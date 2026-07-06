@@ -85,6 +85,7 @@
     <string name="empty_debtors_overdue_hint">Просроченные долги отображаются здесь автоматически</string>
     <string name="debt_tab_owes_me">Мне должны</string>
     <string name="debt_tab_i_owe">Я должен</string>
+    <string name="debt_tab_freedom">Свобода</string>
     <string name="debt_filter_all">Все</string>
     <string name="debt_filter_active">Активные</string>
     <string name="debt_filter_overdue">Просроченные</string>

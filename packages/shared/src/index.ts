@@ -1,5 +1,6 @@
 export * from "./constants";
 export * from "./finance";
+export * from "./debtFreedomEngine";
 export * from "./sync";
 export * from "./syncEngine";
 export * from "./deviceId";

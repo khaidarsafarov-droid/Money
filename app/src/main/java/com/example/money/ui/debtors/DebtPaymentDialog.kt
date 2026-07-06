@@ -30,10 +30,21 @@ import com.example.money.ui.util.InputValidators
 fun DebtPaymentDialog(
     debtor: Debtor,
     availableBalance: Double,
+    initialAmountCents: Long = 0L,
     onDismiss: () -> Unit,
     onConfirm: (amount: Double, affectsBalance: Boolean) -> Unit,
 ) {
-    var amountText by remember(debtor.id) { mutableStateOf("") }
+    var amountText by remember(debtor.id, initialAmountCents) {
+        mutableStateOf(
+            if (initialAmountCents > 0L) {
+                MoneyMath.fromCents(initialAmountCents).let { amount ->
+                    if (amount % 1.0 == 0.0) amount.toLong().toString() else amount.toString()
+                }
+            } else {
+                ""
+            },
+        )
+    }
     var amountError by remember { mutableStateOf<String?>(null) }
     val defaultAffectsBalance = debtor.debtType == DebtType.CREDITOR
     var affectsBalance by remember(debtor.id) { mutableStateOf(defaultAffectsBalance) }

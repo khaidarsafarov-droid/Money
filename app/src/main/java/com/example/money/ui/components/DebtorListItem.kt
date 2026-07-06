@@ -38,6 +38,7 @@ import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.initials
 import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.OverdueRed
 import com.example.money.ui.theme.UrgentYellowBg
@@ -51,11 +52,25 @@ fun DebtorListItem(
     onAddPayment: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onAccelerate: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val dueStatus = debtor.dueStatus()
     val isOverdue = dueStatus == DebtDueStatus.OVERDUE
     val showRemind = debtor.debtType == DebtType.CREDITOR && !debtor.isPaid
+    val milestones = com.example.money.domain.util.DebtFreedomEngine.computeMilestones(
+        currentCents = debtor.currentAmountCents,
+        targetCents = debtor.targetAmountCents,
+    )
+    val accelerateCents = com.example.money.domain.util.DebtFreedomEngine.suggestAcceleratePaymentCents(
+        remainingCents = debtor.remainingAmountCents,
+        targetCents = debtor.targetAmountCents,
+        currentCents = debtor.currentAmountCents,
+    )
+    val paymentsToClose = com.example.money.domain.util.DebtFreedomEngine.estimatePaymentsToClose(
+        remainingCents = debtor.remainingAmountCents,
+        paymentCents = accelerateCents,
+    )
 
     Card(
         modifier = modifier
@@ -93,6 +108,18 @@ fun DebtorListItem(
                             style = MaterialTheme.typography.titleMedium,
                         )
                         DebtDisplayStatusChip(dueStatus = dueStatus)
+                        if (!debtor.isPaid && onAccelerate != null) {
+                            TextButton(
+                                onClick = onAccelerate,
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.debt_accelerate),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = GoldPrimary,
+                                )
+                            }
+                        }
                     }
                     Text(
                         text = stringResource(
@@ -125,6 +152,36 @@ fun DebtorListItem(
                     color = if (isOverdue) OverdueRed else GoldPrimary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
+                Text(
+                    text = stringResource(
+                        R.string.debt_journey_progress,
+                        milestones.progressPercent,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                milestones.nextMilestone?.let { milestone ->
+                    Text(
+                        text = stringResource(
+                            R.string.debt_next_milestone,
+                            milestone.percent,
+                            Formatters.currencyFromCents(milestone.centsToReach, debtor.currency),
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GoldPrimary,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                if (com.example.money.domain.util.DebtFreedomEngine.isSmallDebt(debtor.remainingAmountCents)) {
+                    Text(
+                        text = stringResource(
+                            R.string.debt_small_win_hint,
+                            paymentsToClose,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = FinancePositive,
+                    )
+                }
                 Text(
                     text = stringResource(
                         R.string.debtor_remaining,

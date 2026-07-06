@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { HandCoins, Inbox, Target, TrendingUp } from "lucide-react";
 import { useCallback, useState } from "react";
+import { FreedomForecastCard } from "@/components/debt/FreedomForecastCard";
 import { FinanceCard } from "@/components/cards/FinanceCard";
 import { BalanceOverviewCard } from "@/components/finance/BalanceOverviewCard";
 import { TransactionHistory } from "@/components/finance/TransactionHistory";
@@ -29,6 +30,7 @@ export function DashboardPage() {
   const { showToast } = useToast();
   const webSync = useWebSync(finance.replaceState);
   const [paymentItem, setPaymentItem] = useState<FinancialItem | null>(null);
+  const [paymentPrefillCents, setPaymentPrefillCents] = useState(0);
   const [transferGoal, setTransferGoal] = useState<FinancialItem | null>(null);
   const [amountAction, setAmountAction] = useState<AmountAction | null>(null);
   const [showAddGoal, setShowAddGoal] = useState(false);
@@ -36,10 +38,14 @@ export function DashboardPage() {
   const [pendingDelete, setPendingDelete] = useState<FinancialItem | null>(null);
 
   const goals = finance.state.items.filter((item) => item.type === "GOAL");
+  const activeDebts = finance.state.items.filter(
+    (item) => item.type === "DEBT" && item.status !== "COMPLETED",
+  );
   const hasOperations =
     finance.transactions.length > 0 || finance.state.items.length > 0;
 
-  const openPayment = useCallback((item: FinancialItem) => {
+  const openPayment = useCallback((item: FinancialItem, prefillCents = 0) => {
+    setPaymentPrefillCents(prefillCents);
     setPaymentItem(item);
   }, []);
 
@@ -115,6 +121,10 @@ export function DashboardPage() {
         ) : null}
 
         <div className="space-y-5">
+          {(finance.typeFilter === "debt" || finance.typeFilter === "all") && activeDebts.length > 0 ? (
+            <FreedomForecastCard debts={activeDebts} />
+          ) : null}
+
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-milk-text">
@@ -178,7 +188,11 @@ export function DashboardPage() {
       <PaymentModal
         item={paymentItem}
         open={paymentItem !== null}
-        onClose={() => setPaymentItem(null)}
+        initialAmountCents={paymentPrefillCents}
+        onClose={() => {
+          setPaymentItem(null);
+          setPaymentPrefillCents(0);
+        }}
         onSubmit={(id, amount) => {
           const result = finance.processPayment(id, amount);
           if (result.ok) {

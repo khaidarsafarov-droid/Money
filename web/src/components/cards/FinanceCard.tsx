@@ -4,7 +4,7 @@ import type { FinancialItem } from "@/types/finance";
 
 interface FinanceCardProps {
   item: FinancialItem;
-  onAddPayment?: (item: FinancialItem) => void;
+  onAddPayment?: (item: FinancialItem, prefillCents?: number) => void;
   onGoalTransfer?: (item: FinancialItem) => void;
   onGoalExpense?: () => void;
   onDelete?: (item: FinancialItem) => void;

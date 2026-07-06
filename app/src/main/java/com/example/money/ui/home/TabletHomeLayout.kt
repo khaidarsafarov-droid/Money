@@ -40,6 +40,8 @@ import com.example.money.domain.sync.SyncConnectionState
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.debtors.DebtTab
+import com.example.money.domain.util.DebtFreedomEngine
+import com.example.money.ui.debtors.DebtFreedomTab
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorFilterRow
@@ -74,6 +76,10 @@ fun TabletHomeLayout(
     onExpense: () -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
+    onAccelerateDebtPayment: (Debtor, Long) -> Unit,
+    freedomProjection: DebtFreedomEngine.FreedomProjection,
+    extraMonthlyCents: Long,
+    onExtraMonthlyChange: (Long) -> Unit,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onConfirmTransfer: (Long) -> Unit,
@@ -188,34 +194,45 @@ fun TabletHomeLayout(
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
-                        item {
-                            DebtorFilterRow(
-                                selectedFilter = debtorFilter,
-                                onFilterSelected = onDebtorFilterChange,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                            )
-                        }
-                        if (debtors.isEmpty()) {
+                        if (debtTab == DebtTab.Freedom) {
                             item {
-                                EmptyStateMessage(
-                                    title = emptyDebtorsTitle(debtorFilter),
-                                    hint = emptyDebtorsHint(debtorFilter),
+                                DebtFreedomTab(
+                                    projection = freedomProjection,
+                                    extraMonthlyCents = extraMonthlyCents,
+                                    onExtraMonthlyChange = onExtraMonthlyChange,
+                                    modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }
                         } else {
-                            items(debtors, key = { "tablet-debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
-                                HomeListCompactRow(
-                                    title = debtor.name,
-                                    subtitle = stringResource(
-                                        R.string.tablet_list_debtor_subtitle,
-                                        Formatters.currencyFromCents(debtor.remainingAmountCents),
-                                        Formatters.currencyFromCents(debtor.targetAmountCents),
-                                    ),
-                                    selected = selection is HomeListSelection.DebtorItem &&
-                                        selection.debtor.id == debtor.id,
-                                    onClick = { onSelectionChange(HomeListSelection.DebtorItem(debtor)) },
-                                    modifier = Modifier.padding(vertical = 4.dp),
+                            item {
+                                DebtorFilterRow(
+                                    selectedFilter = debtorFilter,
+                                    onFilterSelected = onDebtorFilterChange,
+                                    modifier = Modifier.padding(vertical = 8.dp),
                                 )
+                            }
+                            if (debtors.isEmpty()) {
+                                item {
+                                    EmptyStateMessage(
+                                        title = emptyDebtorsTitle(debtorFilter),
+                                        hint = emptyDebtorsHint(debtorFilter),
+                                    )
+                                }
+                            } else {
+                                items(debtors, key = { "tablet-debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
+                                    HomeListCompactRow(
+                                        title = debtor.name,
+                                        subtitle = stringResource(
+                                            R.string.tablet_list_debtor_subtitle,
+                                            Formatters.currencyFromCents(debtor.remainingAmountCents),
+                                            Formatters.currencyFromCents(debtor.targetAmountCents),
+                                        ),
+                                        selected = selection is HomeListSelection.DebtorItem &&
+                                            selection.debtor.id == debtor.id,
+                                        onClick = { onSelectionChange(HomeListSelection.DebtorItem(debtor)) },
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                    )
+                                }
                             }
                         }
                     }

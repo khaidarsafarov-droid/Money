@@ -8,6 +8,7 @@ import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.repository.DebtorRepository
+import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.notification.DebtReminderScheduler
@@ -49,9 +50,13 @@ class DebtorsViewModel(
         _debtTab,
         _filter,
     ) { debtors, tab, filter ->
+        if (tab == DebtTab.Freedom) {
+            return@combine emptyList()
+        }
         val type = when (tab) {
             DebtTab.OwesMe -> DebtType.CREDITOR
             DebtTab.IOwe -> DebtType.DEBTOR
+            DebtTab.Freedom -> DebtType.DEBTOR
         }
         val now = System.currentTimeMillis()
         val byType = debtors.filter { it.debtType == type }
@@ -75,6 +80,35 @@ class DebtorsViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = DashboardDebtMetrics(0, 0, 0, 0),
         )
+
+    private val _extraMonthlyCents = MutableStateFlow(0L)
+    val extraMonthlyCents: StateFlow<Long> = _extraMonthlyCents.asStateFlow()
+
+    val freedomProjection: StateFlow<DebtFreedomEngine.FreedomProjection> = combine(
+        allDebtors,
+        _extraMonthlyCents,
+    ) { debtors, extra ->
+        DebtFreedomEngine.calculateFreedomProjection(
+            debts = debtors,
+            debtType = DebtType.DEBTOR,
+            extraMonthlyCents = extra,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = DebtFreedomEngine.FreedomProjection(
+            freedomDateMillis = null,
+            monthsRemaining = null,
+            totalRemainingCents = 0L,
+            monthlyPaymentCents = 0L,
+            monthsSavedWithExtra = null,
+            hasActiveDebts = false,
+        ),
+    )
+
+    fun setExtraMonthlyCents(cents: Long) {
+        _extraMonthlyCents.value = cents.coerceAtLeast(0L)
+    }
 
     fun setDebtTab(tab: DebtTab) {
         _debtTab.value = tab

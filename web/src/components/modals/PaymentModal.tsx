@@ -7,6 +7,7 @@ import { FormField, Modal, ModalButton, inputClassName } from "@/components/ui/M
 interface PaymentModalProps {
   item: FinancialItem | null;
   open: boolean;
+  initialAmountCents?: number;
   onClose: () => void;
   onSubmit: (id: string, amount: string) => { ok: boolean; error?: string };
 }
@@ -14,6 +15,7 @@ interface PaymentModalProps {
 export function PaymentModal({
   item,
   open,
+  initialAmountCents = 0,
   onClose,
   onSubmit,
 }: PaymentModalProps) {
@@ -24,8 +26,12 @@ export function PaymentModal({
     if (!open) {
       setAmount("");
       setError(null);
+      return;
     }
-  }, [open]);
+    if (initialAmountCents > 0) {
+      setAmount(fromCents(initialAmountCents).toFixed(2));
+    }
+  }, [open, initialAmountCents]);
 
   const remaining = item ? remainingAmount(item) : 0;
   const isDebt = item?.type === "DEBT";
