@@ -46,6 +46,11 @@ object AppIntents {
             putExtra(EXTRA_ACTION, ACTION_ADD_EXPENSE)
         }
 
+    fun openAppIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
     fun quickAddIntent(context: Context): Intent =
         Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP

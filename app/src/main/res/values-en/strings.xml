@@ -41,15 +41,20 @@
 
     <!-- Widget -->
     <string name="widget_goal_title">Goal budget</string>
-    <string name="widget_goal_description">Main goal progress and quick expense entry</string>
+    <string name="widget_goal_description">Balance, goals, debts, and quick add</string>
     <string name="widget_progress_percent">%1$d%% complete</string>
     <string name="widget_remaining">Remaining: %1$s of %2$s</string>
     <string name="widget_remaining_empty">Set a goal in the app</string>
     <string name="widget_quick_add">Quick add</string>
     <string name="widget_pending_count">Unconfirmed on phone: %1$d</string>
-    <string name="widget_active_items_title">Active goals and debts</string>
+    <string name="widget_pending_badge">%1$d pending</string>
+    <string name="widget_overdue_debts">%1$d overdue</string>
+    <string name="widget_goals_section">Goals · %1$d</string>
+    <string name="widget_active_items_title">Up next</string>
+    <string name="widget_item_type_goal">Goal</string>
+    <string name="widget_item_type_debt">Debt</string>
     <string name="widget_item_remaining">Remaining: %1$s</string>
-    <string name="widget_item_progress">Progress: %1$d%% · %2$s left</string>
+    <string name="widget_item_progress">%1$d%% · %2$s left</string>
 
     <string name="tab_debts">Debts</string>
     <string name="tab_debtors">Debtors</string>

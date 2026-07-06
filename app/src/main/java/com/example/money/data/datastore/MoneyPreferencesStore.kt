@@ -40,6 +40,17 @@ object MoneyPreferenceKeys {
     val UPDATED_AT = longPreferencesKey("widget_updated_at")
     val CURRENCY_REGION = stringPreferencesKey("currency_region")
     val ACTIVE_ITEMS_JSON = stringPreferencesKey("widget_active_items_json")
+    val GLOBAL_BALANCE = doublePreferencesKey("widget_global_balance")
+    val TOTAL_DEPOSITS = doublePreferencesKey("widget_total_deposits")
+    val TOTAL_EXPENSES = doublePreferencesKey("widget_total_expenses")
+    val TOTAL_ACCUMULATED = doublePreferencesKey("widget_total_accumulated")
+    val TOTAL_REMAINING_TO_GOAL = doublePreferencesKey("widget_total_remaining_to_goal")
+    val OWED_TO_ME_CENTS = longPreferencesKey("widget_owed_to_me_cents")
+    val OWED_TO_ME_COUNT = intPreferencesKey("widget_owed_to_me_count")
+    val I_OWE_CENTS = longPreferencesKey("widget_i_owe_cents")
+    val I_OWE_COUNT = intPreferencesKey("widget_i_owe_count")
+    val ACTIVE_GOALS_COUNT = intPreferencesKey("widget_active_goals_count")
+    val OVERDUE_DEBT_COUNT = intPreferencesKey("widget_overdue_debt_count")
 
     val VOICE_REPORTS_ENABLED = booleanPreferencesKey("voice_reports_enabled")
     val VOICE_REPORT_HOUR = intPreferencesKey("voice_report_hour")
@@ -71,6 +82,17 @@ class MoneyPreferencesStore(
                     prefs[MoneyPreferenceKeys.CURRENCY_REGION] ?: CurrencyRegion.US.name,
                 ),
                 activeItems = decodeActiveItems(prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON]),
+                globalBalance = prefs[MoneyPreferenceKeys.GLOBAL_BALANCE] ?: 0.0,
+                totalDeposits = prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] ?: 0.0,
+                totalExpenses = prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] ?: 0.0,
+                totalAccumulated = prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0,
+                totalRemainingToGoal = prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] ?: 0.0,
+                owedToMeCents = prefs[MoneyPreferenceKeys.OWED_TO_ME_CENTS] ?: 0L,
+                owedToMeCount = prefs[MoneyPreferenceKeys.OWED_TO_ME_COUNT] ?: 0,
+                iOweCents = prefs[MoneyPreferenceKeys.I_OWE_CENTS] ?: 0L,
+                iOweCount = prefs[MoneyPreferenceKeys.I_OWE_COUNT] ?: 0,
+                activeGoalsCount = prefs[MoneyPreferenceKeys.ACTIVE_GOALS_COUNT] ?: 0,
+                overdueDebtCount = prefs[MoneyPreferenceKeys.OVERDUE_DEBT_COUNT] ?: 0,
             )
         }
 
@@ -92,6 +114,17 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.UPDATED_AT] = snapshot.updatedAt
             prefs[MoneyPreferenceKeys.CURRENCY_REGION] = snapshot.currencyRegion.name
             prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON] = encodeActiveItems(snapshot.activeItems)
+            prefs[MoneyPreferenceKeys.GLOBAL_BALANCE] = snapshot.globalBalance
+            prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] = snapshot.totalDeposits
+            prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] = snapshot.totalExpenses
+            prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] = snapshot.totalAccumulated
+            prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] = snapshot.totalRemainingToGoal
+            prefs[MoneyPreferenceKeys.OWED_TO_ME_CENTS] = snapshot.owedToMeCents
+            prefs[MoneyPreferenceKeys.OWED_TO_ME_COUNT] = snapshot.owedToMeCount
+            prefs[MoneyPreferenceKeys.I_OWE_CENTS] = snapshot.iOweCents
+            prefs[MoneyPreferenceKeys.I_OWE_COUNT] = snapshot.iOweCount
+            prefs[MoneyPreferenceKeys.ACTIVE_GOALS_COUNT] = snapshot.activeGoalsCount
+            prefs[MoneyPreferenceKeys.OVERDUE_DEBT_COUNT] = snapshot.overdueDebtCount
         }
     }
 
@@ -165,7 +198,8 @@ class MoneyPreferencesStore(
                     .put("type", item.type.name)
                     .put("name", item.name)
                     .put("remaining", item.remainingLabel)
-                    .put("progress", item.progressFraction.toDouble()),
+                    .put("progress", item.progressFraction.toDouble())
+                    .put("overdue", item.isOverdue),
             )
         }
         return array.toString()
@@ -191,6 +225,7 @@ class MoneyPreferencesStore(
                             name = item.getString("name"),
                             remainingLabel = item.getString("remaining"),
                             progressFraction = item.getDouble("progress").toFloat(),
+                            isOverdue = item.optBoolean("overdue", false),
                         ),
                     )
                 }

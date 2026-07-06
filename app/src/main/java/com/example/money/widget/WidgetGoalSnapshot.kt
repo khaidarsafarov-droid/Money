@@ -10,6 +10,7 @@ data class WidgetFinanceItem(
     val name: String,
     val remainingLabel: String,
     val progressFraction: Float,
+    val isOverdue: Boolean = false,
 )
 
 enum class WidgetItemType {
@@ -17,7 +18,7 @@ enum class WidgetItemType {
     DEBT,
 }
 
-/** Снимок прогресса цели для Glance-виджета. Только локальные данные телефона. */
+/** Снимок финансов для Glance-виджета. Только локальные данные телефона. */
 data class WidgetGoalSnapshot(
     val currentAmount: Double,
     val targetAmount: Double,
@@ -28,6 +29,17 @@ data class WidgetGoalSnapshot(
     val updatedAt: Long,
     val currencyRegion: CurrencyRegion,
     val activeItems: List<WidgetFinanceItem> = emptyList(),
+    val globalBalance: Double = 0.0,
+    val totalDeposits: Double = 0.0,
+    val totalExpenses: Double = 0.0,
+    val totalAccumulated: Double = 0.0,
+    val totalRemainingToGoal: Double = 0.0,
+    val owedToMeCents: Long = 0L,
+    val owedToMeCount: Int = 0,
+    val iOweCents: Long = 0L,
+    val iOweCount: Int = 0,
+    val activeGoalsCount: Int = 0,
+    val overdueDebtCount: Int = 0,
 ) {
     companion object {
         val Empty = WidgetGoalSnapshot(

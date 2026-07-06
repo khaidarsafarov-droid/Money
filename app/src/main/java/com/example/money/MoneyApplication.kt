@@ -121,6 +121,7 @@ class MoneyApplication : Application() {
         GoalWidgetSnapshotWriter(
             goalRepository = goalRepository,
             debtorRepository = debtorRepository,
+            budgetRepository = budgetRepository,
             pendingTransactionCount = budgetRepository.observePendingCount(),
             preferencesStore = preferencesStore,
             currencyRegion = preferencesStore.currencyRegion,

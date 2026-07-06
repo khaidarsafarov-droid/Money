@@ -38,15 +38,20 @@
 
     <!-- Widget -->
     <string name="widget_goal_title">Бюджет цели</string>
-    <string name="widget_goal_description">Прогресс главной цели и быстрое добавление расхода</string>
+    <string name="widget_goal_description">Остаток, цели, долги и быстрое добавление</string>
     <string name="widget_progress_percent">%1$d%% выполнено</string>
     <string name="widget_remaining">Осталось: %1$s из %2$s</string>
     <string name="widget_remaining_empty">Задайте цель в приложении</string>
     <string name="widget_quick_add">Быстрое добавление</string>
     <string name="widget_pending_count">Не подтверждено на телефоне: %1$d</string>
-    <string name="widget_active_items_title">Активные цели и долги</string>
+    <string name="widget_pending_badge">%1$d ждут</string>
+    <string name="widget_overdue_debts">%1$d просроч. долг.</string>
+    <string name="widget_goals_section">Цели · %1$d</string>
+    <string name="widget_active_items_title">Ближайшие</string>
+    <string name="widget_item_type_goal">Цель</string>
+    <string name="widget_item_type_debt">Долг</string>
     <string name="widget_item_remaining">Осталось: %1$s</string>
-    <string name="widget_item_progress">Прогресс: %1$d%% · осталось %2$s</string>
+    <string name="widget_item_progress">%1$d%% · %2$s</string>
     <string name="tab_debts">Долги</string>
     <string name="tab_debtors">Должники</string>
     <string name="tab_operations">Операции</string>

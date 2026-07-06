@@ -5,6 +5,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.glance.Button
 import androidx.glance.ButtonDefaults
 import androidx.glance.GlanceId
@@ -26,6 +27,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.material3.ColorProviders
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -36,6 +38,8 @@ import com.example.money.ui.theme.BrownMuted
 import com.example.money.ui.theme.BrownText
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.theme.FinanceNegative
+import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GaugeTrack
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
@@ -68,6 +72,10 @@ private val WidgetColorProviders = ColorProviders(
         onSurface = BrownText,
         onSurfaceVariant = BrownMuted,
         surfaceVariant = GaugeTrack,
+        tertiary = FinancePositive,
+        onTertiary = Color.White,
+        error = FinanceNegative,
+        onError = Color.White,
     ),
 )
 
@@ -78,144 +86,147 @@ private fun GoalWidgetContent(
 ) {
     val region = snapshot.currencyRegion
     val webBaseUrl = context.getString(R.string.web_payment_base_url).trim()
+    val openAppIntent = AppIntents.openAppIntent(context)
+    val quickAddIntent = AppIntents.quickAddIntent(context)
 
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(16.dp)
             .background(GlanceTheme.colors.background)
-            .padding(14.dp),
+            .padding(12.dp),
         verticalAlignment = Alignment.Top,
         horizontalAlignment = Alignment.Start,
     ) {
-        Row(
-            modifier = GlanceModifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+        WidgetHeader(context = context, snapshot = snapshot)
+
+        Spacer(modifier = GlanceModifier.height(8.dp))
+
+        Column(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .cornerRadius(12.dp)
+                .background(GlanceTheme.colors.surface)
+                .clickable(actionStartActivity(openAppIntent))
+                .padding(12.dp),
         ) {
             Text(
-                text = context.getString(R.string.widget_goal_title),
-                modifier = GlanceModifier.defaultWeight(),
+                text = context.getString(
+                    R.string.global_balance_available,
+                    Formatters.currencyCompact(snapshot.globalBalance, region),
+                ),
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
-                    fontWeight = FontWeight.Medium,
-                ),
-            )
-            Text(
-                text = "${snapshot.progressPercent}%",
-                style = TextStyle(
-                    color = GlanceTheme.colors.primary,
                     fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
                 ),
             )
-        }
 
-        if (snapshot.pendingCount > 0) {
-            Spacer(modifier = GlanceModifier.height(4.dp))
             Text(
-                text = context.getString(R.string.widget_pending_count, snapshot.pendingCount),
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant),
-            )
-        }
-
-        Spacer(modifier = GlanceModifier.height(10.dp))
-
-        if (snapshot.targetAmount > 0) {
-            LinearProgressIndicator(
-                progress = snapshot.progressFraction,
-                modifier = GlanceModifier.fillMaxWidth(),
+                text = context.getString(R.string.global_balance_income_minus_expenses),
+                style = TextStyle(
+                    color = GlanceTheme.colors.onSurfaceVariant,
+                    fontSize = 11.sp,
+                ),
             )
 
             Spacer(modifier = GlanceModifier.height(8.dp))
 
-            Text(
-                text = Formatters.currencyCompact(snapshot.currentAmount, region),
-                style = TextStyle(
-                    color = GlanceTheme.colors.onSurface,
-                    fontWeight = FontWeight.Bold,
-                ),
-            )
+            Row(modifier = GlanceModifier.fillMaxWidth()) {
+                WidgetMetricTile(
+                    label = context.getString(R.string.global_balance_accumulated_label),
+                    value = Formatters.currencyCompact(snapshot.totalAccumulated, region),
+                    valueColor = GlanceTheme.colors.tertiary,
+                    modifier = GlanceModifier.defaultWeight(),
+                )
+                Spacer(modifier = GlanceModifier.width(8.dp))
+                WidgetMetricTile(
+                    label = context.getString(R.string.global_balance_remaining_label),
+                    value = Formatters.currencyCompact(snapshot.totalRemainingToGoal, region),
+                    valueColor = GlanceTheme.colors.onSurface,
+                    modifier = GlanceModifier.defaultWeight(),
+                )
+            }
 
-            Text(
-                text = context.getString(
-                    R.string.widget_remaining,
-                    Formatters.currencyCompact(snapshot.remainingAmount, region),
-                    Formatters.currencyCompact(snapshot.targetAmount, region),
-                ),
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant),
-            )
-        } else {
-            Text(
-                text = context.getString(R.string.widget_remaining_empty),
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant),
-            )
-        }
+            Spacer(modifier = GlanceModifier.height(8.dp))
 
-        if (snapshot.activeItems.isNotEmpty()) {
-            Spacer(modifier = GlanceModifier.height(10.dp))
-            Text(
-                text = context.getString(R.string.widget_active_items_title),
-                style = TextStyle(
-                    color = GlanceTheme.colors.onSurface,
-                    fontWeight = FontWeight.Medium,
-                ),
-            )
-            snapshot.activeItems.take(4).forEach { item ->
+            Row(modifier = GlanceModifier.fillMaxWidth()) {
+                WidgetDebtTile(
+                    context = context,
+                    label = context.getString(R.string.debt_dashboard_owes_me),
+                    amountCents = snapshot.owedToMeCents,
+                    activeCount = snapshot.owedToMeCount,
+                    positive = true,
+                    region = region,
+                    modifier = GlanceModifier.defaultWeight(),
+                )
+                Spacer(modifier = GlanceModifier.width(8.dp))
+                WidgetDebtTile(
+                    context = context,
+                    label = context.getString(R.string.debt_dashboard_i_owe),
+                    amountCents = snapshot.iOweCents,
+                    activeCount = snapshot.iOweCount,
+                    positive = false,
+                    region = region,
+                    modifier = GlanceModifier.defaultWeight(),
+                )
+            }
+
+            if (snapshot.totalDeposits > 0.0 || snapshot.totalExpenses > 0.0) {
                 Spacer(modifier = GlanceModifier.height(6.dp))
-                val rowModifier = if (item.type == WidgetItemType.DEBT) {
-                    val debtIntent = if (webBaseUrl.isNotEmpty()) {
-                        AppIntents.openWebPaymentDeepLink(context, webBaseUrl, item.payKey)
-                    } else {
-                        AppIntents.openDebtPaymentIntent(context, item.id)
-                    }
-                    GlanceModifier
-                        .fillMaxWidth()
-                        .clickable(actionStartActivity(debtIntent))
-                } else {
-                    GlanceModifier.fillMaxWidth()
-                }
-                Column(modifier = rowModifier) {
+                Row(modifier = GlanceModifier.fillMaxWidth()) {
                     Text(
-                        text = item.name,
+                        text = context.getString(R.string.global_balance_deposits_label),
                         style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontWeight = FontWeight.Medium,
+                            color = GlanceTheme.colors.onSurfaceVariant,
+                            fontSize = 11.sp,
                         ),
                     )
                     Text(
-                        text = context.getString(
-                            R.string.widget_item_progress,
-                            (item.progressFraction * 100).toInt(),
-                            item.remainingLabel,
+                        text = Formatters.currencyCompact(snapshot.totalDeposits, region),
+                        modifier = GlanceModifier.padding(start = 4.dp),
+                        style = TextStyle(
+                            color = GlanceTheme.colors.tertiary,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 11.sp,
                         ),
-                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant),
                     )
-                    LinearProgressIndicator(
-                        progress = item.progressFraction,
-                        modifier = GlanceModifier.fillMaxWidth(),
+                    Spacer(modifier = GlanceModifier.defaultWeight())
+                    Text(
+                        text = context.getString(R.string.global_balance_expenses_label),
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant,
+                            fontSize = 11.sp,
+                        ),
+                    )
+                    Text(
+                        text = Formatters.currencyCompact(snapshot.totalExpenses, region),
+                        modifier = GlanceModifier.padding(start = 4.dp),
+                        style = TextStyle(
+                            color = GlanceTheme.colors.error,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 11.sp,
+                        ),
                     )
                 }
             }
         }
 
-        Spacer(modifier = GlanceModifier.defaultWeight())
+        if (snapshot.targetAmount > 0.0) {
+            Spacer(modifier = GlanceModifier.height(10.dp))
+            WidgetGoalsSection(context = context, snapshot = snapshot, region = region)
+        }
 
-        val quickAddIntent = AppIntents.quickAddIntent(context)
-
-        Row(
-            modifier = GlanceModifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.End,
-        ) {
-            Button(
-                text = "+",
-                onClick = actionStartActivity(quickAddIntent),
-                colors = ButtonDefaults.buttonColors(),
-                modifier = GlanceModifier
-                    .cornerRadius(20.dp)
-                    .padding(bottom = 4.dp),
+        if (snapshot.activeItems.isNotEmpty()) {
+            Spacer(modifier = GlanceModifier.height(10.dp))
+            WidgetActiveItemsSection(
+                context = context,
+                snapshot = snapshot,
+                webBaseUrl = webBaseUrl,
             )
         }
 
-        Spacer(modifier = GlanceModifier.height(6.dp))
+        Spacer(modifier = GlanceModifier.defaultWeight())
 
         Button(
             text = context.getString(R.string.widget_quick_add),
@@ -225,5 +236,283 @@ private fun GoalWidgetContent(
                 .fillMaxWidth()
                 .cornerRadius(16.dp),
         )
+    }
+}
+
+@Composable
+private fun WidgetHeader(
+    context: Context,
+    snapshot: WidgetGoalSnapshot,
+) {
+    Row(
+        modifier = GlanceModifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = GlanceModifier.defaultWeight()) {
+            Text(
+                text = context.getString(R.string.app_name),
+                style = TextStyle(
+                    color = GlanceTheme.colors.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                ),
+            )
+            if (snapshot.overdueDebtCount > 0) {
+                Text(
+                    text = context.getString(R.string.widget_overdue_debts, snapshot.overdueDebtCount),
+                    style = TextStyle(
+                        color = GlanceTheme.colors.error,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+            }
+        }
+
+        if (snapshot.pendingCount > 0) {
+            Text(
+                text = context.getString(R.string.widget_pending_badge, snapshot.pendingCount),
+                modifier = GlanceModifier
+                    .cornerRadius(10.dp)
+                    .background(GlanceTheme.colors.surfaceVariant)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                style = TextStyle(
+                    color = GlanceTheme.colors.primary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 11.sp,
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun WidgetMetricTile(
+    label: String,
+    value: String,
+    valueColor: androidx.glance.unit.ColorProvider,
+    modifier: GlanceModifier = GlanceModifier,
+) {
+    Column(
+        modifier = modifier
+            .cornerRadius(8.dp)
+            .background(GlanceTheme.colors.background)
+            .padding(8.dp),
+    ) {
+        Text(
+            text = label,
+            style = TextStyle(
+                color = GlanceTheme.colors.onSurfaceVariant,
+                fontSize = 10.sp,
+            ),
+        )
+        Text(
+            text = value,
+            style = TextStyle(
+                color = valueColor,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun WidgetDebtTile(
+    context: Context,
+    label: String,
+    amountCents: Long,
+    activeCount: Int,
+    positive: Boolean,
+    region: com.example.money.settings.CurrencyRegion,
+    modifier: GlanceModifier = GlanceModifier,
+) {
+    val isEmpty = amountCents <= 0L
+    val prefix = if (positive) "+" else "−"
+    val amount = Formatters.currencyFromCents(amountCents, region)
+    val valueColor = when {
+        isEmpty -> GlanceTheme.colors.onSurfaceVariant
+        positive -> GlanceTheme.colors.tertiary
+        else -> GlanceTheme.colors.error
+    }
+
+    Column(
+        modifier = modifier
+            .cornerRadius(8.dp)
+            .background(
+                if (isEmpty) {
+                    GlanceTheme.colors.surfaceVariant
+                } else {
+                    GlanceTheme.colors.background
+                },
+            )
+            .padding(8.dp),
+    ) {
+        Text(
+            text = label,
+            style = TextStyle(
+                color = GlanceTheme.colors.onSurfaceVariant,
+                fontSize = 10.sp,
+            ),
+        )
+        Text(
+            text = if (isEmpty) Formatters.currencyFromCents(0, region) else "$prefix$amount",
+            style = TextStyle(
+                color = valueColor,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+            ),
+        )
+        Text(
+            text = context.getString(R.string.debt_dashboard_active_count, activeCount),
+            style = TextStyle(
+                color = GlanceTheme.colors.onSurfaceVariant,
+                fontSize = 10.sp,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun WidgetGoalsSection(
+    context: Context,
+    snapshot: WidgetGoalSnapshot,
+    region: com.example.money.settings.CurrencyRegion,
+) {
+    Row(
+        modifier = GlanceModifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = context.getString(R.string.widget_goals_section, snapshot.activeGoalsCount),
+            modifier = GlanceModifier.defaultWeight(),
+            style = TextStyle(
+                color = GlanceTheme.colors.onSurface,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+            ),
+        )
+        Text(
+            text = context.getString(R.string.widget_progress_percent, snapshot.progressPercent),
+            style = TextStyle(
+                color = GlanceTheme.colors.primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+            ),
+        )
+    }
+
+    Spacer(modifier = GlanceModifier.height(6.dp))
+
+    LinearProgressIndicator(
+        progress = snapshot.progressFraction,
+        modifier = GlanceModifier.fillMaxWidth(),
+    )
+
+    Spacer(modifier = GlanceModifier.height(4.dp))
+
+    Text(
+        text = context.getString(
+            R.string.widget_remaining,
+            Formatters.currencyCompact(snapshot.remainingAmount, region),
+            Formatters.currencyCompact(snapshot.targetAmount, region),
+        ),
+        style = TextStyle(
+            color = GlanceTheme.colors.onSurfaceVariant,
+            fontSize = 11.sp,
+        ),
+    )
+}
+
+@Composable
+private fun WidgetActiveItemsSection(
+    context: Context,
+    snapshot: WidgetGoalSnapshot,
+    webBaseUrl: String,
+) {
+    Text(
+        text = context.getString(R.string.widget_active_items_title),
+        style = TextStyle(
+            color = GlanceTheme.colors.onSurface,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+        ),
+    )
+
+    snapshot.activeItems.forEach { item ->
+        Spacer(modifier = GlanceModifier.height(6.dp))
+        val rowModifier = if (item.type == WidgetItemType.DEBT) {
+            val debtIntent = if (webBaseUrl.isNotEmpty()) {
+                AppIntents.openWebPaymentDeepLink(context, webBaseUrl, item.payKey)
+            } else {
+                AppIntents.openDebtPaymentIntent(context, item.id)
+            }
+            GlanceModifier
+                .fillMaxWidth()
+                .cornerRadius(8.dp)
+                .background(GlanceTheme.colors.surface)
+                .clickable(actionStartActivity(debtIntent))
+                .padding(8.dp)
+        } else {
+            GlanceModifier
+                .fillMaxWidth()
+                .cornerRadius(8.dp)
+                .background(GlanceTheme.colors.surface)
+                .padding(8.dp)
+        }
+
+        Column(modifier = rowModifier) {
+            Row(
+                modifier = GlanceModifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val typeLabel = when (item.type) {
+                    WidgetItemType.GOAL -> context.getString(R.string.widget_item_type_goal)
+                    WidgetItemType.DEBT -> context.getString(R.string.widget_item_type_debt)
+                }
+                Text(
+                    text = typeLabel,
+                    modifier = GlanceModifier
+                        .cornerRadius(6.dp)
+                        .background(GlanceTheme.colors.surfaceVariant)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                    style = TextStyle(
+                        color = when {
+                            item.isOverdue -> GlanceTheme.colors.error
+                            item.type == WidgetItemType.GOAL -> GlanceTheme.colors.primary
+                            else -> GlanceTheme.colors.error
+                        },
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+                Spacer(modifier = GlanceModifier.width(6.dp))
+                Text(
+                    text = item.name,
+                    modifier = GlanceModifier.defaultWeight(),
+                    style = TextStyle(
+                        color = if (item.isOverdue) GlanceTheme.colors.error else GlanceTheme.colors.onSurface,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                    ),
+                )
+            }
+            Text(
+                text = context.getString(
+                    R.string.widget_item_progress,
+                    (item.progressFraction * 100).toInt(),
+                    item.remainingLabel,
+                ),
+                style = TextStyle(
+                    color = GlanceTheme.colors.onSurfaceVariant,
+                    fontSize = 10.sp,
+                ),
+            )
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            LinearProgressIndicator(
+                progress = item.progressFraction,
+                modifier = GlanceModifier.fillMaxWidth(),
+            )
+        }
     }
 }
