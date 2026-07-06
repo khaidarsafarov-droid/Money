@@ -1,0 +1,13 @@
+{
+  "name": "money",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "web"
+  ],
+  "scripts": {
+    "test": "npm run test --workspace=@money/shared && npm run test --workspace=money-web",
+    "test:shared": "npm run test --workspace=@money/shared",
+    "test:web": "npm run test --workspace=money-web"
+  }
+}

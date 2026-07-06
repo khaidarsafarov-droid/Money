@@ -1,0 +1,181 @@
+import { createId } from "@/lib/money";
+import type { DashboardTotals, FinanceState, FinancialItem, FinancialStatus, Payment, StatusFilter, TypeFilter } from "@/types/finance";
+import { computeGlobalFinanceSummary, enrichFinanceState, addTransaction } from "@/lib/globalFinanceEngine";
+
+export function resolveStatus(target: number, amount: number): FinancialStatus {
+  if (amount <= 0) return "ACTIVE";
+  if (amount >= target && target > 0) return "COMPLETED";
+  return "PARTIAL";
+}
+
+export function remainingAmount(item: FinancialItem): number {
+  return Math.max(item.target - item.amount, 0);
+}
+
+export function progressFraction(item: FinancialItem): number {
+  if (item.target <= 0) return 0;
+  return Math.min(item.amount / item.target, 1);
+}
+
+export function filterItems(
+  items: FinancialItem[],
+  filter: StatusFilter,
+): FinancialItem[] {
+  switch (filter) {
+    case "active":
+      return items.filter((item) => item.status !== "COMPLETED");
+    case "completed":
+      return items.filter((item) => item.status === "COMPLETED");
+    default:
+      return items;
+  }
+}
+
+export function filterByType(
+  items: FinancialItem[],
+  filter: TypeFilter,
+): FinancialItem[] {
+  switch (filter) {
+    case "goal":
+      return items.filter((item) => item.type === "GOAL");
+    case "debt":
+      return items.filter((item) => item.type === "DEBT");
+    default:
+      return items;
+  }
+}
+
+export function isDebtOverdue(item: FinancialItem): boolean {
+  if (item.type !== "DEBT" || item.status === "COMPLETED" || !item.dateDue) {
+    return false;
+  }
+  const due = new Date(item.dateDue);
+  due.setHours(23, 59, 59, 999);
+  return due.getTime() < Date.now();
+}
+
+function itemSortRank(item: FinancialItem): number {
+  if (isDebtOverdue(item)) return 0;
+  if (item.status === "COMPLETED") return 2;
+  return 1;
+}
+
+export function sortItems(items: FinancialItem[]): FinancialItem[] {
+  return [...items].sort((a, b) => {
+    const rankDiff = itemSortRank(a) - itemSortRank(b);
+    if (rankDiff !== 0) return rankDiff;
+    if (a.type === "DEBT" && b.type === "DEBT" && a.dateDue && b.dateDue) {
+      return a.dateDue.localeCompare(b.dateDue);
+    }
+    return (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "");
+  });
+}
+
+export function computeDashboardTotals(state: FinanceState): DashboardTotals {
+  const enriched = enrichFinanceState(state);
+  const activeItems = enriched.items.filter((item) => item.status !== "COMPLETED");
+  const completedItems = enriched.items.filter((item) => item.status === "COMPLETED");
+
+  const debts = enriched.items.filter((item) => item.type === "DEBT");
+  const finance = computeGlobalFinanceSummary(enriched);
+
+  const totalSavedUsd = finance.totalAccumulatedCents / 100;
+  const totalDebtRemainingUsd = debts
+    .filter((d) => d.status !== "COMPLETED")
+    .reduce((sum, d) => sum + remainingAmount(d) / 100, 0);
+
+  return {
+    globalBalanceUsd: finance.globalBalanceCents / 100,
+    totalSavedUsd,
+    totalRemainingToGoalUsd: finance.totalRemainingToGoalCents / 100,
+    totalDebtRemainingUsd,
+    availableBalanceUsd: finance.availableBalanceCents / 100,
+    activeCount: activeItems.length,
+    completedCount: completedItems.length,
+  };
+}
+
+export function processPayment(
+  state: FinanceState,
+  id: string,
+  paymentCents: number,
+): FinanceState {
+  if (paymentCents <= 0) return state;
+
+  const item = state.items.find((entry) => entry.id === id);
+  if (!item) return state;
+
+  if (item.type === "GOAL") {
+    const result = addTransaction(state, {
+      kind: "GOAL_TRANSFER",
+      amountCents: paymentCents,
+      goalId: id,
+    });
+    return result.error ? state : result.state;
+  }
+
+  const items = state.items.map((entry) => {
+    if (entry.id !== id) return entry;
+
+    const capped = Math.min(paymentCents, remainingAmount(entry));
+    if (capped <= 0) return entry;
+
+    const newAmount = entry.amount + capped;
+    const payment: Payment = {
+      id: createId(),
+      amount: capped,
+      paidAt: new Date().toISOString(),
+    };
+
+    return {
+      ...entry,
+      amount: newAmount,
+      status: resolveStatus(entry.target, newAmount),
+      history: [payment, ...entry.history],
+      updatedAt: new Date().toISOString(),
+    };
+  });
+
+  return { ...state, items };
+}
+
+export function addGoal(
+  state: FinanceState,
+  input: { name: string; target: number; dateDeadline?: string },
+): FinanceState {
+  const item: FinancialItem = {
+    id: createId(),
+    type: "GOAL",
+    name: input.name,
+    target: input.target,
+    amount: 0,
+    status: "ACTIVE",
+    history: [],
+    dateDeadline: input.dateDeadline,
+    updatedAt: new Date().toISOString(),
+  };
+  return enrichFinanceState({ ...state, items: [item, ...state.items] });
+}
+
+export function addDebt(
+  state: FinanceState,
+  input: { name: string; target: number; dateGiven: string; dateDue: string },
+): FinanceState {
+  const item: FinancialItem = {
+    id: createId(),
+    type: "DEBT",
+    name: input.name,
+    target: input.target,
+    amount: 0,
+    status: "ACTIVE",
+    history: [],
+    dateGiven: input.dateGiven,
+    dateDue: input.dateDue,
+    updatedAt: new Date().toISOString(),
+  };
+  return { ...state, items: [item, ...state.items] };
+}
+
+export function removeItem(state: FinanceState, id: string): FinanceState {
+  return { ...state, items: state.items.filter((item) => item.id !== id) };
+}

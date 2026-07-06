@@ -1,0 +1,28 @@
+package com.example.money.data.local.entity
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import com.example.money.data.sync.SyncIds
+
+@Entity(
+    tableName = "expenses",
+    indices = [Index(value = ["sync_id"], unique = true)],
+)
+data class ExpenseEntity(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    @ColumnInfo(name = "sync_id")
+    val syncId: String = SyncIds.newId(),
+    val amount: Double,
+    val category: String,
+    val date: Long,
+    val note: String = "",
+    /** Только подтверждённые транзакции учитываются в прогрессе виджета. */
+    val isConfirmed: Boolean = false,
+    @ColumnInfo(name = "debt_id")
+    val debtId: Long? = null,
+    @ColumnInfo(name = "debt_payment_id")
+    val debtPaymentId: Long? = null,
+)

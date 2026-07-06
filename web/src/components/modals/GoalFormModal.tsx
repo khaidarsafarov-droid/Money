@@ -1,0 +1,107 @@
+import { useState } from "react";
+import { FormField, Modal, ModalButton, inputClassName } from "@/components/ui/Modal";
+import { parseMoneyInput } from "@/lib/money";
+
+interface GoalFormModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (input: { name: string; target: number; dateDeadline?: string }) => void;
+}
+
+function defaultDeadlineIso(): string {
+  const date = new Date();
+  date.setMonth(date.getMonth() + 3);
+  return date.toISOString().slice(0, 10);
+}
+
+export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
+  const [name, setName] = useState("");
+  const [target, setTarget] = useState("");
+  const [hasDeadline, setHasDeadline] = useState(false);
+  const [deadline, setDeadline] = useState(defaultDeadlineIso);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSubmit() {
+    if (!name.trim()) {
+      setError("Укажите, для чего эта цель");
+      return;
+    }
+    const targetCents = parseMoneyInput(target);
+    if (!targetCents) {
+      setError("Введите корректную сумму цели");
+      return;
+    }
+    onSubmit({
+      name: name.trim(),
+      target: targetCents,
+      dateDeadline: hasDeadline ? deadline : undefined,
+    });
+    setName("");
+    setTarget("");
+    setHasDeadline(false);
+    setDeadline(defaultDeadlineIso());
+    setError(null);
+    onClose();
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Новая цель"
+      footer={
+        <>
+          <ModalButton variant="secondary" onClick={onClose}>
+            Отмена
+          </ModalButton>
+          <ModalButton onClick={handleSubmit}>Добавить</ModalButton>
+        </>
+      }
+    >
+      <FormField
+        label="Для чего цель?"
+        error={error && !name.trim() ? error : null}
+      >
+        <input
+          className={inputClassName}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ремонт грузовика, отпуск, резерв на рейс"
+        />
+      </FormField>
+      <FormField label="Сумма цели (USD)" error={error && name.trim() ? error : null}>
+        <input
+          className={inputClassName}
+          inputMode="decimal"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          placeholder="1000"
+        />
+      </FormField>
+      <p className="text-xs text-milk-muted">
+        Накопления начинаются с нуля. Пополните общий баланс и переведите средства на цель.
+      </p>
+      <FormField label="Срок цели">
+        <label className="flex items-center gap-3 text-sm text-milk-muted">
+          <input
+            type="checkbox"
+            checked={hasDeadline}
+            onChange={(e) => setHasDeadline(e.target.checked)}
+            className="size-4 rounded border-milk-surface"
+          />
+          Рассчитать ежедневный взнос до дедлайна
+        </label>
+      </FormField>
+      {hasDeadline && (
+        <FormField label="Дата окончания">
+          <input
+            type="date"
+            className={inputClassName}
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+          />
+        </FormField>
+      )}
+    </Modal>
+  );
+}
