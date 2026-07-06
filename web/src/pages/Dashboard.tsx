@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { HandCoins, Inbox, Target, TrendingUp } from "lucide-react";
 import { useCallback, useState } from "react";
+import { FreedomForecastCard } from "@/components/debt/FreedomForecastCard";
 import { FinanceCard } from "@/components/cards/FinanceCard";
 import { BalanceOverviewCard } from "@/components/finance/BalanceOverviewCard";
 import { TransactionHistory } from "@/components/finance/TransactionHistory";
@@ -9,6 +10,9 @@ import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 import { DebtFormModal } from "@/components/modals/DebtFormModal";
 import { GoalFormModal } from "@/components/modals/GoalFormModal";
 import { PaymentModal } from "@/components/modals/PaymentModal";
+import { DebtAdvisorSheet } from "@/components/psychology/DebtAdvisorSheet";
+import { GamificationBanner } from "@/components/psychology/GamificationBanner";
+import { PsychologySettingsPanel } from "@/components/psychology/PsychologySettingsPanel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExpandableFab } from "@/components/ui/ExpandableFab";
 import { StatCard } from "@/components/ui/StatCard";
@@ -16,36 +20,74 @@ import { StatusFilterTabs } from "@/components/ui/StatusFilterTabs";
 import { TypeFilterChips } from "@/components/ui/TypeFilterChips";
 import { SyncPanel } from "@/components/sync/SyncPanel";
 import { useToast } from "@/components/ui/Toast";
+import { useAppPsychology } from "@/hooks/useAppPsychology";
 import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
 import { usePaymentDeepLink } from "@/hooks/usePaymentDeepLink";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, formatUsd, parseMoneyInput } from "@/lib/money";
 import type { FinancialItem } from "@/types/finance";
 
 type AmountAction = "deposit" | "expense" | "goal-transfer";
 
 export function DashboardPage() {
   const finance = useFinanceManager();
+  const psychology = useAppPsychology();
   const { showToast } = useToast();
   const webSync = useWebSync(finance.replaceState);
   const [paymentItem, setPaymentItem] = useState<FinancialItem | null>(null);
+  const [paymentPrefillCents, setPaymentPrefillCents] = useState(0);
   const [transferGoal, setTransferGoal] = useState<FinancialItem | null>(null);
   const [amountAction, setAmountAction] = useState<AmountAction | null>(null);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showAddDebt, setShowAddDebt] = useState(false);
+  const [showAdvisor, setShowAdvisor] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<FinancialItem | null>(null);
 
+  const hideAmounts = psychology.privacy.hideAmounts;
+  const money = useCallback(
+    (cents: number) => formatMoney(cents, { hidden: hideAmounts }),
+    [hideAmounts],
+  );
+  const usd = useCallback(
+    (amount: number) => formatUsd(amount, { hidden: hideAmounts }),
+    [hideAmounts],
+  );
+
   const goals = finance.state.items.filter((item) => item.type === "GOAL");
+  const activeDebts = finance.state.items.filter(
+    (item) => item.type === "DEBT" && item.status !== "COMPLETED",
+  );
   const hasOperations =
     finance.transactions.length > 0 || finance.state.items.length > 0;
 
-  const openPayment = useCallback((item: FinancialItem) => {
+  const openPayment = useCallback((item: FinancialItem, prefillCents = 0) => {
+    setPaymentPrefillCents(prefillCents);
     setPaymentItem(item);
   }, []);
 
   usePaymentDeepLink(finance.state.items, openPayment);
 
-  const availableHint = `Доступно на общем остатке: ${formatMoney(finance.globalFinance.availableBalanceCents)}`;
+  const availableHint = `Доступно на общем остатке: ${money(finance.globalFinance.availableBalanceCents)}`;
+
+  const applyAutopilot = useCallback(() => {
+    const plan = psychology.planAutopilotPayment(finance.state.items);
+    if (!plan) {
+      showToast("Не удалось применить микроплатёж", "info");
+      return;
+    }
+    const amountInput = (plan.amountCents / 100).toFixed(2);
+    const item = finance.state.items.find((entry) => entry.id === plan.debtId);
+    const result = finance.processPayment(plan.debtId, amountInput);
+    if (result.ok && item) {
+      const paymentCents = parseMoneyInput(amountInput);
+      if (paymentCents) {
+        psychology.recordDebtPayment(item, paymentCents);
+      }
+      showToast("Операция сохранена");
+    } else if (!result.ok) {
+      showToast(result.error ?? "Не удалось применить платёж", "info");
+    }
+  }, [finance, psychology, showToast]);
 
   const emptyDescription =
     finance.statusFilter === "completed"
@@ -71,7 +113,16 @@ export function DashboardPage() {
 
         <BalanceOverviewCard
           finance={finance.globalFinance}
-          formatUsd={finance.formatUsd}
+          formatUsd={usd}
+          hideAmounts={hideAmounts}
+        />
+
+        <PsychologySettingsPanel
+          privacy={psychology.privacy}
+          autopilot={psychology.autopilot}
+          onPrivacyChange={psychology.updatePrivacy}
+          onAutopilotChange={psychology.updateAutopilot}
+          hideAmounts={hideAmounts}
         />
 
         <SyncPanel
@@ -90,13 +141,13 @@ export function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard
             label="Долги"
-            value={finance.formatUsd(finance.dashboardTotals.totalDebtRemainingUsd)}
+            value={usd(finance.dashboardTotals.totalDebtRemainingUsd)}
             icon={HandCoins}
             hint="Осталось получить"
           />
           <StatCard
             label="Свободно"
-            value={finance.formatUsd(finance.dashboardTotals.availableBalanceUsd)}
+            value={usd(finance.dashboardTotals.availableBalanceUsd)}
             icon={TrendingUp}
             hint="Для переводов и расходов"
           />
@@ -115,6 +166,23 @@ export function DashboardPage() {
         ) : null}
 
         <div className="space-y-5">
+          {(finance.typeFilter === "debt" || finance.typeFilter === "all") && activeDebts.length > 0 ? (
+            <>
+              <FreedomForecastCard debts={activeDebts} hideAmounts={hideAmounts} />
+              <GamificationBanner state={psychology.gamification} />
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setShowAdvisor(true)} className="pill-btn-secondary">
+                  Советник
+                </button>
+                {psychology.autopilot.enabled ? (
+                  <button type="button" onClick={applyAutopilot} className="pill-btn-primary">
+                    Внести сейчас
+                  </button>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-milk-text">
@@ -163,6 +231,7 @@ export function DashboardPage() {
                   <FinanceCard
                     key={item.id}
                     item={item}
+                    hideAmounts={hideAmounts}
                     onAddPayment={openPayment}
                     onGoalTransfer={setTransferGoal}
                     onGoalExpense={() => setAmountAction("expense")}
@@ -178,14 +247,32 @@ export function DashboardPage() {
       <PaymentModal
         item={paymentItem}
         open={paymentItem !== null}
-        onClose={() => setPaymentItem(null)}
+        initialAmountCents={paymentPrefillCents}
+        onClose={() => {
+          setPaymentItem(null);
+          setPaymentPrefillCents(0);
+        }}
         onSubmit={(id, amount) => {
+          const item = paymentItem;
           const result = finance.processPayment(id, amount);
           if (result.ok) {
+            if (item?.type === "DEBT") {
+              const paymentCents = parseMoneyInput(amount);
+              if (paymentCents) {
+                psychology.recordDebtPayment(item, paymentCents);
+              }
+            }
             showToast("Операция сохранена");
           }
           return result;
         }}
+      />
+
+      <DebtAdvisorSheet
+        open={showAdvisor}
+        messages={psychology.advisorHistory}
+        onPrompt={(promptId) => psychology.askAdvisor(promptId, finance.state.items)}
+        onClose={() => setShowAdvisor(false)}
       />
 
       <AmountModal

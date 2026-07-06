@@ -31,6 +31,7 @@ interface FinanceCardShellProps {
   remainingLabel: string;
   paidLabel: string;
   overdue?: boolean;
+  hideAmounts?: boolean;
   onDelete?: (item: FinancialItem) => void;
   action?: ReactNode;
   meta?: ReactNode;
@@ -43,6 +44,7 @@ export function FinanceCardShell({
   remainingLabel,
   paidLabel,
   overdue = false,
+  hideAmounts = false,
   onDelete,
   action,
   meta,
@@ -109,7 +111,7 @@ export function FinanceCardShell({
 
         {overAchieved && (
           <p className="text-sm font-semibold text-[#C9A24D]">
-            Перевыполнение: +{formatMoney(goalSurplusCents(item))}
+            Перевыполнение: +{formatMoney(goalSurplusCents(item), { hidden: hideAmounts })}
           </p>
         )}
 
@@ -124,24 +126,24 @@ export function FinanceCardShell({
 
         {daily != null && (
           <p className="text-sm text-milk-muted">
-            Ежедневно: <span className="font-semibold text-milk-text">{formatMoney(daily)}</span>
+            Ежедневно: <span className="font-semibold text-milk-text">{formatMoney(daily, { hidden: hideAmounts })}</span>
           </p>
         )}
 
         {overdue && (
           <div className="flex items-center gap-2 rounded-2xl bg-milk-error/10 px-3 py-2 text-sm text-milk-error">
             <AppIcon icon={AlertTriangle} size={16} />
-            Срок возврата прошёл — осталось {formatMoney(remaining)}
+            Срок возврата прошёл — осталось {formatMoney(remaining, { hidden: hideAmounts })}
           </div>
         )}
 
         <p className="text-sm text-milk-muted">
           {remainingLabel}:{" "}
-          <span className="font-semibold text-milk-text">{formatMoney(remaining)}</span>
+          <span className="font-semibold text-milk-text">{formatMoney(remaining, { hidden: hideAmounts })}</span>
         </p>
 
         <p className="text-sm text-milk-muted">
-          {paidLabel} {formatMoney(item.amount)} из {formatMoney(item.target)}
+          {paidLabel} {formatMoney(item.amount, { hidden: hideAmounts })} из {formatMoney(item.target, { hidden: hideAmounts })}
         </p>
 
         {action}
@@ -158,7 +160,7 @@ export function FinanceCardShell({
                   <span className="text-milk-muted">
                     {new Date(payment.paidAt).toLocaleDateString("ru-RU")}
                   </span>
-                  <span className="font-medium text-milk-text">+{formatMoney(payment.amount)}</span>
+                  <span className="font-medium text-milk-text">+{formatMoney(payment.amount, { hidden: hideAmounts })}</span>
                 </li>
               ))}
             </ul>

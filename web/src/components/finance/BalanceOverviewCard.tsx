@@ -6,9 +6,11 @@ import type { GlobalFinanceSummary } from "@/types/finance";
 interface BalanceOverviewCardProps {
   finance: GlobalFinanceSummary;
   formatUsd: (amount: number) => string;
+  hideAmounts?: boolean;
 }
 
-export function BalanceOverviewCard({ finance, formatUsd }: BalanceOverviewCardProps) {
+export function BalanceOverviewCard({ finance, formatUsd, hideAmounts = false }: BalanceOverviewCardProps) {
+  const money = (cents: number) => formatMoney(cents, { hidden: hideAmounts });
   return (
     <section className="balance-card space-y-5">
       <div className="flex items-start justify-between gap-4">
@@ -17,7 +19,7 @@ export function BalanceOverviewCard({ finance, formatUsd }: BalanceOverviewCardP
             Остаток
           </p>
           <p className="text-3xl font-semibold tabular-nums tracking-tight text-milk-text sm:text-4xl">
-            {formatUsd(finance.globalBalanceCents / 100)}
+            {hideAmounts ? "•••" : formatUsd(finance.globalBalanceCents / 100)}
           </p>
           <p className="text-sm text-milk-muted">Доходы − расходы</p>
         </div>
@@ -30,14 +32,14 @@ export function BalanceOverviewCard({ finance, formatUsd }: BalanceOverviewCardP
         <div className="rounded-2xl border border-milk-surface/70 bg-milk-bg/80 px-4 py-3">
           <p className="text-xs uppercase tracking-wide text-milk-muted">Накоплено</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-finance-positive">
-            {formatMoney(finance.totalAccumulatedCents)}
+            {money(finance.totalAccumulatedCents)}
           </p>
           <p className="text-xs text-milk-muted">По активным целям</p>
         </div>
         <div className="rounded-2xl border border-milk-surface/70 bg-milk-bg/80 px-4 py-3">
           <p className="text-xs uppercase tracking-wide text-milk-muted">До целей</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-milk-text">
-            {formatMoney(finance.totalRemainingToGoalCents)}
+            {money(finance.totalRemainingToGoalCents)}
           </p>
           <p className="text-xs text-milk-muted">Осталось до 100%</p>
         </div>
@@ -46,7 +48,7 @@ export function BalanceOverviewCard({ finance, formatUsd }: BalanceOverviewCardP
       <p className="text-sm leading-relaxed text-milk-muted">
         Чтобы закрыть все активные цели, добавьте ещё{" "}
         <span className="font-semibold text-milk-text">
-          {formatMoney(finance.totalRemainingToGoalCents)}
+          {money(finance.totalRemainingToGoalCents)}
         </span>
         .
       </p>
@@ -55,13 +57,13 @@ export function BalanceOverviewCard({ finance, formatUsd }: BalanceOverviewCardP
         <span>
           Пополнения{" "}
           <span className="font-semibold tabular-nums text-finance-positive">
-            {formatMoney(finance.totalDepositsCents)}
+            {money(finance.totalDepositsCents)}
           </span>
         </span>
         <span>
           Расходы{" "}
           <span className="font-semibold tabular-nums text-finance-negative">
-            {formatMoney(finance.totalExpensesCents)}
+            {money(finance.totalExpensesCents)}
           </span>
         </span>
       </div>

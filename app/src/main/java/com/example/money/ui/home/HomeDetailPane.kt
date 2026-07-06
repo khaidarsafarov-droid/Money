@@ -23,6 +23,7 @@ import com.example.money.R
 import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
+import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalProgress
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.GoalListItem
@@ -43,6 +44,8 @@ fun HomeDetailPane(
     onExpense: () -> Unit,
     onRemindDebtor: (com.example.money.domain.model.Debtor) -> Unit,
     onAddDebtPayment: (com.example.money.domain.model.Debtor) -> Unit,
+    onAccelerateDebtPayment: (com.example.money.domain.model.Debtor, Long) -> Unit = { _, _ -> },
+    hideAmounts: Boolean = false,
     onEditDebtor: (com.example.money.domain.model.Debtor) -> Unit,
     onDeleteDebtor: (com.example.money.domain.model.Debtor) -> Unit,
     onConfirmTransfer: (Long) -> Unit,
@@ -106,6 +109,11 @@ fun HomeDetailPane(
                     fontWeight = FontWeight.SemiBold,
                 )
                 val context = LocalContext.current
+                val accelerateCents = DebtFreedomEngine.suggestAcceleratePaymentCents(
+                    remainingCents = selection.debtor.remainingAmountCents,
+                    targetCents = selection.debtor.targetAmountCents,
+                    currentCents = selection.debtor.currentAmountCents,
+                )
                 DebtorListItem(
                     debtor = selection.debtor,
                     onRemind = {
@@ -119,8 +127,10 @@ fun HomeDetailPane(
                         )
                     },
                     onAddPayment = { onAddDebtPayment(selection.debtor) },
+                    onAccelerate = { onAccelerateDebtPayment(selection.debtor, accelerateCents) },
                     onEdit = { onEditDebtor(selection.debtor) },
                     onDelete = { onDeleteDebtor(selection.debtor) },
+                    hideAmounts = hideAmounts,
                 )
             }
             is HomeListSelection.TransferItem -> {

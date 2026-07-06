@@ -40,6 +40,9 @@ data class WidgetGoalSnapshot(
     val iOweCount: Int = 0,
     val activeGoalsCount: Int = 0,
     val overdueDebtCount: Int = 0,
+    val hideAmounts: Boolean = false,
+    val streakCount: Int = 0,
+    val lastWinMessage: String? = null,
 ) {
     companion object {
         val Empty = WidgetGoalSnapshot(

@@ -1,5 +1,6 @@
 package com.example.money.ui.home
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -40,6 +41,12 @@ import com.example.money.domain.sync.SyncConnectionState
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.debtors.DebtTab
+import com.example.money.domain.util.DebtFreedomEngine
+import com.example.money.settings.AutopilotSettings
+import com.example.money.settings.GamificationState
+import com.example.money.settings.PrivacySettings
+import com.example.money.ui.debtors.DebtFreedomTab
+import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorFilterRow
@@ -74,6 +81,15 @@ fun TabletHomeLayout(
     onExpense: () -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
+    onAccelerateDebtPayment: (Debtor, Long) -> Unit,
+    freedomProjection: DebtFreedomEngine.FreedomProjection,
+    extraMonthlyCents: Long,
+    onExtraMonthlyChange: (Long) -> Unit,
+    gamificationState: GamificationState = GamificationState(),
+    privacySettings: PrivacySettings = PrivacySettings(),
+    autopilotSettings: AutopilotSettings = AutopilotSettings(),
+    onOpenAdvisor: () -> Unit = {},
+    onApplyAutopilot: () -> Unit = {},
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onConfirmTransfer: (Long) -> Unit,
@@ -168,8 +184,8 @@ fun TabletHomeLayout(
                                     title = goal.name,
                                     subtitle = stringResource(
                                         R.string.tablet_list_goal_subtitle,
-                                        Formatters.currencyFromCents(goal.currentAmountCents),
-                                        Formatters.currencyFromCents(goal.targetAmountCents),
+                                        Formatters.currencyFromCents(goal.currentAmountCents, hide = privacySettings.hideAmounts),
+                                        Formatters.currencyFromCents(goal.targetAmountCents, hide = privacySettings.hideAmounts),
                                         goal.progressPercent,
                                     ),
                                     selected = selection is HomeListSelection.GoalItem &&
@@ -188,34 +204,74 @@ fun TabletHomeLayout(
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
-                        item {
-                            DebtorFilterRow(
-                                selectedFilter = debtorFilter,
-                                onFilterSelected = onDebtorFilterChange,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                            )
-                        }
-                        if (debtors.isEmpty()) {
+                        if (debtTab == DebtTab.Freedom) {
                             item {
-                                EmptyStateMessage(
-                                    title = emptyDebtorsTitle(debtorFilter),
-                                    hint = emptyDebtorsHint(debtorFilter),
+                                DebtFreedomTab(
+                                    projection = freedomProjection,
+                                    extraMonthlyCents = extraMonthlyCents,
+                                    onExtraMonthlyChange = onExtraMonthlyChange,
+                                    modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }
                         } else {
-                            items(debtors, key = { "tablet-debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
-                                HomeListCompactRow(
-                                    title = debtor.name,
-                                    subtitle = stringResource(
-                                        R.string.tablet_list_debtor_subtitle,
-                                        Formatters.currencyFromCents(debtor.remainingAmountCents),
-                                        Formatters.currencyFromCents(debtor.targetAmountCents),
-                                    ),
-                                    selected = selection is HomeListSelection.DebtorItem &&
-                                        selection.debtor.id == debtor.id,
-                                    onClick = { onSelectionChange(HomeListSelection.DebtorItem(debtor)) },
+                            item {
+                                GamificationBanner(
+                                    state = gamificationState,
                                     modifier = Modifier.padding(vertical = 4.dp),
                                 )
+                            }
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    androidx.compose.material3.OutlinedButton(
+                                        onClick = onOpenAdvisor,
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Text(stringResource(R.string.advisor_open))
+                                    }
+                                    if (autopilotSettings.enabled) {
+                                        androidx.compose.material3.Button(
+                                            onClick = onApplyAutopilot,
+                                            modifier = Modifier.weight(1f),
+                                        ) {
+                                            Text(stringResource(R.string.autopilot_apply_now))
+                                        }
+                                    }
+                                }
+                            }
+                            item {
+                                DebtorFilterRow(
+                                    selectedFilter = debtorFilter,
+                                    onFilterSelected = onDebtorFilterChange,
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                )
+                            }
+                            if (debtors.isEmpty()) {
+                                item {
+                                    EmptyStateMessage(
+                                        title = emptyDebtorsTitle(debtorFilter),
+                                        hint = emptyDebtorsHint(debtorFilter),
+                                    )
+                                }
+                            } else {
+                                items(debtors, key = { "tablet-debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
+                                    HomeListCompactRow(
+                                        title = debtor.name,
+                                        subtitle = stringResource(
+                                            R.string.tablet_list_debtor_subtitle,
+                                            Formatters.currencyFromCents(debtor.remainingAmountCents, hide = privacySettings.hideAmounts),
+                                            Formatters.currencyFromCents(debtor.targetAmountCents, hide = privacySettings.hideAmounts),
+                                        ),
+                                        selected = selection is HomeListSelection.DebtorItem &&
+                                            selection.debtor.id == debtor.id,
+                                        onClick = { onSelectionChange(HomeListSelection.DebtorItem(debtor)) },
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                    )
+                                }
                             }
                         }
                     }
@@ -281,6 +337,8 @@ fun TabletHomeLayout(
                 onExpense = onExpense,
                 onRemindDebtor = onRemindDebtor,
                 onAddDebtPayment = onAddDebtPayment,
+                onAccelerateDebtPayment = onAccelerateDebtPayment,
+                hideAmounts = privacySettings.hideAmounts,
                 onEditDebtor = onEditDebtor,
                 onDeleteDebtor = onDeleteDebtor,
                 onConfirmTransfer = onConfirmTransfer,

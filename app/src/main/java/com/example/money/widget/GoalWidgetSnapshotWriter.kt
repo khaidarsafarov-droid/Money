@@ -14,10 +14,6 @@ import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/**
- * Записывает подтверждённый прогресс из локальной Room БД в DataStore.
- * Полностью офлайн — без сети и облака.
- */
 class GoalWidgetSnapshotWriter(
     private val goalRepository: GoalRepository,
     private val debtorRepository: DebtorRepository,
@@ -34,8 +30,11 @@ class GoalWidgetSnapshotWriter(
             pendingTransactionCount,
             currencyRegion,
             budgetRepository.observeBudgetSummary(),
-        ) { goals, debts, pendingCount, region, budget ->
+            preferencesStore.privacySettings,
+            preferencesStore.gamificationState,
+        ) { goals, debts, pendingCount, region, budget, privacy, gamification ->
             val now = System.currentTimeMillis()
+            val hideWidget = privacy.hideOnWidget || privacy.hideAmounts
             val activeGoals = goals.filter { !it.isCompleted }
             val totalCurrentCents = activeGoals.sumOf { it.currentAmountCents }
             val totalTargetCents = activeGoals.sumOf { it.targetAmountCents }
@@ -57,7 +56,7 @@ class GoalWidgetSnapshotWriter(
                 pendingCount = pendingCount,
                 updatedAt = now,
                 currencyRegion = region,
-                activeItems = buildActiveItems(activeGoals, debts, now),
+                activeItems = buildActiveItems(activeGoals, debts, now, hideWidget),
                 globalBalance = budget.globalBalance,
                 totalDeposits = budget.totalDeposits,
                 totalExpenses = budget.totalExpenses,
@@ -69,6 +68,9 @@ class GoalWidgetSnapshotWriter(
                 iOweCount = debtMetrics.iOweActiveCount,
                 activeGoalsCount = activeGoals.size,
                 overdueDebtCount = overdueDebtCount,
+                hideAmounts = hideWidget,
+                streakCount = gamification.streakCount,
+                lastWinMessage = gamification.lastWinMessage,
             )
         }.distinctUntilChanged()
 
@@ -80,6 +82,7 @@ class GoalWidgetSnapshotWriter(
         goals: List<SavingsGoal>,
         debts: List<Debtor>,
         now: Long,
+        hide: Boolean,
     ): List<WidgetFinanceItem> {
         val goalItems = goals
             .filter { it.remainingAmountCents > 0L }
@@ -90,7 +93,7 @@ class GoalWidgetSnapshotWriter(
                     payKey = "goal-${goal.id}",
                     type = WidgetItemType.GOAL,
                     name = goal.name.ifBlank { "Цель" },
-                    remainingLabel = Formatters.currencyFromCents(goal.remainingAmountCents),
+                    remainingLabel = Formatters.currencyFromCents(goal.remainingAmountCents, hide = hide),
                     progressFraction = goal.progressFraction,
                 )
             }
@@ -107,7 +110,7 @@ class GoalWidgetSnapshotWriter(
                     payKey = "debt-${debt.id}",
                     type = WidgetItemType.DEBT,
                     name = debt.name,
-                    remainingLabel = Formatters.currencyFromCents(debt.remainingAmountCents),
+                    remainingLabel = Formatters.currencyFromCents(debt.remainingAmountCents, hide = hide),
                     progressFraction = debt.progressFraction,
                     isOverdue = debt.dateDue < now,
                 )

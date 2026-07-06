@@ -85,6 +85,7 @@
     <string name="empty_debtors_overdue_hint">Просроченные долги отображаются здесь автоматически</string>
     <string name="debt_tab_owes_me">Мне должны</string>
     <string name="debt_tab_i_owe">Я должен</string>
+    <string name="debt_tab_freedom">Свобода</string>
     <string name="debt_filter_all">Все</string>
     <string name="debt_filter_active">Активные</string>
     <string name="debt_filter_overdue">Просроченные</string>
@@ -250,4 +251,35 @@
     <string name="voice_report_no_goals">Привет. У вас пока нет активных целей. Добавьте цель в приложении.</string>
     <string name="voice_report_all_complete">Привет. Все %1$d целей завершены. Отличная работа.</string>
     <string name="voice_report_summary">Привет. Выполнено %1$d%% целей. Накоплено %2$s из %3$s. Осталось %4$s.</string>
+    <string name="voice_report_debt_advice">По долгам: %1$s</string>
+
+    <string name="privacy_settings_title">Приватность</string>
+    <string name="privacy_settings_hint">Скрывайте суммы на экране и в виджете — никто не увидит цифры без вашего согласия.</string>
+    <string name="privacy_hide_amounts">Скрывать суммы в приложении</string>
+    <string name="privacy_hide_amounts_hint">Вместо сумм показывается •••</string>
+    <string name="privacy_hide_widget">Скрывать суммы в виджете</string>
+    <string name="privacy_hide_widget_hint">Виджет покажет прогресс без конкретных цифр</string>
+    <string name="msg_payment_neutral">Операция сохранена</string>
+
+    <string name="advisor_title">Советник по долгам</string>
+    <string name="advisor_hint">Подсказки на основе ваших данных — без интернета и без осуждения.</string>
+    <string name="advisor_open">Советник</string>
+    <string name="advisor_prompt_first">С чего начать?</string>
+    <string name="advisor_prompt_extra">Что если +$50?</string>
+    <string name="advisor_prompt_motivation">Мотивация</string>
+
+    <string name="gamification_streak">Серия платежей: %1$d</string>
+
+    <string name="autopilot_settings_title">Автопилот</string>
+    <string name="autopilot_enabled">Ежедневные микроплатежи</string>
+    <string name="autopilot_enabled_hint">Напоминание внести небольшую сумму в выбранный долг</string>
+    <string name="autopilot_daily_amount">Сумма в день</string>
+    <string name="autopilot_strategy">Стратегия</string>
+    <string name="autopilot_strategy_snowball">Снежный ком</string>
+    <string name="autopilot_strategy_avalanche">Лавина</string>
+    <string name="autopilot_apply_now">Внести сейчас</string>
+    <string name="autopilot_applied">Микроплатёж %1$s внесён в «%2$s»</string>
+    <string name="autopilot_apply_failed">Не удалось применить микроплатёж</string>
+    <string name="autopilot_notification_title">Микроплатёж по долгу</string>
+    <string name="autopilot_notification_body">Сегодня можно внести %1$s — один шаг к свободе</string>
 </resources>

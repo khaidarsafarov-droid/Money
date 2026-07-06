@@ -88,6 +88,7 @@ private fun GoalWidgetContent(
     val webBaseUrl = context.getString(R.string.web_payment_base_url).trim()
     val openAppIntent = AppIntents.openAppIntent(context)
     val quickAddIntent = AppIntents.quickAddIntent(context)
+    val hide = snapshot.hideAmounts
 
     Column(
         modifier = GlanceModifier
@@ -113,7 +114,7 @@ private fun GoalWidgetContent(
             Text(
                 text = context.getString(
                     R.string.global_balance_available,
-                    Formatters.currencyCompact(snapshot.globalBalance, region),
+                    maskCompact(snapshot.globalBalance, region, hide),
                 ),
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
@@ -135,14 +136,14 @@ private fun GoalWidgetContent(
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 WidgetMetricTile(
                     label = context.getString(R.string.global_balance_accumulated_label),
-                    value = Formatters.currencyCompact(snapshot.totalAccumulated, region),
+                    value = maskCompact(snapshot.totalAccumulated, region, hide),
                     valueColor = GlanceTheme.colors.tertiary,
                     modifier = GlanceModifier.defaultWeight(),
                 )
                 Spacer(modifier = GlanceModifier.width(8.dp))
                 WidgetMetricTile(
                     label = context.getString(R.string.global_balance_remaining_label),
-                    value = Formatters.currencyCompact(snapshot.totalRemainingToGoal, region),
+                    value = maskCompact(snapshot.totalRemainingToGoal, region, hide),
                     valueColor = GlanceTheme.colors.onSurface,
                     modifier = GlanceModifier.defaultWeight(),
                 )
@@ -158,6 +159,7 @@ private fun GoalWidgetContent(
                     activeCount = snapshot.owedToMeCount,
                     positive = true,
                     region = region,
+                    hide = hide,
                     modifier = GlanceModifier.defaultWeight(),
                 )
                 Spacer(modifier = GlanceModifier.width(8.dp))
@@ -168,6 +170,7 @@ private fun GoalWidgetContent(
                     activeCount = snapshot.iOweCount,
                     positive = false,
                     region = region,
+                    hide = hide,
                     modifier = GlanceModifier.defaultWeight(),
                 )
             }
@@ -183,7 +186,7 @@ private fun GoalWidgetContent(
                         ),
                     )
                     Text(
-                        text = Formatters.currencyCompact(snapshot.totalDeposits, region),
+                        text = maskCompact(snapshot.totalDeposits, region, hide),
                         modifier = GlanceModifier.padding(start = 4.dp),
                         style = TextStyle(
                             color = GlanceTheme.colors.tertiary,
@@ -200,7 +203,7 @@ private fun GoalWidgetContent(
                         ),
                     )
                     Text(
-                        text = Formatters.currencyCompact(snapshot.totalExpenses, region),
+                        text = maskCompact(snapshot.totalExpenses, region, hide),
                         modifier = GlanceModifier.padding(start = 4.dp),
                         style = TextStyle(
                             color = GlanceTheme.colors.error,
@@ -214,7 +217,7 @@ private fun GoalWidgetContent(
 
         if (snapshot.targetAmount > 0.0) {
             Spacer(modifier = GlanceModifier.height(10.dp))
-            WidgetGoalsSection(context = context, snapshot = snapshot, region = region)
+            WidgetGoalsSection(context = context, snapshot = snapshot, region = region, hide = hide)
         }
 
         if (snapshot.activeItems.isNotEmpty()) {
@@ -325,11 +328,12 @@ private fun WidgetDebtTile(
     activeCount: Int,
     positive: Boolean,
     region: com.example.money.settings.CurrencyRegion,
+    hide: Boolean = false,
     modifier: GlanceModifier = GlanceModifier,
 ) {
     val isEmpty = amountCents <= 0L
     val prefix = if (positive) "+" else "−"
-    val amount = Formatters.currencyFromCents(amountCents, region)
+    val amount = maskFromCents(amountCents, region, hide)
     val valueColor = when {
         isEmpty -> GlanceTheme.colors.onSurfaceVariant
         positive -> GlanceTheme.colors.tertiary
@@ -356,7 +360,7 @@ private fun WidgetDebtTile(
             ),
         )
         Text(
-            text = if (isEmpty) Formatters.currencyFromCents(0, region) else "$prefix$amount",
+            text = if (isEmpty) maskFromCents(0, region, hide) else "$prefix$amount",
             style = TextStyle(
                 color = valueColor,
                 fontWeight = FontWeight.Medium,
@@ -378,6 +382,7 @@ private fun WidgetGoalsSection(
     context: Context,
     snapshot: WidgetGoalSnapshot,
     region: com.example.money.settings.CurrencyRegion,
+    hide: Boolean = false,
 ) {
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
@@ -414,8 +419,8 @@ private fun WidgetGoalsSection(
     Text(
         text = context.getString(
             R.string.widget_remaining,
-            Formatters.currencyCompact(snapshot.remainingAmount, region),
-            Formatters.currencyCompact(snapshot.targetAmount, region),
+            maskCompact(snapshot.remainingAmount, region, hide),
+            maskCompact(snapshot.targetAmount, region, hide),
         ),
         style = TextStyle(
             color = GlanceTheme.colors.onSurfaceVariant,
@@ -515,4 +520,24 @@ private fun WidgetActiveItemsSection(
             )
         }
     }
+}
+
+private fun maskCompact(
+    amount: Double,
+    region: com.example.money.settings.CurrencyRegion,
+    hide: Boolean,
+): String = if (hide) {
+    Formatters.MASKED_AMOUNT
+} else {
+    Formatters.currencyCompact(amount, region)
+}
+
+private fun maskFromCents(
+    cents: Long,
+    region: com.example.money.settings.CurrencyRegion,
+    hide: Boolean,
+): String = if (hide) {
+    Formatters.MASKED_AMOUNT
+} else {
+    Formatters.currencyFromCents(cents, region)
 }

@@ -47,6 +47,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,6 +77,7 @@ import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
+import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
@@ -84,6 +86,9 @@ import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
+import com.example.money.ui.debtors.DebtAdvisorBottomSheet
+import com.example.money.ui.debtors.DebtFreedomTab
+import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.debtors.DebtorsViewModel
@@ -110,6 +115,8 @@ fun HomeScreen(
     onRequestNotificationPermission: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenAppLanguage: () -> Unit = {},
+    onOpenPrivacySettings: () -> Unit = {},
+    onOpenAutopilotSettings: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -123,7 +130,11 @@ fun HomeScreen(
         factory = BudgetViewModel.Factory(app.budgetRepository),
     )
     val debtorsViewModel: DebtorsViewModel = viewModel(
-        factory = DebtorsViewModel.Factory(app.debtorRepository, app.debtReminderScheduler),
+        factory = DebtorsViewModel.Factory(
+            app.debtorRepository,
+            app.debtReminderScheduler,
+            app.preferencesStore,
+        ),
     )
 
     val goals by goalViewModel.goals.collectAsStateWithLifecycle()
@@ -132,6 +143,12 @@ fun HomeScreen(
     val debtTab by debtorsViewModel.debtTab.collectAsStateWithLifecycle()
     val debtorFilter by debtorsViewModel.filter.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
+    val freedomProjection by debtorsViewModel.freedomProjection.collectAsStateWithLifecycle()
+    val extraMonthlyCents by debtorsViewModel.extraMonthlyCents.collectAsStateWithLifecycle()
+    val privacySettings by debtorsViewModel.privacySettings.collectAsStateWithLifecycle()
+    val gamificationState by debtorsViewModel.gamificationState.collectAsStateWithLifecycle()
+    val autopilotSettings by debtorsViewModel.autopilotSettings.collectAsStateWithLifecycle()
+    val advisorMessages by debtorsViewModel.advisorMessages.collectAsStateWithLifecycle()
     val budgetSummary by budgetViewModel.budgetSummary.collectAsStateWithLifecycle()
     val availableBalanceUsd = budgetSummary.availableBalance
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
@@ -142,6 +159,7 @@ fun HomeScreen(
     var showAddDebtorDialog by remember { mutableStateOf(false) }
     var editDebtor by remember { mutableStateOf<Debtor?>(null) }
     var showDebtPaymentDialog by remember { mutableStateOf<Debtor?>(null) }
+    var debtPaymentPrefillCents by remember { mutableLongStateOf(0L) }
     var showTransferDialog by remember { mutableStateOf(false) }
     var showExpenseDialog by remember { mutableStateOf(false) }
     var showGoalTransferDialog by remember { mutableStateOf<SavingsGoal?>(null) }
@@ -150,6 +168,7 @@ fun HomeScreen(
     var showWelcomeDialog by remember { mutableStateOf(WelcomePreferences.shouldShowWelcome(context)) }
     var showQuickAddDialog by remember { mutableStateOf(false) }
     var showTopMenu by remember { mutableStateOf(false) }
+    var showAdvisorSheet by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -294,16 +313,32 @@ fun HomeScreen(
         DebtPaymentDialog(
             debtor = debtor,
             availableBalance = availableBalanceUsd,
-            onDismiss = { showDebtPaymentDialog = null },
+            initialAmountCents = debtPaymentPrefillCents,
+            onDismiss = {
+                showDebtPaymentDialog = null
+                debtPaymentPrefillCents = 0L
+            },
             onConfirm = { amount, affectsBalance ->
                 scope.launch {
                     val ok = debtorsViewModel.processPaymentSync(debtor.id, amount, affectsBalance)
                     showDebtPaymentDialog = null
-                    showMessage(
-                        context.getString(
-                            if (ok) R.string.msg_debt_payment_applied else R.string.error_payment_failed,
-                        ),
-                    )
+                    debtPaymentPrefillCents = 0L
+                    if (ok) {
+                        val updated = app.debtorRepository.getDebtorById(debtor.id)
+                        val remaining = updated?.remainingAmountCents ?: 0L
+                        showMessage(
+                            context.getString(
+                                R.string.msg_payment_neutral,
+                                Formatters.currencyFromCents(
+                                    remaining,
+                                    debtor.currency,
+                                    hide = privacySettings.hideAmounts,
+                                ),
+                            ),
+                        )
+                    } else {
+                        showMessage(context.getString(R.string.error_payment_failed))
+                    }
                 }
             },
         )
@@ -571,7 +606,40 @@ fun HomeScreen(
                         ),
                     )
                 },
-                onAddDebtPayment = { showDebtPaymentDialog = it },
+                onAddDebtPayment = { debtor ->
+                    debtPaymentPrefillCents = 0L
+                    showDebtPaymentDialog = debtor
+                },
+                onAccelerateDebtPayment = { debtor, prefillCents ->
+                    debtPaymentPrefillCents = prefillCents
+                    showDebtPaymentDialog = debtor
+                },
+                freedomProjection = freedomProjection,
+                extraMonthlyCents = extraMonthlyCents,
+                onExtraMonthlyChange = debtorsViewModel::setExtraMonthlyCents,
+                gamificationState = gamificationState,
+                privacySettings = privacySettings,
+                autopilotSettings = autopilotSettings,
+                onOpenAdvisor = { showAdvisorSheet = true },
+                onApplyAutopilot = {
+                    scope.launch {
+                        val plan = debtorsViewModel.applyMicroPaymentSync()
+                        if (plan != null) {
+                            showMessage(
+                                context.getString(
+                                    R.string.autopilot_applied,
+                                    Formatters.currencyFromCents(
+                                        plan.amountCents,
+                                        hide = privacySettings.hideAmounts,
+                                    ),
+                                    plan.debtorName,
+                                ),
+                            )
+                        } else {
+                            showMessage(context.getString(R.string.autopilot_apply_failed))
+                        }
+                    }
+                },
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
@@ -616,7 +684,17 @@ fun HomeScreen(
                         ),
                     )
                 },
-                onAddDebtPayment = { showDebtPaymentDialog = it },
+                onAddDebtPayment = { debtor ->
+                    debtPaymentPrefillCents = 0L
+                    showDebtPaymentDialog = debtor
+                },
+                onAccelerateDebtPayment = { debtor, prefillCents ->
+                    debtPaymentPrefillCents = prefillCents
+                    showDebtPaymentDialog = debtor
+                },
+                freedomProjection = freedomProjection,
+                extraMonthlyCents = extraMonthlyCents,
+                onExtraMonthlyChange = debtorsViewModel::setExtraMonthlyCents,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
@@ -625,11 +703,45 @@ fun HomeScreen(
                 onDeleteExpense = { pendingDelete = PendingDelete.ExpenseItem(it) },
                 onOpenVoiceSettings = onOpenVoiceSettings,
                 onOpenAppLanguage = onOpenAppLanguage,
+                onOpenPrivacySettings = onOpenPrivacySettings,
+                onOpenAutopilotSettings = onOpenAutopilotSettings,
+                gamificationState = gamificationState,
+                privacySettings = privacySettings,
+                autopilotSettings = autopilotSettings,
+                onOpenAdvisor = { showAdvisorSheet = true },
+                onApplyAutopilot = {
+                    scope.launch {
+                        val plan = debtorsViewModel.applyMicroPaymentSync()
+                        if (plan != null) {
+                            showMessage(
+                                context.getString(
+                                    R.string.autopilot_applied,
+                                    Formatters.currencyFromCents(
+                                        plan.amountCents,
+                                        hide = privacySettings.hideAmounts,
+                                    ),
+                                    plan.debtorName,
+                                ),
+                            )
+                        } else {
+                            showMessage(context.getString(R.string.autopilot_apply_failed))
+                        }
+                    }
+                },
                 scope = scope,
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
                 emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
             )
         }
+    }
+
+    if (showAdvisorSheet) {
+        DebtAdvisorBottomSheet(
+            debts = allDebtors,
+            messages = advisorMessages,
+            onPromptSelected = debtorsViewModel::askAdvisor,
+            onDismiss = { showAdvisorSheet = false },
+        )
     }
 }
 
@@ -662,6 +774,10 @@ private fun PhoneHomeLayout(
     onExpense: () -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
+    onAccelerateDebtPayment: (Debtor, Long) -> Unit,
+    freedomProjection: DebtFreedomEngine.FreedomProjection,
+    extraMonthlyCents: Long,
+    onExtraMonthlyChange: (Long) -> Unit,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onConfirmTransfer: (Long) -> Unit,
@@ -670,6 +786,13 @@ private fun PhoneHomeLayout(
     onDeleteExpense: (Expense) -> Unit,
     onOpenVoiceSettings: () -> Unit,
     onOpenAppLanguage: () -> Unit,
+    onOpenPrivacySettings: () -> Unit,
+    onOpenAutopilotSettings: () -> Unit,
+    gamificationState: com.example.money.settings.GamificationState,
+    privacySettings: com.example.money.settings.PrivacySettings,
+    autopilotSettings: com.example.money.settings.AutopilotSettings,
+    onOpenAdvisor: () -> Unit,
+    onApplyAutopilot: () -> Unit,
     scope: kotlinx.coroutines.CoroutineScope,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
@@ -692,6 +815,22 @@ private fun PhoneHomeLayout(
                         selected = false,
                         onClick = {
                             onOpenAppLanguage()
+                            scope.launch { drawerState.close() }
+                        },
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.privacy_settings_title)) },
+                        selected = false,
+                        onClick = {
+                            onOpenPrivacySettings()
+                            scope.launch { drawerState.close() }
+                        },
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.autopilot_settings_title)) },
+                        selected = false,
+                        onClick = {
+                            onOpenAutopilotSettings()
                             scope.launch { drawerState.close() }
                         },
                     )
@@ -825,39 +964,88 @@ private fun PhoneHomeLayout(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             )
                         }
-                        item {
-                            DebtorFilterRow(
-                                selectedFilter = debtorFilter,
-                                onFilterSelected = onDebtorFilterChange,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            )
-                        }
-                        if (debtors.isEmpty()) {
+                        if (debtTab != DebtTab.Freedom) {
                             item {
-                                EmptyStateMessage(
-                                    title = emptyDebtorsTitle(debtorFilter),
-                                    hint = emptyDebtorsHint(debtorFilter),
+                                GamificationBanner(
+                                    state = gamificationState,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                )
+                            }
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    androidx.compose.material3.OutlinedButton(
+                                        onClick = onOpenAdvisor,
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Text(stringResource(R.string.advisor_open))
+                                    }
+                                    if (autopilotSettings.enabled) {
+                                        androidx.compose.material3.Button(
+                                            onClick = onApplyAutopilot,
+                                            modifier = Modifier.weight(1f),
+                                        ) {
+                                            Text(stringResource(R.string.autopilot_apply_now))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (debtTab == DebtTab.Freedom) {
+                            item {
+                                DebtFreedomTab(
+                                    projection = freedomProjection,
+                                    extraMonthlyCents = extraMonthlyCents,
+                                    onExtraMonthlyChange = onExtraMonthlyChange,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 )
                             }
                         } else {
-                            items(debtors, key = { "debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
-                                val isHighlighted = debtor.id == highlightedDebtorId
-                                DebtorListItem(
-                                    debtor = debtor,
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                                        .then(
-                                            if (isHighlighted) {
-                                                Modifier.border(2.dp, GoldPrimary, MaterialTheme.shapes.large)
-                                            } else {
-                                                Modifier
-                                            },
-                                        ),
-                                    onRemind = { onRemindDebtor(debtor) },
-                                    onAddPayment = { onAddDebtPayment(debtor) },
-                                    onEdit = { onEditDebtor(debtor) },
-                                    onDelete = { onDeleteDebtor(debtor) },
+                            item {
+                                DebtorFilterRow(
+                                    selectedFilter = debtorFilter,
+                                    onFilterSelected = onDebtorFilterChange,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 )
+                            }
+                            if (debtors.isEmpty()) {
+                                item {
+                                    EmptyStateMessage(
+                                        title = emptyDebtorsTitle(debtorFilter),
+                                        hint = emptyDebtorsHint(debtorFilter),
+                                    )
+                                }
+                            } else {
+                                items(debtors, key = { "debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
+                                    val isHighlighted = debtor.id == highlightedDebtorId
+                                    val accelerateCents = DebtFreedomEngine.suggestAcceleratePaymentCents(
+                                        remainingCents = debtor.remainingAmountCents,
+                                        targetCents = debtor.targetAmountCents,
+                                        currentCents = debtor.currentAmountCents,
+                                    )
+                                    DebtorListItem(
+                                        debtor = debtor,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                                            .then(
+                                                if (isHighlighted) {
+                                                    Modifier.border(2.dp, GoldPrimary, MaterialTheme.shapes.large)
+                                                } else {
+                                                    Modifier
+                                                },
+                                            ),
+                                        onRemind = { onRemindDebtor(debtor) },
+                                        onAddPayment = { onAddDebtPayment(debtor) },
+                                        onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
+                                        onEdit = { onEditDebtor(debtor) },
+                                        onDelete = { onDeleteDebtor(debtor) },
+                                        hideAmounts = privacySettings.hideAmounts,
+                                    )
+                                }
                             }
                         }
                     }

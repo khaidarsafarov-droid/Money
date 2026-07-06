@@ -2,7 +2,10 @@ package com.example.money.voice
 
 import android.content.Context
 import com.example.money.R
+import com.example.money.domain.model.Debtor
+import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.SavingsGoal
+import com.example.money.domain.util.DebtAdvisorTemplates
 import com.example.money.domain.util.MoneyMath
 
 object VoiceReportComposer {
@@ -55,7 +58,7 @@ object VoiceReportComposer {
             language,
         )
 
-        return VoiceReportSpeechFormatter.prepareForSpeech(
+        val goalsMessage = VoiceReportSpeechFormatter.prepareForSpeech(
             localizedContext.getString(
                 R.string.voice_report_summary,
                 snapshot.progressPercent,
@@ -65,5 +68,22 @@ object VoiceReportComposer {
             ),
             language,
         )
+
+        return goalsMessage
+    }
+
+    fun composeDebtAdvice(
+        context: Context,
+        debtors: List<Debtor>,
+        language: VoiceLanguage = VoiceLanguage.RU,
+    ): String? {
+        val activeIOwe = debtors.filter {
+            it.debtType == DebtType.DEBTOR && !it.isPaid && it.remainingAmountCents > 0L
+        }
+        if (activeIOwe.isEmpty()) return null
+
+        val localizedContext = VoiceLocaleContext.wrap(context, language)
+        val advice = DebtAdvisorTemplates.buildReply("motivation", debtors)
+        return localizedContext.getString(R.string.voice_report_debt_advice, advice)
     }
 }

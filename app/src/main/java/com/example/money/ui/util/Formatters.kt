@@ -10,22 +10,28 @@ import java.util.Locale
 
 object Formatters {
 
+    const val MASKED_AMOUNT = "•••"
+
     private val locale: Locale
         get() = Locale.getDefault()
 
-    fun currency(amount: Double, region: CurrencyRegion = CurrencyRegion.US): String =
-        currencyFormat(region).format(amount)
+    fun currency(amount: Double, region: CurrencyRegion = CurrencyRegion.US, hide: Boolean = false): String =
+        if (hide) MASKED_AMOUNT else currencyFormat(region).format(amount)
 
-    fun currencyCompact(amount: Double, region: CurrencyRegion = CurrencyRegion.US): String {
+    fun currencyCompact(amount: Double, region: CurrencyRegion = CurrencyRegion.US, hide: Boolean = false): String {
+        if (hide) return MASKED_AMOUNT
         val formatted = currency(amount, region)
         return formatted.replace(".00", "")
     }
 
-    fun currencyFromCents(cents: Long, @Suppress("UNUSED_PARAMETER") currencyCode: String = "USD"): String =
-        currencyCompact(cents / 100.0, CurrencyRegion.US)
+    fun currencyFromCents(
+        cents: Long,
+        @Suppress("UNUSED_PARAMETER") currencyCode: String = "USD",
+        hide: Boolean = false,
+    ): String = currencyCompact(cents / 100.0, CurrencyRegion.US, hide)
 
-    fun currencyFromCents(cents: Long, region: CurrencyRegion): String =
-        currencyCompact(cents / 100.0, CurrencyRegion.US)
+    fun currencyFromCents(cents: Long, region: CurrencyRegion, hide: Boolean = false): String =
+        currencyCompact(cents / 100.0, region, hide)
 
     fun date(millis: Long): String =
         DateFormat.getDateInstance(DateFormat.SHORT, locale).format(Date(millis))

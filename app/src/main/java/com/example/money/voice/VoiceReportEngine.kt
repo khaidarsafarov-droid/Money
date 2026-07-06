@@ -3,6 +3,8 @@ package com.example.money.voice
 import android.content.Context
 import com.example.money.MoneyApplication
 import com.example.money.data.datastore.MoneyPreferencesStore
+import com.example.money.domain.model.DebtType
+import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.GoalRepository
 import kotlinx.coroutines.flow.first
 import java.util.Calendar
@@ -23,12 +25,14 @@ class VoiceReportEngine(
     private val context: Context,
     private val preferencesStore: MoneyPreferencesStore,
     private val goalRepository: GoalRepository,
+    private val debtorRepository: DebtorRepository,
     private val speaker: VoiceReportSpeaker,
 ) {
     constructor(app: MoneyApplication) : this(
         context = app,
         preferencesStore = app.preferencesStore,
         goalRepository = app.goalRepository,
+        debtorRepository = app.debtorRepository,
         speaker = VoiceReportSpeaker(
             app,
             VoiceReportAudioPolicy(app),
@@ -61,12 +65,21 @@ class VoiceReportEngine(
         playbackConfig: VoicePlaybackConfig = settings.playbackConfig,
     ): VoiceReportSpeaker.SpeakResult {
         val goals = goalRepository.observeAllGoals().first()
+        val debtors = debtorRepository.getAllDebtors().first()
         val snapshot = VoiceReportComposer.buildSnapshot(goals)
-        val message = VoiceReportComposer.composeMessage(
+        var message = VoiceReportComposer.composeMessage(
             context = context,
             snapshot = snapshot,
             language = settings.language,
         )
+        val hasActiveIOwe = debtors.any {
+            it.debtType == DebtType.DEBTOR && !it.isPaid && it.remainingAmountCents > 0L
+        }
+        if (hasActiveIOwe) {
+            VoiceReportComposer.composeDebtAdvice(context, debtors, settings.language)?.let { advice ->
+                message = "$message $advice"
+            }
+        }
         return speaker.speak(message, playbackConfig)
     }
 

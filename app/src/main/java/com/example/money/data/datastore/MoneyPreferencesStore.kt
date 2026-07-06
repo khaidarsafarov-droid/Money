@@ -13,7 +13,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.domain.sync.SnapshotVoiceSettings
-import com.example.money.settings.CurrencyRegion
+import com.example.money.settings.AutopilotSettings
+import com.example.money.settings.AutopilotStrategy
+import com.example.money.settings.GamificationState
+import com.example.money.settings.PrivacySettings
 import com.example.money.voice.VoiceGender
 import com.example.money.voice.VoiceLanguage
 import com.example.money.voice.VoiceReportSettings
@@ -51,6 +54,9 @@ object MoneyPreferenceKeys {
     val I_OWE_COUNT = intPreferencesKey("widget_i_owe_count")
     val ACTIVE_GOALS_COUNT = intPreferencesKey("widget_active_goals_count")
     val OVERDUE_DEBT_COUNT = intPreferencesKey("widget_overdue_debt_count")
+    val WIDGET_HIDE_AMOUNTS = booleanPreferencesKey("widget_hide_amounts")
+    val WIDGET_STREAK_COUNT = intPreferencesKey("widget_streak_count")
+    val WIDGET_LAST_WIN = stringPreferencesKey("widget_last_win")
 
     val VOICE_REPORTS_ENABLED = booleanPreferencesKey("voice_reports_enabled")
     val VOICE_REPORT_HOUR = intPreferencesKey("voice_report_hour")
@@ -61,6 +67,22 @@ object MoneyPreferenceKeys {
     val VOICE_GENDER = stringPreferencesKey("voice_gender")
     val VOICE_FORCE_SILENT = booleanPreferencesKey("voice_force_silent")
     val VOICE_SETTINGS_SYNC_AT = longPreferencesKey("voice_settings_sync_at")
+
+    val PRIVACY_HIDE_AMOUNTS = booleanPreferencesKey("privacy_hide_amounts")
+    val PRIVACY_HIDE_ON_WIDGET = booleanPreferencesKey("privacy_hide_on_widget")
+
+    val GAMIFICATION_STREAK = intPreferencesKey("gamification_streak")
+    val GAMIFICATION_LAST_PAYMENT_ISO = stringPreferencesKey("gamification_last_payment_iso")
+    val GAMIFICATION_UNLOCKED_BADGES_JSON = stringPreferencesKey("gamification_unlocked_badges_json")
+    val GAMIFICATION_LAST_WIN = stringPreferencesKey("gamification_last_win")
+
+    val AUTOPILOT_ENABLED = booleanPreferencesKey("autopilot_enabled")
+    val AUTOPILOT_DAILY_CENTS = longPreferencesKey("autopilot_daily_cents")
+    val AUTOPILOT_STRATEGY = stringPreferencesKey("autopilot_strategy")
+    val AUTOPILOT_REMINDER_HOUR = intPreferencesKey("autopilot_reminder_hour")
+    val AUTOPILOT_REMINDER_MINUTE = intPreferencesKey("autopilot_reminder_minute")
+
+    val ADVISOR_HISTORY_JSON = stringPreferencesKey("advisor_history_json")
 }
 
 class MoneyPreferencesStore(
@@ -93,6 +115,9 @@ class MoneyPreferencesStore(
                 iOweCount = prefs[MoneyPreferenceKeys.I_OWE_COUNT] ?: 0,
                 activeGoalsCount = prefs[MoneyPreferenceKeys.ACTIVE_GOALS_COUNT] ?: 0,
                 overdueDebtCount = prefs[MoneyPreferenceKeys.OVERDUE_DEBT_COUNT] ?: 0,
+                hideAmounts = prefs[MoneyPreferenceKeys.WIDGET_HIDE_AMOUNTS] ?: false,
+                streakCount = prefs[MoneyPreferenceKeys.WIDGET_STREAK_COUNT] ?: 0,
+                lastWinMessage = prefs[MoneyPreferenceKeys.WIDGET_LAST_WIN],
             )
         }
 
@@ -125,6 +150,11 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.I_OWE_COUNT] = snapshot.iOweCount
             prefs[MoneyPreferenceKeys.ACTIVE_GOALS_COUNT] = snapshot.activeGoalsCount
             prefs[MoneyPreferenceKeys.OVERDUE_DEBT_COUNT] = snapshot.overdueDebtCount
+            prefs[MoneyPreferenceKeys.WIDGET_HIDE_AMOUNTS] = snapshot.hideAmounts
+            prefs[MoneyPreferenceKeys.WIDGET_STREAK_COUNT] = snapshot.streakCount
+            snapshot.lastWinMessage?.let {
+                prefs[MoneyPreferenceKeys.WIDGET_LAST_WIN] = it
+            } ?: remove(MoneyPreferenceKeys.WIDGET_LAST_WIN)
         }
     }
 
@@ -185,6 +215,44 @@ class MoneyPreferencesStore(
     suspend fun markAppOpenedToday(isoDate: String) {
         context.moneyPreferencesDataStore.edit { prefs ->
             prefs[MoneyPreferenceKeys.LAST_APP_OPEN_DATE] = isoDate
+        }
+    }
+
+    val privacySettings: Flow<PrivacySettings> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toPrivacySettings() }
+
+    suspend fun updatePrivacySettings(transform: (PrivacySettings) -> PrivacySettings) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writePrivacySettings(transform(prefs.toPrivacySettings()))
+        }
+    }
+
+    val autopilotSettings: Flow<AutopilotSettings> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toAutopilotSettings() }
+
+    suspend fun updateAutopilotSettings(transform: (AutopilotSettings) -> AutopilotSettings) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writeAutopilotSettings(transform(prefs.toAutopilotSettings()))
+        }
+    }
+
+    val gamificationState: Flow<GamificationState> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toGamificationState() }
+
+    suspend fun updateGamificationState(transform: (GamificationState) -> GamificationState) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writeGamificationState(transform(prefs.toGamificationState()))
+        }
+    }
+
+    val advisorHistoryJson: Flow<String> =
+        context.moneyPreferencesDataStore.data.map { prefs ->
+            prefs[MoneyPreferenceKeys.ADVISOR_HISTORY_JSON] ?: "[]"
+        }
+
+    suspend fun writeAdvisorHistoryJson(json: String) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs[MoneyPreferenceKeys.ADVISOR_HISTORY_JSON] = json
         }
     }
 
@@ -261,4 +329,71 @@ private fun MutablePreferences.writeVoiceReportSettings(settings: VoiceReportSet
     settings.lastAppOpenDate?.let {
         this[MoneyPreferenceKeys.LAST_APP_OPEN_DATE] = it
     } ?: remove(MoneyPreferenceKeys.LAST_APP_OPEN_DATE)
+}
+
+private fun Preferences.toPrivacySettings(): PrivacySettings =
+    PrivacySettings(
+        hideAmounts = this[MoneyPreferenceKeys.PRIVACY_HIDE_AMOUNTS] ?: false,
+        hideOnWidget = this[MoneyPreferenceKeys.PRIVACY_HIDE_ON_WIDGET] ?: false,
+    )
+
+private fun MutablePreferences.writePrivacySettings(settings: PrivacySettings) {
+    this[MoneyPreferenceKeys.PRIVACY_HIDE_AMOUNTS] = settings.hideAmounts
+    this[MoneyPreferenceKeys.PRIVACY_HIDE_ON_WIDGET] = settings.hideOnWidget
+}
+
+private fun Preferences.toAutopilotSettings(): AutopilotSettings =
+    AutopilotSettings(
+        enabled = this[MoneyPreferenceKeys.AUTOPILOT_ENABLED] ?: false,
+        dailyAmountCents = this[MoneyPreferenceKeys.AUTOPILOT_DAILY_CENTS] ?: 300L,
+        strategy = AutopilotStrategy.fromStored(this[MoneyPreferenceKeys.AUTOPILOT_STRATEGY]),
+        reminderHour = this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_HOUR] ?: 20,
+        reminderMinute = this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_MINUTE] ?: 0,
+    )
+
+private fun MutablePreferences.writeAutopilotSettings(settings: AutopilotSettings) {
+    this[MoneyPreferenceKeys.AUTOPILOT_ENABLED] = settings.enabled
+    this[MoneyPreferenceKeys.AUTOPILOT_DAILY_CENTS] = settings.dailyAmountCents
+    this[MoneyPreferenceKeys.AUTOPILOT_STRATEGY] = settings.strategy.name
+    this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_HOUR] = settings.reminderHour
+    this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_MINUTE] = settings.reminderMinute
+}
+
+private fun Preferences.toGamificationState(): GamificationState =
+    GamificationState(
+        streakCount = this[MoneyPreferenceKeys.GAMIFICATION_STREAK] ?: 0,
+        lastPaymentIsoDate = this[MoneyPreferenceKeys.GAMIFICATION_LAST_PAYMENT_ISO],
+        unlockedBadges = decodeStringSet(this[MoneyPreferenceKeys.GAMIFICATION_UNLOCKED_BADGES_JSON]),
+        lastWinMessage = this[MoneyPreferenceKeys.GAMIFICATION_LAST_WIN],
+    )
+
+private fun MutablePreferences.writeGamificationState(state: GamificationState) {
+    this[MoneyPreferenceKeys.GAMIFICATION_STREAK] = state.streakCount
+    state.lastPaymentIsoDate?.let {
+        this[MoneyPreferenceKeys.GAMIFICATION_LAST_PAYMENT_ISO] = it
+    } ?: remove(MoneyPreferenceKeys.GAMIFICATION_LAST_PAYMENT_ISO)
+    this[MoneyPreferenceKeys.GAMIFICATION_UNLOCKED_BADGES_JSON] = encodeStringSet(state.unlockedBadges)
+    state.lastWinMessage?.let {
+        this[MoneyPreferenceKeys.GAMIFICATION_LAST_WIN] = it
+    } ?: remove(MoneyPreferenceKeys.GAMIFICATION_LAST_WIN)
+}
+
+private fun encodeStringSet(values: Set<String>): String {
+    val array = JSONArray()
+    values.forEach { array.put(it) }
+    return array.toString()
+}
+
+private fun decodeStringSet(raw: String?): Set<String> {
+    if (raw.isNullOrBlank()) return emptySet()
+    return try {
+        val array = JSONArray(raw)
+        buildSet {
+            for (index in 0 until array.length()) {
+                add(array.getString(index))
+            }
+        }
+    } catch (_: Exception) {
+        emptySet()
+    }
 }
