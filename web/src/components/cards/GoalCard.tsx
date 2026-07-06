@@ -5,12 +5,13 @@ import type { FinancialItem } from "@/types/finance";
 
 interface GoalCardProps {
   item: FinancialItem;
+  hideAmounts?: boolean;
   onTransfer?: (item: FinancialItem) => void;
   onExpense?: () => void;
   onDelete?: (item: FinancialItem) => void;
 }
 
-export function GoalCard({ item, onTransfer, onExpense, onDelete }: GoalCardProps) {
+export function GoalCard({ item, hideAmounts = false, onTransfer, onExpense, onDelete }: GoalCardProps) {
   const canTransfer = item.status !== "COMPLETED" && onTransfer;
 
   return (
@@ -20,6 +21,7 @@ export function GoalCard({ item, onTransfer, onExpense, onDelete }: GoalCardProp
       typeIcon={Target}
       remainingLabel="До цели"
       paidLabel="Накоплено"
+      hideAmounts={hideAmounts}
       onDelete={onDelete}
       action={
         canTransfer || onExpense ? (

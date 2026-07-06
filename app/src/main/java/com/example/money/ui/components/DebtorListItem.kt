@@ -22,6 +22,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +54,7 @@ fun DebtorListItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onAccelerate: (() -> Unit)? = null,
+    hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val dueStatus = debtor.dueStatus()
@@ -124,7 +126,7 @@ fun DebtorListItem(
                     Text(
                         text = stringResource(
                             R.string.debtor_target_amount,
-                            Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency),
+                            Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency, hide = hideAmounts),
                         ),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -165,7 +167,7 @@ fun DebtorListItem(
                         text = stringResource(
                             R.string.debt_next_milestone,
                             milestone.percent,
-                            Formatters.currencyFromCents(milestone.centsToReach, debtor.currency),
+                            Formatters.currencyFromCents(milestone.centsToReach, debtor.currency, hide = hideAmounts),
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         color = GoldPrimary,
@@ -185,7 +187,7 @@ fun DebtorListItem(
                 Text(
                     text = stringResource(
                         R.string.debtor_remaining,
-                        Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency),
+                        Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency, hide = hideAmounts),
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
@@ -193,8 +195,8 @@ fun DebtorListItem(
                 Text(
                     text = stringResource(
                         R.string.debtor_paid_progress,
-                        Formatters.currencyFromCents(debtor.currentAmountCents, debtor.currency),
-                        Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency),
+                        Formatters.currencyFromCents(debtor.currentAmountCents, debtor.currency, hide = hideAmounts),
+                        Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency, hide = hideAmounts),
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

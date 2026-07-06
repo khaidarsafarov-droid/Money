@@ -23,7 +23,7 @@ import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.DebtReminderSchedulerImpl
 import com.example.money.notification.NotificationChannels
 import com.example.money.voice.VoiceReportScheduler
-import com.example.money.widget.GoalWidgetSnapshotWriter
+import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.widget.GoalWidgetUpdater
 import com.example.money.widget.WidgetGoalRepository
 import com.example.money.ui.util.AppLocaleContext
@@ -137,6 +137,7 @@ class MoneyApplication : Application() {
         NotificationChannels.create(this)
         rescheduleDebtReminders()
         startWidgetPipeline()
+        syncAutopilotSchedule()
         syncVoiceReportSchedule()
         startPeerSync()
     }
@@ -148,6 +149,12 @@ class MoneyApplication : Application() {
             } catch (exception: Exception) {
                 Log.w(TAG, "Failed to start P2P sync", exception)
             }
+        }
+    }
+
+    private fun syncAutopilotSchedule() {
+        applicationScope.launch {
+            MicroPaymentScheduler.syncSchedule(this@MoneyApplication)
         }
     }
 

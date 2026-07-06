@@ -86,7 +86,9 @@ import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
+import com.example.money.ui.debtors.DebtAdvisorBottomSheet
 import com.example.money.ui.debtors.DebtFreedomTab
+import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.debtors.DebtorsViewModel
@@ -113,6 +115,8 @@ fun HomeScreen(
     onRequestNotificationPermission: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenAppLanguage: () -> Unit = {},
+    onOpenPrivacySettings: () -> Unit = {},
+    onOpenAutopilotSettings: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -126,7 +130,11 @@ fun HomeScreen(
         factory = BudgetViewModel.Factory(app.budgetRepository),
     )
     val debtorsViewModel: DebtorsViewModel = viewModel(
-        factory = DebtorsViewModel.Factory(app.debtorRepository, app.debtReminderScheduler),
+        factory = DebtorsViewModel.Factory(
+            app.debtorRepository,
+            app.debtReminderScheduler,
+            app.preferencesStore,
+        ),
     )
 
     val goals by goalViewModel.goals.collectAsStateWithLifecycle()
@@ -137,6 +145,10 @@ fun HomeScreen(
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
     val freedomProjection by debtorsViewModel.freedomProjection.collectAsStateWithLifecycle()
     val extraMonthlyCents by debtorsViewModel.extraMonthlyCents.collectAsStateWithLifecycle()
+    val privacySettings by debtorsViewModel.privacySettings.collectAsStateWithLifecycle()
+    val gamificationState by debtorsViewModel.gamificationState.collectAsStateWithLifecycle()
+    val autopilotSettings by debtorsViewModel.autopilotSettings.collectAsStateWithLifecycle()
+    val advisorMessages by debtorsViewModel.advisorMessages.collectAsStateWithLifecycle()
     val budgetSummary by budgetViewModel.budgetSummary.collectAsStateWithLifecycle()
     val availableBalanceUsd = budgetSummary.availableBalance
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
@@ -156,6 +168,7 @@ fun HomeScreen(
     var showWelcomeDialog by remember { mutableStateOf(WelcomePreferences.shouldShowWelcome(context)) }
     var showQuickAddDialog by remember { mutableStateOf(false) }
     var showTopMenu by remember { mutableStateOf(false) }
+    var showAdvisorSheet by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -310,11 +323,22 @@ fun HomeScreen(
                     val ok = debtorsViewModel.processPaymentSync(debtor.id, amount, affectsBalance)
                     showDebtPaymentDialog = null
                     debtPaymentPrefillCents = 0L
-                    showMessage(
-                        context.getString(
-                            if (ok) R.string.msg_debt_payment_applied else R.string.error_payment_failed,
-                        ),
-                    )
+                    if (ok) {
+                        val updated = app.debtorRepository.getDebtorById(debtor.id)
+                        val remaining = updated?.remainingAmountCents ?: 0L
+                        showMessage(
+                            context.getString(
+                                R.string.msg_payment_neutral,
+                                Formatters.currencyFromCents(
+                                    remaining,
+                                    debtor.currency,
+                                    hide = privacySettings.hideAmounts,
+                                ),
+                            ),
+                        )
+                    } else {
+                        showMessage(context.getString(R.string.error_payment_failed))
+                    }
                 }
             },
         )
@@ -593,6 +617,29 @@ fun HomeScreen(
                 freedomProjection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = debtorsViewModel::setExtraMonthlyCents,
+                gamificationState = gamificationState,
+                privacySettings = privacySettings,
+                autopilotSettings = autopilotSettings,
+                onOpenAdvisor = { showAdvisorSheet = true },
+                onApplyAutopilot = {
+                    scope.launch {
+                        val plan = debtorsViewModel.applyMicroPaymentSync()
+                        if (plan != null) {
+                            showMessage(
+                                context.getString(
+                                    R.string.autopilot_applied,
+                                    Formatters.currencyFromCents(
+                                        plan.amountCents,
+                                        hide = privacySettings.hideAmounts,
+                                    ),
+                                    plan.debtorName,
+                                ),
+                            )
+                        } else {
+                            showMessage(context.getString(R.string.autopilot_apply_failed))
+                        }
+                    }
+                },
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
@@ -656,11 +703,45 @@ fun HomeScreen(
                 onDeleteExpense = { pendingDelete = PendingDelete.ExpenseItem(it) },
                 onOpenVoiceSettings = onOpenVoiceSettings,
                 onOpenAppLanguage = onOpenAppLanguage,
+                onOpenPrivacySettings = onOpenPrivacySettings,
+                onOpenAutopilotSettings = onOpenAutopilotSettings,
+                gamificationState = gamificationState,
+                privacySettings = privacySettings,
+                autopilotSettings = autopilotSettings,
+                onOpenAdvisor = { showAdvisorSheet = true },
+                onApplyAutopilot = {
+                    scope.launch {
+                        val plan = debtorsViewModel.applyMicroPaymentSync()
+                        if (plan != null) {
+                            showMessage(
+                                context.getString(
+                                    R.string.autopilot_applied,
+                                    Formatters.currencyFromCents(
+                                        plan.amountCents,
+                                        hide = privacySettings.hideAmounts,
+                                    ),
+                                    plan.debtorName,
+                                ),
+                            )
+                        } else {
+                            showMessage(context.getString(R.string.autopilot_apply_failed))
+                        }
+                    }
+                },
                 scope = scope,
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
                 emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
             )
         }
+    }
+
+    if (showAdvisorSheet) {
+        DebtAdvisorBottomSheet(
+            debts = allDebtors,
+            messages = advisorMessages,
+            onPromptSelected = debtorsViewModel::askAdvisor,
+            onDismiss = { showAdvisorSheet = false },
+        )
     }
 }
 
@@ -705,6 +786,13 @@ private fun PhoneHomeLayout(
     onDeleteExpense: (Expense) -> Unit,
     onOpenVoiceSettings: () -> Unit,
     onOpenAppLanguage: () -> Unit,
+    onOpenPrivacySettings: () -> Unit,
+    onOpenAutopilotSettings: () -> Unit,
+    gamificationState: com.example.money.settings.GamificationState,
+    privacySettings: com.example.money.settings.PrivacySettings,
+    autopilotSettings: com.example.money.settings.AutopilotSettings,
+    onOpenAdvisor: () -> Unit,
+    onApplyAutopilot: () -> Unit,
     scope: kotlinx.coroutines.CoroutineScope,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
@@ -727,6 +815,22 @@ private fun PhoneHomeLayout(
                         selected = false,
                         onClick = {
                             onOpenAppLanguage()
+                            scope.launch { drawerState.close() }
+                        },
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.privacy_settings_title)) },
+                        selected = false,
+                        onClick = {
+                            onOpenPrivacySettings()
+                            scope.launch { drawerState.close() }
+                        },
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.autopilot_settings_title)) },
+                        selected = false,
+                        onClick = {
+                            onOpenAutopilotSettings()
                             scope.launch { drawerState.close() }
                         },
                     )
@@ -860,6 +964,37 @@ private fun PhoneHomeLayout(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             )
                         }
+                        if (debtTab != DebtTab.Freedom) {
+                            item {
+                                GamificationBanner(
+                                    state = gamificationState,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                )
+                            }
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    androidx.compose.material3.OutlinedButton(
+                                        onClick = onOpenAdvisor,
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Text(stringResource(R.string.advisor_open))
+                                    }
+                                    if (autopilotSettings.enabled) {
+                                        androidx.compose.material3.Button(
+                                            onClick = onApplyAutopilot,
+                                            modifier = Modifier.weight(1f),
+                                        ) {
+                                            Text(stringResource(R.string.autopilot_apply_now))
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         if (debtTab == DebtTab.Freedom) {
                             item {
                                 DebtFreedomTab(
@@ -908,6 +1043,7 @@ private fun PhoneHomeLayout(
                                         onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
                                         onEdit = { onEditDebtor(debtor) },
                                         onDelete = { onDeleteDebtor(debtor) },
+                                        hideAmounts = privacySettings.hideAmounts,
                                     )
                                 }
                             }

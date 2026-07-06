@@ -2,6 +2,7 @@ import type { CurrencyCode, FinancialItem } from "@/types/finance";
 import { remainingAmount } from "@/lib/financeEngine";
 
 export const APP_CURRENCY: CurrencyCode = "USD";
+export const MASKED_AMOUNT = "•••";
 
 export function toCents(amount: number): number {
   return Math.round(amount * 100);
@@ -19,7 +20,8 @@ export function parseMoneyInput(raw: string): number | null {
   return toCents(value);
 }
 
-export function formatMoney(cents: number): string {
+export function formatMoney(cents: number, options?: { hidden?: boolean }): string {
+  if (options?.hidden) return MASKED_AMOUNT;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: APP_CURRENCY,
@@ -27,7 +29,8 @@ export function formatMoney(cents: number): string {
   }).format(fromCents(cents));
 }
 
-export function formatUsd(amount: number): string {
+export function formatUsd(amount: number, options?: { hidden?: boolean }): string {
+  if (options?.hidden) return MASKED_AMOUNT;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: APP_CURRENCY,

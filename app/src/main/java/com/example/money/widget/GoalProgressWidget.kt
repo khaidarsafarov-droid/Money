@@ -117,6 +117,25 @@ private fun GoalWidgetContent(
             )
         }
 
+        if (snapshot.streakCount > 0) {
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            Text(
+                text = context.getString(R.string.gamification_streak, snapshot.streakCount),
+                style = TextStyle(
+                    color = GlanceTheme.colors.primary,
+                    fontWeight = FontWeight.Medium,
+                ),
+            )
+        }
+
+        snapshot.lastWinMessage?.let { win ->
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            Text(
+                text = win,
+                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant),
+            )
+        }
+
         Spacer(modifier = GlanceModifier.height(10.dp))
 
         if (snapshot.targetAmount > 0) {
@@ -128,7 +147,11 @@ private fun GoalWidgetContent(
             Spacer(modifier = GlanceModifier.height(8.dp))
 
             Text(
-                text = Formatters.currencyCompact(snapshot.currentAmount, region),
+                text = if (snapshot.hideAmounts) {
+                    Formatters.MASKED_AMOUNT
+                } else {
+                    Formatters.currencyCompact(snapshot.currentAmount, region)
+                },
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
                     fontWeight = FontWeight.Bold,
@@ -138,8 +161,8 @@ private fun GoalWidgetContent(
             Text(
                 text = context.getString(
                     R.string.widget_remaining,
-                    Formatters.currencyCompact(snapshot.remainingAmount, region),
-                    Formatters.currencyCompact(snapshot.targetAmount, region),
+                    if (snapshot.hideAmounts) Formatters.MASKED_AMOUNT else Formatters.currencyCompact(snapshot.remainingAmount, region),
+                    if (snapshot.hideAmounts) Formatters.MASKED_AMOUNT else Formatters.currencyCompact(snapshot.targetAmount, region),
                 ),
                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant),
             )

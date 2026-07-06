@@ -263,4 +263,35 @@
     <string name="voice_report_no_goals">Hello. You have no active savings goals yet. Add a goal in the app.</string>
     <string name="voice_report_all_complete">Hello. All %1$d goals are complete. Great work.</string>
     <string name="voice_report_summary">Hello. %1$d%% of goals complete. Saved %2$s of %3$s. Remaining %4$s.</string>
+    <string name="voice_report_debt_advice">On debts: %1$s</string>
+
+    <string name="privacy_settings_title">Privacy</string>
+    <string name="privacy_settings_hint">Hide amounts on screen and widget — no one sees figures without your consent.</string>
+    <string name="privacy_hide_amounts">Hide amounts in app</string>
+    <string name="privacy_hide_amounts_hint">Shows ••• instead of amounts</string>
+    <string name="privacy_hide_widget">Hide amounts on widget</string>
+    <string name="privacy_hide_widget_hint">Widget shows progress without specific figures</string>
+    <string name="msg_payment_neutral">Transaction saved</string>
+
+    <string name="advisor_title">Debt advisor</string>
+    <string name="advisor_hint">Tips based on your data — offline and judgment-free.</string>
+    <string name="advisor_open">Advisor</string>
+    <string name="advisor_prompt_first">Where to start?</string>
+    <string name="advisor_prompt_extra">What if +$50?</string>
+    <string name="advisor_prompt_motivation">Motivation</string>
+
+    <string name="gamification_streak">Payment streak: %1$d</string>
+
+    <string name="autopilot_settings_title">Autopilot</string>
+    <string name="autopilot_enabled">Daily micro-payments</string>
+    <string name="autopilot_enabled_hint">Reminder to pay a small amount toward a chosen debt</string>
+    <string name="autopilot_daily_amount">Daily amount</string>
+    <string name="autopilot_strategy">Strategy</string>
+    <string name="autopilot_strategy_snowball">Snowball</string>
+    <string name="autopilot_strategy_avalanche">Avalanche</string>
+    <string name="autopilot_apply_now">Pay now</string>
+    <string name="autopilot_applied">Micro-payment %1$s applied to «%2$s»</string>
+    <string name="autopilot_apply_failed">Could not apply micro-payment</string>
+    <string name="autopilot_notification_title">Debt micro-payment</string>
+    <string name="autopilot_notification_body">You can pay %1$s today — one step toward freedom</string>
 </resources>

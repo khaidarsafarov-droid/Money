@@ -1,30 +1,40 @@
 package com.example.money.ui.debtors
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import android.util.Log
+import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.repository.DebtorRepository
+import com.example.money.domain.util.DebtAutopilotEngine
 import com.example.money.domain.util.DebtFreedomEngine
+import com.example.money.domain.util.DebtGamificationEngine
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.notification.DebtReminderScheduler
+import com.example.money.settings.AutopilotSettings
+import com.example.money.settings.GamificationState
+import com.example.money.settings.PrivacySettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 
 class DebtorsViewModel(
     private val debtorRepository: DebtorRepository,
     private val debtReminderScheduler: DebtReminderScheduler,
+    private val preferencesStore: MoneyPreferencesStore,
 ) : ViewModel() {
 
     private val _debtTab = MutableStateFlow(DebtTab.OwesMe)
@@ -32,6 +42,9 @@ class DebtorsViewModel(
 
     private val _filter = MutableStateFlow(DebtorFilter.ALL)
     val filter: StateFlow<DebtorFilter> = _filter.asStateFlow()
+
+    private val _advisorMessages = MutableStateFlow<List<AdvisorChatMessage>>(emptyList())
+    val advisorMessages: StateFlow<List<AdvisorChatMessage>> = _advisorMessages.asStateFlow()
 
     private val allDebtors = debtorRepository.getAllDebtors()
         .catch { exception ->
@@ -43,6 +56,24 @@ class DebtorsViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),
+    )
+
+    val privacySettings: StateFlow<PrivacySettings> = preferencesStore.privacySettings.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = PrivacySettings(),
+    )
+
+    val gamificationState: StateFlow<GamificationState> = preferencesStore.gamificationState.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = GamificationState(),
+    )
+
+    val autopilotSettings: StateFlow<AutopilotSettings> = preferencesStore.autopilotSettings.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = AutopilotSettings(),
     )
 
     val debtors: StateFlow<List<Debtor>> = combine(
@@ -106,6 +137,13 @@ class DebtorsViewModel(
         ),
     )
 
+    init {
+        viewModelScope.launch {
+            val json = preferencesStore.advisorHistoryJson.first()
+            _advisorMessages.value = decodeAdvisorMessages(json)
+        }
+    }
+
     fun setExtraMonthlyCents(cents: Long) {
         _extraMonthlyCents.value = cents.coerceAtLeast(0L)
     }
@@ -116,6 +154,15 @@ class DebtorsViewModel(
 
     fun setFilter(filter: DebtorFilter) {
         _filter.value = filter
+    }
+
+    fun askAdvisor(promptId: String) {
+        viewModelScope.launch {
+            val debts = allDebtorsList.value
+            val updated = buildAdvisorMessages(promptId, debts, _advisorMessages.value)
+            _advisorMessages.value = updated
+            preferencesStore.writeAdvisorHistoryJson(encodeAdvisorMessages(updated))
+        }
     }
 
     fun addDebtor(
@@ -193,7 +240,37 @@ class DebtorsViewModel(
         if (debtor?.isPaid == true) {
             debtReminderScheduler.cancel(debtorId)
         }
+        if (success && debtor != null) {
+            recordPaymentGamification(debtor)
+        }
         return success
+    }
+
+    suspend fun applyMicroPaymentSync(): DebtAutopilotEngine.MicroPaymentPlan? {
+        val settings = preferencesStore.autopilotSettings.first()
+        val plan = DebtAutopilotEngine.planMicroPayment(allDebtorsList.value, settings) ?: return null
+        val debtor = debtorRepository.getDebtorById(plan.debtorId) ?: return null
+        val affectsBalance = debtor.debtType == DebtType.CREDITOR
+        val ok = processPaymentSync(
+            debtorId = plan.debtorId,
+            amount = MoneyMath.fromCents(plan.amountCents),
+            affectsBalance = affectsBalance,
+        )
+        return if (ok) plan else null
+    }
+
+    private suspend fun recordPaymentGamification(debtor: Debtor) {
+        val current = preferencesStore.gamificationState.first()
+        val latest = debtor.paymentHistory.maxByOrNull { it.paidAt } ?: return
+        val next = DebtGamificationEngine.applyPayment(
+            previous = current,
+            paidAtMillis = latest.paidAt,
+            dateDueMillis = debtor.dateDue,
+            currentCents = debtor.currentAmountCents,
+            targetCents = debtor.targetAmountCents,
+            paymentCount = debtor.paymentHistory.size,
+        )
+        preferencesStore.updateGamificationState { next }
     }
 
     fun markAsPaid(id: Long) {
@@ -218,16 +295,53 @@ class DebtorsViewModel(
 
         private fun kotlinx.coroutines.flow.Flow<List<Debtor>>.mapMetrics() =
             map { DebtMetricsEngine.computeMetrics(it) }
+
+        private fun encodeAdvisorMessages(messages: List<AdvisorChatMessage>): String {
+            val array = JSONArray()
+            messages.forEach { message ->
+                array.put(
+                    JSONObject()
+                        .put("role", message.role.name)
+                        .put("text", message.text),
+                )
+            }
+            return array.toString()
+        }
+
+        private fun decodeAdvisorMessages(raw: String): List<AdvisorChatMessage> {
+            if (raw.isBlank()) return emptyList()
+            return try {
+                val array = JSONArray(raw)
+                buildList {
+                    for (index in 0 until array.length()) {
+                        val item = array.getJSONObject(index)
+                        add(
+                            AdvisorChatMessage(
+                                role = AdvisorRole.valueOf(item.getString("role")),
+                                text = item.getString("text"),
+                            ),
+                        )
+                    }
+                }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
     }
 
     class Factory(
         private val debtorRepository: DebtorRepository,
         private val debtReminderScheduler: DebtReminderScheduler,
+        private val preferencesStore: MoneyPreferencesStore,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(DebtorsViewModel::class.java)) {
-                return DebtorsViewModel(debtorRepository, debtReminderScheduler) as T
+                return DebtorsViewModel(
+                    debtorRepository,
+                    debtReminderScheduler,
+                    preferencesStore,
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

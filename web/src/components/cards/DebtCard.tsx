@@ -14,11 +14,12 @@ import type { FinancialItem } from "@/types/finance";
 
 interface DebtCardProps {
   item: FinancialItem;
+  hideAmounts?: boolean;
   onAddPayment?: (item: FinancialItem, prefillCents?: number) => void;
   onDelete?: (item: FinancialItem) => void;
 }
 
-export function DebtCard({ item, onAddPayment, onDelete }: DebtCardProps) {
+export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: DebtCardProps) {
   const canPay = item.status !== "COMPLETED" && onAddPayment;
   const overdue = isDebtOverdue(item);
   const remaining = Math.max(item.target - item.amount, 0);
@@ -34,6 +35,7 @@ export function DebtCard({ item, onAddPayment, onDelete }: DebtCardProps) {
       remainingLabel="Осталось"
       paidLabel="Внесено"
       overdue={overdue}
+      hideAmounts={hideAmounts}
       onDelete={onDelete}
       meta={
         <div className="space-y-1">
@@ -50,7 +52,7 @@ export function DebtCard({ item, onAddPayment, onDelete }: DebtCardProps) {
               {milestones.nextMilestone ? (
                 <p className="text-sm font-medium text-milk-gold">
                   До вехи {milestones.nextMilestone.percent}% осталось{" "}
-                  {formatMoney(milestones.nextMilestone.centsToReach)}
+                  {formatMoney(milestones.nextMilestone.centsToReach, { hidden: hideAmounts })}
                 </p>
               ) : null}
               {isSmallDebt(remaining) ? (

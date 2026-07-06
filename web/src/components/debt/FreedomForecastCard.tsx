@@ -7,9 +7,10 @@ import type { FinancialItem } from "@/types/finance";
 
 interface FreedomForecastCardProps {
   debts: FinancialItem[];
+  hideAmounts?: boolean;
 }
 
-export function FreedomForecastCard({ debts }: FreedomForecastCardProps) {
+export function FreedomForecastCard({ debts, hideAmounts = false }: FreedomForecastCardProps) {
   const [extraMonthlyCents, setExtraMonthlyCents] = useState(0);
   const projection = useMemo(
     () => projectDebtFreedom(debts, extraMonthlyCents),
@@ -49,13 +50,13 @@ export function FreedomForecastCard({ debts }: FreedomForecastCardProps) {
       </div>
 
       <p className="text-sm text-milk-muted">
-        Осталось {formatMoney(projection.totalRemainingCents)} · темп{" "}
-        {formatMoney(projection.monthlyPaymentCents)}/мес · ~{projection.monthsRemaining} мес.
+        Осталось {formatMoney(projection.totalRemainingCents, { hidden: hideAmounts })} · темп{" "}
+        {formatMoney(projection.monthlyPaymentCents, { hidden: hideAmounts })}/мес · ~{projection.monthsRemaining} мес.
       </p>
 
       <label className="block space-y-2">
         <span className="text-sm font-medium text-milk-text">
-          Дополнительно в месяц: {formatMoney(extraMonthlyCents)}
+          Дополнительно в месяц: {formatMoney(extraMonthlyCents, { hidden: hideAmounts })}
         </span>
         <input
           type="range"

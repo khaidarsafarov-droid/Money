@@ -159,4 +159,12 @@ object DebtFreedomEngine {
         }
         return calendar.timeInMillis
     }
+
+    fun isoDateLabel(millis: Long): String {
+        val formatter = java.text.DateFormat.getDateInstance(
+            java.text.DateFormat.LONG,
+            java.util.Locale.getDefault(),
+        )
+        return formatter.format(java.util.Date(millis))
+    }
 }

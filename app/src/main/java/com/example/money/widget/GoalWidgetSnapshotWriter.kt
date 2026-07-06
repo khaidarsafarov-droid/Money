@@ -11,10 +11,6 @@ import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/**
- * Записывает подтверждённый прогресс из локальной Room БД в DataStore.
- * Полностью офлайн — без сети и облака.
- */
 class GoalWidgetSnapshotWriter(
     private val goalRepository: GoalRepository,
     private val debtorRepository: DebtorRepository,
@@ -29,7 +25,10 @@ class GoalWidgetSnapshotWriter(
             debtorRepository.getActiveDebtors(),
             pendingTransactionCount,
             currencyRegion,
-        ) { goals, debts, pendingCount, region ->
+            preferencesStore.privacySettings,
+            preferencesStore.gamificationState,
+        ) { goals, debts, pendingCount, region, privacy, gamification ->
+            val hideWidget = privacy.hideOnWidget || privacy.hideAmounts
             val activeGoals = goals.filter { !it.isCompleted }
             val totalCurrentCents = activeGoals.sumOf { it.currentAmountCents }
             val totalTargetCents = activeGoals.sumOf { it.targetAmountCents }
@@ -48,7 +47,10 @@ class GoalWidgetSnapshotWriter(
                 pendingCount = pendingCount,
                 updatedAt = System.currentTimeMillis(),
                 currencyRegion = region,
-                activeItems = buildActiveItems(activeGoals, debts),
+                activeItems = buildActiveItems(activeGoals, debts, hideWidget),
+                hideAmounts = hideWidget,
+                streakCount = gamification.streakCount,
+                lastWinMessage = gamification.lastWinMessage,
             )
         }.distinctUntilChanged()
 
@@ -59,6 +61,7 @@ class GoalWidgetSnapshotWriter(
     private fun buildActiveItems(
         goals: List<SavingsGoal>,
         debts: List<Debtor>,
+        hide: Boolean,
     ): List<WidgetFinanceItem> {
         val goalItems = goals
             .filter { it.remainingAmountCents > 0L }
@@ -68,7 +71,7 @@ class GoalWidgetSnapshotWriter(
                     payKey = "goal-${goal.id}",
                     type = WidgetItemType.GOAL,
                     name = goal.name.ifBlank { "Цель" },
-                    remainingLabel = Formatters.currencyFromCents(goal.remainingAmountCents),
+                    remainingLabel = Formatters.currencyFromCents(goal.remainingAmountCents, hide = hide),
                     progressFraction = goal.progressFraction,
                 )
             }
@@ -79,7 +82,7 @@ class GoalWidgetSnapshotWriter(
                 payKey = "debt-${debt.id}",
                 type = WidgetItemType.DEBT,
                 name = debt.name,
-                remainingLabel = Formatters.currencyFromCents(debt.remainingAmountCents),
+                remainingLabel = Formatters.currencyFromCents(debt.remainingAmountCents, hide = hide),
                 progressFraction = debt.progressFraction,
             )
         }

@@ -28,6 +28,9 @@ data class WidgetGoalSnapshot(
     val updatedAt: Long,
     val currencyRegion: CurrencyRegion,
     val activeItems: List<WidgetFinanceItem> = emptyList(),
+    val hideAmounts: Boolean = false,
+    val streakCount: Int = 0,
+    val lastWinMessage: String? = null,
 ) {
     companion object {
         val Empty = WidgetGoalSnapshot(
