@@ -7,6 +7,8 @@ export interface AutopilotDebtInput {
   targetCents: number;
   isCompleted: boolean;
   dateDueMs?: number;
+  interestRateBps?: number;
+  loanCategory?: string;
 }
 
 export interface AutopilotSettings {
@@ -15,6 +17,7 @@ export interface AutopilotSettings {
   strategy: AutopilotStrategy;
   reminderHour: number;
   reminderMinute: number;
+  roundPaymentsToTen: boolean;
 }
 
 export const DEFAULT_AUTOPILOT: AutopilotSettings = {
@@ -23,6 +26,7 @@ export const DEFAULT_AUTOPILOT: AutopilotSettings = {
   strategy: "snowball",
   reminderHour: 20,
   reminderMinute: 0,
+  roundPaymentsToTen: false,
 };
 
 export function pickTargetDebt(
@@ -37,6 +41,9 @@ export function pickTargetDebt(
   }
 
   return [...active].sort((a, b) => {
+    const rateA = a.interestRateBps ?? 0;
+    const rateB = b.interestRateBps ?? 0;
+    if (rateA !== rateB) return rateB - rateA;
     const dueA = a.dateDueMs ?? Number.MAX_SAFE_INTEGER;
     const dueB = b.dateDueMs ?? Number.MAX_SAFE_INTEGER;
     if (dueA !== dueB) return dueA - dueB;
@@ -44,8 +51,16 @@ export function pickTargetDebt(
   })[0] ?? null;
 }
 
+export function roundPaymentToTenCents(amountCents: number): number {
+  if (amountCents <= 0) return amountCents;
+  const dollars = Math.ceil(amountCents / 100);
+  const roundedDollars = Math.ceil(dollars / 10) * 10;
+  return roundedDollars * 100;
+}
+
 export function microPaymentAmountCents(settings: AutopilotSettings): number {
-  return Math.max(100, settings.dailyAmountCents);
+  const base = Math.max(100, settings.dailyAmountCents);
+  return settings.roundPaymentsToTen ? roundPaymentToTenCents(base) : base;
 }
 
 export interface MicroPaymentPlan {

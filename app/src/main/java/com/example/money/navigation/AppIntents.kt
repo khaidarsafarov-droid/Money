@@ -3,6 +3,7 @@ package com.example.money.navigation
 import android.content.Context
 import android.content.Intent
 import com.example.money.MainActivity
+import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.home.HomeLaunchConfig
 import com.example.money.ui.home.HomeTab
 
@@ -15,6 +16,7 @@ object AppIntents {
     const val ACTION_QUICK_ADD = "quick_add"
     const val ACTION_OPEN_DEBTOR = "open_debtor"
     const val ACTION_DEBT_PAYMENT = "debt_payment"
+    const val ACTION_WEEKLY_CHECKIN = "weekly_checkin"
 
     fun parseLaunchConfig(intent: Intent?): HomeLaunchConfig {
         if (intent == null) return HomeLaunchConfig()
@@ -36,6 +38,11 @@ object AppIntents {
                     openDebtPaymentForDebtorId = debtorId.takeIf { it > 0L },
                 )
             }
+            ACTION_WEEKLY_CHECKIN -> HomeLaunchConfig(
+                initialTab = HomeTab.Debts,
+                initialDebtTab = DebtTab.IOwe,
+                openWeeklyCheckIn = true,
+            )
             else -> HomeLaunchConfig()
         }
     }
@@ -62,6 +69,12 @@ object AppIntents {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_ACTION, ACTION_OPEN_DEBTOR)
             putExtra(EXTRA_DEBTOR_ID, debtorId)
+        }
+
+    fun openWeeklyCheckInIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_ACTION, ACTION_WEEKLY_CHECKIN)
         }
 
     fun openDebtPaymentIntent(context: Context, debtorId: Long): Intent =

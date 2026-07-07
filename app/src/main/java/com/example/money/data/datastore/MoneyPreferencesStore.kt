@@ -17,6 +17,7 @@ import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
+import com.example.money.settings.WeeklyCheckInSettings
 import com.example.money.voice.VoiceGender
 import com.example.money.voice.VoiceLanguage
 import com.example.money.voice.VoiceReportSettings
@@ -81,6 +82,10 @@ object MoneyPreferenceKeys {
     val AUTOPILOT_STRATEGY = stringPreferencesKey("autopilot_strategy")
     val AUTOPILOT_REMINDER_HOUR = intPreferencesKey("autopilot_reminder_hour")
     val AUTOPILOT_REMINDER_MINUTE = intPreferencesKey("autopilot_reminder_minute")
+    val AUTOPILOT_ROUND_TO_TEN = booleanPreferencesKey("autopilot_round_to_ten")
+
+    val WEEKLY_CHECKIN_ENABLED = booleanPreferencesKey("weekly_checkin_enabled")
+    val WEEKLY_CHECKIN_HOUR = intPreferencesKey("weekly_checkin_hour")
 
     val ADVISOR_HISTORY_JSON = stringPreferencesKey("advisor_history_json")
 }
@@ -256,6 +261,27 @@ class MoneyPreferencesStore(
         }
     }
 
+    val weeklyCheckInSettings: Flow<WeeklyCheckInSettings> =
+        context.moneyPreferencesDataStore.data.map { prefs ->
+            WeeklyCheckInSettings(
+                enabled = prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_ENABLED] ?: false,
+                hour = prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_HOUR] ?: 10,
+            )
+        }
+
+    suspend fun updateWeeklyCheckInSettings(transform: (WeeklyCheckInSettings) -> WeeklyCheckInSettings) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            val updated = transform(
+                WeeklyCheckInSettings(
+                    enabled = prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_ENABLED] ?: false,
+                    hour = prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_HOUR] ?: 10,
+                ),
+            )
+            prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_ENABLED] = updated.enabled
+            prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_HOUR] = updated.hour
+        }
+    }
+
     private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
         val array = JSONArray()
         items.forEach { item ->
@@ -349,6 +375,7 @@ private fun Preferences.toAutopilotSettings(): AutopilotSettings =
         strategy = AutopilotStrategy.fromStored(this[MoneyPreferenceKeys.AUTOPILOT_STRATEGY]),
         reminderHour = this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_HOUR] ?: 20,
         reminderMinute = this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_MINUTE] ?: 0,
+        roundPaymentsToTen = this[MoneyPreferenceKeys.AUTOPILOT_ROUND_TO_TEN] ?: false,
     )
 
 private fun MutablePreferences.writeAutopilotSettings(settings: AutopilotSettings) {
@@ -357,6 +384,7 @@ private fun MutablePreferences.writeAutopilotSettings(settings: AutopilotSetting
     this[MoneyPreferenceKeys.AUTOPILOT_STRATEGY] = settings.strategy.name
     this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_HOUR] = settings.reminderHour
     this[MoneyPreferenceKeys.AUTOPILOT_REMINDER_MINUTE] = settings.reminderMinute
+    this[MoneyPreferenceKeys.AUTOPILOT_ROUND_TO_TEN] = settings.roundPaymentsToTen
 }
 
 private fun Preferences.toGamificationState(): GamificationState =

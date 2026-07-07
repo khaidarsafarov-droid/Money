@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.money.MoneyApplication
 import com.example.money.autopilot.MicroPaymentScheduler
+import com.example.money.notification.WeeklyCheckInScheduler
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
+import com.example.money.settings.WeeklyCheckInSettings
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -33,6 +35,20 @@ class AutopilotSettingsViewModel(
 
     fun setStrategy(strategy: AutopilotStrategy) {
         update { it.copy(strategy = strategy) }
+    }
+
+    val weeklyCheckInSettings: StateFlow<WeeklyCheckInSettings> =
+        preferencesStore.weeklyCheckInSettings.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = WeeklyCheckInSettings(),
+        )
+
+    fun updateWeeklyCheckIn(transform: (WeeklyCheckInSettings) -> WeeklyCheckInSettings) {
+        viewModelScope.launch {
+            preferencesStore.updateWeeklyCheckInSettings(transform)
+            WeeklyCheckInScheduler.syncSchedule(app)
+        }
     }
 
     class Factory(

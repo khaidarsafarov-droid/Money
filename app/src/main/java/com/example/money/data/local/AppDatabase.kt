@@ -23,7 +23,7 @@ import com.example.money.data.local.migration.MIGRATION_4_5
 import com.example.money.data.local.migration.MIGRATION_5_6
 import com.example.money.data.local.migration.MIGRATION_6_7
 import com.example.money.data.local.migration.MIGRATION_7_8
-import com.example.money.data.local.migration.MIGRATION_8_9
+import com.example.money.data.local.migration.MIGRATION_9_10
 
 @Database(
     entities = [
@@ -34,7 +34,7 @@ import com.example.money.data.local.migration.MIGRATION_8_9
         SavingsGoalEntity::class,
         SyncQueueEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -58,7 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME,
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build().also { instance = it }
             }
         }
     }

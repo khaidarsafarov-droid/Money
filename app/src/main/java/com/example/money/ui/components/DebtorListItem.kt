@@ -110,6 +110,16 @@ fun DebtorListItem(
                             style = MaterialTheme.typography.titleMedium,
                         )
                         DebtDisplayStatusChip(dueStatus = dueStatus)
+                        if (debtor.isHighPriorityDebt && !debtor.isPaid) {
+                            Text(
+                                text = stringResource(R.string.loan_priority_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = OverdueRed,
+                                modifier = Modifier
+                                    .background(OverdueRed.copy(alpha = 0.1f), MaterialTheme.shapes.small)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
                         if (!debtor.isPaid && onAccelerate != null) {
                             TextButton(
                                 onClick = onAccelerate,

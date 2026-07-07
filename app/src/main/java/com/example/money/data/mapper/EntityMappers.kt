@@ -30,6 +30,8 @@ fun DebtorEntity.toDomain(payments: List<DebtPaymentEntity> = emptyList()): Debt
     note = note,
     dateGiven = dateGiven,
     dateDue = dateDue,
+    loanCategory = loanCategory.toLoanCategory(),
+    interestRateBps = interestRateBps,
     paymentHistory = payments.map { it.toDomain() },
 )
 
@@ -46,6 +48,8 @@ fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
     note = note,
     dateGiven = dateGiven,
     dateDue = dateDue,
+    loanCategory = loanCategory.name,
+    interestRateBps = interestRateBps,
 )
 
 fun DebtPaymentEntity.toDomain(): DebtPayment = DebtPayment(
@@ -144,3 +148,6 @@ private fun String.toDebtStatus(): DebtStatus =
 
 private fun String.toDebtType(): DebtType =
     runCatching { DebtType.valueOf(this) }.getOrDefault(DebtType.CREDITOR)
+
+private fun String.toLoanCategory(): LoanCategory =
+    LoanCategory.fromStored(this)

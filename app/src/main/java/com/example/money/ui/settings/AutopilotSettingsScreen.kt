@@ -144,6 +144,65 @@ fun AutopilotSettingsScreen(
                             label = { Text(stringResource(R.string.autopilot_strategy_avalanche)) },
                         )
                     }
+                    if (settings.strategy == AutopilotStrategy.AVALANCHE) {
+                        Text(
+                            stringResource(R.string.autopilot_strategy_avalanche_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CreamSurface),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.autopilot_round_to_ten), fontWeight = FontWeight.SemiBold)
+                        Text(
+                            stringResource(R.string.autopilot_round_to_ten_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Switch(
+                        checked = settings.roundPaymentsToTen,
+                        onCheckedChange = { enabled ->
+                            viewModel.update { it.copy(roundPaymentsToTen = enabled) }
+                        },
+                    )
+                }
+            }
+
+            val weeklyCheckIn by viewModel.weeklyCheckInSettings.collectAsStateWithLifecycle()
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CreamSurface),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.weekly_checkin_enabled), fontWeight = FontWeight.SemiBold)
+                        Text(
+                            stringResource(R.string.weekly_checkin_enabled_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Switch(
+                        checked = weeklyCheckIn.enabled,
+                        onCheckedChange = { enabled ->
+                            viewModel.updateWeeklyCheckIn { it.copy(enabled = enabled) }
+                        },
+                    )
                 }
             }
         }

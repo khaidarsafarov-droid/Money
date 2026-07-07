@@ -9,6 +9,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
+import kotlin.math.ceil
 import kotlin.math.max
 
 object DebtGamificationEngine {
@@ -91,7 +92,8 @@ object DebtAutopilotEngine {
         return when (strategy) {
             AutopilotStrategy.SNOWBALL -> active.minByOrNull { it.remainingAmountCents }
             AutopilotStrategy.AVALANCHE -> active.sortedWith(
-                compareBy<Debtor> { it.dateDue }
+                compareByDescending<Debtor> { it.interestRateBps }
+                    .thenBy { it.dateDue }
                     .thenByDescending { it.remainingAmountCents },
             ).firstOrNull()
         }
@@ -101,7 +103,7 @@ object DebtAutopilotEngine {
         if (!settings.enabled) return null
         val target = pickTargetDebt(debts, settings.strategy) ?: return null
         val amount = minOf(
-            max(100L, settings.dailyAmountCents),
+            microPaymentAmountCents(settings),
             target.remainingAmountCents,
         )
         if (amount <= 0L) return null
@@ -110,6 +112,18 @@ object DebtAutopilotEngine {
             debtorName = target.name,
             amountCents = amount,
         )
+    }
+
+    private fun microPaymentAmountCents(settings: AutopilotSettings): Long {
+        val base = max(100L, settings.dailyAmountCents)
+        return if (settings.roundPaymentsToTen) roundPaymentToTenCents(base) else base
+    }
+
+    fun roundPaymentToTenCents(amountCents: Long): Long {
+        if (amountCents <= 0L) return amountCents
+        val dollars = ceil(amountCents / 100.0).toLong()
+        val roundedDollars = ((dollars + 9) / 10) * 10
+        return roundedDollars * 100
     }
 }
 
@@ -128,9 +142,16 @@ object DebtAdvisorTemplates {
 
         return when (promptId) {
             "which_debt_first" -> {
-                val target = DebtAutopilotEngine.pickTargetDebt(active, AutopilotStrategy.SNOWBALL)
-                    ?: return "Сначала добавьте долг в приложение."
-                "Начните с «${target.name}» — это самый маленький остаток. Быстрая победа даст энергию закрыть остальные."
+                val hasHighRate = active.any { it.interestRateBps > 0 }
+                val avalanche = DebtAutopilotEngine.pickTargetDebt(active, AutopilotStrategy.AVALANCHE)
+                val snowball = DebtAutopilotEngine.pickTargetDebt(active, AutopilotStrategy.SNOWBALL)
+                if (hasHighRate && avalanche != null) {
+                    val rate = avalanche.interestRateBps / 100.0
+                    "Стратегия «Лавина»: начните с «${avalanche.name}» — самая высокая ставка (${String.format("%.1f", rate)}%). Закрыв «плохие» долги, вы сэкономите на процентах."
+                } else {
+                    val target = snowball ?: return "Сначала добавьте долг в приложение."
+                    "Начните с «${target.name}» — это самый маленький остаток. Быстрая победа даст энергию закрыть остальные."
+                }
             }
             "what_if_extra" -> {
                 val boosted = DebtFreedomEngine.calculateFreedomProjection(

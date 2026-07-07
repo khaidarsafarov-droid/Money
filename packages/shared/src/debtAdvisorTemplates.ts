@@ -17,6 +17,8 @@ export interface AdvisorDebtInput {
   currentCents: number;
   isCompleted: boolean;
   dateDueMs?: number;
+  interestRateBps?: number;
+  loanCategory?: string;
 }
 
 export interface AdvisorMessage {
@@ -35,6 +37,9 @@ export function pickAvalancheDebt(debts: AdvisorDebtInput[]): AdvisorDebtInput |
   const active = debts.filter((d) => !d.isCompleted && d.remainingCents > 0);
   if (active.length === 0) return null;
   return [...active].sort((a, b) => {
+    const rateA = a.interestRateBps ?? 0;
+    const rateB = b.interestRateBps ?? 0;
+    if (rateA !== rateB) return rateB - rateA;
     const dueA = a.dateDueMs ?? Number.MAX_SAFE_INTEGER;
     const dueB = b.dateDueMs ?? Number.MAX_SAFE_INTEGER;
     if (dueA !== dueB) return dueA - dueB;
@@ -64,7 +69,14 @@ export function buildAdvisorReply(
 
   switch (promptId) {
     case "which_debt_first": {
+      const avalanche = pickAvalancheDebt(active);
       const snowball = pickSnowballDebt(active);
+      if (!avalanche && !snowball) return "Сначала добавьте долг в приложение.";
+      const hasHighRate = active.some((d) => (d.interestRateBps ?? 0) > 0);
+      if (hasHighRate && avalanche) {
+        const rate = ((avalanche.interestRateBps ?? 0) / 100).toFixed(1);
+        return `Стратегия «Лавина»: начните с «${avalanche.name}» — самая высокая ставка (${rate}%). Закрыв «плохие» долги, вы сэкономите на процентах.`;
+      }
       if (!snowball) return "Сначала добавьте долг в приложение.";
       return `Начните с «${snowball.name}» — это самый маленький остаток. Быстрая победа даст энергию закрыть остальные.`;
     }

@@ -10,12 +10,14 @@ data class HomeLaunchConfig(
     val initialDebtTab: DebtTab = DebtTab.OwesMe,
     val highlightDebtorId: Long? = null,
     val openDebtPaymentForDebtorId: Long? = null,
+    val openWeeklyCheckIn: Boolean = false,
 ) {
     fun withoutOneShotActions(): HomeLaunchConfig = copy(
         openExpenseDialog = false,
         openQuickAddDialog = false,
         highlightDebtorId = null,
         openDebtPaymentForDebtorId = null,
+        openWeeklyCheckIn = false,
     )
 }
 

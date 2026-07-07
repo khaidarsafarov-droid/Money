@@ -31,4 +31,8 @@ data class DebtorEntity(
     val dateGiven: Long,
     @ColumnInfo(name = "date_due")
     val dateDue: Long,
+    @ColumnInfo(name = "loan_category")
+    val loanCategory: String = "OTHER",
+    @ColumnInfo(name = "interest_rate_bps")
+    val interestRateBps: Int = 0,
 )

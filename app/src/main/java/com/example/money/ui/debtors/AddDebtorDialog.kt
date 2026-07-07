@@ -23,7 +23,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.domain.model.DebtType
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.DatePickerField
@@ -49,6 +52,8 @@ fun DebtorFormDialog(
         dateDue: Long,
         affectsBalance: Boolean,
         note: String,
+        loanCategory: LoanCategory,
+        interestRateBps: Int,
     ) -> Unit,
 ) {
     val isEdit = existingDebtor != null
@@ -74,6 +79,15 @@ fun DebtorFormDialog(
     }
     var dateDue by remember(existingDebtor?.id, debtType) {
         mutableLongStateOf(existingDebtor?.dateDue ?: defaultDueDateMillis())
+    }
+    var loanCategory by remember(existingDebtor?.id, debtType) {
+        mutableStateOf(existingDebtor?.loanCategory ?: LoanCategory.OTHER)
+    }
+    var interestRateText by remember(existingDebtor?.id, debtType) {
+        mutableStateOf(
+            existingDebtor?.interestRateBps?.let { if (it > 0) (it / 100.0).toString() else "" }
+                .orEmpty(),
+        )
     }
 
     var nameError by remember { mutableStateOf<String?>(null) }
@@ -171,6 +185,35 @@ fun DebtorFormDialog(
                     label = { Text(stringResource(R.string.debt_note_label)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (resolvedType == DebtType.DEBTOR) {
+                    Text(
+                        text = stringResource(R.string.loan_category_label),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LoanCategory.entries.forEach { category ->
+                            FilterChip(
+                                selected = loanCategory == category,
+                                onClick = { loanCategory = category },
+                                label = { Text(loanCategoryLabel(category)) },
+                            )
+                        }
+                    }
+                    if (loanCategory.isHighPriority) {
+                        Text(
+                            text = stringResource(R.string.loan_category_priority_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    OutlinedTextField(
+                        value = interestRateText,
+                        onValueChange = { interestRateText = it },
+                        label = { Text(stringResource(R.string.loan_interest_rate_label)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
@@ -218,7 +261,18 @@ fun DebtorFormDialog(
                     if (nameError != null || amountError != null || dateError != null) return@TextButton
 
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
-                    onConfirm(name.trim(), amount, dateGiven, dateDue, affectsBalance, note.trim())
+                    val interestRateBps = interestRateText.toDoubleOrNull()
+                        ?.let { (it * 100).toInt().coerceAtLeast(0) } ?: 0
+                    onConfirm(
+                        name.trim(),
+                        amount,
+                        dateGiven,
+                        dateDue,
+                        affectsBalance,
+                        note.trim(),
+                        loanCategory,
+                        interestRateBps,
+                    )
                 },
             ) {
                 Text(
@@ -247,6 +301,8 @@ fun AddDebtorDialog(
         dateDue: Long,
         affectsBalance: Boolean,
         note: String,
+        loanCategory: LoanCategory,
+        interestRateBps: Int,
     ) -> Unit,
 ) = DebtorFormDialog(
     debtType = debtType,

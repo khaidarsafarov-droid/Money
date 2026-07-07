@@ -305,4 +305,53 @@
     <string name="autopilot_apply_failed">Не удалось применить микроплатёж</string>
     <string name="autopilot_notification_title">Микроплатёж по долгу</string>
     <string name="autopilot_notification_body">Сегодня можно внести %1$s — один шаг к свободе</string>
+    <string name="autopilot_round_to_ten">Округлять платёж до $10</string>
+    <string name="autopilot_round_to_ten_hint">Лишние $2–$5 автоматически пойдут на основной долг</string>
+    <string name="autopilot_strategy_avalanche_hint">Лавина: сначала долг с самой высокой процентной ставкой</string>
+
+    <!-- Loan categories (Article integration) -->
+    <string name="loan_category_label">Тип долга</string>
+    <string name="loan_category_credit_card">Кредитная карта</string>
+    <string name="loan_category_consumer">Потребительский</string>
+    <string name="loan_category_auto">Авто</string>
+    <string name="loan_category_mortgage">Ипотека</string>
+    <string name="loan_category_education">Обучение</string>
+    <string name="loan_category_other">Другое</string>
+    <string name="loan_category_priority_hint">Приоритетный — закрывайте в первую очередь</string>
+    <string name="loan_priority_badge">Приоритет</string>
+    <string name="loan_interest_rate_label">Процентная ставка (%)</string>
+
+    <!-- Debt overview -->
+    <string name="debt_overview_title">Ваша отправная точка</string>
+    <string name="debt_overview_subtitle">Это ваша отправная точка. Мы всё исправим.</string>
+    <string name="debt_overview_count">Активных долгов: %1$d</string>
+
+    <!-- Celebration -->
+    <string name="celebration_title">Долг закрыт!</string>
+    <string name="celebration_body">Поздравляем! Вы закрыли долг «%1$s». Выберите бесплатную награду:</string>
+    <string name="celebration_reward_prompt">Как отпразднуете?</string>
+    <string name="celebration_reward_walk">Прогулка</string>
+    <string name="celebration_reward_movie">Фильм</string>
+    <string name="celebration_reward_meal">Любимое блюдо</string>
+    <string name="celebration_postcard_title">Я закрыл(а) долг!</string>
+    <string name="celebration_postcard_body">Ещё один шаг к финансовой свободе — без цифр, только победа.</string>
+    <string name="celebration_share">Поделиться</string>
+    <string name="celebration_share_text">Я закрыл(а) долг! Ещё один шаг к финансовой свободе 🎉</string>
+    <string name="action_close">Закрыть</string>
+
+    <!-- Weekly check-in -->
+    <string name="weekly_checkin_title">Еженедельный чек-ин</string>
+    <string name="weekly_checkin_body">Ваш прогресс по снижению долгов:</string>
+    <string name="weekly_checkin_progress">Погашено %1$d%% от общей суммы</string>
+    <string name="weekly_checkin_remaining">Осталось: %1$s</string>
+    <string name="weekly_checkin_closed_count">Закрыто долгов: %1$d</string>
+    <string name="weekly_checkin_enabled">Еженедельный чек-ин</string>
+    <string name="weekly_checkin_enabled_hint">Каждое воскресенье — напоминание посмотреть прогресс</string>
+    <string name="weekly_checkin_notification_title">Чек-ин по долгам</string>
+    <string name="weekly_checkin_notification_body">Посмотрите, как снизился ваш общий долг на этой неделе</string>
+
+    <!-- Income ideas -->
+    <string name="income_ideas_title">Идеи для дохода</string>
+    <string name="income_ideas_subtitle">Проверенные ресурсы для подработки:</string>
+    <string name="income_calculator_hint">Чтобы закрыть все долги на %2$d мес. быстрее, нужно ~%1$s/мес дополнительного дохода.</string>
 </resources>

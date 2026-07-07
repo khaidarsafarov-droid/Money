@@ -17,4 +17,5 @@ data class AutopilotSettings(
     val strategy: AutopilotStrategy = AutopilotStrategy.SNOWBALL,
     val reminderHour: Int = 20,
     val reminderMinute: Int = 0,
+    val roundPaymentsToTen: Boolean = false,
 )

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.util.DebtExtraPaymentEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.MoneyTextField
 import com.example.money.ui.util.Formatters
@@ -59,6 +60,10 @@ fun DebtPaymentDialog(
     }
 
     val context = LocalContext.current
+    val extraHintCents = 1_000L
+    val extraImpact = remember(debtor.id, debtor.remainingAmountCents) {
+        DebtExtraPaymentEngine.calculateImpact(debtor, extraHintCents)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -81,6 +86,13 @@ fun DebtPaymentDialog(
                     isError = amountError != null,
                     supportingText = amountError,
                 )
+                if (debtor.debtType == DebtType.DEBTOR && extraImpact.hint.isNotBlank()) {
+                    Text(
+                        text = extraImpact.hint,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                    )
+                }
                 TextButton(
                     onClick = {
                         amountText = MoneyMath.fromCents(debtor.remainingAmountCents).let { amount ->

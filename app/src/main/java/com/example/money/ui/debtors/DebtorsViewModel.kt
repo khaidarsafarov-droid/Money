@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.DebtType
+import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.repository.DebtorRepository
@@ -45,6 +46,37 @@ class DebtorsViewModel(
 
     private val _advisorMessages = MutableStateFlow<List<AdvisorChatMessage>>(emptyList())
     val advisorMessages: StateFlow<List<AdvisorChatMessage>> = _advisorMessages.asStateFlow()
+
+    private val _celebrationDebtor = MutableStateFlow<Debtor?>(null)
+    val celebrationDebtor: StateFlow<Debtor?> = _celebrationDebtor.asStateFlow()
+
+    private val _showCheckIn = MutableStateFlow(false)
+    val showCheckIn: StateFlow<Boolean> = _showCheckIn.asStateFlow()
+
+    fun dismissCelebration() {
+        _celebrationDebtor.value = null
+    }
+
+    fun dismissCheckIn() {
+        _showCheckIn.value = false
+    }
+
+    fun openCheckIn() {
+        _showCheckIn.value = true
+    }
+
+    val weeklyCheckInSettings: StateFlow<com.example.money.settings.WeeklyCheckInSettings> =
+        preferencesStore.weeklyCheckInSettings.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = com.example.money.settings.WeeklyCheckInSettings(),
+        )
+
+    suspend fun updateWeeklyCheckInSettings(
+        transform: (com.example.money.settings.WeeklyCheckInSettings) -> com.example.money.settings.WeeklyCheckInSettings,
+    ) {
+        preferencesStore.updateWeeklyCheckInSettings(transform)
+    }
 
     private val allDebtors = debtorRepository.getAllDebtors()
         .catch { exception ->
@@ -174,6 +206,8 @@ class DebtorsViewModel(
         affectsBalance: Boolean,
         note: String = "",
         currency: String = "USD",
+        loanCategory: LoanCategory = LoanCategory.OTHER,
+        interestRateBps: Int = 0,
     ) {
         viewModelScope.launch {
             try {
@@ -193,6 +227,8 @@ class DebtorsViewModel(
                         note = note,
                         dateGiven = dateGiven,
                         dateDue = dateDue,
+                        loanCategory = loanCategory,
+                        interestRateBps = interestRateBps,
                     ),
                 )
                 val created = debtorRepository.getDebtorById(id)
@@ -213,6 +249,8 @@ class DebtorsViewModel(
         dateDue: Long,
         affectsBalance: Boolean,
         note: String = "",
+        loanCategory: LoanCategory = debtor.loanCategory,
+        interestRateBps: Int = debtor.interestRateBps,
     ) {
         viewModelScope.launch {
             val targetCents = MoneyMath.toCents(amount)
@@ -224,6 +262,8 @@ class DebtorsViewModel(
                 dateDue = dateDue,
                 affectsBalance = affectsBalance,
                 note = note,
+                loanCategory = loanCategory,
+                interestRateBps = interestRateBps,
             )
             debtorRepository.updateDebtor(updated, previousAffectsBalance)
             if (!updated.isPaid) {
@@ -239,6 +279,7 @@ class DebtorsViewModel(
         val debtor = debtorRepository.getDebtorById(debtorId)
         if (debtor?.isPaid == true) {
             debtReminderScheduler.cancel(debtorId)
+            _celebrationDebtor.value = debtor
         }
         if (success && debtor != null) {
             recordPaymentGamification(debtor)

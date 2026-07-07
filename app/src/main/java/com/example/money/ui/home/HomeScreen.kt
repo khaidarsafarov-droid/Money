@@ -88,7 +88,11 @@ import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtAdvisorBottomSheet
 import com.example.money.ui.debtors.DebtFreedomTab
+import com.example.money.ui.debtors.DebtCelebrationDialog
+import com.example.money.ui.debtors.DebtCheckInSheet
+import com.example.money.ui.debtors.DebtOverviewCard
 import com.example.money.ui.debtors.GamificationBanner
+import com.example.money.ui.debtors.IncomeIdeasDialog
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.debtors.DebtorsViewModel
@@ -169,7 +173,11 @@ fun HomeScreen(
     var showQuickAddDialog by remember { mutableStateOf(false) }
     var showTopMenu by remember { mutableStateOf(false) }
     var showAdvisorSheet by remember { mutableStateOf(false) }
+    var showIncomeIdeas by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
+
+    val celebrationDebtor by debtorsViewModel.celebrationDebtor.collectAsStateWithLifecycle()
+    val showCheckIn by debtorsViewModel.showCheckIn.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
@@ -197,6 +205,7 @@ fun HomeScreen(
         launchConfig.initialDebtTab,
         launchConfig.highlightDebtorId,
         launchConfig.openDebtPaymentForDebtorId,
+        launchConfig.openWeeklyCheckIn,
     ) {
         selectedTab = launchConfig.initialTab.ordinal
         tabletSection = when (launchConfig.initialTab) {
@@ -228,6 +237,11 @@ fun HomeScreen(
             } else if (launchConfig.highlightDebtorId != null) {
                 showMessage(context.getString(R.string.debtor_not_found))
             }
+        }
+
+        if (launchConfig.openWeeklyCheckIn) {
+            debtorsViewModel.setDebtTab(DebtTab.IOwe)
+            debtorsViewModel.openCheckIn()
         }
 
         onLaunchConfigConsumed()
@@ -270,7 +284,7 @@ fun HomeScreen(
             },
             availableBalance = availableBalanceUsd,
             onDismiss = { showAddDebtorDialog = false },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note ->
+            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps ->
                 debtorsViewModel.addDebtor(
                     name = name,
                     amount = amount,
@@ -282,6 +296,8 @@ fun HomeScreen(
                     },
                     affectsBalance = affectsBalance,
                     note = note,
+                    loanCategory = loanCategory,
+                    interestRateBps = interestRateBps,
                 )
                 showAddDebtorDialog = false
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_added)) }
@@ -294,7 +310,7 @@ fun HomeScreen(
             existingDebtor = debtor,
             availableBalance = availableBalanceUsd,
             onDismiss = { editDebtor = null },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note ->
+            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps ->
                 debtorsViewModel.updateDebtor(
                     debtor = debtor,
                     name = name,
@@ -303,6 +319,8 @@ fun HomeScreen(
                     dateDue = dateDue,
                     affectsBalance = affectsBalance,
                     note = note,
+                    loanCategory = loanCategory,
+                    interestRateBps = interestRateBps,
                 )
                 editDebtor = null
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_updated)) }
@@ -341,6 +359,19 @@ fun HomeScreen(
                     }
                 }
             },
+        )
+    }
+    celebrationDebtor?.let { debtor ->
+        DebtCelebrationDialog(
+            debtor = debtor,
+            onDismiss = debtorsViewModel::dismissCelebration,
+        )
+    }
+    if (showIncomeIdeas) {
+        IncomeIdeasDialog(
+            debtors = allDebtors,
+            hideAmounts = privacySettings.hideAmounts,
+            onDismiss = { showIncomeIdeas = false },
         )
     }
     if (showTransferDialog) {
@@ -660,6 +691,7 @@ fun HomeScreen(
                 onTabSelected = { selectedTab = it },
                 goals = goals,
                 debtors = debtors,
+                allDebtors = allDebtors,
                 debtTab = debtTab,
                 onDebtTabChange = debtorsViewModel::setDebtTab,
                 debtorFilter = debtorFilter,
@@ -705,6 +737,9 @@ fun HomeScreen(
                 onOpenAppLanguage = onOpenAppLanguage,
                 onOpenPrivacySettings = onOpenPrivacySettings,
                 onOpenAutopilotSettings = onOpenAutopilotSettings,
+                onOpenIncomeIdeas = { showIncomeIdeas = true },
+                showCheckIn = showCheckIn,
+                onDismissCheckIn = debtorsViewModel::dismissCheckIn,
                 gamificationState = gamificationState,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
@@ -757,6 +792,7 @@ private fun PhoneHomeLayout(
     onTabSelected: (Int) -> Unit,
     goals: List<SavingsGoal>,
     debtors: List<Debtor>,
+    allDebtors: List<Debtor>,
     debtTab: DebtTab,
     onDebtTabChange: (DebtTab) -> Unit,
     debtorFilter: DebtorFilter,
@@ -788,6 +824,9 @@ private fun PhoneHomeLayout(
     onOpenAppLanguage: () -> Unit,
     onOpenPrivacySettings: () -> Unit,
     onOpenAutopilotSettings: () -> Unit,
+    onOpenIncomeIdeas: () -> Unit,
+    showCheckIn: Boolean,
+    onDismissCheckIn: () -> Unit,
     gamificationState: com.example.money.settings.GamificationState,
     privacySettings: com.example.money.settings.PrivacySettings,
     autopilotSettings: com.example.money.settings.AutopilotSettings,
@@ -831,6 +870,14 @@ private fun PhoneHomeLayout(
                         selected = false,
                         onClick = {
                             onOpenAutopilotSettings()
+                            scope.launch { drawerState.close() }
+                        },
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.income_ideas_title)) },
+                        selected = false,
+                        onClick = {
+                            onOpenIncomeIdeas()
                             scope.launch { drawerState.close() }
                         },
                     )
@@ -965,6 +1012,32 @@ private fun PhoneHomeLayout(
                             )
                         }
                         if (debtTab != DebtTab.Freedom) {
+                            if (debtTab == DebtTab.IOwe) {
+                                item {
+                                    DebtOverviewCard(
+                                        debtors = allDebtors,
+                                        hideAmounts = privacySettings.hideAmounts,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                    )
+                                }
+                            }
+                            if (showCheckIn) {
+                                item {
+                                    DebtCheckInSheet(
+                                        debtors = allDebtors,
+                                        hideAmounts = privacySettings.hideAmounts,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                    )
+                                }
+                                item {
+                                    TextButton(
+                                        onClick = onDismissCheckIn,
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                    ) {
+                                        Text(stringResource(R.string.action_close))
+                                    }
+                                }
+                            }
                             item {
                                 GamificationBanner(
                                     state = gamificationState,
