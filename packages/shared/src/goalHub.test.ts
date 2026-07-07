@@ -3,6 +3,7 @@ import { determinePsychotype, psychotypeLabelRu } from "./psychotype";
 import { affirmationsForFears } from "./userFears";
 import { buildPayoffPlan } from "./goalHubEngine";
 import { isChecklistComplete, emptyWeeklyChecklist } from "./weeklyChecklist";
+import { computeGoalBadges, GOAL_BADGE_FIRST_PAYMENT, GOAL_BADGE_FREEDOM } from "./goalChallenges";
 
 describe("psychotype", () => {
   it("detects spender majority", () => {
@@ -66,5 +67,27 @@ describe("weeklyChecklist", () => {
       luckDiaryEntry: true,
     };
     expect(isChecklistComplete(state)).toBe(true);
+  });
+});
+
+describe("goalChallenges", () => {
+  it("awards first payment badge", () => {
+    const badges = computeGoalBadges({
+      paymentCount: 1,
+      smallestDebtClosed: false,
+      totalDebtProgressPercent: 10,
+      allDebtsClosed: false,
+    });
+    expect(badges).toContain(GOAL_BADGE_FIRST_PAYMENT);
+  });
+
+  it("awards freedom when all debts closed", () => {
+    const badges = computeGoalBadges({
+      paymentCount: 5,
+      smallestDebtClosed: true,
+      totalDebtProgressPercent: 100,
+      allDebtsClosed: true,
+    });
+    expect(badges).toContain(GOAL_BADGE_FREEDOM);
   });
 });

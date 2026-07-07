@@ -9,6 +9,7 @@ import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtFreedomEngine
+import com.example.money.domain.util.GoalChallengeEngines
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.FinancialPsychotype
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -88,6 +90,33 @@ class GoalHubViewModel(
         initialValue = emptyList(),
     )
 
+    val activeChallenges: StateFlow<List<GoalChallengeEngines.ActiveChallenge>> = combine(
+        profile,
+        debtors,
+    ) { prof, list ->
+        val parsed = GoalChallengeEngines.parseChallenges(prof.activeChallengesJson)
+        GoalChallengeEngines.syncPaymentChallengeProgress(parsed, list)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList(),
+    )
+
+    init {
+        viewModelScope.launch {
+            debtors
+                .distinctUntilChanged()
+                .collect { list ->
+                    val badges = GoalChallengeEngines.computeGoalBadges(list)
+                    val current = profile.value.goalBadges
+                    if (badges != current) {
+                        preferencesStore.updateGoalPsychologyProfile { it.copy(goalBadges = badges) }
+                    }
+                    syncChallengeProgressFromPayments(list)
+                }
+        }
+    }
+
     fun setExtraMonthlyCents(cents: Long) {
         _extraMonthlyCents.value = cents.coerceAtLeast(0L)
     }
@@ -133,6 +162,56 @@ class GoalHubViewModel(
     fun updateVisionPhotoPath(path: String?) {
         viewModelScope.launch {
             preferencesStore.updateGoalPsychologyProfile { it.copy(visionPhotoPath = path) }
+        }
+    }
+
+    fun startChallenge(
+        templateId: GoalChallengeEngines.ChallengeTemplateId,
+        debtId: Long? = null,
+        debtName: String? = null,
+    ) {
+        viewModelScope.launch {
+            val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)
+            val challenge = GoalChallengeEngines.createChallenge(templateId, debtId, debtName)
+            val encoded = GoalChallengeEngines.encodeChallenges(current + challenge)
+            preferencesStore.updateGoalPsychologyProfile { it.copy(activeChallengesJson = encoded) }
+        }
+    }
+
+    fun incrementChallengeDay(challengeId: String) {
+        viewModelScope.launch {
+            val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)
+            val updated = current.map { challenge ->
+                if (challenge.id != challengeId || challenge.completed) {
+                    challenge
+                } else {
+                    val next = challenge.progressDays + 1
+                    val target = challenge.targetDays
+                    challenge.copy(
+                        progressDays = next,
+                        completed = target != null && next >= target,
+                    )
+                }
+            }
+            preferencesStore.updateGoalPsychologyProfile {
+                it.copy(activeChallengesJson = GoalChallengeEngines.encodeChallenges(updated))
+            }
+        }
+    }
+
+    fun removeChallenge(challengeId: String) {
+        viewModelScope.launch {
+            val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)
+            val updated = current.filterNot { it.id == challengeId }
+            preferencesStore.updateGoalPsychologyProfile {
+                it.copy(activeChallengesJson = GoalChallengeEngines.encodeChallenges(updated))
+            }
+        }
+    }
+
+    fun deleteLuckEntry(entry: LuckDiaryEntryEntity) {
+        viewModelScope.launch {
+            luckDiaryDao.delete(entry)
         }
     }
 
@@ -198,6 +277,16 @@ class GoalHubViewModel(
             .put("pleasureOrRestraint", state.pleasureOrRestraint)
             .put("luckDiaryEntry", state.luckDiaryEntry)
             .toString()
+
+    private suspend fun syncChallengeProgressFromPayments(debtors: List<Debtor>) {
+        val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)
+        val synced = GoalChallengeEngines.syncPaymentChallengeProgress(current, debtors)
+        if (synced != current) {
+            preferencesStore.updateGoalPsychologyProfile {
+                it.copy(activeChallengesJson = GoalChallengeEngines.encodeChallenges(synced))
+            }
+        }
+    }
 
     class Factory(
         private val debtorRepository: DebtorRepository,
