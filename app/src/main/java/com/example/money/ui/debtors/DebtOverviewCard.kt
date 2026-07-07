@@ -17,18 +17,33 @@ import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 
 @Composable
 fun DebtOverviewCard(
     debtors: List<Debtor>,
+    debtType: DebtType,
     hideAmounts: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }
-    val totalRemaining = iOwe.sumOf { it.remainingAmountCents }
+    val activeDebts = debtors.filter { it.debtType == debtType && !it.isPaid }
+    val totalRemaining = activeDebts.sumOf { it.remainingAmountCents }
     if (totalRemaining <= 0L) return
+
+    val titleRes = when (debtType) {
+        DebtType.CREDITOR -> R.string.debt_overview_owes_me_title
+        DebtType.DEBTOR -> R.string.debt_overview_title
+    }
+    val subtitleRes = when (debtType) {
+        DebtType.CREDITOR -> R.string.debt_overview_owes_me_subtitle
+        DebtType.DEBTOR -> R.string.debt_overview_subtitle
+    }
+    val amountColor = when (debtType) {
+        DebtType.CREDITOR -> FinancePositive
+        DebtType.DEBTOR -> GoldPrimary
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -39,7 +54,7 @@ fun DebtOverviewCard(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = stringResource(R.string.debt_overview_title),
+                text = stringResource(titleRes),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
@@ -47,15 +62,15 @@ fun DebtOverviewCard(
                 text = Formatters.currencyFromCents(totalRemaining, hide = hideAmounts),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = GoldPrimary,
+                color = amountColor,
             )
             Text(
-                text = stringResource(R.string.debt_overview_subtitle),
+                text = stringResource(subtitleRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = stringResource(R.string.debt_overview_count, iOwe.size),
+                text = stringResource(R.string.debt_overview_count, activeDebts.size),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

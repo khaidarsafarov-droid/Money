@@ -219,19 +219,19 @@ fun DebtorListItem(
             }
 
             if (!debtor.isPaid) {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     OutlinedButton(
                         onClick = onAddPayment,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.small,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Payments,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(18.dp),
                         )
                         Text(
                             text = stringResource(
@@ -241,10 +241,15 @@ fun DebtorListItem(
                                     R.string.action_make_payment
                                 },
                             ),
-                            style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier.padding(start = 4.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(start = 8.dp),
+                            maxLines = 1,
                         )
                     }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                     OutlinedButton(
                         onClick = onEdit,
                         shape = MaterialTheme.shapes.small,
@@ -326,6 +331,7 @@ fun DebtorListItem(
                             contentDescription = stringResource(R.string.action_delete),
                             modifier = Modifier.size(16.dp),
                         )
+                    }
                     }
                 }
             } else {

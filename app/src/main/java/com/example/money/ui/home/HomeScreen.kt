@@ -1165,10 +1165,15 @@ private fun PhoneHomeLayout(
                             )
                         }
                         if (debtTab != DebtTab.Freedom && debtTab != DebtTab.Calendar) {
-                            if (debtTab == DebtTab.IOwe) {
+                            if (debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe) {
                                 item {
                                     DebtOverviewCard(
                                         debtors = allDebtors,
+                                        debtType = when (debtTab) {
+                                            DebtTab.OwesMe -> DebtType.CREDITOR
+                                            DebtTab.IOwe -> DebtType.DEBTOR
+                                            else -> DebtType.DEBTOR
+                                        },
                                         hideAmounts = privacySettings.hideAmounts,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                                     )

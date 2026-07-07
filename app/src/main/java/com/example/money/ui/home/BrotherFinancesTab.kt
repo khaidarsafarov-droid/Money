@@ -56,13 +56,16 @@ fun GlobalBalanceHeader(
             Text(
                 text = stringResource(
                     R.string.global_balance_available,
-                    Formatters.currencyCompact(summary.globalBalance),
+                    Formatters.currencyCompact(summary.availableBalance),
                 ),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = stringResource(R.string.global_balance_income_minus_expenses),
+                text = stringResource(
+                    R.string.global_balance_available_hint,
+                    Formatters.currencyCompact(summary.globalBalance),
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -106,6 +109,12 @@ fun GlobalBalanceHeader(
                     modifier = Modifier.weight(1f),
                 )
             }
+
+            Text(
+                text = stringResource(R.string.global_balance_debts_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             Text(
                 text = stringResource(
