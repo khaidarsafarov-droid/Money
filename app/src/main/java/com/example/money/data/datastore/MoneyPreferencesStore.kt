@@ -18,6 +18,9 @@ import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.FinancialPsychotype
 import com.example.money.settings.GoalPsychologyProfile
 import com.example.money.settings.PrivacySettings
+import com.example.money.settings.UserEmotion
+import com.example.money.settings.UserGender
+import com.example.money.settings.UserProfile
 import com.example.money.settings.WeeklyCheckInSettings
 import com.example.money.voice.VoiceGender
 import com.example.money.voice.VoiceLanguage
@@ -102,6 +105,15 @@ object MoneyPreferenceKeys {
     val GOAL_WEEKLY_CHECKLIST_JSON = stringPreferencesKey("goal_weekly_checklist_json")
     val GOAL_ACTIVE_CHALLENGES_JSON = stringPreferencesKey("goal_active_challenges_json")
     val GOAL_BADGES_JSON = stringPreferencesKey("goal_badges_json")
+
+    val USER_DISPLAY_NAME = stringPreferencesKey("user_display_name")
+    val USER_GENDER = stringPreferencesKey("user_gender")
+    val USER_AGE = intPreferencesKey("user_age")
+    val USER_CUSTOM_FEAR = stringPreferencesKey("user_custom_fear")
+    val USER_GOAL_TEXT = stringPreferencesKey("user_goal_text")
+    val USER_EMOTION = stringPreferencesKey("user_emotion")
+    val USER_PRIORITY = stringPreferencesKey("user_priority")
+    val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
 }
 
 class MoneyPreferencesStore(
@@ -305,6 +317,15 @@ class MoneyPreferencesStore(
         }
     }
 
+    val userProfile: Flow<UserProfile> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toUserProfile() }
+
+    suspend fun updateUserProfile(transform: (UserProfile) -> UserProfile) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writeUserProfile(transform(prefs.toUserProfile()))
+        }
+    }
+
     private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
         val array = JSONArray()
         items.forEach { item ->
@@ -484,4 +505,30 @@ private fun MutablePreferences.writeGoalPsychologyProfile(profile: GoalPsycholog
     this[MoneyPreferenceKeys.GOAL_WEEKLY_CHECKLIST_JSON] = profile.weeklyChecklistJson
     this[MoneyPreferenceKeys.GOAL_ACTIVE_CHALLENGES_JSON] = profile.activeChallengesJson
     this[MoneyPreferenceKeys.GOAL_BADGES_JSON] = encodeStringSet(profile.goalBadges)
+}
+
+private fun Preferences.toUserProfile(): UserProfile {
+    val ageRaw = this[MoneyPreferenceKeys.USER_AGE]
+    return UserProfile(
+        displayName = this[MoneyPreferenceKeys.USER_DISPLAY_NAME] ?: "",
+        gender = UserGender.fromStored(this[MoneyPreferenceKeys.USER_GENDER]),
+        age = ageRaw?.takeIf { it > 0 },
+        customFear = this[MoneyPreferenceKeys.USER_CUSTOM_FEAR] ?: "",
+        goalText = this[MoneyPreferenceKeys.USER_GOAL_TEXT] ?: "",
+        emotion = UserEmotion.fromStored(this[MoneyPreferenceKeys.USER_EMOTION]),
+        priority = this[MoneyPreferenceKeys.USER_PRIORITY] ?: "",
+        onboardingCompleted = this[MoneyPreferenceKeys.ONBOARDING_COMPLETED] ?: false,
+    )
+}
+
+private fun MutablePreferences.writeUserProfile(profile: UserProfile) {
+    this[MoneyPreferenceKeys.USER_DISPLAY_NAME] = profile.displayName
+    this[MoneyPreferenceKeys.USER_GENDER] = profile.gender.name
+    profile.age?.let { this[MoneyPreferenceKeys.USER_AGE] = it } ?: remove(MoneyPreferenceKeys.USER_AGE)
+    this[MoneyPreferenceKeys.USER_CUSTOM_FEAR] = profile.customFear
+    this[MoneyPreferenceKeys.USER_GOAL_TEXT] = profile.goalText
+    profile.emotion?.let { this[MoneyPreferenceKeys.USER_EMOTION] = it.name }
+        ?: remove(MoneyPreferenceKeys.USER_EMOTION)
+    this[MoneyPreferenceKeys.USER_PRIORITY] = profile.priority
+    this[MoneyPreferenceKeys.ONBOARDING_COMPLETED] = profile.onboardingCompleted
 }

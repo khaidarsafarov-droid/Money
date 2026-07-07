@@ -83,12 +83,18 @@ fun GoalScreen(
     )
 
     val profile by viewModel.profile.collectAsStateWithLifecycle()
+    val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(
+        initialValue = com.example.money.settings.UserProfile(),
+    )
     val freedom by viewModel.freedomProjection.collectAsStateWithLifecycle()
     val payoffPlan by viewModel.payoffPlan.collectAsStateWithLifecycle()
     val luckEntries by viewModel.luckEntries.collectAsStateWithLifecycle()
     val extraMonthly by viewModel.extraMonthlyCents.collectAsStateWithLifecycle()
     val activeChallenges by viewModel.activeChallenges.collectAsStateWithLifecycle()
     val debtors by viewModel.debtors.collectAsStateWithLifecycle()
+
+    val displayName = userProfile.resolvedDisplayName()
+    val goalText = userProfile.resolvedGoalText()
 
     var showPsychotypeTest by remember { mutableStateOf(!profile.psychotypeTestCompleted) }
     var showLuckForm by remember { mutableStateOf(false) }
@@ -187,7 +193,7 @@ fun GoalScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             HubCard {
-                Text(stringResource(R.string.goal_hub_psychotype, GoalPsychologyEngines.psychotypeLabel(psychotype)))
+                Text(stringResource(R.string.goal_hub_greeting, displayName, GoalPsychologyEngines.psychotypeLabel(psychotype)))
                 Text(GoalPsychologyEngines.psychotypeTagline(psychotype), color = GoldPrimary)
             }
 
@@ -255,7 +261,7 @@ fun GoalScreen(
                 }
                 profile.selectedFearIds.forEach { fearId ->
                     Text(
-                        text = "• ${GoalPsychologyEngines.affirmationForFear(fearId, progress)}",
+                        text = "• ${GoalPsychologyEngines.affirmationForFear(fearId, progress, displayName, goalText)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = FinancePositive,
                         modifier = Modifier.padding(top = 4.dp),
@@ -270,7 +276,7 @@ fun GoalScreen(
 
             HubCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(stringResource(R.string.goal_hub_luck_title), fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.goal_hub_luck_title_personal, displayName), fontWeight = FontWeight.SemiBold)
                     TextButton(onClick = { showLuckForm = true }) {
                         Text(stringResource(R.string.goal_hub_luck_add))
                     }
@@ -290,6 +296,7 @@ fun GoalScreen(
 
             ChallengesCard(
                 challenges = activeChallenges,
+                displayName = displayName,
                 onAdd = { showChallengePicker = true },
                 onIncrement = viewModel::incrementChallengeDay,
                 onRemove = viewModel::removeChallenge,
@@ -593,13 +600,14 @@ private fun VisionBoardCard(
 @Composable
 private fun ChallengesCard(
     challenges: List<GoalChallengeEngines.ActiveChallenge>,
+    displayName: String,
     onAdd: () -> Unit,
     onIncrement: (String) -> Unit,
     onRemove: (String) -> Unit,
 ) {
     HubCard {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(stringResource(R.string.goal_hub_challenges_title), fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.goal_hub_challenges_title_personal, displayName), fontWeight = FontWeight.SemiBold)
             TextButton(onClick = onAdd) {
                 Text(stringResource(R.string.goal_hub_challenges_add))
             }

@@ -66,6 +66,42 @@ object GoalPsychologyEngines {
         FinancialPsychotype.BALANCED -> "Шаг за шагом к свободе"
     }
 
+    fun psychotypeOnboardingDescription(type: FinancialPsychotype): String = when (type) {
+        FinancialPsychotype.SPENDER -> "Вы любите тратить — это даёт вам энергию. Давайте направим её в нужное русло."
+        FinancialPsychotype.SAVER -> "Вы умеете копить — это ваша суперсила. Научимся тратить с удовольствием."
+        FinancialPsychotype.INDIFFERENT -> "Деньги не ваша страсть, но контроль над ними даст вам свободу."
+        FinancialPsychotype.PLAYER -> "Риск — ваше топливо. Используем его для роста, а не для потерь."
+        FinancialPsychotype.BALANCED -> "Вы на верном пути — сохраняйте баланс."
+    }
+
+    fun affirmationForFear(
+        fearId: String,
+        progressPercent: Int,
+        displayName: String? = null,
+        goalText: String? = null,
+    ): String {
+        val base = when (fearId) {
+            "wont_escape" -> "Каждый платёж приближает вас к свободе. Вы уже сделали первый шаг."
+            "earn_more_than_parents" -> "Ваш успех — это благодарность, а не предательство."
+            "ashamed_of_debt" -> "Долги — это опыт, а не приговор. Вы справитесь."
+            "money_corrupts" -> "Вы решаете, каким человеком быть — деньги лишь инструмент."
+            "rich_are_bad" -> "Финансовая свобода может служить вам и близким."
+            "afraid_of_numbers" -> if (progressPercent > 0) {
+                "Сегодня посмотрите на свой прогресс. Вы стали ближе на $progressPercent%."
+            } else {
+                "Сегодня посмотрите на свой прогресс — вы на правильном пути."
+            }
+            else -> "Каждый шаг к свободе имеет значение."
+        }
+        val who = displayName?.trim()?.takeIf { it.length >= 2 } ?: return base
+        val goal = goalText?.trim()?.takeIf { it.isNotEmpty() }
+        return if (goal != null) {
+            "$who, вы справитесь! $base Ваша цель — $goal."
+        } else {
+            "$who, вы справитесь! $base"
+        }
+    }
+
     fun buildPayoffPlan(
         debtors: List<Debtor>,
         strategy: AutopilotStrategy,
@@ -138,20 +174,6 @@ object GoalPsychologyEngines {
             }
         }
         return max(0, ceil((target.timeInMillis - now).toDouble() / MS_PER_DAY).toInt())
-    }
-
-    fun affirmationForFear(fearId: String, progressPercent: Int): String = when (fearId) {
-        "wont_escape" -> "Каждый платёж приближает вас к свободе. Вы уже сделали первый шаг."
-        "earn_more_than_parents" -> "Ваш успех — это благодарность, а не предательство."
-        "ashamed_of_debt" -> "Долги — это опыт, а не приговор. Вы справитесь."
-        "money_corrupts" -> "Вы решаете, каким человеком быть — деньги лишь инструмент."
-        "rich_are_bad" -> "Финансовая свобода может служить вам и близким."
-        "afraid_of_numbers" -> if (progressPercent > 0) {
-            "Сегодня посмотрите на свой прогресс. Вы стали ближе на $progressPercent%."
-        } else {
-            "Сегодня посмотрите на свой прогресс — вы на правильном пути."
-        }
-        else -> "Каждый шаг к свободе имеет значение."
     }
 
     private fun estimateMonthly(debtor: Debtor, now: Long): Long? {

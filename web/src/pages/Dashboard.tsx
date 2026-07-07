@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { HandCoins, Inbox, Target, TrendingUp } from "lucide-react";
 import { useCallback, useState } from "react";
+import { personalizedGreeting } from "@money/shared";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { FreedomForecastCard } from "@/components/debt/FreedomForecastCard";
 import { FinanceCard } from "@/components/cards/FinanceCard";
 import { BalanceOverviewCard } from "@/components/finance/BalanceOverviewCard";
@@ -20,6 +22,7 @@ import { StatusFilterTabs } from "@/components/ui/StatusFilterTabs";
 import { TypeFilterChips } from "@/components/ui/TypeFilterChips";
 import { SyncPanel } from "@/components/sync/SyncPanel";
 import { useToast } from "@/components/ui/Toast";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAppPsychology } from "@/hooks/useAppPsychology";
 import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
@@ -32,6 +35,8 @@ type AmountAction = "deposit" | "expense" | "goal-transfer";
 export function DashboardPage() {
   const finance = useFinanceManager();
   const psychology = useAppPsychology();
+  const { profile: userProfile } = useUserProfile();
+  const [onboardingDone, setOnboardingDone] = useState(userProfile.onboardingCompleted);
   const { showToast } = useToast();
   const webSync = useWebSync(finance.replaceState);
   const [paymentItem, setPaymentItem] = useState<FinancialItem | null>(null);
@@ -98,6 +103,25 @@ export function DashboardPage() {
           ? "Создайте цель и начните копить на важную задачу."
           : "Создайте цель или добавьте долг — всё в одном месте.";
 
+  if (!onboardingDone) {
+    return <OnboardingFlow onComplete={() => setOnboardingDone(true)} />;
+  }
+
+  const debtProgressPercent =
+    activeDebts.length > 0
+      ? Math.min(
+          100,
+          Math.floor(
+            (activeDebts.reduce((sum, d) => sum + d.currentCents, 0) /
+              Math.max(
+                1,
+                activeDebts.reduce((sum, d) => sum + d.targetCents, 0),
+              )) *
+              100,
+          ),
+        )
+      : 0;
+
   return (
     <div className="mx-auto min-h-dvh max-w-5xl px-4 pb-32 pt-8 sm:px-6">
       <header className="mb-8 space-y-6">
@@ -106,7 +130,7 @@ export function DashboardPage() {
             TruckerLoad · Project Money
           </p>
           <h1 className="text-3xl font-semibold tracking-tight text-milk-text sm:text-4xl">
-            Личные цели
+            {personalizedGreeting(userProfile.displayName, debtProgressPercent)}
           </h1>
           <p className="text-sm text-milk-muted">USD · точность до центов</p>
         </div>

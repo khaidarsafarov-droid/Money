@@ -79,6 +79,7 @@ import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
+import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.debtors.DebtReminderShare
@@ -93,6 +94,7 @@ import com.example.money.ui.debtors.DebtCheckInSheet
 import com.example.money.ui.debtors.DebtOverviewCard
 import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.IncomeIdeasDialog
+import com.example.money.settings.UserProfile
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.debtors.DebtorsViewModel
@@ -159,6 +161,10 @@ fun HomeScreen(
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
     val transfers by budgetViewModel.transfers.collectAsStateWithLifecycle()
     val expenses by budgetViewModel.expenses.collectAsStateWithLifecycle()
+    val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
+    val debtProgressPercent = remember(allDebtors) {
+        GoalPsychologyEngines.totalDebtProgressPercent(allDebtors)
+    }
 
     var selectedTab by remember { mutableIntStateOf(launchConfig.initialTab.ordinal) }
     var showAddDebtorDialog by remember { mutableStateOf(false) }
@@ -170,7 +176,7 @@ fun HomeScreen(
     var showGoalTransferDialog by remember { mutableStateOf<SavingsGoal?>(null) }
     var showAddGoalDialog by remember { mutableStateOf(false) }
     var editGoal by remember { mutableStateOf<SavingsGoal?>(null) }
-    var showWelcomeDialog by remember { mutableStateOf(WelcomePreferences.shouldShowWelcome(context)) }
+    var showWelcomeDialog by remember { mutableStateOf(false) }
     var showQuickAddDialog by remember { mutableStateOf(false) }
     var showTopMenu by remember { mutableStateOf(false) }
     var showAdvisorSheet by remember { mutableStateOf(false) }
@@ -197,6 +203,10 @@ fun HomeScreen(
 
     suspend fun showMessage(message: String) {
         snackbarHostState.showSnackbar(message)
+    }
+
+    LaunchedEffect(userProfile.onboardingCompleted) {
+        showWelcomeDialog = userProfile.onboardingCompleted && WelcomePreferences.shouldShowWelcome(context)
     }
 
     LaunchedEffect(
@@ -702,6 +712,8 @@ fun HomeScreen(
                 budgetSummary = budgetSummary,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
+                greetingName = userProfile.resolvedDisplayName(),
+                debtProgressPercent = debtProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
@@ -804,6 +816,8 @@ private fun PhoneHomeLayout(
     budgetSummary: com.example.money.domain.model.BudgetSummary,
     goalMetrics: com.example.money.domain.model.DashboardGoalMetrics,
     debtMetrics: com.example.money.domain.model.DashboardDebtMetrics,
+    greetingName: String,
+    debtProgressPercent: Int,
     highlightedDebtorId: Long?,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
@@ -909,6 +923,19 @@ private fun PhoneHomeLayout(
                     .padding(innerPadding),
                 contentPadding = PaddingValues(bottom = 88.dp),
             ) {
+                item {
+                    Text(
+                        text = if (debtProgressPercent > 0) {
+                            stringResource(R.string.home_greeting_progress, greetingName, debtProgressPercent)
+                        } else {
+                            stringResource(R.string.home_greeting_simple, greetingName)
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = GoldPrimary,
+                    )
+                }
                 item {
                     GlobalBalanceHeader(
                         summary = budgetSummary,

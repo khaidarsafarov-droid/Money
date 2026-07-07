@@ -2,6 +2,7 @@ export * from "./constants";
 export * from "./finance";
 export * from "./goalHubEngine";
 export * from "./goalChallenges";
+export * from "./userProfile";
 export * from "./psychotype";
 export * from "./userFears";
 export * from "./reframing";
