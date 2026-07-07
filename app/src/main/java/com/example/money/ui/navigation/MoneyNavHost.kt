@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.example.money.ui.goal.GoalScreen
 import com.example.money.ui.home.HomeLaunchConfig
 import com.example.money.ui.home.HomeScreen
 import com.example.money.ui.settings.AppLanguageScreen
@@ -25,8 +26,10 @@ fun MoneyNavHost(
     var showAppLanguage by remember { mutableStateOf(false) }
     var showPrivacySettings by remember { mutableStateOf(false) }
     var showAutopilotSettings by remember { mutableStateOf(false) }
+    var showGoalHub by remember { mutableStateOf(false) }
 
     when {
+        showGoalHub -> GoalScreen(onBack = { showGoalHub = false }, modifier = modifier)
         showAppLanguage -> AppLanguageScreen(onBack = { showAppLanguage = false }, modifier = modifier)
         showPrivacySettings -> PrivacySettingsScreen(onBack = { showPrivacySettings = false }, modifier = modifier)
         showAutopilotSettings -> AutopilotSettingsScreen(onBack = { showAutopilotSettings = false }, modifier = modifier)
@@ -40,6 +43,7 @@ fun MoneyNavHost(
             onOpenAppLanguage = { showAppLanguage = true },
             onOpenPrivacySettings = { showPrivacySettings = true },
             onOpenAutopilotSettings = { showAutopilotSettings = true },
+            onOpenGoalHub = { showGoalHub = true },
             modifier = modifier,
         )
     }

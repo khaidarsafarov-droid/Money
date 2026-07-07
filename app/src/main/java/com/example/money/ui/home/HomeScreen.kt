@@ -121,6 +121,7 @@ fun HomeScreen(
     onOpenAppLanguage: () -> Unit = {},
     onOpenPrivacySettings: () -> Unit = {},
     onOpenAutopilotSettings: () -> Unit = {},
+    onOpenGoalHub: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -738,6 +739,7 @@ fun HomeScreen(
                 onOpenPrivacySettings = onOpenPrivacySettings,
                 onOpenAutopilotSettings = onOpenAutopilotSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
+                onOpenGoalHub = onOpenGoalHub,
                 showCheckIn = showCheckIn,
                 onDismissCheckIn = debtorsViewModel::dismissCheckIn,
                 gamificationState = gamificationState,
@@ -825,6 +827,7 @@ private fun PhoneHomeLayout(
     onOpenPrivacySettings: () -> Unit,
     onOpenAutopilotSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
+    onOpenGoalHub: () -> Unit,
     showCheckIn: Boolean,
     onDismissCheckIn: () -> Unit,
     gamificationState: com.example.money.settings.GamificationState,
@@ -936,8 +939,13 @@ private fun PhoneHomeLayout(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
-                        TextButton(onClick = onAddGoal) {
-                            Text(stringResource(R.string.goal_add_title))
+                        Row {
+                            TextButton(onClick = onOpenGoalHub) {
+                                Text(stringResource(R.string.goal_hub_open))
+                            }
+                            TextButton(onClick = onAddGoal) {
+                                Text(stringResource(R.string.goal_add_title))
+                            }
                         }
                     }
                 }

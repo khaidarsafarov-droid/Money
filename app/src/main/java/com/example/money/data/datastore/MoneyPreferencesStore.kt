@@ -15,7 +15,8 @@ import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.domain.sync.SnapshotVoiceSettings
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
-import com.example.money.settings.GamificationState
+import com.example.money.settings.FinancialPsychotype
+import com.example.money.settings.GoalPsychologyProfile
 import com.example.money.settings.PrivacySettings
 import com.example.money.settings.WeeklyCheckInSettings
 import com.example.money.voice.VoiceGender
@@ -88,6 +89,19 @@ object MoneyPreferenceKeys {
     val WEEKLY_CHECKIN_HOUR = intPreferencesKey("weekly_checkin_hour")
 
     val ADVISOR_HISTORY_JSON = stringPreferencesKey("advisor_history_json")
+
+    val GOAL_PSYCHOTYPE = stringPreferencesKey("goal_psychotype")
+    val GOAL_PSYCHOTYPE_ANSWERS_JSON = stringPreferencesKey("goal_psychotype_answers_json")
+    val GOAL_PSYCHOTYPE_COMPLETED = booleanPreferencesKey("goal_psychotype_completed")
+    val GOAL_FEARS_JSON = stringPreferencesKey("goal_fears_json")
+    val GOAL_WORD_POWER = booleanPreferencesKey("goal_word_power")
+    val GOAL_PERSONAL_MOTIVATION = stringPreferencesKey("goal_personal_motivation")
+    val GOAL_VISION_PHOTO_PATH = stringPreferencesKey("goal_vision_photo_path")
+    val GOAL_PAYDAY_DAY = intPreferencesKey("goal_payday_day")
+    val GOAL_PAYOFF_STRATEGY = stringPreferencesKey("goal_payoff_strategy")
+    val GOAL_WEEKLY_CHECKLIST_JSON = stringPreferencesKey("goal_weekly_checklist_json")
+    val GOAL_ACTIVE_CHALLENGES_JSON = stringPreferencesKey("goal_active_challenges_json")
+    val GOAL_BADGES_JSON = stringPreferencesKey("goal_badges_json")
 }
 
 class MoneyPreferencesStore(
@@ -282,6 +296,15 @@ class MoneyPreferencesStore(
         }
     }
 
+    val goalPsychologyProfile: Flow<GoalPsychologyProfile> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toGoalPsychologyProfile() }
+
+    suspend fun updateGoalPsychologyProfile(transform: (GoalPsychologyProfile) -> GoalPsychologyProfile) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writeGoalPsychologyProfile(transform(prefs.toGoalPsychologyProfile()))
+        }
+    }
+
     private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
         val array = JSONArray()
         items.forEach { item ->
@@ -424,4 +447,41 @@ private fun decodeStringSet(raw: String?): Set<String> {
     } catch (_: Exception) {
         emptySet()
     }
+}
+
+private fun Preferences.toGoalPsychologyProfile(): GoalPsychologyProfile {
+    val psychotypeRaw = this[MoneyPreferenceKeys.GOAL_PSYCHOTYPE]
+    return GoalPsychologyProfile(
+        psychotype = psychotypeRaw?.let { FinancialPsychotype.fromStored(it) },
+        psychotypeAnswersJson = this[MoneyPreferenceKeys.GOAL_PSYCHOTYPE_ANSWERS_JSON] ?: "[]",
+        selectedFearIds = decodeStringSet(this[MoneyPreferenceKeys.GOAL_FEARS_JSON]),
+        wordPowerEnabled = this[MoneyPreferenceKeys.GOAL_WORD_POWER] ?: true,
+        personalMotivation = this[MoneyPreferenceKeys.GOAL_PERSONAL_MOTIVATION] ?: "",
+        visionPhotoPath = this[MoneyPreferenceKeys.GOAL_VISION_PHOTO_PATH],
+        paydayDayOfMonth = this[MoneyPreferenceKeys.GOAL_PAYDAY_DAY] ?: 25,
+        payoffStrategy = this[MoneyPreferenceKeys.GOAL_PAYOFF_STRATEGY] ?: "AVALANCHE",
+        weeklyChecklistJson = this[MoneyPreferenceKeys.GOAL_WEEKLY_CHECKLIST_JSON] ?: "{}",
+        activeChallengesJson = this[MoneyPreferenceKeys.GOAL_ACTIVE_CHALLENGES_JSON] ?: "[]",
+        goalBadges = decodeStringSet(this[MoneyPreferenceKeys.GOAL_BADGES_JSON]),
+        psychotypeTestCompleted = this[MoneyPreferenceKeys.GOAL_PSYCHOTYPE_COMPLETED] ?: false,
+    )
+}
+
+private fun MutablePreferences.writeGoalPsychologyProfile(profile: GoalPsychologyProfile) {
+    profile.psychotype?.let {
+        this[MoneyPreferenceKeys.GOAL_PSYCHOTYPE] = it.name
+    } ?: remove(MoneyPreferenceKeys.GOAL_PSYCHOTYPE)
+    this[MoneyPreferenceKeys.GOAL_PSYCHOTYPE_ANSWERS_JSON] = profile.psychotypeAnswersJson
+    this[MoneyPreferenceKeys.GOAL_PSYCHOTYPE_COMPLETED] = profile.psychotypeTestCompleted
+    this[MoneyPreferenceKeys.GOAL_FEARS_JSON] = encodeStringSet(profile.selectedFearIds)
+    this[MoneyPreferenceKeys.GOAL_WORD_POWER] = profile.wordPowerEnabled
+    this[MoneyPreferenceKeys.GOAL_PERSONAL_MOTIVATION] = profile.personalMotivation
+    profile.visionPhotoPath?.let {
+        this[MoneyPreferenceKeys.GOAL_VISION_PHOTO_PATH] = it
+    } ?: remove(MoneyPreferenceKeys.GOAL_VISION_PHOTO_PATH)
+    this[MoneyPreferenceKeys.GOAL_PAYDAY_DAY] = profile.paydayDayOfMonth
+    this[MoneyPreferenceKeys.GOAL_PAYOFF_STRATEGY] = profile.payoffStrategy
+    this[MoneyPreferenceKeys.GOAL_WEEKLY_CHECKLIST_JSON] = profile.weeklyChecklistJson
+    this[MoneyPreferenceKeys.GOAL_ACTIVE_CHALLENGES_JSON] = profile.activeChallengesJson
+    this[MoneyPreferenceKeys.GOAL_BADGES_JSON] = encodeStringSet(profile.goalBadges)
 }
