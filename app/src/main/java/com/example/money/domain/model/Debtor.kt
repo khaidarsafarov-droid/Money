@@ -18,6 +18,9 @@ data class Debtor(
     val paymentHistory: List<DebtPayment> = emptyList(),
     val calendarEventId: String? = null,
     val calendarSyncFailed: Boolean = false,
+    val contactLookupKey: String? = null,
+    val contactUri: String? = null,
+    val contactPhotoUri: String? = null,
 ) {
     val remainingAmountCents: Long
         get() = com.example.money.domain.util.MoneyMath.remainingCents(

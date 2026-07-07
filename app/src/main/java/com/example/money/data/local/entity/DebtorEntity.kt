@@ -8,7 +8,10 @@ import com.example.money.data.sync.SyncIds
 
 @Entity(
     tableName = "debtor",
-    indices = [Index(value = ["sync_id"], unique = true)],
+    indices = [
+        Index(value = ["sync_id"], unique = true),
+        Index(value = ["contact_lookup_key"]),
+    ],
 )
 data class DebtorEntity(
     @PrimaryKey(autoGenerate = true)
@@ -39,4 +42,10 @@ data class DebtorEntity(
     val calendarEventId: String? = null,
     @ColumnInfo(name = "calendar_sync_failed")
     val calendarSyncFailed: Boolean = false,
+    @ColumnInfo(name = "contact_lookup_key")
+    val contactLookupKey: String? = null,
+    @ColumnInfo(name = "contact_uri")
+    val contactUri: String? = null,
+    @ColumnInfo(name = "contact_photo_uri")
+    val contactPhotoUri: String? = null,
 )

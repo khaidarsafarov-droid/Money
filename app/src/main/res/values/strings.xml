@@ -511,4 +511,20 @@
     <string name="calendar_close_keep_mark">Оставить с пометкой [ЗАКРЫТ]</string>
     <string name="calendar_day_title">%1$s</string>
     <string name="calendar_day_empty">На этот день нет долгов</string>
+
+    <!-- Contacts -->
+    <string name="contact_pick_action">Выбрать из контактов</string>
+    <string name="contact_linked_hint">Контакт: %1$s</string>
+    <string name="contact_existing_debts_hint">С этим контактом уже %1$d записей в истории</string>
+    <string name="contact_history_short">История (%1$d)</string>
+    <string name="contact_history_action">История с контактом</string>
+    <string name="contact_history_title">История с %1$s</string>
+    <string name="contact_history_active_summary">Активных: %1$d · осталось %2$s</string>
+    <string name="contact_history_closed_summary">Закрытых записей: %1$d</string>
+    <string name="contact_history_debts_section">Все долги</string>
+    <string name="contact_history_payments_section">Платежи</string>
+    <string name="contact_history_empty">Пока нет записей с этим контактом</string>
+    <string name="contact_history_owes_me">Должен мне</string>
+    <string name="contact_history_i_owe">Я должен</string>
+    <string name="contact_history_debt_dates">%1$s — срок %2$s</string>
 </resources>

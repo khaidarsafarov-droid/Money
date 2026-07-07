@@ -3,11 +3,19 @@ package com.example.money.ui.debtors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,8 +34,11 @@ import com.example.money.R
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import com.example.money.contacts.ContactResolver
+import com.example.money.contacts.PickedContact
 import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.util.ContactDebtHistoryEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.MoneyTextField
@@ -44,7 +55,9 @@ fun DebtorFormDialog(
     debtType: DebtType,
     existingDebtor: Debtor? = null,
     availableBalance: Double,
+    allDebtors: List<Debtor> = emptyList(),
     onDismiss: () -> Unit,
+    onViewContactHistory: ((String, String) -> Unit)? = null,
     onConfirm: (
         name: String,
         amount: Double,
@@ -54,6 +67,9 @@ fun DebtorFormDialog(
         note: String,
         loanCategory: LoanCategory,
         interestRateBps: Int,
+        contactLookupKey: String?,
+        contactUri: String?,
+        contactPhotoUri: String?,
     ) -> Unit,
 ) {
     val isEdit = existingDebtor != null
@@ -89,6 +105,38 @@ fun DebtorFormDialog(
                 .orEmpty(),
         )
     }
+    var pickedContact by remember(existingDebtor?.id, debtType) {
+        mutableStateOf(
+            existingDebtor?.contactLookupKey?.let { key ->
+                PickedContact(
+                    displayName = existingDebtor.name,
+                    lookupKey = key,
+                    contactUri = existingDebtor.contactUri.orEmpty(),
+                    photoUri = existingDebtor.contactPhotoUri,
+                )
+            },
+        )
+    }
+
+    val context = LocalContext.current
+
+    val contactPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickContact(),
+    ) { uri ->
+        if (uri != null) {
+            ContactResolver.resolve(context, uri)?.let { contact ->
+                pickedContact = contact
+                name = contact.displayName
+                nameError = null
+            }
+        }
+    }
+
+    val existingContactDebtCount = remember(pickedContact?.lookupKey, allDebtors) {
+        pickedContact?.lookupKey?.let { key ->
+            ContactDebtHistoryEngine.countExistingDebts(allDebtors, key)
+        } ?: 0
+    }
 
     var nameError by remember { mutableStateOf<String?>(null) }
     var amountError by remember { mutableStateOf<String?>(null) }
@@ -112,8 +160,6 @@ fun DebtorFormDialog(
         DebtType.DEBTOR -> R.string.debt_credit_to_budget
     }
 
-    val context = LocalContext.current
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -130,18 +176,63 @@ fun DebtorFormDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        nameError = null
-                    },
-                    label = { Text(stringResource(nameLabelRes)) },
-                    isError = nameError != null,
-                    supportingText = nameError?.let { { Text(it) } },
-                    singleLine = true,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                )
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            nameError = null
+                        },
+                        label = { Text(stringResource(nameLabelRes)) },
+                        isError = nameError != null,
+                        supportingText = nameError?.let { { Text(it) } },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    IconButton(onClick = { contactPickerLauncher.launch(null) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Contacts,
+                            contentDescription = stringResource(R.string.contact_pick_action),
+                        )
+                    }
+                }
+                pickedContact?.let { contact ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.contact_linked_hint, contact.displayName),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (existingContactDebtCount > 0 && onViewContactHistory != null) {
+                            TextButton(
+                                onClick = { onViewContactHistory(contact.lookupKey, contact.displayName) },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.History,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 4.dp),
+                                )
+                                Text(stringResource(R.string.contact_history_short, existingContactDebtCount))
+                            }
+                        }
+                    }
+                }
+                if (existingContactDebtCount > 0 && pickedContact != null) {
+                    Text(
+                        text = stringResource(R.string.contact_existing_debts_hint, existingContactDebtCount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 MoneyTextField(
                     value = amountText,
                     onValueChange = {
@@ -272,6 +363,9 @@ fun DebtorFormDialog(
                         note.trim(),
                         loanCategory,
                         interestRateBps,
+                        pickedContact?.lookupKey,
+                        pickedContact?.contactUri,
+                        pickedContact?.photoUri,
                     )
                 },
             ) {
@@ -293,6 +387,7 @@ fun DebtorFormDialog(
 fun AddDebtorDialog(
     debtType: DebtType,
     availableBalance: Double,
+    allDebtors: List<Debtor> = emptyList(),
     onDismiss: () -> Unit,
     onConfirm: (
         name: String,
@@ -303,11 +398,15 @@ fun AddDebtorDialog(
         note: String,
         loanCategory: LoanCategory,
         interestRateBps: Int,
+        contactLookupKey: String?,
+        contactUri: String?,
+        contactPhotoUri: String?,
     ) -> Unit,
 ) = DebtorFormDialog(
     debtType = debtType,
     existingDebtor = null,
     availableBalance = availableBalance,
+    allDebtors = allDebtors,
     onDismiss = onDismiss,
     onConfirm = onConfirm,
 )

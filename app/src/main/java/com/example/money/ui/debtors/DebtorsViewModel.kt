@@ -252,6 +252,9 @@ class DebtorsViewModel(
         currency: String = "USD",
         loanCategory: LoanCategory = LoanCategory.OTHER,
         interestRateBps: Int = 0,
+        contactLookupKey: String? = null,
+        contactUri: String? = null,
+        contactPhotoUri: String? = null,
     ) {
         viewModelScope.launch {
             try {
@@ -273,6 +276,9 @@ class DebtorsViewModel(
                         dateDue = dateDue,
                         loanCategory = loanCategory,
                         interestRateBps = interestRateBps,
+                        contactLookupKey = contactLookupKey,
+                        contactUri = contactUri,
+                        contactPhotoUri = contactPhotoUri,
                     ),
                 )
                 val created = debtorRepository.getDebtorById(id)
@@ -296,6 +302,9 @@ class DebtorsViewModel(
         note: String = "",
         loanCategory: LoanCategory = debtor.loanCategory,
         interestRateBps: Int = debtor.interestRateBps,
+        contactLookupKey: String? = debtor.contactLookupKey,
+        contactUri: String? = debtor.contactUri,
+        contactPhotoUri: String? = debtor.contactPhotoUri,
     ) {
         viewModelScope.launch {
             val targetCents = MoneyMath.toCents(amount)
@@ -309,6 +318,9 @@ class DebtorsViewModel(
                 note = note,
                 loanCategory = loanCategory,
                 interestRateBps = interestRateBps,
+                contactLookupKey = contactLookupKey,
+                contactUri = contactUri,
+                contactPhotoUri = contactPhotoUri,
             )
             debtorRepository.updateDebtor(updated, previousAffectsBalance)
             if (!updated.isPaid) {

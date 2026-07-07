@@ -85,6 +85,7 @@ import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.debtors.DebtReminderShare
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
+import com.example.money.ui.debtors.ContactDebtHistorySheet
 import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtAdvisorBottomSheet
@@ -206,6 +207,11 @@ fun HomeScreen(
     }
     var tabletSelection by remember { mutableStateOf<HomeListSelection>(HomeListSelection.Overview) }
     var highlightedDebtorId by remember { mutableStateOf<Long?>(null) }
+    var contactHistoryTarget by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    val openContactHistory: (String, String) -> Unit = { lookupKey, displayName ->
+        contactHistoryTarget = lookupKey to displayName
+    }
 
     suspend fun showMessage(message: String) {
         snackbarHostState.showSnackbar(message)
@@ -349,8 +355,10 @@ fun HomeScreen(
                 DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
             },
             availableBalance = availableBalanceUsd,
+            allDebtors = allDebtors,
+            onViewContactHistory = openContactHistory,
             onDismiss = { showAddDebtorDialog = false },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps ->
+            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri ->
                 debtorsViewModel.addDebtor(
                     name = name,
                     amount = amount,
@@ -365,6 +373,9 @@ fun HomeScreen(
                     note = note,
                     loanCategory = loanCategory,
                     interestRateBps = interestRateBps,
+                    contactLookupKey = contactLookupKey,
+                    contactUri = contactUri,
+                    contactPhotoUri = contactPhotoUri,
                 )
                 showAddDebtorDialog = false
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_added)) }
@@ -376,8 +387,10 @@ fun HomeScreen(
             debtType = debtor.debtType,
             existingDebtor = debtor,
             availableBalance = availableBalanceUsd,
+            allDebtors = allDebtors,
+            onViewContactHistory = openContactHistory,
             onDismiss = { editDebtor = null },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps ->
+            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri ->
                 debtorsViewModel.updateDebtor(
                     debtor = debtor,
                     name = name,
@@ -388,9 +401,25 @@ fun HomeScreen(
                     note = note,
                     loanCategory = loanCategory,
                     interestRateBps = interestRateBps,
+                    contactLookupKey = contactLookupKey,
+                    contactUri = contactUri,
+                    contactPhotoUri = contactPhotoUri,
                 )
                 editDebtor = null
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_updated)) }
+            },
+        )
+    }
+    contactHistoryTarget?.let { (lookupKey, displayName) ->
+        ContactDebtHistorySheet(
+            lookupKey = lookupKey,
+            displayName = displayName,
+            allDebtors = allDebtors,
+            hideAmounts = privacySettings.hideAmounts,
+            onDismiss = { contactHistoryTarget = null },
+            onOpenDebt = { debtor ->
+                contactHistoryTarget = null
+                editDebtor = debtor
             },
         )
     }
@@ -811,6 +840,11 @@ fun HomeScreen(
                 onExtraMonthlyChange = debtorsViewModel::setExtraMonthlyCents,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
+                onViewContactHistory = { debtor ->
+                    debtor.contactLookupKey?.let { key ->
+                        openContactHistory(key, debtor.name)
+                    }
+                },
                 onSyncCalendar = debtorsViewModel::syncDebtToCalendarManually,
                 onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
@@ -904,6 +938,7 @@ private fun PhoneHomeLayout(
     onExtraMonthlyChange: (Long) -> Unit,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
+    onViewContactHistory: (Debtor) -> Unit,
     onSyncCalendar: (Debtor) -> Unit,
     onRemoveCalendar: (Debtor) -> Unit,
     onConfirmTransfer: (Long) -> Unit,
@@ -1242,6 +1277,9 @@ private fun PhoneHomeLayout(
                                         onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
                                         onEdit = { onEditDebtor(debtor) },
                                         onDelete = { onDeleteDebtor(debtor) },
+                                        onViewContactHistory = debtor.contactLookupKey?.let { key ->
+                                            { onViewContactHistory(debtor) }
+                                        },
                                         onCalendar = {
                                             if (debtor.calendarEventId.isNullOrBlank()) {
                                                 onSyncCalendar(debtor)

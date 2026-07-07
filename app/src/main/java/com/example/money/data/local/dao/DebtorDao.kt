@@ -23,6 +23,10 @@ interface DebtorDao {
     @Query("SELECT * FROM debtor WHERE status != 'COMPLETED' ORDER BY date_due ASC")
     fun getActiveDebtorsWithPayments(): Flow<List<DebtorWithPayments>>
 
+    @Transaction
+    @Query("SELECT * FROM debtor WHERE contact_lookup_key = :lookupKey ORDER BY date_given DESC")
+    fun getDebtorsByContactLookupKey(lookupKey: String): Flow<List<DebtorWithPayments>>
+
     @Query("SELECT * FROM debtor WHERE id = :id")
     suspend fun getDebtorById(id: Long): DebtorEntity?
 
