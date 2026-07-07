@@ -72,6 +72,10 @@ class DebtorRepositoryImpl(
                 note = debtor.note,
                 dateGiven = debtor.dateGiven,
                 dateDue = debtor.dateDue,
+                loanCategory = debtor.loanCategory.name,
+                interestRateBps = debtor.interestRateBps,
+                calendarEventId = debtor.calendarEventId,
+                calendarSyncFailed = debtor.calendarSyncFailed,
             )
             debtorDao.update(updated)
 

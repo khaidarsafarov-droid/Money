@@ -15,10 +15,13 @@ import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.DebtGamificationEngine
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.MoneyMath
+import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.settings.AutopilotSettings
+import com.example.money.settings.CalendarSettings
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
+import com.example.money.settings.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +39,7 @@ class DebtorsViewModel(
     private val debtorRepository: DebtorRepository,
     private val debtReminderScheduler: DebtReminderScheduler,
     private val preferencesStore: MoneyPreferencesStore,
+    private val debtCalendarSyncService: DebtCalendarSyncService,
 ) : ViewModel() {
 
     private val _debtTab = MutableStateFlow(DebtTab.OwesMe)
@@ -50,8 +54,33 @@ class DebtorsViewModel(
     private val _celebrationDebtor = MutableStateFlow<Debtor?>(null)
     val celebrationDebtor: StateFlow<Debtor?> = _celebrationDebtor.asStateFlow()
 
-    private val _showCheckIn = MutableStateFlow(false)
-    val showCheckIn: StateFlow<Boolean> = _showCheckIn.asStateFlow()
+    private val _pendingCalendarClose = MutableStateFlow<Debtor?>(null)
+    val pendingCalendarClose: StateFlow<Debtor?> = _pendingCalendarClose.asStateFlow()
+
+    private val _calendarMessage = MutableStateFlow<String?>(null)
+    val calendarMessage: StateFlow<String?> = _calendarMessage.asStateFlow()
+
+    fun dismissCalendarMessage() {
+        _calendarMessage.value = null
+    }
+
+    fun dismissCalendarClosePrompt() {
+        _pendingCalendarClose.value = null
+    }
+
+    fun confirmRemoveCalendarEvent(remove: Boolean) {
+        val debtor = _pendingCalendarClose.value ?: return
+        _pendingCalendarClose.value = null
+        viewModelScope.launch {
+            if (remove) {
+                debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId)
+                persistCalendarState(debtor, eventId = null, failed = false)
+            } else {
+                val paid = debtorRepository.getDebtorById(debtor.id) ?: debtor
+                syncDebtToCalendar(paid, markClosed = true)
+            }
+        }
+    }
 
     fun dismissCelebration() {
         _celebrationDebtor.value = null
@@ -60,6 +89,9 @@ class DebtorsViewModel(
     fun dismissCheckIn() {
         _showCheckIn.value = false
     }
+
+    private val _showCheckIn = MutableStateFlow(false)
+    val showCheckIn: StateFlow<Boolean> = _showCheckIn.asStateFlow()
 
     fun openCheckIn() {
         _showCheckIn.value = true
@@ -108,12 +140,18 @@ class DebtorsViewModel(
         initialValue = AutopilotSettings(),
     )
 
+    val calendarSettings: StateFlow<CalendarSettings> = preferencesStore.calendarSettings.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = CalendarSettings(),
+    )
+
     val debtors: StateFlow<List<Debtor>> = combine(
         allDebtors,
         _debtTab,
         _filter,
     ) { debtors, tab, filter ->
-        if (tab == DebtTab.Freedom) {
+        if (tab == DebtTab.Freedom || tab == DebtTab.Calendar) {
             return@combine emptyList()
         }
         val type = when (tab) {
@@ -234,6 +272,7 @@ class DebtorsViewModel(
                 val created = debtorRepository.getDebtorById(id)
                 if (created != null && !created.isPaid) {
                     debtReminderScheduler.schedule(created)
+                    syncDebtToCalendar(created)
                 }
             } catch (exception: Exception) {
                 Log.e(TAG, "Failed to add debtor", exception)
@@ -269,6 +308,7 @@ class DebtorsViewModel(
             if (!updated.isPaid) {
                 debtReminderScheduler.cancel(debtor.id)
                 debtReminderScheduler.schedule(updated)
+                syncDebtToCalendar(updated)
             }
         }
     }
@@ -280,6 +320,9 @@ class DebtorsViewModel(
         if (debtor?.isPaid == true) {
             debtReminderScheduler.cancel(debtorId)
             _celebrationDebtor.value = debtor
+            if (!debtor.calendarEventId.isNullOrBlank()) {
+                _pendingCalendarClose.value = debtor
+            }
         }
         if (success && debtor != null) {
             recordPaymentGamification(debtor)
@@ -323,8 +366,68 @@ class DebtorsViewModel(
 
     fun deleteDebtor(debtor: Debtor) {
         viewModelScope.launch {
+            debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId)
             debtorRepository.deleteDebtor(debtor)
             debtReminderScheduler.cancel(debtor.id)
+        }
+    }
+
+    fun syncDebtToCalendarManually(debtor: Debtor) {
+        viewModelScope.launch {
+            syncDebtToCalendar(debtor)
+        }
+    }
+
+    fun removeDebtFromCalendarManually(debtor: Debtor) {
+        viewModelScope.launch {
+            val removed = debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId)
+            persistCalendarState(debtor, eventId = null, failed = !removed)
+            _calendarMessage.value = if (removed) "calendar_removed" else "calendar_failed"
+        }
+    }
+
+    suspend fun updateCalendarSettings(transform: (CalendarSettings) -> CalendarSettings) {
+        preferencesStore.updateCalendarSettings(transform)
+    }
+
+    private suspend fun syncDebtToCalendar(debtor: Debtor, markClosed: Boolean = false) {
+        val settings = preferencesStore.calendarSettings.first()
+        if (!settings.autoSyncEnabled) return
+        val profile = preferencesStore.userProfile.first()
+        val result = debtCalendarSyncService.upsertDebtEvent(
+            debtor = debtor,
+            settings = settings,
+            displayName = profile.resolvedDisplayName(),
+            markClosed = markClosed,
+        )
+        persistCalendarState(debtor, result.eventId, result.failed)
+        if (result.failed) {
+            _calendarMessage.value = "calendar_failed"
+        }
+    }
+
+    private suspend fun persistCalendarState(debtor: Debtor, eventId: String?, failed: Boolean) {
+        val latest = debtorRepository.getDebtorById(debtor.id) ?: return
+        debtorRepository.updateDebtor(
+            latest.copy(
+                calendarEventId = eventId,
+                calendarSyncFailed = failed,
+            ),
+            latest.affectsBalance,
+        )
+    }
+
+    private suspend fun retryFailedCalendarSyncs() {
+        val settings = preferencesStore.calendarSettings.first()
+        if (!settings.autoSyncEnabled || !debtCalendarSyncService.hasPermissions()) return
+        allDebtorsList.value
+            .filter { !it.isPaid && (it.calendarSyncFailed || it.calendarEventId.isNullOrBlank()) }
+            .forEach { syncDebtToCalendar(it) }
+    }
+
+    init {
+        viewModelScope.launch {
+            retryFailedCalendarSyncs()
         }
     }
 
@@ -374,6 +477,7 @@ class DebtorsViewModel(
         private val debtorRepository: DebtorRepository,
         private val debtReminderScheduler: DebtReminderScheduler,
         private val preferencesStore: MoneyPreferencesStore,
+        private val debtCalendarSyncService: DebtCalendarSyncService,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -382,6 +486,7 @@ class DebtorsViewModel(
                     debtorRepository,
                     debtReminderScheduler,
                     preferencesStore,
+                    debtCalendarSyncService,
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

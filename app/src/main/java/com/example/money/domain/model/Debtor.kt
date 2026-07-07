@@ -16,6 +16,8 @@ data class Debtor(
     val loanCategory: LoanCategory = LoanCategory.OTHER,
     val interestRateBps: Int = 0,
     val paymentHistory: List<DebtPayment> = emptyList(),
+    val calendarEventId: String? = null,
+    val calendarSyncFailed: Boolean = false,
 ) {
     val remainingAmountCents: Long
         get() = com.example.money.domain.util.MoneyMath.remainingCents(

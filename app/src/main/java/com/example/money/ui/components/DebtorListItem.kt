@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Share
@@ -54,6 +55,8 @@ fun DebtorListItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onAccelerate: (() -> Unit)? = null,
+    onCalendar: (() -> Unit)? = null,
+    calendarSynced: Boolean = false,
     hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -266,6 +269,28 @@ fun DebtorListItem(
                             Icon(
                                 imageVector = Icons.Outlined.Share,
                                 contentDescription = stringResource(R.string.action_remind),
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                    if (onCalendar != null) {
+                        OutlinedButton(
+                            onClick = onCalendar,
+                            shape = MaterialTheme.shapes.small,
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                horizontal = 8.dp,
+                                vertical = 4.dp,
+                            ),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CalendarMonth,
+                                contentDescription = stringResource(
+                                    if (calendarSynced) {
+                                        R.string.calendar_action_update
+                                    } else {
+                                        R.string.calendar_action_add
+                                    },
+                                ),
                                 modifier = Modifier.size(16.dp),
                             )
                         }

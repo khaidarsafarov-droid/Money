@@ -7,6 +7,7 @@ enum class DebtTab(val titleRes: Int) {
     OwesMe(R.string.debt_tab_owes_me),
     IOwe(R.string.debt_tab_i_owe),
     Freedom(R.string.debt_tab_freedom),
+    Calendar(R.string.debt_tab_calendar),
     ;
 
     companion object {

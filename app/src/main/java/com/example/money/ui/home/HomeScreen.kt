@@ -89,6 +89,7 @@ import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtAdvisorBottomSheet
 import com.example.money.ui.debtors.DebtFreedomTab
+import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCelebrationDialog
 import com.example.money.ui.debtors.DebtCheckInSheet
 import com.example.money.ui.debtors.DebtOverviewCard
@@ -123,6 +124,7 @@ fun HomeScreen(
     onOpenAppLanguage: () -> Unit = {},
     onOpenPrivacySettings: () -> Unit = {},
     onOpenAutopilotSettings: () -> Unit = {},
+    onOpenCalendarSettings: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -141,6 +143,7 @@ fun HomeScreen(
             app.debtorRepository,
             app.debtReminderScheduler,
             app.preferencesStore,
+            app.debtCalendarSyncService,
         ),
     )
 
@@ -184,6 +187,8 @@ fun HomeScreen(
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
 
     val celebrationDebtor by debtorsViewModel.celebrationDebtor.collectAsStateWithLifecycle()
+    val pendingCalendarClose by debtorsViewModel.pendingCalendarClose.collectAsStateWithLifecycle()
+    val calendarMessage by debtorsViewModel.calendarMessage.collectAsStateWithLifecycle()
     val showCheckIn by debtorsViewModel.showCheckIn.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -264,6 +269,34 @@ fun HomeScreen(
         if (index >= 0) {
             listState.animateScrollToItem(index + 2)
         }
+    }
+
+    LaunchedEffect(calendarMessage) {
+        when (calendarMessage) {
+            "calendar_failed" -> showMessage(context.getString(R.string.calendar_sync_failed))
+            "calendar_removed" -> showMessage(context.getString(R.string.calendar_removed))
+        }
+        if (calendarMessage != null) {
+            debtorsViewModel.dismissCalendarMessage()
+        }
+    }
+
+    if (pendingCalendarClose != null) {
+        AlertDialog(
+            onDismissRequest = { debtorsViewModel.dismissCalendarClosePrompt() },
+            title = { Text(stringResource(R.string.calendar_close_title)) },
+            text = { Text(stringResource(R.string.calendar_close_body)) },
+            confirmButton = {
+                TextButton(onClick = { debtorsViewModel.confirmRemoveCalendarEvent(remove = true) }) {
+                    Text(stringResource(R.string.calendar_close_remove))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { debtorsViewModel.confirmRemoveCalendarEvent(remove = false) }) {
+                    Text(stringResource(R.string.calendar_close_keep_mark))
+                }
+            },
+        )
     }
 
     if (showWelcomeDialog) {
@@ -684,6 +717,8 @@ fun HomeScreen(
                 },
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
+                onSyncCalendar = debtorsViewModel::syncDebtToCalendarManually,
+                onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
                 onDeleteTransfer = { pendingDelete = PendingDelete.TransferItem(it) },
                 onConfirmExpense = budgetViewModel::confirmExpense,
@@ -742,6 +777,8 @@ fun HomeScreen(
                 onExtraMonthlyChange = debtorsViewModel::setExtraMonthlyCents,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
+                onSyncCalendar = debtorsViewModel::syncDebtToCalendarManually,
+                onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
                 onDeleteTransfer = { pendingDelete = PendingDelete.TransferItem(it) },
                 onConfirmExpense = budgetViewModel::confirmExpense,
@@ -750,6 +787,7 @@ fun HomeScreen(
                 onOpenAppLanguage = onOpenAppLanguage,
                 onOpenPrivacySettings = onOpenPrivacySettings,
                 onOpenAutopilotSettings = onOpenAutopilotSettings,
+                onOpenCalendarSettings = onOpenCalendarSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onOpenGoalHub = onOpenGoalHub,
                 showCheckIn = showCheckIn,
@@ -832,6 +870,8 @@ private fun PhoneHomeLayout(
     onExtraMonthlyChange: (Long) -> Unit,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
+    onSyncCalendar: (Debtor) -> Unit,
+    onRemoveCalendar: (Debtor) -> Unit,
     onConfirmTransfer: (Long) -> Unit,
     onDeleteTransfer: (Transfer) -> Unit,
     onConfirmExpense: (Long) -> Unit,
@@ -840,6 +880,7 @@ private fun PhoneHomeLayout(
     onOpenAppLanguage: () -> Unit,
     onOpenPrivacySettings: () -> Unit,
     onOpenAutopilotSettings: () -> Unit,
+    onOpenCalendarSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
     onOpenGoalHub: () -> Unit,
     showCheckIn: Boolean,
@@ -887,6 +928,14 @@ private fun PhoneHomeLayout(
                         selected = false,
                         onClick = {
                             onOpenAutopilotSettings()
+                            scope.launch { drawerState.close() }
+                        },
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.calendar_settings_title)) },
+                        selected = false,
+                        onClick = {
+                            onOpenCalendarSettings()
                             scope.launch { drawerState.close() }
                         },
                     )
@@ -1046,7 +1095,7 @@ private fun PhoneHomeLayout(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             )
                         }
-                        if (debtTab != DebtTab.Freedom) {
+                        if (debtTab != DebtTab.Freedom && debtTab != DebtTab.Calendar) {
                             if (debtTab == DebtTab.IOwe) {
                                 item {
                                     DebtOverviewCard(
@@ -1103,7 +1152,15 @@ private fun PhoneHomeLayout(
                                 }
                             }
                         }
-                        if (debtTab == DebtTab.Freedom) {
+                        if (debtTab == DebtTab.Calendar) {
+                            item {
+                                DebtCalendarTab(
+                                    debtors = allDebtors,
+                                    hideAmounts = privacySettings.hideAmounts,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                )
+                            }
+                        } else if (debtTab == DebtTab.Freedom) {
                             item {
                                 DebtFreedomTab(
                                     projection = freedomProjection,
@@ -1151,6 +1208,14 @@ private fun PhoneHomeLayout(
                                         onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
                                         onEdit = { onEditDebtor(debtor) },
                                         onDelete = { onDeleteDebtor(debtor) },
+                                        onCalendar = {
+                                            if (debtor.calendarEventId.isNullOrBlank()) {
+                                                onSyncCalendar(debtor)
+                                            } else {
+                                                onRemoveCalendar(debtor)
+                                            }
+                                        },
+                                        calendarSynced = !debtor.calendarEventId.isNullOrBlank(),
                                         hideAmounts = privacySettings.hideAmounts,
                                     )
                                 }

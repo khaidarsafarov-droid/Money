@@ -33,6 +33,8 @@ fun DebtorEntity.toDomain(payments: List<DebtPaymentEntity> = emptyList()): Debt
     loanCategory = loanCategory.toLoanCategory(),
     interestRateBps = interestRateBps,
     paymentHistory = payments.map { it.toDomain() },
+    calendarEventId = calendarEventId,
+    calendarSyncFailed = calendarSyncFailed,
 )
 
 fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
@@ -50,6 +52,8 @@ fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
     dateDue = dateDue,
     loanCategory = loanCategory.name,
     interestRateBps = interestRateBps,
+    calendarEventId = calendarEventId,
+    calendarSyncFailed = calendarSyncFailed,
 )
 
 fun DebtPaymentEntity.toDomain(): DebtPayment = DebtPayment(

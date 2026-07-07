@@ -18,6 +18,7 @@ import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.FinancialPsychotype
 import com.example.money.settings.GoalPsychologyProfile
 import com.example.money.settings.PrivacySettings
+import com.example.money.settings.CalendarSettings
 import com.example.money.settings.UserEmotion
 import com.example.money.settings.UserGender
 import com.example.money.settings.UserProfile
@@ -114,6 +115,14 @@ object MoneyPreferenceKeys {
     val USER_EMOTION = stringPreferencesKey("user_emotion")
     val USER_PRIORITY = stringPreferencesKey("user_priority")
     val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+
+    val CALENDAR_AUTO_SYNC = booleanPreferencesKey("calendar_auto_sync")
+    val CALENDAR_REMIND_1D = booleanPreferencesKey("calendar_remind_1d")
+    val CALENDAR_REMIND_3D = booleanPreferencesKey("calendar_remind_3d")
+    val CALENDAR_REMIND_DUE = booleanPreferencesKey("calendar_remind_due")
+    val CALENDAR_USE_DEBTS_CAL = booleanPreferencesKey("calendar_use_debts_cal")
+    val CALENDAR_DEBTS_CAL_ID = longPreferencesKey("calendar_debts_cal_id")
+    val CALENDAR_PERMISSION_REQUESTED = booleanPreferencesKey("calendar_permission_requested")
 }
 
 class MoneyPreferencesStore(
@@ -326,6 +335,15 @@ class MoneyPreferencesStore(
         }
     }
 
+    val calendarSettings: Flow<CalendarSettings> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toCalendarSettings() }
+
+    suspend fun updateCalendarSettings(transform: (CalendarSettings) -> CalendarSettings) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writeCalendarSettings(transform(prefs.toCalendarSettings()))
+        }
+    }
+
     private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
         val array = JSONArray()
         items.forEach { item ->
@@ -531,4 +549,27 @@ private fun MutablePreferences.writeUserProfile(profile: UserProfile) {
         ?: remove(MoneyPreferenceKeys.USER_EMOTION)
     this[MoneyPreferenceKeys.USER_PRIORITY] = profile.priority
     this[MoneyPreferenceKeys.ONBOARDING_COMPLETED] = profile.onboardingCompleted
+}
+
+private fun Preferences.toCalendarSettings(): CalendarSettings =
+    CalendarSettings(
+        autoSyncEnabled = this[MoneyPreferenceKeys.CALENDAR_AUTO_SYNC] ?: true,
+        remindOneDayBefore = this[MoneyPreferenceKeys.CALENDAR_REMIND_1D] ?: true,
+        remindThreeDaysBefore = this[MoneyPreferenceKeys.CALENDAR_REMIND_3D] ?: false,
+        remindOnDueDay = this[MoneyPreferenceKeys.CALENDAR_REMIND_DUE] ?: true,
+        useDebtsCalendar = this[MoneyPreferenceKeys.CALENDAR_USE_DEBTS_CAL] ?: true,
+        debtsCalendarId = this[MoneyPreferenceKeys.CALENDAR_DEBTS_CAL_ID],
+        permissionRequested = this[MoneyPreferenceKeys.CALENDAR_PERMISSION_REQUESTED] ?: false,
+    )
+
+private fun MutablePreferences.writeCalendarSettings(settings: CalendarSettings) {
+    this[MoneyPreferenceKeys.CALENDAR_AUTO_SYNC] = settings.autoSyncEnabled
+    this[MoneyPreferenceKeys.CALENDAR_REMIND_1D] = settings.remindOneDayBefore
+    this[MoneyPreferenceKeys.CALENDAR_REMIND_3D] = settings.remindThreeDaysBefore
+    this[MoneyPreferenceKeys.CALENDAR_REMIND_DUE] = settings.remindOnDueDay
+    this[MoneyPreferenceKeys.CALENDAR_USE_DEBTS_CAL] = settings.useDebtsCalendar
+    settings.debtsCalendarId?.let {
+        this[MoneyPreferenceKeys.CALENDAR_DEBTS_CAL_ID] = it
+    } ?: remove(MoneyPreferenceKeys.CALENDAR_DEBTS_CAL_ID)
+    this[MoneyPreferenceKeys.CALENDAR_PERMISSION_REQUESTED] = settings.permissionRequested
 }

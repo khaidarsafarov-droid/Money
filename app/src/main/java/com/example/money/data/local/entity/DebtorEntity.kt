@@ -35,4 +35,8 @@ data class DebtorEntity(
     val loanCategory: String = "OTHER",
     @ColumnInfo(name = "interest_rate_bps")
     val interestRateBps: Int = 0,
+    @ColumnInfo(name = "calendar_event_id")
+    val calendarEventId: String? = null,
+    @ColumnInfo(name = "calendar_sync_failed")
+    val calendarSyncFailed: Boolean = false,
 )

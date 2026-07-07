@@ -489,4 +489,26 @@
     <string name="goal_hub_greeting">%1$s, вы — %2$s</string>
     <string name="goal_hub_luck_title_personal">Дневник удач %1$s</string>
     <string name="goal_hub_challenges_title_personal">%1$s, ваши челленджи</string>
+
+    <!-- Calendar integration -->
+    <string name="debt_tab_calendar">Календарь</string>
+    <string name="calendar_settings_title">Напоминания и календарь</string>
+    <string name="calendar_auto_sync">Добавлять долги в календарь</string>
+    <string name="calendar_remind_1d">Напоминание за 1 день</string>
+    <string name="calendar_remind_3d">Напоминание за 3 дня</string>
+    <string name="calendar_remind_due">Напоминание в день срока</string>
+    <string name="calendar_use_debts_calendar">Использовать календарь «Долги»</string>
+    <string name="calendar_create_debts_calendar">Создать календарь «Долги»</string>
+    <string name="calendar_request_permission">Разрешить доступ к календарю</string>
+    <string name="calendar_permission_hint">Без доступа к календарю мы не сможем напоминать о сроках долгов. Вы можете включить доступ в настройках телефона.</string>
+    <string name="calendar_sync_failed">Не удалось добавить событие в календарь. Проверьте настройки.</string>
+    <string name="calendar_removed">Событие удалено из календаря</string>
+    <string name="calendar_action_add">Добавить в календарь</string>
+    <string name="calendar_action_update">Удалить из календаря</string>
+    <string name="calendar_close_title">Долг закрыт</string>
+    <string name="calendar_close_body">Удалить событие из календаря?</string>
+    <string name="calendar_close_remove">Удалить</string>
+    <string name="calendar_close_keep_mark">Оставить с пометкой [ЗАКРЫТ]</string>
+    <string name="calendar_day_title">%1$s</string>
+    <string name="calendar_day_empty">На этот день нет долгов</string>
 </resources>

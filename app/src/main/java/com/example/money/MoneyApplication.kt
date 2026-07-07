@@ -19,6 +19,7 @@ import com.example.money.domain.repository.BudgetRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.FinanceSnapshotRepository
 import com.example.money.domain.repository.GoalRepository
+import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.DebtReminderSchedulerImpl
 import com.example.money.notification.NotificationChannels
@@ -111,6 +112,10 @@ class MoneyApplication : Application() {
 
     val debtReminderScheduler: DebtReminderScheduler by lazy {
         DebtReminderSchedulerImpl(this)
+    }
+
+    val debtCalendarSyncService: DebtCalendarSyncService by lazy {
+        DebtCalendarSyncService(this)
     }
 
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
