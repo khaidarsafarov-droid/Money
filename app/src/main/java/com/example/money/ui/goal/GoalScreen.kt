@@ -37,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,6 +84,7 @@ fun GoalScreen(
     )
 
     val profile by viewModel.profile.collectAsStateWithLifecycle()
+    val psychotypeTestPrompt by viewModel.psychotypeTestPrompt.collectAsStateWithLifecycle()
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(
         initialValue = com.example.money.settings.UserProfile(),
     )
@@ -96,7 +98,12 @@ fun GoalScreen(
     val displayName = userProfile.resolvedDisplayName()
     val goalText = userProfile.resolvedGoalText()
 
-    var showPsychotypeTest by remember { mutableStateOf(!profile.psychotypeTestCompleted) }
+    var showPsychotypeTest by remember { mutableStateOf(false) }
+    LaunchedEffect(psychotypeTestPrompt) {
+        if (psychotypeTestPrompt == true) {
+            showPsychotypeTest = true
+        }
+    }
     var showLuckForm by remember { mutableStateOf(false) }
     var showFears by remember { mutableStateOf(false) }
     var showChallengePicker by remember { mutableStateOf(false) }

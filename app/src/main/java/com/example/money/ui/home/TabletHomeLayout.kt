@@ -66,6 +66,7 @@ fun TabletHomeLayout(
     floatingActionButton: @Composable () -> Unit,
     goals: List<SavingsGoal>,
     debtors: List<Debtor>,
+    allDebtors: List<Debtor>,
     debtTab: DebtTab,
     onDebtTabChange: (DebtTab) -> Unit,
     debtorFilter: DebtorFilter,
@@ -205,7 +206,15 @@ fun TabletHomeLayout(
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
-                        if (debtTab == DebtTab.Freedom) {
+                        if (debtTab == DebtTab.Calendar) {
+                            item {
+                                DebtCalendarTab(
+                                    debtors = allDebtors,
+                                    hideAmounts = privacySettings.hideAmounts,
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                )
+                            }
+                        } else if (debtTab == DebtTab.Freedom) {
                             item {
                                 DebtFreedomTab(
                                     projection = freedomProjection,

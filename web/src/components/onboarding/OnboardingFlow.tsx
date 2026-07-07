@@ -1,10 +1,9 @@
 import { useState } from "react";
 import {
-  DEFAULT_DISPLAY_NAME,
-  DEFAULT_GOAL_TEXT,
   determinePsychotype,
   isValidAge,
   isValidDisplayName,
+  PSYCHOTYPE_QUESTIONS,
   psychotypeLabelRu,
   psychotypeOnboardingDescription,
   resolveDisplayName,
@@ -33,17 +32,14 @@ const EMOTIONS: { id: UserEmotion; emoji: string }[] = [
   { id: "THINKING", emoji: "🤔" },
 ];
 
-interface OnboardingFlowProps {
-  onComplete: () => void;
-}
-
-export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
+export function OnboardingFlow() {
   const { completeOnboarding } = useUserProfile();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [gender, setGender] = useState<UserGender>("UNSPECIFIED");
   const [ageText, setAgeText] = useState("");
   const [answers, setAnswers] = useState<PsychotypeAnswer[]>(["a", "a", "a", "a", "a"]);
+  const [psychotypeQuestionIndex, setPsychotypeQuestionIndex] = useState(0);
   const [psychotypeResult, setPsychotypeResult] = useState<ReturnType<typeof determinePsychotype> | null>(null);
   const [fears, setFears] = useState<UserFearId[]>([]);
   const [customFear, setCustomFear] = useState("");
@@ -54,6 +50,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const totalSteps = 6;
   const parsedAge = ageText ? Number(ageText) : null;
   const displayName = resolveDisplayName(name);
+  const psychotypeQuestion = PSYCHOTYPE_QUESTIONS[psychotypeQuestionIndex];
 
   const finish = () => {
     const psychotype = psychotypeResult ?? determinePsychotype(answers);
@@ -68,7 +65,22 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       priority,
       psychotype,
     });
-    onComplete();
+  };
+
+  const selectPsychotypeAnswer = (key: PsychotypeAnswer) => {
+    setAnswers((current) => {
+      const next = [...current];
+      next[psychotypeQuestionIndex] = key;
+      return next;
+    });
+  };
+
+  const advancePsychotypeQuestion = () => {
+    if (psychotypeQuestionIndex < PSYCHOTYPE_QUESTIONS.length - 1) {
+      setPsychotypeQuestionIndex((index) => index + 1);
+      return;
+    }
+    setPsychotypeResult(determinePsychotype(answers));
   };
 
   return (
@@ -142,15 +154,29 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <h2 className="text-xl font-bold">Финансовый психотип</h2>
             {!psychotypeResult ? (
               <>
-                <p className="mt-4 text-gray-600">Ответьте на 5 вопросов — результат появится автоматически.</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Вопрос {psychotypeQuestionIndex + 1} из {PSYCHOTYPE_QUESTIONS.length}
+                </p>
+                <p className="mt-4 text-gray-700">{psychotypeQuestion?.text}</p>
+                <div className="mt-4 space-y-2">
+                  {psychotypeQuestion?.options.map((option) => (
+                    <label key={option.key} className="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm">
+                      <input
+                        type="radio"
+                        name={`psychotype-q-${psychotypeQuestionIndex}`}
+                        checked={answers[psychotypeQuestionIndex] === option.key}
+                        onChange={() => selectPsychotypeAnswer(option.key)}
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
                 <button
                   type="button"
                   className="mt-8 w-full rounded-xl bg-emerald-600 py-3 text-white"
-                  onClick={() => {
-                    setPsychotypeResult(determinePsychotype(answers));
-                  }}
+                  onClick={advancePsychotypeQuestion}
                 >
-                  Показать результат (демо)
+                  {psychotypeQuestionIndex < PSYCHOTYPE_QUESTIONS.length - 1 ? "Далее" : "Показать результат"}
                 </button>
               </>
             ) : (

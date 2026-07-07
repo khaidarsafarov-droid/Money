@@ -36,7 +36,6 @@ export function DashboardPage() {
   const finance = useFinanceManager();
   const psychology = useAppPsychology();
   const { profile: userProfile } = useUserProfile();
-  const [onboardingDone, setOnboardingDone] = useState(userProfile.onboardingCompleted);
   const { showToast } = useToast();
   const webSync = useWebSync(finance.replaceState);
   const [paymentItem, setPaymentItem] = useState<FinancialItem | null>(null);
@@ -103,8 +102,8 @@ export function DashboardPage() {
           ? "Создайте цель и начните копить на важную задачу."
           : "Создайте цель или добавьте долг — всё в одном месте.";
 
-  if (!onboardingDone) {
-    return <OnboardingFlow onComplete={() => setOnboardingDone(true)} />;
+  if (!userProfile.onboardingCompleted) {
+    return <OnboardingFlow />;
   }
 
   const debtProgressPercent =

@@ -59,9 +59,15 @@ class DebtorsViewModel(
 
     private val _calendarMessage = MutableStateFlow<String?>(null)
     val calendarMessage: StateFlow<String?> = _calendarMessage.asStateFlow()
+    private var calendarMessageNonce = 0
 
     fun dismissCalendarMessage() {
         _calendarMessage.value = null
+    }
+
+    private fun postCalendarMessage(key: String) {
+        calendarMessageNonce += 1
+        _calendarMessage.value = "$key#$calendarMessageNonce"
     }
 
     fun dismissCalendarClosePrompt() {
@@ -73,7 +79,7 @@ class DebtorsViewModel(
         _pendingCalendarClose.value = null
         viewModelScope.launch {
             if (remove) {
-                debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId)
+                debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId, debtor.id)
                 persistCalendarState(debtor, eventId = null, failed = false)
             } else {
                 val paid = debtorRepository.getDebtorById(debtor.id) ?: debtor
@@ -157,7 +163,7 @@ class DebtorsViewModel(
         val type = when (tab) {
             DebtTab.OwesMe -> DebtType.CREDITOR
             DebtTab.IOwe -> DebtType.DEBTOR
-            DebtTab.Freedom -> DebtType.DEBTOR
+            DebtTab.Freedom, DebtTab.Calendar -> DebtType.DEBTOR
         }
         val now = System.currentTimeMillis()
         val byType = debtors.filter { it.debtType == type }
@@ -366,7 +372,7 @@ class DebtorsViewModel(
 
     fun deleteDebtor(debtor: Debtor) {
         viewModelScope.launch {
-            debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId)
+            debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId, debtor.id)
             debtorRepository.deleteDebtor(debtor)
             debtReminderScheduler.cancel(debtor.id)
         }
@@ -380,9 +386,9 @@ class DebtorsViewModel(
 
     fun removeDebtFromCalendarManually(debtor: Debtor) {
         viewModelScope.launch {
-            val removed = debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId)
+            val removed = debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId, debtor.id)
             persistCalendarState(debtor, eventId = null, failed = !removed)
-            _calendarMessage.value = if (removed) "calendar_removed" else "calendar_failed"
+            postCalendarMessage(if (removed) "calendar_removed" else "calendar_failed")
         }
     }
 
@@ -402,7 +408,7 @@ class DebtorsViewModel(
         )
         persistCalendarState(debtor, result.eventId, result.failed)
         if (result.failed) {
-            _calendarMessage.value = "calendar_failed"
+            postCalendarMessage("calendar_failed")
         }
     }
 
@@ -415,6 +421,12 @@ class DebtorsViewModel(
             ),
             latest.affectsBalance,
         )
+    }
+
+    fun retryCalendarSyncIfNeeded() {
+        viewModelScope.launch {
+            retryFailedCalendarSyncs()
+        }
     }
 
     private suspend fun retryFailedCalendarSyncs() {

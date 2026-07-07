@@ -151,6 +151,7 @@ fun HomeScreen(
     val allDebtors by debtorsViewModel.allDebtorsList.collectAsStateWithLifecycle()
     val debtors by debtorsViewModel.debtors.collectAsStateWithLifecycle()
     val debtTab by debtorsViewModel.debtTab.collectAsStateWithLifecycle()
+    val canAddDebtor = debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe
     val debtorFilter by debtorsViewModel.filter.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
     val freedomProjection by debtorsViewModel.freedomProjection.collectAsStateWithLifecycle()
@@ -272,12 +273,32 @@ fun HomeScreen(
     }
 
     LaunchedEffect(calendarMessage) {
-        when (calendarMessage) {
+        when (calendarMessage?.substringBefore('#')) {
             "calendar_failed" -> showMessage(context.getString(R.string.calendar_sync_failed))
             "calendar_removed" -> showMessage(context.getString(R.string.calendar_removed))
         }
         if (calendarMessage != null) {
             debtorsViewModel.dismissCalendarMessage()
+        }
+    }
+
+    val calendarSettings by debtorsViewModel.calendarSettings.collectAsStateWithLifecycle()
+    var hasCalendarPermissions by remember {
+        mutableStateOf(app.debtCalendarSyncService.hasPermissions())
+    }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                hasCalendarPermissions = app.debtCalendarSyncService.hasPermissions()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(hasCalendarPermissions, calendarSettings.autoSyncEnabled) {
+        if (hasCalendarPermissions && calendarSettings.autoSyncEnabled) {
+            debtorsViewModel.retryCalendarSyncIfNeeded()
         }
     }
 
@@ -320,11 +341,12 @@ fun HomeScreen(
         )
     }
 
-    if (showAddDebtorDialog) {
+    if (showAddDebtorDialog && canAddDebtor) {
         DebtorFormDialog(
             debtType = when (debtTab) {
                 DebtTab.OwesMe -> DebtType.CREDITOR
                 DebtTab.IOwe -> DebtType.DEBTOR
+                DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
             },
             availableBalance = availableBalanceUsd,
             onDismiss = { showAddDebtorDialog = false },
@@ -337,6 +359,7 @@ fun HomeScreen(
                     debtType = when (debtTab) {
                         DebtTab.OwesMe -> DebtType.CREDITOR
                         DebtTab.IOwe -> DebtType.DEBTOR
+                        DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
                     },
                     affectsBalance = affectsBalance,
                     note = note,
@@ -589,7 +612,12 @@ fun HomeScreen(
                             text = { Text(stringResource(R.string.menu_add_debt)) },
                             onClick = {
                                 showTopMenu = false
-                                showAddDebtorDialog = true
+                                if (canAddDebtor) {
+                                    showAddDebtorDialog = true
+                                } else {
+                                    debtorsViewModel.setDebtTab(DebtTab.OwesMe)
+                                    showAddDebtorDialog = true
+                                }
                             },
                         )
                         syncState.webSocketUrl?.let { webSocketUrl ->
@@ -629,7 +657,14 @@ fun HomeScreen(
                     if (isTablet) {
                         when (tabletSection) {
                             HomeSection.Goals -> showAddGoalDialog = true
-                            HomeSection.Debts -> showAddDebtorDialog = true
+                            HomeSection.Debts -> {
+                                if (canAddDebtor) {
+                                    showAddDebtorDialog = true
+                                } else {
+                                    debtorsViewModel.setDebtTab(DebtTab.OwesMe)
+                                    showAddDebtorDialog = true
+                                }
+                            }
                             HomeSection.Operations -> showQuickAddDialog = true
                         }
                     } else {
@@ -658,6 +693,7 @@ fun HomeScreen(
                 floatingActionButton = fab,
                 goals = goals,
                 debtors = debtors,
+                allDebtors = allDebtors,
                 debtTab = debtTab,
                 onDebtTabChange = debtorsViewModel::setDebtTab,
                 debtorFilter = debtorFilter,
@@ -717,8 +753,6 @@ fun HomeScreen(
                 },
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
-                onSyncCalendar = debtorsViewModel::syncDebtToCalendarManually,
-                onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
                 onDeleteTransfer = { pendingDelete = PendingDelete.TransferItem(it) },
                 onConfirmExpense = budgetViewModel::confirmExpense,

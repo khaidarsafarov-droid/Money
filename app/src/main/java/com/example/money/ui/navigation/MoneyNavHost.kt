@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +24,7 @@ import com.example.money.ui.settings.AutopilotSettingsScreen
 import com.example.money.ui.settings.CalendarSettingsScreen
 import com.example.money.ui.settings.PrivacySettingsScreen
 import com.example.money.ui.settings.VoiceSettingsScreen
+import kotlinx.coroutines.launch
 
 @Composable
 fun MoneyNavHost(
@@ -34,6 +36,7 @@ fun MoneyNavHost(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as MoneyApplication
+    val scope = rememberCoroutineScope()
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(
         initialValue = UserProfile(),
     )
@@ -43,11 +46,11 @@ fun MoneyNavHost(
 
     val calendarPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
-    ) { result ->
-        val granted = result[Manifest.permission.READ_CALENDAR] == true &&
-            result[Manifest.permission.WRITE_CALENDAR] == true
-        if (!granted) {
-            // user declined — settings screen explains how to enable later
+    ) { _ ->
+        scope.launch {
+            app.preferencesStore.updateCalendarSettings {
+                it.copy(permissionRequested = true)
+            }
         }
     }
 
@@ -56,9 +59,6 @@ fun MoneyNavHost(
             calendarPermissionLauncher.launch(
                 arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR),
             )
-            app.preferencesStore.updateCalendarSettings {
-                it.copy(permissionRequested = true)
-            }
         }
     }
 

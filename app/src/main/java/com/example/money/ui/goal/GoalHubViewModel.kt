@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -47,6 +48,16 @@ class GoalHubViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = GoalPsychologyProfile(),
     )
+
+    private val _psychotypeTestPrompt = MutableStateFlow<Boolean?>(null)
+    val psychotypeTestPrompt: StateFlow<Boolean?> = _psychotypeTestPrompt.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val loaded = preferencesStore.goalPsychologyProfile.first()
+            _psychotypeTestPrompt.value = !loaded.psychotypeTestCompleted
+        }
+    }
 
     val debtors: StateFlow<List<Debtor>> = debtorRepository.getAllDebtors().stateIn(
         scope = viewModelScope,
@@ -132,6 +143,7 @@ class GoalHubViewModel(
                     psychotypeTestCompleted = true,
                 )
             }
+            _psychotypeTestPrompt.value = false
         }
     }
 

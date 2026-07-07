@@ -50,7 +50,7 @@ class DebtCalendarSyncService(
             val endMillis = startMillis + 60 * 60 * 1000
             val title = DebtCalendarText.buildTitle(debtor, markClosed)
             val description = DebtCalendarText.buildDescription(debtor, displayName)
-            val deepLink = "money://debt/${debtor.id}"
+            val deepLink = debtDeepLink(debtor.id)
 
             val values = ContentValues().apply {
                 put(CalendarContract.Events.CALENDAR_ID, calendarId)
@@ -65,28 +65,25 @@ class DebtCalendarSyncService(
             }
 
             val resolver = context.contentResolver
-            val eventId = debtor.calendarEventId?.toLongOrNull()
-            val savedId = if (eventId != null) {
-                val updated = resolver.update(
-                    ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId),
-                    values,
-                    null,
-                    null,
-                )
-                if (updated > 0) {
-                    replaceReminders(eventId, settings)
-                    eventId
-                } else {
-                    val uri = resolver.insert(CalendarContract.Events.CONTENT_URI, values)
-                    val newId = uri?.lastPathSegment?.toLongOrNull()
-                    newId?.let { replaceReminders(it, settings) }
-                    newId
+            val storedEventId = debtor.calendarEventId?.toLongOrNull()
+            val ownedStoredEvent = storedEventId?.let { eventBelongsToDebtor(it, debtor.id) } == true
+
+            val savedId = when {
+                ownedStoredEvent -> {
+                    val updated = resolver.update(
+                        ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, storedEventId!!),
+                        values,
+                        null,
+                        null,
+                    )
+                    if (updated > 0) {
+                        replaceReminders(storedEventId, settings)
+                        storedEventId
+                    } else {
+                        insertDebtEvent(values, settings)
+                    }
                 }
-            } else {
-                val uri = resolver.insert(CalendarContract.Events.CONTENT_URI, values)
-                val newId = uri?.lastPathSegment?.toLongOrNull()
-                newId?.let { replaceReminders(it, settings) }
-                newId
+                else -> insertDebtEvent(values, settings)
             }
 
             CalendarSyncResult(savedId?.toString(), failed = savedId == null)
@@ -97,10 +94,13 @@ class DebtCalendarSyncService(
         }
     }
 
-    suspend fun deleteDebtEvent(eventId: String?): Boolean = withContext(Dispatchers.IO) {
+    suspend fun deleteDebtEvent(eventId: String?, debtorId: Long? = null): Boolean = withContext(Dispatchers.IO) {
         if (!hasPermissions() || eventId.isNullOrBlank()) return@withContext false
         return@withContext try {
             val id = eventId.toLongOrNull() ?: return@withContext false
+            if (debtorId != null && !eventBelongsToDebtor(id, debtorId)) {
+                return@withContext false
+            }
             val rows = context.contentResolver.delete(
                 ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, id),
                 null,
@@ -118,6 +118,31 @@ class DebtCalendarSyncService(
         resolveCalendarId(settings)
     }
 
+    private fun insertDebtEvent(values: ContentValues, settings: CalendarSettings): Long? {
+        val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+        val newId = uri?.lastPathSegment?.toLongOrNull()
+        newId?.let { replaceReminders(it, settings) }
+        return newId
+    }
+
+    private fun eventBelongsToDebtor(eventId: Long, debtorId: Long): Boolean {
+        val resolver = context.contentResolver
+        resolver.query(
+            ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId),
+            arrayOf(CalendarContract.Events.CUSTOM_APP_URI),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (!cursor.moveToFirst()) return false
+            val deepLink = cursor.getString(0)
+            return deepLink == debtDeepLink(debtorId)
+        }
+        return false
+    }
+
+    private fun debtDeepLink(debtorId: Long): String = "money://debt/$debtorId"
+
     private fun resolveCalendarId(settings: CalendarSettings): Long? {
         settings.debtsCalendarId?.let { return it }
         val resolver = context.contentResolver
@@ -125,6 +150,7 @@ class DebtCalendarSyncService(
             CalendarContract.Calendars._ID,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
             CalendarContract.Calendars.VISIBLE,
+            CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL,
         )
         resolver.query(
             CalendarContract.Calendars.CONTENT_URI,
@@ -135,24 +161,29 @@ class DebtCalendarSyncService(
         )?.use { cursor ->
             val idIndex = cursor.getColumnIndexOrThrow(CalendarContract.Calendars._ID)
             val nameIndex = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
-            var primaryId: Long? = null
+            val accessIndex = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL)
+            var writablePrimaryId: Long? = null
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idIndex)
                 val name = cursor.getString(nameIndex) ?: ""
-                if (settings.useDebtsCalendar && name == DEBTS_CALENDAR_NAME) {
+                val access = cursor.getInt(accessIndex)
+                if (settings.useDebtsCalendar && name == DEBTS_CALENDAR_NAME && isWritableAccess(access)) {
                     return id
                 }
-                if (primaryId == null) {
-                    primaryId = id
+                if (writablePrimaryId == null && isWritableAccess(access)) {
+                    writablePrimaryId = id
                 }
             }
             if (settings.useDebtsCalendar) {
-                return createDebtsCalendar() ?: primaryId
+                return createDebtsCalendar() ?: writablePrimaryId
             }
-            return primaryId
+            return writablePrimaryId
         }
         return null
     }
+
+    private fun isWritableAccess(accessLevel: Int): Boolean =
+        accessLevel >= CalendarContract.Calendars.CALENDAR_ACCESS_CONTRIBUTOR
 
     private fun createDebtsCalendar(): Long? {
         val resolver = context.contentResolver
@@ -175,7 +206,9 @@ class DebtCalendarSyncService(
                 .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_TYPE, account.second)
                 .build(),
             values,
-        )
+        ) ?: run {
+            resolver.insert(CalendarContract.Calendars.CONTENT_URI, values)
+        }
         return uri?.lastPathSegment?.toLongOrNull()
     }
 
@@ -188,17 +221,25 @@ class DebtCalendarSyncService(
                 CalendarContract.Calendars.ACCOUNT_TYPE,
                 CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL,
             ),
-            null,
-            null,
+            "${CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL} >= ?",
+            arrayOf(CalendarContract.Calendars.CALENDAR_ACCESS_CONTRIBUTOR.toString()),
             null,
         )?.use { cursor ->
             val nameIndex = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.ACCOUNT_NAME)
             val typeIndex = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.ACCOUNT_TYPE)
+            val accessIndex = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL)
+            var best: Pair<String, String>? = null
+            var bestAccess = -1
             while (cursor.moveToNext()) {
                 val name = cursor.getString(nameIndex) ?: continue
                 val type = cursor.getString(typeIndex) ?: continue
-                return name to type
+                val access = cursor.getInt(accessIndex)
+                if (access > bestAccess) {
+                    bestAccess = access
+                    best = name to type
+                }
             }
+            return best
         }
         return null
     }

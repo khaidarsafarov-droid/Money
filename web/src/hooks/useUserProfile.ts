@@ -17,15 +17,17 @@ export function useUserProfile() {
   }, []);
 
   const completeOnboarding = useCallback((finalProfile: Partial<UserProfile>) => {
-    const next: UserProfile = {
-      ...DEFAULT_USER_PROFILE,
-      ...profile,
-      ...finalProfile,
-      onboardingCompleted: true,
-    };
-    saveUserProfile(next);
-    setProfile(next);
-  }, [profile]);
+    setProfile((current) => {
+      const next: UserProfile = {
+        ...DEFAULT_USER_PROFILE,
+        ...current,
+        ...finalProfile,
+        onboardingCompleted: true,
+      };
+      saveUserProfile(next);
+      return next;
+    });
+  }, []);
 
   return {
     profile,
