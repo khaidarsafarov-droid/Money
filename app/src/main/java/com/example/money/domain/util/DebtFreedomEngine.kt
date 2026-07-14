@@ -1,6 +1,5 @@
 package com.example.money.domain.util
 
-import com.example.money.domain.model.DebtPayment
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DebtType
 import kotlin.math.ceil
@@ -103,13 +102,32 @@ object DebtFreedomEngine {
 
         val baseMonthly = estimateMonthlyPaymentCents(active, now)
         val effectiveMonthly = max(MIN_MONTHLY_CENTS, baseMonthly + extraMonthlyCents)
-        val monthsRemaining = ceil(totalRemaining.toDouble() / effectiveMonthly).toInt()
+        val paceBasedMonths = ceil(totalRemaining.toDouble() / effectiveMonthly).toInt()
+        val paceBasedFreedom = addMonths(now, paceBasedMonths)
 
-        val freedomDate = addMonths(now, monthsRemaining)
+        val latestDueDate = active
+            .filter { it.dateDue > now }
+            .maxOfOrNull { it.dateDue }
+
+        val freedomDate = if (latestDueDate != null) {
+            minOf(latestDueDate, paceBasedFreedom)
+        } else {
+            paceBasedFreedom
+        }
+
+        val monthsRemaining = monthsUntil(now, freedomDate)
 
         val monthsSavedWithExtra = if (extraMonthlyCents > 0L && baseMonthly > 0L) {
-            val baseMonths = ceil(totalRemaining.toDouble() / max(MIN_MONTHLY_CENTS, baseMonthly)).toInt()
-            max(0, baseMonths - monthsRemaining)
+            val baseEffectiveMonthly = max(MIN_MONTHLY_CENTS, baseMonthly)
+            val basePaceMonths = ceil(totalRemaining.toDouble() / baseEffectiveMonthly).toInt()
+            val basePaceFreedom = addMonths(now, basePaceMonths)
+            val baseFreedomDate = if (latestDueDate != null) {
+                minOf(latestDueDate, basePaceFreedom)
+            } else {
+                basePaceFreedom
+            }
+            val baseMonthsRemaining = monthsUntil(now, baseFreedomDate)
+            max(0, baseMonthsRemaining - monthsRemaining)
         } else {
             null
         }
@@ -127,6 +145,17 @@ object DebtFreedomEngine {
     private fun estimateMonthlyPaymentCents(debts: List<Debtor>, now: Long): Long {
         if (debts.isEmpty()) return 0L
 
+        val totalRemaining = debts.sumOf { it.remainingAmountCents }
+        val withFutureDue = debts.filter { it.dateDue > now }
+        if (withFutureDue.isNotEmpty()) {
+            val latestDue = withFutureDue.maxOf { it.dateDue }
+            val monthsUntilDue = max(
+                1.0,
+                (latestDue - now).toDouble() / MS_PER_MONTH,
+            )
+            return ceil(totalRemaining / monthsUntilDue).toLong()
+        }
+
         val recentPayments = debts
             .flatMap { debtor -> debtor.paymentHistory.map { payment -> payment to debtor } }
             .filter { (payment, _) -> payment.paidAt >= now - PAYMENT_WINDOW_MS }
@@ -138,18 +167,13 @@ object DebtFreedomEngine {
             return ceil(total / months).toLong()
         }
 
-        val totalRemaining = debts.sumOf { it.remainingAmountCents }
-        val withDue = debts.filter { it.dateDue > 0L }
-        if (withDue.isNotEmpty()) {
-            val nearestDue = withDue.minOf { it.dateDue }
-            val monthsUntilDue = max(
-                1.0,
-                (nearestDue - now).toDouble() / MS_PER_MONTH,
-            )
-            return ceil(totalRemaining / monthsUntilDue).toLong()
-        }
-
         return max(DEFAULT_ACCELERATE_CENTS, ceil(totalRemaining / 12.0).toLong())
+    }
+
+    private fun monthsUntil(fromMillis: Long, toMillis: Long): Int {
+        if (toMillis <= fromMillis) return 0
+        val days = ceil((toMillis - fromMillis).toDouble() / MS_PER_DAY)
+        return max(1, ceil(days / 30.0).toInt())
     }
 
     private fun addMonths(fromMillis: Long, months: Int): Long {

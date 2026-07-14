@@ -95,6 +95,15 @@ export function estimateMonthlyPaymentCents(
   const active = debts.filter((d) => !d.isCompleted && d.remainingCents > 0);
   if (active.length === 0) return 0;
 
+  const totalRemaining = active.reduce((sum, d) => sum + d.remainingCents, 0);
+  const withFutureDue = active.filter((d) => d.dateDueMs != null && d.dateDueMs > nowMs);
+
+  if (withFutureDue.length > 0) {
+    const latestDue = Math.max(...withFutureDue.map((d) => d.dateDueMs!));
+    const monthsUntilDue = Math.max(1, (latestDue - nowMs) / MS_PER_MONTH);
+    return Math.ceil(totalRemaining / monthsUntilDue);
+  }
+
   const recentPayments = active
     .flatMap((d) => d.payments)
     .filter((p) => p.paidAtMs >= nowMs - PAYMENT_WINDOW_MS);
@@ -106,19 +115,13 @@ export function estimateMonthlyPaymentCents(
     return Math.ceil(total / months);
   }
 
-  const totalRemaining = active.reduce((sum, d) => sum + d.remainingCents, 0);
-  const withDue = active.filter((d) => d.dateDueMs != null);
-
-  if (withDue.length > 0) {
-    const nearestDue = Math.min(...withDue.map((d) => d.dateDueMs!));
-    const monthsUntilDue = Math.max(
-      1,
-      Math.ceil((nearestDue - nowMs) / MS_PER_MONTH),
-    );
-    return Math.ceil(totalRemaining / monthsUntilDue);
-  }
-
   return Math.max(DEFAULT_ACCELERATE_CENTS, Math.ceil(totalRemaining / 12));
+}
+
+function monthsUntil(fromMs: number, toMs: number): number {
+  if (toMs <= fromMs) return 0;
+  const days = Math.ceil((toMs - fromMs) / MS_PER_DAY);
+  return Math.max(1, Math.ceil(days / 30));
 }
 
 export function calculateFreedomProjection(
@@ -142,19 +145,34 @@ export function calculateFreedomProjection(
 
   const baseMonthly = estimateMonthlyPaymentCents(debts, nowMs);
   const effectiveMonthly = Math.max(MIN_MONTHLY_CENTS, baseMonthly + extraMonthlyCents);
-  const monthsRemaining = Math.ceil(totalRemaining / effectiveMonthly);
+  const paceBasedMonths = Math.ceil(totalRemaining / effectiveMonthly);
+  const paceBasedFreedom = addMonthsToDate(nowMs, paceBasedMonths);
 
-  const freedomDate = new Date(nowMs);
-  freedomDate.setMonth(freedomDate.getMonth() + monthsRemaining);
+  const latestDueDate = active
+    .filter((d) => d.dateDueMs != null && d.dateDueMs > nowMs)
+    .reduce<number | null>((latest, d) => {
+      const due = d.dateDueMs!;
+      return latest == null ? due : Math.max(latest, due);
+    }, null);
+
+  const freedomDateMs =
+    latestDueDate != null ? Math.min(latestDueDate, paceBasedFreedom) : paceBasedFreedom;
+
+  const monthsRemaining = monthsUntil(nowMs, freedomDateMs);
 
   let monthsSavedWithExtra: number | null = null;
   if (extraMonthlyCents > 0 && baseMonthly > 0) {
-    const baseMonths = Math.ceil(totalRemaining / Math.max(MIN_MONTHLY_CENTS, baseMonthly));
-    monthsSavedWithExtra = Math.max(0, baseMonths - monthsRemaining);
+    const baseEffectiveMonthly = Math.max(MIN_MONTHLY_CENTS, baseMonthly);
+    const basePaceMonths = Math.ceil(totalRemaining / baseEffectiveMonthly);
+    const basePaceFreedom = addMonthsToDate(nowMs, basePaceMonths);
+    const baseFreedomDateMs =
+      latestDueDate != null ? Math.min(latestDueDate, basePaceFreedom) : basePaceFreedom;
+    const baseMonthsRemaining = monthsUntil(nowMs, baseFreedomDateMs);
+    monthsSavedWithExtra = Math.max(0, baseMonthsRemaining - monthsRemaining);
   }
 
   return {
-    freedomDateMs: freedomDate.getTime(),
+    freedomDateMs,
     monthsRemaining,
     totalRemainingCents: totalRemaining,
     monthlyPaymentCents: baseMonthly,

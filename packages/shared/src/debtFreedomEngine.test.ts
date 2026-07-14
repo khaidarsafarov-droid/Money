@@ -63,6 +63,29 @@ describe("calculateFreedomProjection", () => {
     expect(projection.monthsRemaining).toBeGreaterThan(0);
   });
 
+  it("respects due date over historical payment pace", () => {
+    const now = Date.UTC(2026, 6, 7);
+    const due = Date.UTC(2026, 6, 31);
+    const projection = calculateFreedomProjection(
+      [
+        {
+          remainingCents: 35_000,
+          targetCents: 50_000,
+          currentCents: 15_000,
+          isCompleted: false,
+          payments: [{ amountCents: 15_000, paidAtMs: now }],
+          dateDueMs: due,
+        },
+      ],
+      0,
+      now,
+    );
+
+    expect(projection.freedomDateMs).toBe(due);
+    expect(projection.monthlyPaymentCents).toBe(35_000);
+    expect(projection.monthsRemaining).toBe(1);
+  });
+
   it("shortens timeline with extra monthly payment", () => {
     const now = Date.UTC(2026, 0, 1);
     const debt = {
