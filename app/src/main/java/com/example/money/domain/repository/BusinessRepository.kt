@@ -19,7 +19,11 @@ interface BusinessRepository {
 
     fun observeTransactions(): Flow<List<BusinessTransaction>>
 
-    fun observeDashboard(monthStartMillis: Long, monthEndMillis: Long): Flow<BusinessDashboardSummary>
+    fun observeDashboard(
+        monthStartMillis: Long,
+        monthEndMillis: Long,
+        filters: com.example.money.domain.model.business.BusinessDashboardFilters = com.example.money.domain.model.business.BusinessDashboardFilters(),
+    ): Flow<BusinessDashboardSummary>
 
     suspend fun addClient(client: BusinessClient): Long
 

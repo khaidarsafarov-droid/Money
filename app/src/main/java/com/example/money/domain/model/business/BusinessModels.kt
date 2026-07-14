@@ -81,6 +81,72 @@ data class BusinessDashboardSummary(
     val expectedReceivablesCents: Long,
     val topClients: List<ClientRevenueRow>,
     val topExpenseCategories: List<CategoryAmountRow>,
+    val cashOnHandCents: Long = 0,
+    val revenueChangePercent: Int? = null,
+    val expenseChangePercent: Int? = null,
+    val profitChangePercent: Int? = null,
+    val cashChangePercent: Int? = null,
+    val revenueSparkline: List<Long> = emptyList(),
+    val expenseSparkline: List<Long> = emptyList(),
+    val profitSparkline: List<Long> = emptyList(),
+    val cashSparkline: List<Long> = emptyList(),
+    val cashflowWeekly: List<CashflowWeekPoint> = emptyList(),
+    val monthlyProfit: List<MonthlyProfitPoint> = emptyList(),
+    val clientTable: List<ClientProfitRow> = emptyList(),
+    val projectCards: List<ProjectPerformanceRow> = emptyList(),
+    val overdueInvoices: List<OverdueInvoiceRow> = emptyList(),
+    val upcomingPayments: List<UpcomingPaymentRow> = emptyList(),
+    val insights: List<String> = emptyList(),
+)
+
+data class CashflowWeekPoint(
+    val label: String,
+    val incomeCents: Long,
+    val expenseCents: Long,
+)
+
+data class MonthlyProfitPoint(
+    val label: String,
+    val profitCents: Long,
+)
+
+data class ClientProfitRow(
+    val clientId: Long,
+    val clientName: String,
+    val revenueCents: Long,
+    val profitCents: Long,
+    val lastInvoiceStatus: InvoiceStatus?,
+)
+
+data class ProjectPerformanceRow(
+    val projectId: Long,
+    val projectName: String,
+    val budgetCents: Long,
+    val actualCents: Long,
+    val status: ProjectStatus,
+    val progressFraction: Float,
+)
+
+data class OverdueInvoiceRow(
+    val invoiceId: Long,
+    val clientName: String,
+    val amountCents: Long,
+    val daysOverdue: Long,
+)
+
+data class UpcomingPaymentRow(
+    val invoiceId: Long,
+    val clientName: String,
+    val amountCents: Long,
+    val dueDate: Long,
+)
+
+data class BusinessDashboardFilters(
+    val clientId: Long? = null,
+    val projectId: Long? = null,
+    val periodMonths: Int = 1,
+    val transactionType: BusinessTransactionType? = null,
+    val invoiceStatus: InvoiceStatus? = null,
 )
 
 data class ClientRevenueRow(

@@ -30,7 +30,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -58,10 +58,11 @@ import com.example.money.domain.model.business.BusinessProject
 import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
-import com.example.money.ui.theme.CreamBackground
+import com.example.money.ui.business.components.BusinessDashboardContent
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.util.Formatters
 import java.util.Calendar
 
@@ -82,6 +83,7 @@ fun BusinessHomeScreen(
     val projects by viewModel.projects.collectAsStateWithLifecycle()
     val invoices by viewModel.invoices.collectAsStateWithLifecycle()
     val transactions by viewModel.transactions.collectAsStateWithLifecycle()
+    val filters by viewModel.filters.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -119,7 +121,7 @@ fun BusinessHomeScreen(
             )
         },
         floatingActionButton = {
-            if (selectedTab != BusinessTab.Dashboard) {
+            if (selectedTab != BusinessTab.Dashboard && selectedTab != BusinessTab.Reports && selectedTab != BusinessTab.Settings) {
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
                     containerColor = GoldPrimary,
@@ -130,7 +132,7 @@ fun BusinessHomeScreen(
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            TabRow(selectedTabIndex = selectedTab.ordinal) {
+            ScrollableTabRow(selectedTabIndex = selectedTab.ordinal, edgePadding = 8.dp) {
                 BusinessTab.entries.forEachIndexed { index, tab ->
                     Tab(
                         selected = selectedTab.ordinal == index,
@@ -143,6 +145,8 @@ fun BusinessHomeScreen(
                                     BusinessTab.Projects -> stringResource(R.string.business_tab_projects)
                                     BusinessTab.Invoices -> stringResource(R.string.business_tab_invoices)
                                     BusinessTab.Cashflow -> stringResource(R.string.business_tab_cashflow)
+                                    BusinessTab.Reports -> stringResource(R.string.business_tab_reports)
+                                    BusinessTab.Settings -> stringResource(R.string.business_tab_settings)
                                 },
                             )
                         },
@@ -151,7 +155,14 @@ fun BusinessHomeScreen(
             }
 
             when (selectedTab) {
-                BusinessTab.Dashboard -> BusinessDashboardTab(dashboard)
+                BusinessTab.Dashboard -> BusinessDashboardContent(
+                    dashboard = dashboard,
+                    clients = clients,
+                    projects = projects,
+                    filters = filters,
+                    onFiltersChange = { newFilters -> viewModel.updateFilters { newFilters } },
+                    onClearFilters = viewModel::clearFilters,
+                )
                 BusinessTab.Clients -> BusinessListTab(
                     items = clients.map { it.name to (it.email.ifBlank { it.phone }.ifBlank { it.contactInfo }) },
                     emptyText = stringResource(R.string.business_empty_clients),
@@ -165,6 +176,11 @@ fun BusinessHomeScreen(
                 )
                 BusinessTab.Invoices -> BusinessInvoiceTab(invoices, clients, viewModel::markInvoicePaid)
                 BusinessTab.Cashflow -> BusinessCashflowTab(transactions)
+                BusinessTab.Reports -> BusinessPlaceholderTab(stringResource(R.string.business_reports_coming_soon))
+                BusinessTab.Settings -> BusinessSettingsTab(
+                    businessName = branchSettings.businessName,
+                    onSaveName = viewModel::updateBusinessName,
+                )
             }
         }
     }
@@ -217,64 +233,6 @@ fun BranchToggle(
             icon = { Icon(Icons.Default.Business, contentDescription = null) },
         ) {
             Text(stringResource(R.string.branch_business))
-        }
-    }
-}
-
-@Composable
-private fun BusinessDashboardTab(dashboard: com.example.money.domain.model.business.BusinessDashboardSummary) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        item {
-            MetricCard(
-                title = stringResource(R.string.business_metric_revenue),
-                amountCents = dashboard.monthRevenueCents,
-                color = FinancePositive,
-            )
-        }
-        item {
-            MetricCard(
-                title = stringResource(R.string.business_metric_expenses),
-                amountCents = dashboard.monthExpenseCents,
-                color = FinanceNegative,
-            )
-        }
-        item {
-            MetricCard(
-                title = stringResource(R.string.business_metric_profit),
-                amountCents = dashboard.monthNetProfitCents,
-                color = if (dashboard.monthNetProfitCents >= 0) FinancePositive else FinanceNegative,
-            )
-        }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MetricCard(
-                    title = stringResource(R.string.business_metric_receivables),
-                    amountCents = dashboard.expectedReceivablesCents,
-                    color = GoldPrimary,
-                    modifier = Modifier.weight(1f),
-                )
-                MetricCard(
-                    title = stringResource(R.string.business_metric_overdue),
-                    amountCents = dashboard.overdueReceivablesCents,
-                    color = FinanceNegative,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-        if (dashboard.topClients.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.business_top_clients)) }
-            items(dashboard.topClients) { row ->
-                ListRow(row.clientName, Formatters.currencyFromCents(row.revenueCents))
-            }
-        }
-        if (dashboard.topExpenseCategories.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.business_top_expenses)) }
-            items(dashboard.topExpenseCategories) { row ->
-                ListRow(row.category, Formatters.currencyFromCents(row.amountCents))
-            }
         }
     }
 }
@@ -340,31 +298,27 @@ private fun BusinessCashflowTab(transactions: List<BusinessTransaction>) {
 }
 
 @Composable
-private fun MetricCard(
-    title: String,
-    amountCents: Long,
-    color: androidx.compose.ui.graphics.Color,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                Formatters.currencyFromCents(amountCents),
-                style = MaterialTheme.typography.headlineSmall,
-                color = color,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
+private fun BusinessPlaceholderTab(message: String) {
+    Text(message, modifier = Modifier.padding(24.dp))
 }
 
 @Composable
-private fun SectionTitle(text: String) {
-    Text(text, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+private fun BusinessSettingsTab(
+    businessName: String,
+    onSaveName: (String) -> Unit,
+) {
+    var name by remember(businessName) { mutableStateOf(businessName) }
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text(stringResource(R.string.business_settings_name)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        TextButton(onClick = { onSaveName(name) }) {
+            Text(stringResource(R.string.action_save))
+        }
+    }
 }
 
 @Composable

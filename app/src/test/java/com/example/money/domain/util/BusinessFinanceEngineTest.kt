@@ -46,6 +46,7 @@ class BusinessFinanceEngineTest {
             transactions = transactions,
             invoices = emptyList(),
             clients = listOf(BusinessClient(id = 1, name = "Acme")),
+            projects = emptyList(),
             monthStartMillis = monthStart,
             monthEndMillis = monthEnd,
         )

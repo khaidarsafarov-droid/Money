@@ -16,6 +16,7 @@ val UrgentYellowText = Color(0xFF856404)
 val CardBorder = Color(0xFFE5DDD0)
 val FinancePositive = Color(0xFF4A7C59)
 val FinanceNegative = Color(0xFFB35D5D)
+val FinanceInfo = Color(0xFF4A6FA5)
 
 /** Status badge backgrounds */
 val StatusActiveBg = Color(0xFFF3E6C8)

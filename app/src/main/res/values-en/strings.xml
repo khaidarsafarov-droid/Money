@@ -355,4 +355,22 @@
     <string name="business_field_amount">Amount</string>
     <string name="business_field_category">Category</string>
     <string name="business_need_client_first">Add a client first</string>
+    <string name="business_metric_cash_on_hand">Cash on hand</string>
+    <string name="business_tab_reports">Reports</string>
+    <string name="business_tab_settings">Settings</string>
+    <string name="business_top_clients_table">Top clients</string>
+    <string name="business_col_revenue">Revenue</string>
+    <string name="business_col_profit">Profit</string>
+    <string name="business_col_invoice_status">Last invoice</string>
+    <string name="business_project_performance">Projects</string>
+    <string name="business_overdue_invoices">Overdue invoices</string>
+    <string name="business_upcoming_payments">Upcoming payments</string>
+    <string name="business_days_overdue">Overdue: %1$d days</string>
+    <string name="business_insights_title">Insights</string>
+    <string name="business_filters">Filters</string>
+    <string name="business_filter_all_clients">All clients</string>
+    <string name="business_filter_all_invoices">All invoices</string>
+    <string name="business_filter_clear">Clear</string>
+    <string name="business_reports_coming_soon">Detailed reports and CSV export coming soon</string>
+    <string name="business_settings_name">Business name</string>
 </resources>

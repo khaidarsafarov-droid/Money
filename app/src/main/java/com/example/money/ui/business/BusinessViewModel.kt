@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.FinanceBranch
 import com.example.money.domain.model.business.BusinessClient
+import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessInvoice
 import com.example.money.domain.model.business.BusinessLedgerType
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -31,6 +33,8 @@ enum class BusinessTab {
     Projects,
     Invoices,
     Cashflow,
+    Reports,
+    Settings,
 }
 
 class BusinessViewModel(
@@ -70,8 +74,13 @@ class BusinessViewModel(
         initialValue = emptyList(),
     )
 
-    val dashboard: StateFlow<BusinessDashboardSummary> = businessRepository
-        .observeDashboard(monthRange.first, monthRange.second)
+    private val _filters = MutableStateFlow(BusinessDashboardFilters())
+    val filters: StateFlow<BusinessDashboardFilters> = _filters.asStateFlow()
+
+    val dashboard: StateFlow<BusinessDashboardSummary> = _filters
+        .flatMapLatest { filters ->
+            businessRepository.observeDashboard(monthRange.first, monthRange.second, filters)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -97,6 +106,14 @@ class BusinessViewModel(
 
     fun selectTab(tab: BusinessTab) {
         _selectedTab.value = tab
+    }
+
+    fun updateFilters(transform: (BusinessDashboardFilters) -> BusinessDashboardFilters) {
+        _filters.value = transform(_filters.value)
+    }
+
+    fun clearFilters() {
+        _filters.value = BusinessDashboardFilters()
     }
 
     fun switchToPersonal() {

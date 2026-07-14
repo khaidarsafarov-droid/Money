@@ -41,18 +41,25 @@ class BusinessRepositoryImpl(
     override fun observeTransactions(): Flow<List<BusinessTransaction>> =
         transactionDao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
-    override fun observeDashboard(monthStartMillis: Long, monthEndMillis: Long): Flow<BusinessDashboardSummary> =
+    override fun observeDashboard(
+        monthStartMillis: Long,
+        monthEndMillis: Long,
+        filters: com.example.money.domain.model.business.BusinessDashboardFilters,
+    ): Flow<BusinessDashboardSummary> =
         combine(
             observeTransactions(),
             observeInvoices(),
             observeClients(),
-        ) { transactions, invoices, clients ->
+            observeProjects(),
+        ) { transactions, invoices, clients, projects ->
             BusinessFinanceEngine.computeDashboard(
                 transactions = transactions,
                 invoices = invoices,
                 clients = clients,
+                projects = projects,
                 monthStartMillis = monthStartMillis,
                 monthEndMillis = monthEndMillis,
+                filters = filters,
             )
         }
 

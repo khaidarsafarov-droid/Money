@@ -588,4 +588,22 @@
     <string name="business_field_amount">Сумма</string>
     <string name="business_field_category">Категория</string>
     <string name="business_need_client_first">Сначала добавьте клиента</string>
+    <string name="business_metric_cash_on_hand">Доступные средства</string>
+    <string name="business_tab_reports">Отчёты</string>
+    <string name="business_tab_settings">Настройки</string>
+    <string name="business_top_clients_table">Топ клиентов</string>
+    <string name="business_col_revenue">Доход</string>
+    <string name="business_col_profit">Прибыль</string>
+    <string name="business_col_invoice_status">Последний счёт</string>
+    <string name="business_project_performance">Проекты</string>
+    <string name="business_overdue_invoices">Просроченные счета</string>
+    <string name="business_upcoming_payments">Ближайшие платежи</string>
+    <string name="business_days_overdue">Просрочка: %1$d дн.</string>
+    <string name="business_insights_title">Инсайты</string>
+    <string name="business_filters">Фильтры</string>
+    <string name="business_filter_all_clients">Все клиенты</string>
+    <string name="business_filter_all_invoices">Все счета</string>
+    <string name="business_filter_clear">Сбросить</string>
+    <string name="business_reports_coming_soon">Детальные отчёты и экспорт CSV — в следующем обновлении</string>
+    <string name="business_settings_name">Название бизнеса</string>
 </resources>
