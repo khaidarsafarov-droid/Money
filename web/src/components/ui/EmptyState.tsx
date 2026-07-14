@@ -11,13 +11,11 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <SurfaceCard className="flex flex-col items-center px-6 py-16 text-center">
-      <div className="mb-4 rounded-full bg-milk-surface/70 p-4 text-milk-muted">
-        <AppIcon icon={icon} size={28} />
-      </div>
-      <h3 className="text-lg font-semibold text-milk-text">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm text-milk-muted">{description}</p>
-      {action && <div className="mt-6 flex flex-wrap justify-center gap-3">{action}</div>}
+    <SurfaceCard className="flex flex-col items-center px-4 py-12 text-center">
+      <AppIcon icon={icon} size={20} className="mb-3 text-milk-muted" />
+      <h3 className="text-base font-medium text-milk-text">{title}</h3>
+      <p className="mt-1 max-w-sm text-sm text-milk-muted">{description}</p>
+      {action && <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>}
     </SurfaceCard>
   );
 }

@@ -34,31 +34,32 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       <div
-        className="pointer-events-none fixed bottom-28 left-1/2 z-[60] flex w-full max-w-sm -translate-x-1/2 flex-col gap-2 px-4 sm:bottom-8"
+        className="pointer-events-none fixed bottom-24 left-1/2 z-[60] flex w-full max-w-sm -translate-x-1/2 flex-col gap-2 px-4 sm:bottom-6"
         aria-live="polite"
       >
         <AnimatePresence>
           {toasts.map((toast) => (
             <motion.div
               key={toast.id}
-              initial={{ opacity: 0, y: 16, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.96 }}
-              className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/50 bg-milk-text px-4 py-3 text-sm text-milk-bg shadow-[0_12px_40px_rgb(45_42_38_/_0.2)]"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.15 }}
+              className="pointer-events-auto flex items-center gap-2 rounded-md border border-milk-surface bg-white px-3 py-2.5 text-sm text-milk-text"
             >
               <AppIcon
                 icon={toast.tone === "success" ? CheckCircle2 : Info}
-                size={18}
-                className="shrink-0 text-milk-surface"
+                size={14}
+                className="shrink-0 text-milk-muted"
               />
               <span className="flex-1">{toast.text}</span>
               <button
                 type="button"
-                className="rounded-full p-1 text-milk-surface/80 hover:text-milk-bg"
+                className="rounded p-0.5 text-milk-muted hover:text-milk-text"
                 onClick={() => setToasts((current) => current.filter((entry) => entry.id !== toast.id))}
                 aria-label="Закрыть"
               >
-                <AppIcon icon={X} size={14} />
+                <AppIcon icon={X} size={12} />
               </button>
             </motion.div>
           ))}

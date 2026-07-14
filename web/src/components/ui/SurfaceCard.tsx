@@ -7,8 +7,8 @@ interface IconProps {
   size?: number;
 }
 
-export function AppIcon({ icon: Icon, className = "", size = 20 }: IconProps) {
-  return <Icon className={className} size={size} strokeWidth={1.5} />;
+export function AppIcon({ icon: Icon, className = "text-milk-muted", size = 16 }: IconProps) {
+  return <Icon className={className} size={size} strokeWidth={1.25} />;
 }
 
 interface SurfaceCardProps {
@@ -18,7 +18,7 @@ interface SurfaceCardProps {
 
 export function SurfaceCard({ children, className = "" }: SurfaceCardProps) {
   return (
-    <section className={`glass-card p-6 ${className}`}>
+    <section className={`glass-card p-4 ${className}`}>
       {children}
     </section>
   );

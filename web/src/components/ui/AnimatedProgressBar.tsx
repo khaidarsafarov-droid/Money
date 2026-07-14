@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { isGoalOverAchieved } from "@/lib/goalProgress";
 import type { FinancialItem } from "@/types/finance";
 
@@ -11,11 +10,11 @@ interface AnimatedProgressBarProps {
 }
 
 const variantClasses: Record<ProgressVariant, string> = {
-  default: "bg-milk-accent-dark",
+  default: "bg-milk-accent",
   success: "bg-milk-success",
   warning: "bg-milk-warning",
   danger: "bg-milk-error",
-  gold: "bg-[#C9A24D]",
+  gold: "bg-milk-gold",
 };
 
 export function AnimatedProgressBar({
@@ -27,17 +26,15 @@ export function AnimatedProgressBar({
 
   return (
     <div
-      className={`h-2.5 overflow-hidden rounded-full bg-milk-surface/80 ${className}`}
+      className={`h-1 overflow-hidden rounded-full bg-milk-surface ${className}`}
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(clamped * 100)}
     >
-      <motion.div
-        className={`h-full rounded-full ${variantClasses[variant]}`}
-        initial={false}
-        animate={{ width: `${clamped * 100}%` }}
-        transition={{ type: "spring", stiffness: 120, damping: 22 }}
+      <div
+        className={`h-full rounded-full transition-[width] duration-300 ease-out ${variantClasses[variant]}`}
+        style={{ width: `${clamped * 100}%` }}
       />
     </div>
   );

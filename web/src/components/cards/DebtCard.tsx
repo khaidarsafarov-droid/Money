@@ -50,7 +50,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
                 Вы прошли {milestones.progressPercent}% пути к закрытию долга
               </p>
               {milestones.nextMilestone ? (
-                <p className="text-sm font-medium text-milk-gold">
+                <p className="text-sm text-milk-muted">
                   До вехи {milestones.nextMilestone.percent}% осталось{" "}
                   {formatMoney(milestones.nextMilestone.centsToReach, { hidden: hideAmounts })}
                 </p>
@@ -72,23 +72,23 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
               onClick={() => onAddPayment(item)}
               className="pill-btn-primary inline-flex w-full items-center justify-center gap-2 sm:w-auto"
             >
-              <AppIcon icon={HandCoins} size={18} />
+              <AppIcon icon={HandCoins} size={14} />
               Добавить оплату
             </button>
             <button
               type="button"
               onClick={() => onAddPayment(item, accelerateCents)}
-              className="pill-btn-ghost inline-flex w-full items-center justify-center gap-2 border border-milk-gold/40 text-milk-gold sm:w-auto"
+              className="pill-btn-ghost inline-flex w-full items-center justify-center gap-2 sm:w-auto"
             >
-              <AppIcon icon={Zap} size={18} />
+              <AppIcon icon={Zap} size={14} />
               Ускорить
             </button>
             <button
               type="button"
               onClick={() => void shareDebtReminder(item)}
-              className="pill-btn-ghost inline-flex w-full items-center justify-center gap-2 border border-milk-surface/80 sm:w-auto"
+              className="pill-btn-ghost inline-flex w-full items-center justify-center gap-2 sm:w-auto"
             >
-              <AppIcon icon={Share2} size={18} />
+              <AppIcon icon={Share2} size={14} />
               Напомнить
             </button>
           </div>

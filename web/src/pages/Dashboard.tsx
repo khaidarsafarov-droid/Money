@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { HandCoins, Inbox, Target, TrendingUp } from "lucide-react";
 import { useCallback, useState } from "react";
 import { personalizedGreeting } from "@money/shared";
@@ -17,6 +17,7 @@ import { GamificationBanner } from "@/components/psychology/GamificationBanner";
 import { PsychologySettingsPanel } from "@/components/psychology/PsychologySettingsPanel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExpandableFab } from "@/components/ui/ExpandableFab";
+import { AppIcon } from "@/components/ui/SurfaceCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusFilterTabs } from "@/components/ui/StatusFilterTabs";
 import { TypeFilterChips } from "@/components/ui/TypeFilterChips";
@@ -122,13 +123,11 @@ export function DashboardPage() {
       : 0;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-5xl px-4 pb-32 pt-8 sm:px-6">
-      <header className="mb-8 space-y-6">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-milk-muted">
-            TruckerLoad · Project Money
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-milk-text sm:text-4xl">
+    <div className="mx-auto min-h-dvh max-w-5xl px-4 pb-28 pt-6 sm:px-6">
+      <header className="mb-6 space-y-4">
+        <div className="space-y-0.5">
+          <p className="text-xs text-milk-muted">TruckerLoad · Project Money</p>
+          <h1 className="text-2xl font-medium tracking-tight text-milk-text sm:text-3xl">
             {personalizedGreeting(userProfile.displayName, debtProgressPercent)}
           </h1>
           <p className="text-sm text-milk-muted">USD · точность до центов</p>
@@ -161,7 +160,7 @@ export function DashboardPage() {
           }}
         />
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           <StatCard
             label="Долги"
             value={usd(finance.dashboardTotals.totalDebtRemainingUsd)}
@@ -183,17 +182,17 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <main className="space-y-8">
+      <main className="space-y-6">
         {hasOperations ? (
           <TransactionHistory transactions={finance.transactions} goals={goals} />
         ) : null}
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           {(finance.typeFilter === "debt" || finance.typeFilter === "all") && activeDebts.length > 0 ? (
             <>
               <FreedomForecastCard debts={activeDebts} hideAmounts={hideAmounts} />
               <GamificationBanner state={psychology.gamification} />
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 <button type="button" onClick={() => setShowAdvisor(true)} className="pill-btn-secondary">
                   Советник
                 </button>
@@ -206,9 +205,9 @@ export function DashboardPage() {
             </>
           ) : null}
 
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-milk-text">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-base font-medium text-milk-text">
                 Записи ({finance.visibleItems.length})
               </h2>
               <StatusFilterTabs
@@ -230,17 +229,17 @@ export function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setShowAddGoal(true)}
-                      className="pill-btn-primary inline-flex items-center gap-2"
+                      className="pill-btn-primary inline-flex items-center gap-1.5"
                     >
-                      <Target size={16} strokeWidth={1.5} />
+                      <AppIcon icon={Target} size={14} className="text-white" />
                       Новая цель
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowAddDebt(true)}
-                      className="pill-btn-secondary inline-flex items-center gap-2"
+                      className="pill-btn-secondary inline-flex items-center gap-1.5"
                     >
-                      <HandCoins size={16} strokeWidth={1.5} />
+                      <AppIcon icon={HandCoins} size={14} />
                       Новый долг
                     </button>
                   </>
@@ -248,7 +247,7 @@ export function DashboardPage() {
               }
             />
           ) : (
-            <motion.div layout className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-2">
               <AnimatePresence mode="popLayout">
                 {finance.visibleItems.map((item) => (
                   <FinanceCard
@@ -262,7 +261,7 @@ export function DashboardPage() {
                   />
                 ))}
               </AnimatePresence>
-            </motion.div>
+            </div>
           )}
         </div>
       </main>

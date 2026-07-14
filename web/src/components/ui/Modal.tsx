@@ -29,40 +29,41 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           <button
             type="button"
             aria-label="Закрыть"
-            className="absolute inset-0 bg-milk-text/20 backdrop-blur-sm"
+            className="absolute inset-0 bg-milk-text/10"
             onClick={onClose}
           />
           <motion.div
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
-            className="relative z-10 w-full max-w-lg rounded-3xl border border-white/50 bg-milk-bg p-6 shadow-[0_24px_64px_rgb(45_42_38_/_0.12)]"
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            className="relative z-10 w-full max-w-lg rounded-lg border border-milk-surface bg-white p-4"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.15 }}
           >
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <h2 id="modal-title" className="text-xl font-semibold tracking-tight text-milk-text">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <h2 id="modal-title" className="text-lg font-medium text-milk-text">
                 {title}
               </h2>
               <button
                 type="button"
                 aria-label="Закрыть"
-                className="rounded-full p-2 text-milk-muted transition hover:bg-milk-surface/80"
+                className="rounded-md p-1.5 text-milk-muted transition hover:bg-milk-bg"
                 onClick={onClose}
               >
-                <AppIcon icon={X} size={18} />
+                <AppIcon icon={X} size={16} />
               </button>
             </div>
 
-            <div className="space-y-4">{children}</div>
+            <div className="space-y-3">{children}</div>
 
-            {footer && <div className="mt-6 flex justify-end gap-3">{footer}</div>}
+            {footer && <div className="mt-4 flex justify-end gap-2">{footer}</div>}
           </motion.div>
         </motion.div>
       )}
@@ -78,8 +79,8 @@ interface FormFieldProps {
 
 export function FormField({ label, children, error }: FormFieldProps) {
   return (
-    <label className="block space-y-2">
-      <span className="text-sm font-medium text-milk-muted">{label}</span>
+    <label className="block space-y-1.5">
+      <span className="text-sm text-milk-muted">{label}</span>
       {children}
       {error && <span className="block text-sm text-milk-error">{error}</span>}
     </label>
@@ -87,7 +88,7 @@ export function FormField({ label, children, error }: FormFieldProps) {
 }
 
 export const inputClassName =
-  "w-full rounded-2xl border border-milk-surface bg-white/60 px-4 py-3 text-sm text-milk-text outline-none transition focus:border-milk-accent focus:ring-2 focus:ring-milk-accent/20";
+  "w-full rounded-md border border-milk-surface bg-white px-3 py-2 text-sm text-milk-text outline-none transition focus:border-milk-accent";
 
 export function ModalButton({
   children,
