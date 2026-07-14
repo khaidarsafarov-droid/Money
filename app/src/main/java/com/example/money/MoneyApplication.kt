@@ -24,7 +24,10 @@ import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.DebtReminderSchedulerImpl
 import com.example.money.notification.BusinessInvoiceReminderScheduler
 import com.example.money.notification.BusinessInvoiceReminderSchedulerImpl
+import com.example.money.notification.BusinessSmsScheduler
+import com.example.money.notification.BusinessSmsSchedulerImpl
 import com.example.money.notification.NotificationChannels
+import com.example.money.domain.usecase.BusinessSmsUseCases
 import com.example.money.domain.usecase.BusinessUseCases
 import com.example.money.voice.VoiceReportScheduler
 import com.example.money.autopilot.MicroPaymentScheduler
@@ -137,8 +140,26 @@ class MoneyApplication : Application() {
         BusinessUseCases(businessRepository)
     }
 
+    val businessSmsRepository: com.example.money.domain.repository.BusinessSmsRepository by lazy {
+        com.example.money.data.repository.BusinessSmsRepositoryImpl(
+            smsLogDao = database.businessSmsLogDao(),
+        )
+    }
+
+    val businessSmsUseCases: BusinessSmsUseCases by lazy {
+        BusinessSmsUseCases(
+            context = this,
+            businessRepository = businessRepository,
+            smsRepository = businessSmsRepository,
+        )
+    }
+
     val businessInvoiceReminderScheduler: BusinessInvoiceReminderScheduler by lazy {
         BusinessInvoiceReminderSchedulerImpl(this)
+    }
+
+    val businessSmsScheduler: BusinessSmsScheduler by lazy {
+        BusinessSmsSchedulerImpl(this)
     }
 
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
@@ -166,6 +187,7 @@ class MoneyApplication : Application() {
         NotificationChannels.create(this)
         rescheduleDebtReminders()
         rescheduleBusinessReminders()
+        syncBusinessSmsSchedule()
         startWidgetPipeline()
         syncAutopilotSchedule()
         syncVoiceReportSchedule()
@@ -224,6 +246,13 @@ class MoneyApplication : Application() {
             val settings = preferencesStore.businessBranchSettings.first()
             val invoices = businessRepository.observeInvoices().first()
             businessInvoiceReminderScheduler.syncAll(invoices, settings)
+        }
+    }
+
+    fun syncBusinessSmsSchedule() {
+        applicationScope.launch {
+            val settings = preferencesStore.businessBranchSettings.first()
+            businessSmsScheduler.syncSchedule(settings)
         }
     }
 }

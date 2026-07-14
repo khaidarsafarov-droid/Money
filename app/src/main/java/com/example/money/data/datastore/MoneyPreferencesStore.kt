@@ -139,6 +139,9 @@ object MoneyPreferenceKeys {
     val BUSINESS_INVOICE_REMINDER_HOUR = intPreferencesKey("business_invoice_reminder_hour")
     val BUSINESS_LOW_CASH_THRESHOLD_CENTS = longPreferencesKey("business_low_cash_threshold_cents")
     val BUSINESS_RECURRING_RULES_JSON = stringPreferencesKey("business_recurring_rules_json")
+    val BUSINESS_SMS_AUTOMATION_ENABLED = booleanPreferencesKey("business_sms_automation_enabled")
+    val BUSINESS_SMS_OVERDUE_INVOICE_ENABLED = booleanPreferencesKey("business_sms_overdue_invoice_enabled")
+    val BUSINESS_SMS_DIRECT_SEND_ENABLED = booleanPreferencesKey("business_sms_direct_send_enabled")
 }
 
 class MoneyPreferencesStore(
@@ -634,6 +637,9 @@ private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
         invoiceReminderHour = this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDER_HOUR] ?: 9,
         lowCashThresholdCents = this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_THRESHOLD_CENTS] ?: 50_000L,
         recurringRulesJson = this[MoneyPreferenceKeys.BUSINESS_RECURRING_RULES_JSON] ?: "[]",
+        smsAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_AUTOMATION_ENABLED] ?: false,
+        smsOverdueInvoiceEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_OVERDUE_INVOICE_ENABLED] ?: true,
+        smsDirectSendEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_DIRECT_SEND_ENABLED] ?: false,
     )
 
 private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBranchSettings) {
@@ -648,4 +654,7 @@ private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBra
     this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDER_HOUR] = settings.invoiceReminderHour
     this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_THRESHOLD_CENTS] = settings.lowCashThresholdCents
     this[MoneyPreferenceKeys.BUSINESS_RECURRING_RULES_JSON] = settings.recurringRulesJson
+    this[MoneyPreferenceKeys.BUSINESS_SMS_AUTOMATION_ENABLED] = settings.smsAutomationEnabled
+    this[MoneyPreferenceKeys.BUSINESS_SMS_OVERDUE_INVOICE_ENABLED] = settings.smsOverdueInvoiceEnabled
+    this[MoneyPreferenceKeys.BUSINESS_SMS_DIRECT_SEND_ENABLED] = settings.smsDirectSendEnabled
 }

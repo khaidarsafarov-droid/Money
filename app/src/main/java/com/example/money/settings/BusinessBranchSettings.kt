@@ -23,6 +23,9 @@ data class BusinessBranchSettings(
     val invoiceReminderHour: Int = 9,
     val lowCashThresholdCents: Long = 50_000,
     val recurringRulesJson: String = "[]",
+    val smsAutomationEnabled: Boolean = false,
+    val smsOverdueInvoiceEnabled: Boolean = true,
+    val smsDirectSendEnabled: Boolean = false,
 ) {
     fun savedFilterPresets(): List<SavedFilterPreset> = decodeSavedFilterPresets(savedFilterPresetsJson)
 

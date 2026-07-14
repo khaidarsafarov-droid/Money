@@ -9,6 +9,11 @@ import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessDashboardView
+import com.example.money.domain.model.business.BusinessSmsRecipient
+import com.example.money.domain.model.business.BusinessSmsSendRequest
+import com.example.money.domain.model.business.BusinessSmsSendResult
+import com.example.money.domain.model.business.BusinessSmsTemplateId
+import com.example.money.domain.model.business.BusinessSmsLog
 import com.example.money.domain.model.business.BusinessCategory
 import com.example.money.domain.model.business.CategoryType
 import com.example.money.domain.model.business.BusinessReportFilters
@@ -28,15 +33,18 @@ import com.example.money.domain.model.business.RecurringBusinessRule
 import com.example.money.domain.model.business.RecurringBusinessRuleCodec
 import com.example.money.domain.model.business.CashflowForecastPoint
 import com.example.money.domain.repository.BusinessRepository
+import com.example.money.domain.usecase.BusinessSmsUseCases
 import com.example.money.domain.usecase.BusinessUseCases
 import com.example.money.domain.util.BusinessAutomationService
 import com.example.money.domain.util.BusinessCsvExporter
 import com.example.money.domain.util.BusinessFinanceEngine
 import com.example.money.domain.util.BusinessReportsEngine
 import com.example.money.domain.util.ai.AiInvoiceRiskService
+import com.example.money.domain.util.ai.BusinessSmsTone
 import com.example.money.domain.util.ai.BusinessAiAssistantService
 import com.example.money.domain.util.MoneyMath
 import com.example.money.notification.BusinessInvoiceReminderScheduler
+import com.example.money.notification.BusinessSmsScheduler
 import com.example.money.settings.BusinessBranchSettings
 import com.example.money.ui.business.assistant.BusinessAssistantMessage
 import com.example.money.ui.business.assistant.BusinessAssistantRole
@@ -62,6 +70,7 @@ enum class BusinessTab {
     Cashflow,
     Reports,
     Assistant,
+    Sms,
     Settings,
 }
 
@@ -76,7 +85,9 @@ class BusinessViewModel(
     private val businessRepository: BusinessRepository,
     private val preferencesStore: MoneyPreferencesStore,
     private val businessUseCases: BusinessUseCases,
+    private val businessSmsUseCases: BusinessSmsUseCases,
     private val invoiceReminderScheduler: BusinessInvoiceReminderScheduler? = null,
+    private val businessSmsScheduler: BusinessSmsScheduler? = null,
 ) : ViewModel() {
 
     val branchSettings: StateFlow<BusinessBranchSettings> = preferencesStore.businessBranchSettings.stateIn(
@@ -183,6 +194,15 @@ class BusinessViewModel(
     private val _assistantMessages = MutableStateFlow<List<BusinessAssistantMessage>>(emptyList())
     val assistantMessages: StateFlow<List<BusinessAssistantMessage>> = _assistantMessages.asStateFlow()
 
+    val smsHistory: StateFlow<List<BusinessSmsLog>> = businessSmsUseCases.observeSmsHistory()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList(),
+        )
+
+    val smsTemplates = businessSmsUseCases.listTemplates()
+
     init {
         viewModelScope.launch {
             businessRepository.refreshInvoiceStatuses()
@@ -196,6 +216,7 @@ class BusinessViewModel(
                 inv to settings
             }.collect { (inv, settings) ->
                 invoiceReminderScheduler?.syncAll(inv, settings)
+                businessSmsScheduler?.syncSchedule(settings)
             }
         }
     }
@@ -497,14 +518,56 @@ class BusinessViewModel(
         viewModelScope.launch {
             val settings = branchSettings.value
             invoiceReminderScheduler?.syncAll(invoices.value, settings)
+            businessSmsScheduler?.syncSchedule(settings)
         }
+    }
+
+    suspend fun sendSms(
+        recipients: List<BusinessSmsRecipient>,
+        body: String,
+        templateId: BusinessSmsTemplateId?,
+        useDirectSend: Boolean,
+    ): BusinessSmsSendResult {
+        return businessSmsUseCases.sendSms(
+            BusinessSmsSendRequest(
+                recipients = recipients,
+                body = body,
+                templateId = templateId,
+                useDirectSend = useDirectSend,
+            ),
+        )
+    }
+
+    suspend fun sendBulkSms(
+        clientIds: List<Long>,
+        body: String,
+        templateId: BusinessSmsTemplateId?,
+        useDirectSend: Boolean,
+    ): BusinessSmsSendResult {
+        return businessSmsUseCases.sendBulkToClients(clientIds, body, templateId, useDirectSend)
+    }
+
+    suspend fun renderSmsTemplate(templateId: BusinessSmsTemplateId, clientId: Long?): String {
+        val businessName = branchSettings.value.businessName.ifBlank { "Business" }
+        return businessSmsUseCases.renderTemplate(templateId, clientId, businessName)
+    }
+
+    suspend fun aiGenerateSms(
+        templateId: BusinessSmsTemplateId,
+        clientId: Long?,
+        tone: BusinessSmsTone,
+    ): String {
+        val businessName = branchSettings.value.businessName.ifBlank { "Business" }
+        return businessSmsUseCases.aiGenerateSms(templateId, clientId, businessName, tone)
     }
 
     class Factory(
         private val businessRepository: BusinessRepository,
         private val preferencesStore: MoneyPreferencesStore,
         private val businessUseCases: BusinessUseCases,
+        private val businessSmsUseCases: BusinessSmsUseCases,
         private val invoiceReminderScheduler: BusinessInvoiceReminderScheduler? = null,
+        private val businessSmsScheduler: BusinessSmsScheduler? = null,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -513,7 +576,9 @@ class BusinessViewModel(
                     businessRepository,
                     preferencesStore,
                     businessUseCases,
+                    businessSmsUseCases,
                     invoiceReminderScheduler,
+                    businessSmsScheduler,
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")

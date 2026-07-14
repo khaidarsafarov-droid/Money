@@ -75,6 +75,7 @@ import com.example.money.settings.BusinessBranchSettings
 import com.example.money.ui.business.assistant.BusinessAssistantMessage
 import com.example.money.ui.business.reports.BusinessReportTab
 import com.example.money.ui.business.reports.BusinessReportsContent
+import com.example.money.ui.business.sms.BusinessSmsScreen
 import com.example.money.ui.business.theme.BusinessTheme
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
@@ -104,7 +105,9 @@ private fun BusinessHomeScreenContent(
             app.businessRepository,
             app.preferencesStore,
             app.businessUseCases,
+            app.businessSmsUseCases,
             app.businessInvoiceReminderScheduler,
+            app.businessSmsScheduler,
         ),
     )
 
@@ -122,6 +125,7 @@ private fun BusinessHomeScreenContent(
     val invoiceRisks by viewModel.invoiceRisks.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val assistantMessages by viewModel.assistantMessages.collectAsStateWithLifecycle()
+    val smsHistory by viewModel.smsHistory.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var quickActionDialog by remember { mutableStateOf<BusinessQuickAction?>(null) }
@@ -171,7 +175,8 @@ private fun BusinessHomeScreenContent(
             if (selectedTab != BusinessTab.Dashboard &&
                 selectedTab != BusinessTab.Reports &&
                 selectedTab != BusinessTab.Settings &&
-                selectedTab != BusinessTab.Assistant
+                selectedTab != BusinessTab.Assistant &&
+                selectedTab != BusinessTab.Sms
             ) {
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
@@ -202,6 +207,8 @@ private fun BusinessHomeScreenContent(
                     invoiceRisks = invoiceRisks,
                     categories = categories,
                     assistantMessages = assistantMessages,
+                    smsHistory = smsHistory,
+                    smsTemplates = viewModel.smsTemplates,
                     viewModel = viewModel,
                     context = context,
                 )
@@ -281,6 +288,8 @@ private fun BusinessTabContent(
     invoiceRisks: Map<Long, InvoiceRiskAssessment>,
     categories: List<com.example.money.domain.model.business.BusinessCategory>,
     assistantMessages: List<BusinessAssistantMessage>,
+    smsHistory: List<com.example.money.domain.model.business.BusinessSmsLog>,
+    smsTemplates: List<com.example.money.domain.model.business.BusinessSmsTemplate>,
     viewModel: BusinessViewModel,
     context: Context,
 ) {
@@ -346,6 +355,25 @@ private fun BusinessTabContent(
                 val labelRes = BusinessAssistantPrompt.entries.find { it.id == promptId }?.labelRes
                 val label = labelRes?.let { context.getString(it) } ?: promptId
                 viewModel.askAssistant(promptId, label)
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+        BusinessTab.Sms -> BusinessSmsScreen(
+            clients = clients,
+            templates = smsTemplates,
+            smsHistory = smsHistory,
+            settings = branchSettings,
+            onSendSms = { recipients, body, templateId, useDirectSend ->
+                viewModel.sendSms(recipients, body, templateId, useDirectSend)
+            },
+            onSendBulk = { clientIds, body, templateId, useDirectSend ->
+                viewModel.sendBulkSms(clientIds, body, templateId, useDirectSend)
+            },
+            onRenderTemplate = { templateId, clientId ->
+                viewModel.renderSmsTemplate(templateId, clientId)
+            },
+            onAiGenerate = { templateId, clientId, tone ->
+                viewModel.aiGenerateSms(templateId, clientId, tone)
             },
             modifier = Modifier.fillMaxSize(),
         )

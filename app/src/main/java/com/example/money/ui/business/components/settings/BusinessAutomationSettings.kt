@@ -88,6 +88,45 @@ fun BusinessAutomationSettings(
         }
 
         item {
+            Text(
+                text = stringResource(R.string.business_sms_automation_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_sms_automation_enabled),
+                checked = settings.smsAutomationEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(smsAutomationEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_sms_overdue_enabled),
+                checked = settings.smsOverdueInvoiceEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(smsOverdueInvoiceEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_sms_direct_send),
+                checked = settings.smsDirectSendEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(smsDirectSendEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
             TextButton(onClick = onRunNow) {
                 Text(stringResource(R.string.business_automation_run_now))
             }

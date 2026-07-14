@@ -67,6 +67,7 @@ private fun tabLabel(tab: BusinessTab): String = stringResource(
         BusinessTab.Cashflow -> R.string.business_tab_cashflow
         BusinessTab.Reports -> R.string.business_tab_reports
         BusinessTab.Assistant -> R.string.business_tab_assistant
+        BusinessTab.Sms -> R.string.business_tab_sms
         BusinessTab.Settings -> R.string.business_tab_settings
     },
 )

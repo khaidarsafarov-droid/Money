@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SmartToy
+import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
@@ -56,6 +57,7 @@ private fun BusinessTab.icon(): ImageVector = when (this) {
     BusinessTab.Cashflow -> Icons.AutoMirrored.Outlined.TrendingUp
     BusinessTab.Reports -> Icons.Outlined.Assessment
     BusinessTab.Assistant -> Icons.Outlined.SmartToy
+    BusinessTab.Sms -> Icons.Outlined.Sms
     BusinessTab.Settings -> Icons.Outlined.Settings
 }
 
@@ -67,5 +69,6 @@ private fun BusinessTab.titleRes(): Int = when (this) {
     BusinessTab.Cashflow -> R.string.business_tab_cashflow
     BusinessTab.Reports -> R.string.business_tab_reports
     BusinessTab.Assistant -> R.string.business_tab_assistant
+    BusinessTab.Sms -> R.string.business_tab_sms
     BusinessTab.Settings -> R.string.business_tab_settings
 }

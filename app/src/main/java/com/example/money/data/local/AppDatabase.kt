@@ -15,6 +15,7 @@ import com.example.money.data.local.dao.BusinessCategoryDao
 import com.example.money.data.local.dao.BusinessClientDao
 import com.example.money.data.local.dao.BusinessInvoiceDao
 import com.example.money.data.local.dao.BusinessProjectDao
+import com.example.money.data.local.dao.BusinessSmsLogDao
 import com.example.money.data.local.dao.BusinessTransactionDao
 import com.example.money.data.local.dao.DebtorDao
 import com.example.money.data.local.entity.BusinessAssetEntity
@@ -22,6 +23,7 @@ import com.example.money.data.local.entity.BusinessCategoryEntity
 import com.example.money.data.local.entity.BusinessClientEntity
 import com.example.money.data.local.entity.BusinessInvoiceEntity
 import com.example.money.data.local.entity.BusinessProjectEntity
+import com.example.money.data.local.entity.BusinessSmsLogEntity
 import com.example.money.data.local.entity.BusinessTransactionEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
@@ -44,6 +46,7 @@ import com.example.money.data.local.migration.MIGRATION_11_12
 import com.example.money.data.local.migration.MIGRATION_12_13
 import com.example.money.data.local.migration.MIGRATION_13_14
 import com.example.money.data.local.migration.MIGRATION_14_15
+import com.example.money.data.local.migration.MIGRATION_15_16
 
 @Database(
     entities = [
@@ -60,8 +63,9 @@ import com.example.money.data.local.migration.MIGRATION_14_15
         BusinessTransactionEntity::class,
         BusinessCategoryEntity::class,
         BusinessAssetEntity::class,
+        BusinessSmsLogEntity::class,
     ],
-    version = 15,
+    version = 16,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -80,6 +84,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun businessTransactionDao(): BusinessTransactionDao
     abstract fun businessCategoryDao(): BusinessCategoryDao
     abstract fun businessAssetDao(): BusinessAssetDao
+    abstract fun businessSmsLogDao(): BusinessSmsLogDao
 
     companion object {
         private const val DATABASE_NAME = "money.db"
@@ -97,6 +102,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
                     MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
                     MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15,
+                    MIGRATION_15_16,
                 ).build().also { instance = it }
             }
         }
