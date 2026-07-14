@@ -23,4 +23,7 @@ data class BusinessClientEntity(
     @ColumnInfo(name = "is_active")
     val isActive: Boolean = true,
     val note: String = "",
+    val tags: String = "",
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
 )

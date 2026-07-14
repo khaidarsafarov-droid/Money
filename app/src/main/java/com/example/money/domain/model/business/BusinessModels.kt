@@ -26,6 +26,44 @@ enum class BusinessLedgerType {
     PERSONAL,
 }
 
+enum class BusinessPaymentMethod {
+    CASH,
+    CARD,
+    BANK_TRANSFER,
+    OTHER,
+}
+
+enum class BusinessAssetType {
+    BANK,
+    CASH,
+    CARD,
+    WALLET,
+    OTHER,
+}
+
+enum class CategoryType {
+    INCOME,
+    EXPENSE,
+}
+
+data class BusinessCategory(
+    val id: Long = 0,
+    val syncId: String = "",
+    val name: String,
+    val type: CategoryType,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
+data class BusinessAsset(
+    val id: Long = 0,
+    val syncId: String = "",
+    val name: String,
+    val type: BusinessAssetType = BusinessAssetType.BANK,
+    val balanceCents: Long = 0,
+    val currency: String = "USD",
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
 data class BusinessClient(
     val id: Long = 0,
     val syncId: String = "",
@@ -35,6 +73,8 @@ data class BusinessClient(
     val phone: String = "",
     val isActive: Boolean = true,
     val note: String = "",
+    val tags: String = "",
+    val createdAt: Long = System.currentTimeMillis(),
 )
 
 data class BusinessProject(
@@ -45,6 +85,9 @@ data class BusinessProject(
     val status: ProjectStatus = ProjectStatus.ACTIVE,
     val budgetCents: Long = 0,
     val note: String = "",
+    val startDate: Long? = null,
+    val endDate: Long? = null,
+    val createdAt: Long = System.currentTimeMillis(),
 )
 
 data class BusinessInvoice(
@@ -57,6 +100,8 @@ data class BusinessInvoice(
     val amountCents: Long,
     val status: InvoiceStatus = InvoiceStatus.DRAFT,
     val note: String = "",
+    val currency: String = "USD",
+    val createdAt: Long = System.currentTimeMillis(),
 )
 
 data class BusinessTransaction(
@@ -65,12 +110,17 @@ data class BusinessTransaction(
     val type: BusinessTransactionType,
     val amountCents: Long,
     val category: String,
+    val categoryId: Long? = null,
     val ledgerType: BusinessLedgerType = BusinessLedgerType.OPERATING,
+    val currency: String = "USD",
+    val paymentMethod: BusinessPaymentMethod = BusinessPaymentMethod.OTHER,
+    val taxType: String? = null,
     val clientId: Long? = null,
     val projectId: Long? = null,
     val invoiceId: Long? = null,
     val date: Long,
     val note: String = "",
+    val createdAt: Long = System.currentTimeMillis(),
 )
 
 enum class BusinessDashboardView {

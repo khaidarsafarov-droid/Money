@@ -124,6 +124,8 @@ class MoneyApplication : Application() {
             projectDao = database.businessProjectDao(),
             invoiceDao = database.businessInvoiceDao(),
             transactionDao = database.businessTransactionDao(),
+            categoryDao = database.businessCategoryDao(),
+            assetDao = database.businessAssetDao(),
         )
     }
 

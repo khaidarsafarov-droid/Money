@@ -34,4 +34,10 @@ data class BusinessProjectEntity(
     @ColumnInfo(name = "budget_cents")
     val budgetCents: Long = 0,
     val note: String = "",
+    @ColumnInfo(name = "start_date")
+    val startDate: Long? = null,
+    @ColumnInfo(name = "end_date")
+    val endDate: Long? = null,
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
 )

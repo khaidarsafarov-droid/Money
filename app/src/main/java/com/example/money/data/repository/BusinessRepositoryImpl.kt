@@ -1,17 +1,22 @@
 package com.example.money.data.repository
 
+import com.example.money.data.local.dao.BusinessAssetDao
+import com.example.money.data.local.dao.BusinessCategoryDao
 import com.example.money.data.local.dao.BusinessClientDao
 import com.example.money.data.local.dao.BusinessInvoiceDao
 import com.example.money.data.local.dao.BusinessProjectDao
 import com.example.money.data.local.dao.BusinessTransactionDao
 import com.example.money.data.mapper.toDomain
 import com.example.money.data.mapper.toEntity
+import com.example.money.domain.model.business.BusinessAsset
+import com.example.money.domain.model.business.BusinessCategory
 import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessInvoice
 import com.example.money.domain.model.business.BusinessProject
 import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
+import com.example.money.domain.model.business.CategoryType
 import com.example.money.domain.model.business.InvoiceStatus
 import com.example.money.domain.repository.BusinessRepository
 import com.example.money.domain.util.BusinessFinanceEngine
@@ -24,6 +29,8 @@ class BusinessRepositoryImpl(
     private val projectDao: BusinessProjectDao,
     private val invoiceDao: BusinessInvoiceDao,
     private val transactionDao: BusinessTransactionDao,
+    private val categoryDao: BusinessCategoryDao,
+    private val assetDao: BusinessAssetDao,
 ) : BusinessRepository {
 
     override fun observeClients(): Flow<List<BusinessClient>> =
@@ -40,6 +47,12 @@ class BusinessRepositoryImpl(
 
     override fun observeTransactions(): Flow<List<BusinessTransaction>> =
         transactionDao.observeAll().map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeCategories(): Flow<List<BusinessCategory>> =
+        categoryDao.observeAll().map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeAssets(): Flow<List<BusinessAsset>> =
+        assetDao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
     override fun observeDashboard(
         monthStartMillis: Long,
@@ -99,11 +112,13 @@ class BusinessRepositoryImpl(
     override suspend fun markInvoicePaid(invoiceId: Long) {
         val invoice = invoiceDao.getById(invoiceId) ?: return
         invoiceDao.upsert(invoice.copy(status = InvoiceStatus.PAID.name))
+        val categoryId = resolveCategoryId("Revenue", CategoryType.INCOME)
         transactionDao.insert(
             BusinessTransaction(
                 type = BusinessTransactionType.INCOME,
                 amountCents = invoice.amountCents,
                 category = "Revenue",
+                categoryId = categoryId,
                 clientId = invoice.clientId,
                 projectId = invoice.projectId,
                 invoiceId = invoice.id,
@@ -113,15 +128,40 @@ class BusinessRepositoryImpl(
         )
     }
 
-    override suspend fun addTransaction(transaction: BusinessTransaction): Long =
-        transactionDao.insert(transaction.toEntity())
+    override suspend fun addTransaction(transaction: BusinessTransaction): Long {
+        val resolved = transaction.copy(categoryId = transaction.categoryId ?: resolveCategoryId(transaction.category, transaction.type.toCategoryType()))
+        return transactionDao.insert(resolved.toEntity())
+    }
 
     override suspend fun updateTransaction(transaction: BusinessTransaction) {
-        transactionDao.upsert(transaction.toEntity())
+        val resolved = transaction.copy(categoryId = transaction.categoryId ?: resolveCategoryId(transaction.category, transaction.type.toCategoryType()))
+        transactionDao.upsert(resolved.toEntity())
     }
 
     override suspend fun deleteTransaction(transaction: BusinessTransaction) {
         transactionDao.delete(transaction.toEntity())
+    }
+
+    override suspend fun addCategory(category: BusinessCategory): Long =
+        categoryDao.insert(category.toEntity())
+
+    override suspend fun updateCategory(category: BusinessCategory) {
+        categoryDao.upsert(category.toEntity())
+    }
+
+    override suspend fun deleteCategory(category: BusinessCategory) {
+        categoryDao.delete(category.toEntity())
+    }
+
+    override suspend fun addAsset(asset: BusinessAsset): Long =
+        assetDao.insert(asset.toEntity())
+
+    override suspend fun updateAsset(asset: BusinessAsset) {
+        assetDao.upsert(asset.toEntity())
+    }
+
+    override suspend fun deleteAsset(asset: BusinessAsset) {
+        assetDao.delete(asset.toEntity())
     }
 
     override suspend fun refreshInvoiceStatuses(nowMillis: Long) {
@@ -132,5 +172,16 @@ class BusinessRepositoryImpl(
                 invoiceDao.upsert(entity.copy(status = resolved.name))
             }
         }
+    }
+
+    private suspend fun resolveCategoryId(name: String, type: CategoryType): Long? {
+        val existing = categoryDao.findByNameAndType(name, type.name)
+        if (existing != null) return existing.id
+        return categoryDao.insert(BusinessCategory(name = name, type = type).toEntity())
+    }
+
+    private fun BusinessTransactionType.toCategoryType(): CategoryType = when (this) {
+        BusinessTransactionType.INCOME -> CategoryType.INCOME
+        BusinessTransactionType.EXPENSE -> CategoryType.EXPENSE
     }
 }

@@ -658,4 +658,8 @@
     <string name="business_risk_low">Низкий риск</string>
     <string name="business_risk_medium">Средний риск</string>
     <string name="business_risk_high">Высокий риск</string>
+    <string name="business_invoice_status_draft">Черновик</string>
+    <string name="business_invoice_status_sent">Отправлен</string>
+    <string name="business_invoice_status_paid">Оплачен</string>
+    <string name="business_invoice_status_overdue">Просрочен</string>
 </resources>

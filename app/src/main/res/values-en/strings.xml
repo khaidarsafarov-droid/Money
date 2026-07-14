@@ -425,4 +425,8 @@
     <string name="business_risk_low">Low risk</string>
     <string name="business_risk_medium">Medium risk</string>
     <string name="business_risk_high">High risk</string>
+    <string name="business_invoice_status_draft">Draft</string>
+    <string name="business_invoice_status_sent">Sent</string>
+    <string name="business_invoice_status_paid">Paid</string>
+    <string name="business_invoice_status_overdue">Overdue</string>
 </resources>

@@ -61,8 +61,10 @@ import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
 import android.content.Intent
 import com.example.money.ui.business.components.BusinessDashboardContent
+import com.example.money.ui.business.components.clients.ClientList
+import com.example.money.ui.business.components.invoices.InvoiceTable
+import com.example.money.ui.business.components.transactions.BusinessTransactionTable
 import com.example.money.ui.business.reports.BusinessReportsContent
-import com.example.money.ui.business.components.ai.InvoiceRiskBadge
 import com.example.money.ui.business.theme.BusinessTheme
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
@@ -101,6 +103,7 @@ private fun BusinessHomeScreenContent(
     val reportFilters by viewModel.reportFilters.collectAsStateWithLifecycle()
     val selectedReportTab by viewModel.selectedReportTab.collectAsStateWithLifecycle()
     val invoiceRisks by viewModel.invoiceRisks.collectAsStateWithLifecycle()
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var quickActionDialog by remember { mutableStateOf<BusinessQuickAction?>(null) }
@@ -183,7 +186,9 @@ private fun BusinessHomeScreenContent(
             when (selectedTab) {
                 BusinessTab.Dashboard -> {
                     val availableCategories = BusinessCategories.mergeWithCustom(
-                        branchSettings.customCategories() + transactions.map { it.category },
+                        branchSettings.customCategories() +
+                            categories.map { it.name } +
+                            transactions.map { it.category },
                     )
                     BusinessDashboardContent(
                         dashboard = dashboard,
@@ -204,10 +209,7 @@ private fun BusinessHomeScreenContent(
                         onQuickAction = viewModel::requestQuickAction,
                     )
                 }
-                BusinessTab.Clients -> BusinessListTab(
-                    items = clients.map { it.name to (it.email.ifBlank { it.phone }.ifBlank { it.contactInfo }) },
-                    emptyText = stringResource(R.string.business_empty_clients),
-                )
+                BusinessTab.Clients -> ClientList(clients = clients)
                 BusinessTab.Projects -> BusinessListTab(
                     items = projects.map { project ->
                         val clientName = clients.find { it.id == project.clientId }?.name ?: "—"
@@ -215,13 +217,13 @@ private fun BusinessHomeScreenContent(
                     },
                     emptyText = stringResource(R.string.business_empty_projects),
                 )
-                BusinessTab.Invoices -> BusinessInvoiceTab(
+                BusinessTab.Invoices -> InvoiceTable(
                     invoices = invoices,
                     clients = clients,
                     invoiceRisks = invoiceRisks,
                     onMarkPaid = viewModel::markInvoicePaid,
                 )
-                BusinessTab.Cashflow -> BusinessCashflowTab(transactions)
+                BusinessTab.Cashflow -> BusinessTransactionTable(transactions = transactions)
                 BusinessTab.Reports -> BusinessReportsContent(
                     reports = reports,
                     filters = reportFilters,
@@ -336,60 +338,6 @@ private fun BusinessListTab(items: List<Pair<String, String>>, emptyText: String
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(items) { (title, subtitle) ->
             ListRow(title, subtitle)
-        }
-    }
-}
-
-@Composable
-private fun BusinessInvoiceTab(
-    invoices: List<BusinessInvoice>,
-    clients: List<BusinessClient>,
-    invoiceRisks: Map<Long, com.example.money.domain.model.business.InvoiceRiskAssessment>,
-    onMarkPaid: (BusinessInvoice) -> Unit,
-) {
-    if (invoices.isEmpty()) {
-        Text(stringResource(R.string.business_empty_invoices), modifier = Modifier.padding(24.dp))
-        return
-    }
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(invoices) { invoice ->
-            val clientName = clients.find { it.id == invoice.clientId }?.name ?: "—"
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(clientName, fontWeight = FontWeight.SemiBold)
-                        InvoiceRiskBadge(assessment = invoiceRisks[invoice.id])
-                    }
-                    Text(Formatters.currencyFromCents(invoice.amountCents))
-                    Text("${stringResource(R.string.business_invoice_due)}: ${Formatters.shortDate(invoice.dueDate)}")
-                    Text(invoice.status.name)
-                    if (invoice.status != InvoiceStatus.PAID) {
-                        TextButton(onClick = { onMarkPaid(invoice) }) {
-                            Text(stringResource(R.string.business_mark_paid))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BusinessCashflowTab(transactions: List<BusinessTransaction>) {
-    if (transactions.isEmpty()) {
-        Text(stringResource(R.string.business_empty_cashflow), modifier = Modifier.padding(24.dp))
-        return
-    }
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(transactions) { tx ->
-            val sign = if (tx.type == BusinessTransactionType.INCOME) "+" else "−"
-            ListRow(
-                "${tx.category} · ${tx.ledgerType.name}",
-                "$sign${Formatters.currencyFromCents(tx.amountCents)}",
-            )
         }
     }
 }

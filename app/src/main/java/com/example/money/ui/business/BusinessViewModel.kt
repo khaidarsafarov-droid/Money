@@ -9,7 +9,8 @@ import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessDashboardView
-import com.example.money.domain.model.business.BusinessFilterPreset
+import com.example.money.domain.model.business.BusinessCategory
+import com.example.money.domain.model.business.CategoryType
 import com.example.money.domain.model.business.BusinessReportFilters
 import com.example.money.domain.model.business.BusinessReportPeriod
 import com.example.money.domain.model.business.BusinessReportType
@@ -89,6 +90,12 @@ class BusinessViewModel(
     )
 
     val transactions: StateFlow<List<BusinessTransaction>> = businessRepository.observeTransactions().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList(),
+    )
+
+    val categories: StateFlow<List<BusinessCategory>> = businessRepository.observeCategories().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),
@@ -269,6 +276,9 @@ class BusinessViewModel(
         val trimmed = name.trim()
         if (trimmed.isBlank()) return
         viewModelScope.launch {
+            businessRepository.addCategory(
+                BusinessCategory(name = trimmed, type = CategoryType.EXPENSE),
+            )
             preferencesStore.updateBusinessBranchSettings { settings ->
                 val updated = (settings.customCategories() + trimmed).distinct()
                 settings.copy(customCategoriesJson = BusinessBranchSettings.encodeStringList(updated))

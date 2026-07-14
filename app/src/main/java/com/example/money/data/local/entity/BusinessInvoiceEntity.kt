@@ -47,4 +47,7 @@ data class BusinessInvoiceEntity(
     val amountCents: Long,
     val status: String = "DRAFT",
     val note: String = "",
+    val currency: String = "USD",
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
 )

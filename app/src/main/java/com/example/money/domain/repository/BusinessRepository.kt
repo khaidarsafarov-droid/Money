@@ -1,5 +1,7 @@
 package com.example.money.domain.repository
 
+import com.example.money.domain.model.business.BusinessAsset
+import com.example.money.domain.model.business.BusinessCategory
 import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessInvoice
@@ -18,6 +20,10 @@ interface BusinessRepository {
     fun observeInvoices(): Flow<List<BusinessInvoice>>
 
     fun observeTransactions(): Flow<List<BusinessTransaction>>
+
+    fun observeCategories(): Flow<List<BusinessCategory>>
+
+    fun observeAssets(): Flow<List<BusinessAsset>>
 
     fun observeDashboard(
         monthStartMillis: Long,
@@ -50,6 +56,18 @@ interface BusinessRepository {
     suspend fun updateTransaction(transaction: BusinessTransaction)
 
     suspend fun deleteTransaction(transaction: BusinessTransaction)
+
+    suspend fun addCategory(category: BusinessCategory): Long
+
+    suspend fun updateCategory(category: BusinessCategory)
+
+    suspend fun deleteCategory(category: BusinessCategory)
+
+    suspend fun addAsset(asset: BusinessAsset): Long
+
+    suspend fun updateAsset(asset: BusinessAsset)
+
+    suspend fun deleteAsset(asset: BusinessAsset)
 
     suspend fun refreshInvoiceStatuses(nowMillis: Long = System.currentTimeMillis())
 }

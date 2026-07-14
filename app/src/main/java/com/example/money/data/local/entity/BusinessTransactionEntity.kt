@@ -34,6 +34,7 @@ import com.example.money.data.sync.SyncIds
         Index(value = ["client_id"]),
         Index(value = ["project_id"]),
         Index(value = ["invoice_id"]),
+        Index(value = ["category_id"]),
         Index(value = ["date"]),
         Index(value = ["ledger_type"]),
     ],
@@ -47,8 +48,15 @@ data class BusinessTransactionEntity(
     @ColumnInfo(name = "amount_cents")
     val amountCents: Long,
     val category: String,
+    @ColumnInfo(name = "category_id")
+    val categoryId: Long? = null,
     @ColumnInfo(name = "ledger_type")
     val ledgerType: String = "OPERATING",
+    val currency: String = "USD",
+    @ColumnInfo(name = "payment_method")
+    val paymentMethod: String = "OTHER",
+    @ColumnInfo(name = "tax_type")
+    val taxType: String? = null,
     @ColumnInfo(name = "client_id")
     val clientId: Long? = null,
     @ColumnInfo(name = "project_id")
@@ -57,4 +65,6 @@ data class BusinessTransactionEntity(
     val invoiceId: Long? = null,
     val date: Long,
     val note: String = "",
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
 )
