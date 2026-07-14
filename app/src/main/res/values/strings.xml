@@ -608,4 +608,12 @@
     <string name="business_settings_name">Название бизнеса</string>
     <string name="business_chart_cashflow">Денежный поток</string>
     <string name="business_chart_pnl">Прибыль и убытки</string>
+    <string name="business_dashboard_title">Бизнес-дашборд</string>
+    <string name="business_dashboard_subtitle">Обзор доходов, расходов, прибыли, клиентов, проектов и счетов</string>
+    <string name="business_mode_chip">Бизнес-режим</string>
+    <string name="business_kpi_vs_last_month">%1$s к прошлому месяцу</string>
+    <string name="business_cash_subtitle">По всем бизнес-счетам</string>
+    <string name="business_recent_transactions">Последние операции</string>
+    <string name="business_tx_income">Доход</string>
+    <string name="business_tx_expense">Расход</string>
 </resources>

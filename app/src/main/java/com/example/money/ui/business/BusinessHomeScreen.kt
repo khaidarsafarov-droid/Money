@@ -168,6 +168,7 @@ private fun BusinessHomeScreenContent(
                     dashboard = dashboard,
                     clients = clients,
                     projects = projects,
+                    transactions = transactions,
                     filters = filters,
                     onFiltersChange = { newFilters -> viewModel.updateFilters { newFilters } },
                     onClearFilters = viewModel::clearFilters,

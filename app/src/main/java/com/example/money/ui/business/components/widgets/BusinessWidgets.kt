@@ -156,6 +156,42 @@ fun ClientProfitabilityWidget(
 }
 
 @Composable
+fun RecentTransactionsWidget(
+    transactions: List<BusinessTransaction>,
+    modifier: Modifier = Modifier,
+) {
+    if (transactions.isEmpty()) return
+    BusinessCard(modifier = modifier.fillMaxWidth()) {
+        Text(
+            stringResource(R.string.business_recent_transactions),
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.sm), modifier = Modifier.padding(top = BusinessSpacing.sm)) {
+            transactions.take(5).forEach { tx ->
+                val typeLabel = if (tx.type == BusinessTransactionType.INCOME) {
+                    stringResource(R.string.business_tx_income)
+                } else {
+                    stringResource(R.string.business_tx_expense)
+                }
+                val sign = if (tx.type == BusinessTransactionType.INCOME) "+" else "−"
+                Column {
+                    Text(
+                        tx.note.ifBlank { "${tx.category}" },
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        "$typeLabel • $sign${Formatters.currencyFromCents(tx.amountCents)} • ${Formatters.shortDate(tx.date)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = BusinessColors.Gray500,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun RowWithIcon(
     icon: @Composable () -> Unit,
     title: String,
