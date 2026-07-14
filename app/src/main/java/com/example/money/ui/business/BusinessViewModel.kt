@@ -42,7 +42,8 @@ enum class BusinessTab {
 enum class BusinessQuickAction {
     CREATE_INVOICE,
     ADD_TRANSACTION,
-    CREATE_PROJECT,
+    ADD_CLIENT,
+    ADD_CATEGORY,
 }
 
 class BusinessViewModel(
@@ -138,7 +139,9 @@ class BusinessViewModel(
         _filters.value = BusinessDashboardFilters(
             clientId = preset.clientId,
             projectId = preset.projectId,
+            category = preset.category,
             periodPreset = preset.periodPreset,
+            transactionType = preset.transactionType,
             invoiceStatus = preset.invoiceStatus,
         )
     }
@@ -150,6 +153,8 @@ class BusinessViewModel(
             name = name.trim(),
             clientId = current.clientId,
             projectId = current.projectId,
+            category = current.category,
+            transactionType = current.transactionType,
             invoiceStatus = current.invoiceStatus,
             periodPreset = current.periodPreset,
         )
@@ -201,6 +206,17 @@ class BusinessViewModel(
     fun updateBusinessName(name: String) {
         viewModelScope.launch {
             preferencesStore.updateBusinessBranchSettings { it.copy(businessName = name) }
+        }
+    }
+
+    fun addCustomCategory(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings { settings ->
+                val updated = (settings.customCategories() + trimmed).distinct()
+                settings.copy(customCategoriesJson = BusinessBranchSettings.encodeStringList(updated))
+            }
         }
     }
 

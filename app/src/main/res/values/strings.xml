@@ -594,6 +594,11 @@
     <string name="business_top_clients_table">Топ клиентов</string>
     <string name="business_col_revenue">Доход</string>
     <string name="business_col_profit">Прибыль</string>
+    <string name="business_col_expense">Расход</string>
+    <string name="business_chart_categories">Распределение по категориям</string>
+    <string name="business_top_categories">Топ категорий</string>
+    <string name="business_filter_all_categories">Все категории</string>
+    <string name="business_filter_all_transactions">Все операции</string>
     <string name="business_col_invoice_status">Последний счёт</string>
     <string name="business_project_performance">Проекты</string>
     <string name="business_overdue_invoices">Просроченные счета</string>
@@ -618,7 +623,9 @@
     <string name="business_tx_expense">Расход</string>
     <string name="business_action_create_invoice">Создать счёт</string>
     <string name="business_action_add_transaction">Добавить операцию</string>
-    <string name="business_action_create_project">Создать проект</string>
+    <string name="business_action_add_client">Добавить клиента</string>
+    <string name="business_action_add_category">Добавить категорию</string>
+    <string name="business_add_category">Новая категория</string>
     <string name="business_attention_title">Что требует внимания сегодня</string>
     <string name="business_alert_overdue_invoice">Счёт «%1$s» просрочен на %2$d дн. (%3$s)</string>
     <string name="business_alert_low_cash">Низкий остаток: %1$s</string>

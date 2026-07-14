@@ -84,6 +84,47 @@ class BusinessFinanceEngineTest {
     }
 
     @Test
+    fun buildCategoryDistribution_groupsIncomeAndExpense() {
+        val monthStart = 1_000L
+        val monthEnd = 9_000L
+        val transactions = listOf(
+            BusinessTransaction(
+                id = 1,
+                type = BusinessTransactionType.INCOME,
+                amountCents = 30_000,
+                category = "Services",
+                date = 2_000,
+            ),
+            BusinessTransaction(
+                id = 2,
+                type = BusinessTransactionType.EXPENSE,
+                amountCents = 10_000,
+                category = "Services",
+                date = 3_000,
+            ),
+            BusinessTransaction(
+                id = 3,
+                type = BusinessTransactionType.EXPENSE,
+                amountCents = 5_000,
+                category = "Software",
+                date = 4_000,
+            ),
+        )
+        val summary = BusinessFinanceEngine.computeDashboard(
+            transactions = transactions,
+            invoices = emptyList(),
+            clients = emptyList(),
+            projects = emptyList(),
+            monthStartMillis = monthStart,
+            monthEndMillis = monthEnd,
+        )
+        val services = summary.categoryDistribution.find { it.category == "Services" }
+        assertEquals(30_000, services?.incomeCents)
+        assertEquals(10_000, services?.expenseCents)
+        assertEquals(true, summary.categoryDistribution.isNotEmpty())
+    }
+
+    @Test
     fun computeDashboard_includesAttentionAlertsForOverdue() {
         val monthStart = 1_000L
         val monthEnd = 9_000_000L

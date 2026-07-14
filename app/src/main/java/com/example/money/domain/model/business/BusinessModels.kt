@@ -112,6 +112,8 @@ data class SavedFilterPreset(
     val name: String,
     val clientId: Long? = null,
     val projectId: Long? = null,
+    val category: String? = null,
+    val transactionType: BusinessTransactionType? = null,
     val invoiceStatus: InvoiceStatus? = null,
     val periodPreset: BusinessFilterPreset = BusinessFilterPreset.THIS_MONTH,
 )
@@ -141,6 +143,7 @@ data class BusinessDashboardSummary(
     val upcomingPayments: List<UpcomingPaymentRow> = emptyList(),
     val insights: List<String> = emptyList(),
     val attentionAlerts: List<BusinessAttentionAlert> = emptyList(),
+    val categoryDistribution: List<CategoryDistributionRow> = emptyList(),
 )
 
 data class CashflowWeekPoint(
@@ -188,6 +191,7 @@ data class UpcomingPaymentRow(
 data class BusinessDashboardFilters(
     val clientId: Long? = null,
     val projectId: Long? = null,
+    val category: String? = null,
     val periodPreset: BusinessFilterPreset = BusinessFilterPreset.THIS_MONTH,
     val transactionType: BusinessTransactionType? = null,
     val invoiceStatus: InvoiceStatus? = null,
@@ -204,6 +208,14 @@ data class CategoryAmountRow(
     val amountCents: Long,
 )
 
+data class CategoryDistributionRow(
+    val category: String,
+    val incomeCents: Long,
+    val expenseCents: Long,
+) {
+    val totalCents: Long get() = incomeCents + expenseCents
+}
+
 object BusinessCategories {
     val revenue = listOf("Revenue", "Services", "Products", "Consulting", "Other income")
     val expenses = listOf(
@@ -218,4 +230,7 @@ object BusinessCategories {
         "Other expense",
     )
     val all = revenue + expenses
+
+    fun mergeWithCustom(custom: List<String>): List<String> =
+        (all + custom).distinct().sorted()
 }

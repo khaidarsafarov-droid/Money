@@ -174,23 +174,29 @@ private fun BusinessHomeScreenContent(
             }
 
             when (selectedTab) {
-                BusinessTab.Dashboard -> BusinessDashboardContent(
-                    dashboard = dashboard,
-                    clients = clients,
-                    projects = projects,
-                    transactions = transactions,
-                    filters = filters,
-                    dashboardView = branchSettings.dashboardView,
-                    savedPresets = branchSettings.savedFilterPresets(),
-                    onFiltersChange = { newFilters -> viewModel.updateFilters { newFilters } },
-                    onApplyPreset = viewModel::applyFilterPreset,
-                    onApplySavedPreset = viewModel::applySavedFilterPreset,
-                    onSavePreset = viewModel::saveCurrentFilterPreset,
-                    onDeleteSavedPreset = viewModel::deleteSavedFilterPreset,
-                    onClearFilters = viewModel::clearFilters,
-                    onDashboardViewChange = viewModel::setDashboardView,
-                    onQuickAction = viewModel::requestQuickAction,
-                )
+                BusinessTab.Dashboard -> {
+                    val availableCategories = BusinessCategories.mergeWithCustom(
+                        branchSettings.customCategories() + transactions.map { it.category },
+                    )
+                    BusinessDashboardContent(
+                        dashboard = dashboard,
+                        clients = clients,
+                        projects = projects,
+                        transactions = transactions,
+                        filters = filters,
+                        dashboardView = branchSettings.dashboardView,
+                        savedPresets = branchSettings.savedFilterPresets(),
+                        availableCategories = availableCategories,
+                        onFiltersChange = { newFilters -> viewModel.updateFilters { newFilters } },
+                        onApplyPreset = viewModel::applyFilterPreset,
+                        onApplySavedPreset = viewModel::applySavedFilterPreset,
+                        onSavePreset = viewModel::saveCurrentFilterPreset,
+                        onDeleteSavedPreset = viewModel::deleteSavedFilterPreset,
+                        onClearFilters = viewModel::clearFilters,
+                        onDashboardViewChange = viewModel::setDashboardView,
+                        onQuickAction = viewModel::requestQuickAction,
+                    )
+                }
                 BusinessTab.Clients -> BusinessListTab(
                     items = clients.map { it.name to (it.email.ifBlank { it.phone }.ifBlank { it.contactInfo }) },
                     emptyText = stringResource(R.string.business_empty_clients),
@@ -239,24 +245,33 @@ private fun BusinessHomeScreenContent(
     }
 
     quickActionDialog?.let { action ->
-        BusinessQuickActionDialog(
-            action = action,
-            clients = clients,
-            projects = projects,
-            onDismiss = { quickActionDialog = null },
-            onAddProject = { clientId, name, budget ->
-                viewModel.addProject(clientId, name, budget)
-                quickActionDialog = null
-            },
-            onAddInvoice = { clientId, projectId, amount, issue, due, status ->
-                viewModel.addInvoice(clientId, projectId, amount, issue, due, status)
-                quickActionDialog = null
-            },
-            onAddTransaction = { type, amount, category, ledger, clientId, projectId, date, note ->
-                viewModel.addTransaction(type, amount, category, ledger, clientId, projectId, date, note)
-                quickActionDialog = null
-            },
-        )
+        when (action) {
+            BusinessQuickAction.ADD_CATEGORY -> AddCategoryDialog(
+                onDismiss = { quickActionDialog = null },
+                onAdd = { name ->
+                    viewModel.addCustomCategory(name)
+                    quickActionDialog = null
+                },
+            )
+            else -> BusinessQuickActionDialog(
+                action = action,
+                clients = clients,
+                projects = projects,
+                onDismiss = { quickActionDialog = null },
+                onAddClient = { name, email, phone, info ->
+                    viewModel.addClient(name, email, phone, info)
+                    quickActionDialog = null
+                },
+                onAddInvoice = { clientId, projectId, amount, issue, due, status ->
+                    viewModel.addInvoice(clientId, projectId, amount, issue, due, status)
+                    quickActionDialog = null
+                },
+                onAddTransaction = { type, amount, category, ledger, clientId, projectId, date, note ->
+                    viewModel.addTransaction(type, amount, category, ledger, clientId, projectId, date, note)
+                    quickActionDialog = null
+                },
+            )
+        }
     }
 }
 
@@ -381,27 +396,57 @@ private fun ListRow(title: String, subtitle: String) {
 }
 
 @Composable
+private fun AddCategoryDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.business_add_category)) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.business_field_category)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (name.isNotBlank()) onAdd(name.trim()) },
+                enabled = name.isNotBlank(),
+            ) { Text(stringResource(R.string.action_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+@Composable
 private fun BusinessQuickActionDialog(
     action: BusinessQuickAction,
     clients: List<BusinessClient>,
     projects: List<BusinessProject>,
     onDismiss: () -> Unit,
-    onAddProject: (Long, String, Double) -> Unit,
+    onAddClient: (String, String, String, String) -> Unit,
     onAddInvoice: (Long, Long?, Double, Long, Long, InvoiceStatus) -> Unit,
     onAddTransaction: (BusinessTransactionType, Double, String, BusinessLedgerType, Long?, Long?, Long, String) -> Unit,
 ) {
     val tab = when (action) {
         BusinessQuickAction.CREATE_INVOICE -> BusinessTab.Invoices
         BusinessQuickAction.ADD_TRANSACTION -> BusinessTab.Cashflow
-        BusinessQuickAction.CREATE_PROJECT -> BusinessTab.Projects
+        BusinessQuickAction.ADD_CLIENT -> BusinessTab.Clients
+        BusinessQuickAction.ADD_CATEGORY -> BusinessTab.Settings
     }
     BusinessAddDialog(
         tab = tab,
         clients = clients,
         projects = projects,
         onDismiss = onDismiss,
-        onAddClient = { _, _, _, _ -> },
-        onAddProject = onAddProject,
+        onAddClient = onAddClient,
+        onAddProject = { _, _, _ -> },
         onAddInvoice = onAddInvoice,
         onAddTransaction = onAddTransaction,
     )

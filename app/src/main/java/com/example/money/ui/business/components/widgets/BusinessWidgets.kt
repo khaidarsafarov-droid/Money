@@ -156,6 +156,33 @@ fun ClientProfitabilityWidget(
 }
 
 @Composable
+fun TopCategoriesWidget(
+    title: String,
+    categories: List<com.example.money.domain.model.business.CategoryDistributionRow>,
+    modifier: Modifier = Modifier,
+) {
+    if (categories.isEmpty()) return
+    val columns = listOf(
+        BusinessTableColumn(stringResource(R.string.business_field_category), 1.2f),
+        BusinessTableColumn(stringResource(R.string.business_col_revenue), 1f),
+        BusinessTableColumn(stringResource(R.string.business_col_expense), 1f),
+    )
+    val rows = categories.map { row ->
+        listOf(
+            row.category,
+            Formatters.currencyFromCents(row.incomeCents),
+            Formatters.currencyFromCents(row.expenseCents),
+        )
+    }
+    BusinessTable(
+        title = title,
+        columns = columns,
+        rows = rows,
+        modifier = modifier,
+    )
+}
+
+@Composable
 fun RecentTransactionsWidget(
     transactions: List<BusinessTransaction>,
     modifier: Modifier = Modifier,

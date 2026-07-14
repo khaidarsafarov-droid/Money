@@ -7,7 +7,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCard
-import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -36,9 +37,13 @@ fun BusinessActionShortcuts(
             stringResource(R.string.business_action_add_transaction),
             Icons.Outlined.AddCard,
         ),
-        BusinessQuickAction.CREATE_PROJECT to Pair(
-            stringResource(R.string.business_action_create_project),
-            Icons.Outlined.FolderOpen,
+        BusinessQuickAction.ADD_CLIENT to Pair(
+            stringResource(R.string.business_action_add_client),
+            Icons.Outlined.PersonAdd,
+        ),
+        BusinessQuickAction.ADD_CATEGORY to Pair(
+            stringResource(R.string.business_action_add_category),
+            Icons.Outlined.Category,
         ),
     )
 

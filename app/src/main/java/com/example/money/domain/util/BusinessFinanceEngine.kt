@@ -15,6 +15,7 @@ import com.example.money.domain.model.business.CashflowWeekPoint
 import com.example.money.domain.model.business.ClientProfitRow
 import com.example.money.domain.model.business.ClientRevenueRow
 import com.example.money.domain.model.business.CategoryAmountRow
+import com.example.money.domain.model.business.CategoryDistributionRow
 import com.example.money.domain.model.business.InvoiceStatus
 import com.example.money.domain.model.business.MonthlyProfitPoint
 import com.example.money.domain.model.business.OverdueInvoiceRow
@@ -162,6 +163,8 @@ object BusinessFinanceEngine {
             .sortedByDescending { it.amountCents }
             .take(5)
 
+        val categoryDistribution = buildCategoryDistribution(monthTx)
+
         val openInvoices = filteredInvoices.filter {
             it.status == InvoiceStatus.SENT || it.status == InvoiceStatus.OVERDUE
         }
@@ -225,6 +228,7 @@ object BusinessFinanceEngine {
                 allTransactions = filteredTx.filter { it.ledgerType != BusinessLedgerType.PERSONAL },
                 nowMillis = nowMillis,
             ),
+            categoryDistribution = categoryDistribution,
         )
     }
 
@@ -241,6 +245,7 @@ object BusinessFinanceEngine {
     ): List<BusinessTransaction> = transactions.filter { tx ->
         (filters.clientId == null || tx.clientId == filters.clientId) &&
             (filters.projectId == null || tx.projectId == filters.projectId) &&
+            (filters.category == null || tx.category.equals(filters.category, ignoreCase = true)) &&
             (filters.transactionType == null || tx.type == filters.transactionType)
     }
 
@@ -411,6 +416,22 @@ object BusinessFinanceEngine {
                     dueDate = inv.dueDate,
                 )
             }
+    }
+
+    private fun buildCategoryDistribution(
+        periodTransactions: List<BusinessTransaction>,
+    ): List<CategoryDistributionRow> {
+        val byCategory = periodTransactions.groupBy { it.category }
+        return byCategory.map { (category, rows) ->
+            CategoryDistributionRow(
+                category = category,
+                incomeCents = rows.filter { it.type == BusinessTransactionType.INCOME }.sumOf { it.amountCents },
+                expenseCents = rows.filter { it.type == BusinessTransactionType.EXPENSE }.sumOf { it.amountCents },
+            )
+        }
+            .filter { it.totalCents > 0 }
+            .sortedByDescending { it.totalCents }
+            .take(8)
     }
 
     private const val LOW_CASH_THRESHOLD_CENTS = 10_000L

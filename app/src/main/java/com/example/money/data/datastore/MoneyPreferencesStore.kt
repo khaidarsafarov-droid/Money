@@ -130,6 +130,7 @@ object MoneyPreferenceKeys {
     val BUSINESS_BRANCH_NAME = stringPreferencesKey("business_branch_name")
     val BUSINESS_DASHBOARD_VIEW = stringPreferencesKey("business_dashboard_view")
     val BUSINESS_SAVED_FILTER_PRESETS_JSON = stringPreferencesKey("business_saved_filter_presets_json")
+    val BUSINESS_CUSTOM_CATEGORIES_JSON = stringPreferencesKey("business_custom_categories_json")
 }
 
 class MoneyPreferencesStore(
@@ -618,6 +619,7 @@ private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
             )
         }.getOrDefault(com.example.money.domain.model.business.BusinessDashboardView.FINANCIAL),
         savedFilterPresetsJson = this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] ?: "[]",
+        customCategoriesJson = this[MoneyPreferenceKeys.BUSINESS_CUSTOM_CATEGORIES_JSON] ?: "[]",
     )
 
 private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBranchSettings) {
@@ -625,4 +627,5 @@ private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBra
     this[MoneyPreferenceKeys.BUSINESS_BRANCH_NAME] = settings.businessName
     this[MoneyPreferenceKeys.BUSINESS_DASHBOARD_VIEW] = settings.dashboardView.name
     this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] = settings.savedFilterPresetsJson
+    this[MoneyPreferenceKeys.BUSINESS_CUSTOM_CATEGORIES_JSON] = settings.customCategoriesJson
 }

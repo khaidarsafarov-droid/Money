@@ -39,6 +39,7 @@ import com.example.money.domain.model.business.SavedFilterPreset
 import com.example.money.ui.business.BusinessQuickAction
 import com.example.money.ui.business.components.cards.BusinessKpiCard
 import com.example.money.ui.business.components.charts.CashflowLineChart
+import com.example.money.ui.business.components.charts.CategoryDistributionChart
 import com.example.money.ui.business.components.charts.ProfitBarChart
 import com.example.money.ui.business.components.filters.BusinessFiltersBar
 import com.example.money.ui.business.components.widgets.AiInsightsWidget
@@ -47,6 +48,7 @@ import com.example.money.ui.business.components.widgets.ClientProfitabilityWidge
 import com.example.money.ui.business.components.widgets.OverdueInvoicesWidget
 import com.example.money.ui.business.components.widgets.ProjectPerformanceWidget
 import com.example.money.ui.business.components.widgets.RecentTransactionsWidget
+import com.example.money.ui.business.components.widgets.TopCategoriesWidget
 import com.example.money.ui.business.components.widgets.UpcomingPaymentsWidget
 import com.example.money.ui.business.theme.BusinessKpiType
 import com.example.money.ui.business.theme.BusinessSpacing
@@ -63,6 +65,7 @@ fun BusinessDashboardContent(
     filters: BusinessDashboardFilters,
     dashboardView: BusinessDashboardView,
     savedPresets: List<SavedFilterPreset>,
+    availableCategories: List<String>,
     onFiltersChange: (BusinessDashboardFilters) -> Unit,
     onApplyPreset: (BusinessFilterPreset) -> Unit,
     onApplySavedPreset: (SavedFilterPreset) -> Unit,
@@ -92,6 +95,7 @@ fun BusinessDashboardContent(
             BusinessFiltersBar(
                 clients = clients,
                 projects = projects,
+                categories = availableCategories,
                 filters = filters,
                 savedPresets = savedPresets,
                 onFiltersChange = onFiltersChange,
@@ -297,6 +301,14 @@ private fun FinancialMainColumn(
             values = dashboard.monthlyProfit.map { it.profitCents },
             labels = dashboard.monthlyProfit.map { it.label },
             title = stringResource(R.string.business_chart_pnl),
+        )
+        CategoryDistributionChart(
+            rows = dashboard.categoryDistribution,
+            title = stringResource(R.string.business_chart_categories),
+        )
+        TopCategoriesWidget(
+            title = stringResource(R.string.business_top_categories),
+            categories = dashboard.categoryDistribution,
         )
         AiInsightsWidget(insights = dashboard.insights)
     }

@@ -361,6 +361,11 @@
     <string name="business_top_clients_table">Top clients</string>
     <string name="business_col_revenue">Revenue</string>
     <string name="business_col_profit">Profit</string>
+    <string name="business_col_expense">Expense</string>
+    <string name="business_chart_categories">Category distribution</string>
+    <string name="business_top_categories">Top categories</string>
+    <string name="business_filter_all_categories">All categories</string>
+    <string name="business_filter_all_transactions">All transactions</string>
     <string name="business_col_invoice_status">Last invoice</string>
     <string name="business_project_performance">Projects</string>
     <string name="business_overdue_invoices">Overdue invoices</string>
@@ -385,7 +390,9 @@
     <string name="business_tx_expense">Expense</string>
     <string name="business_action_create_invoice">Create Invoice</string>
     <string name="business_action_add_transaction">Add Transaction</string>
-    <string name="business_action_create_project">Create Project</string>
+    <string name="business_action_add_client">Add Client</string>
+    <string name="business_action_add_category">Add Category</string>
+    <string name="business_add_category">New category</string>
     <string name="business_attention_title">Today\'s Alerts</string>
     <string name="business_alert_overdue_invoice">Invoice for %1$s is %2$d days overdue (%3$s)</string>
     <string name="business_alert_low_cash">Low cash balance: %1$s</string>

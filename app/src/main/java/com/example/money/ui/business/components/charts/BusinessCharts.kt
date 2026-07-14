@@ -1,6 +1,7 @@
 package com.example.money.ui.business.components.charts
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.money.domain.model.business.CategoryDistributionRow
 import com.example.money.ui.business.components.cards.BusinessCard
 import com.example.money.ui.business.theme.BusinessColors
 import com.example.money.ui.business.theme.BusinessSpacing
@@ -82,6 +84,69 @@ fun ProfitBarChart(
         if (labels.isNotEmpty()) {
             Text(labels.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = BusinessColors.Gray500)
         }
+    }
+}
+
+fun CategoryDistributionChart(
+    rows: List<CategoryDistributionRow>,
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+    if (rows.isEmpty()) return
+    BusinessCard(modifier = modifier.fillMaxWidth()) {
+        Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleLarge)
+        HorizontalStackedBarChart(
+            rows = rows,
+            incomeColor = BusinessColors.ProfitGreen,
+            expenseColor = BusinessColors.LossRed,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = BusinessSpacing.sm),
+        )
+    }
+}
+
+@Composable
+private fun HorizontalStackedBarChart(
+    rows: List<CategoryDistributionRow>,
+    incomeColor: Color,
+    expenseColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val maxTotal = rows.maxOf { it.totalCents }.coerceAtLeast(1).toFloat()
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
+        rows.forEach { row ->
+            Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.xs)) {
+                Text(row.category, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(12.dp),
+                ) {
+                    val incomeWidth = (row.incomeCents / maxTotal) * size.width
+                    val expenseWidth = (row.expenseCents / maxTotal) * size.width
+                    if (incomeWidth > 0) {
+                        drawRect(
+                            color = incomeColor,
+                            topLeft = Offset.Zero,
+                            size = androidx.compose.ui.geometry.Size(incomeWidth, size.height),
+                        )
+                    }
+                    if (expenseWidth > 0) {
+                        drawRect(
+                            color = expenseColor,
+                            topLeft = Offset(incomeWidth, 0f),
+                            size = androidx.compose.ui.geometry.Size(expenseWidth, size.height),
+                        )
+                    }
+                }
+            }
+        }
+        Text(
+            "● Income  ● Expense",
+            style = MaterialTheme.typography.labelSmall,
+            color = BusinessColors.Gray500,
+        )
     }
 }
 

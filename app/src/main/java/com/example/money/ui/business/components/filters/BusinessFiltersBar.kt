@@ -24,6 +24,7 @@ import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessFilterPreset
 import com.example.money.domain.model.business.BusinessProject
+import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
 import com.example.money.domain.model.business.SavedFilterPreset
 import com.example.money.ui.business.theme.BusinessSpacing
@@ -32,6 +33,7 @@ import com.example.money.ui.business.theme.BusinessSpacing
 fun BusinessFiltersBar(
     clients: List<BusinessClient>,
     projects: List<BusinessProject>,
+    categories: List<String>,
     filters: BusinessDashboardFilters,
     savedPresets: List<SavedFilterPreset>,
     onFiltersChange: (BusinessDashboardFilters) -> Unit,
@@ -125,6 +127,47 @@ fun BusinessFiltersBar(
         LazyRow(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
             item {
                 FilterChip(
+                    selected = filters.category == null,
+                    onClick = { onFiltersChange(filters.copy(category = null)) },
+                    label = { Text(stringResource(R.string.business_filter_all_categories)) },
+                )
+            }
+            items(categories.take(12)) { category ->
+                FilterChip(
+                    selected = filters.category == category,
+                    onClick = { onFiltersChange(filters.copy(category = category)) },
+                    label = { Text(category) },
+                )
+            }
+        }
+
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
+            item {
+                FilterChip(
+                    selected = filters.transactionType == null,
+                    onClick = { onFiltersChange(filters.copy(transactionType = null)) },
+                    label = { Text(stringResource(R.string.business_filter_all_transactions)) },
+                )
+            }
+            item {
+                FilterChip(
+                    selected = filters.transactionType == BusinessTransactionType.INCOME,
+                    onClick = { onFiltersChange(filters.copy(transactionType = BusinessTransactionType.INCOME)) },
+                    label = { Text(stringResource(R.string.business_tx_income)) },
+                )
+            }
+            item {
+                FilterChip(
+                    selected = filters.transactionType == BusinessTransactionType.EXPENSE,
+                    onClick = { onFiltersChange(filters.copy(transactionType = BusinessTransactionType.EXPENSE)) },
+                    label = { Text(stringResource(R.string.business_tx_expense)) },
+                )
+            }
+        }
+
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
+            item {
+                FilterChip(
                     selected = filters.invoiceStatus == null,
                     onClick = { onFiltersChange(filters.copy(invoiceStatus = null)) },
                     label = { Text(stringResource(R.string.business_filter_all_invoices)) },
@@ -154,6 +197,8 @@ fun BusinessFiltersBar(
         RowActions(
             hasActiveFilters = filters.clientId != null ||
                 filters.projectId != null ||
+                filters.category != null ||
+                filters.transactionType != null ||
                 filters.invoiceStatus != null ||
                 filters.periodPreset != BusinessFilterPreset.THIS_MONTH,
             onSavePreset = { showSaveDialog = true },
