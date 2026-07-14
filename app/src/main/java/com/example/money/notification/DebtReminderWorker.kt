@@ -23,7 +23,8 @@ class DebtReminderWorker(
 
         val debtor = debtorEntity.toDomain()
         val now = System.currentTimeMillis()
-        if (now < debtor.dateDue) {
+        val dueAtNine = DebtReminderScheduler.dueDateAtNineAm(debtor.dateDue)
+        if (now < dueAtNine) {
             app.debtReminderScheduler.schedule(debtor)
             return Result.success()
         }

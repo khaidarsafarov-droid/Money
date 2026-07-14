@@ -123,6 +123,7 @@ object MoneyPreferenceKeys {
     val CALENDAR_USE_DEBTS_CAL = booleanPreferencesKey("calendar_use_debts_cal")
     val CALENDAR_DEBTS_CAL_ID = longPreferencesKey("calendar_debts_cal_id")
     val CALENDAR_PERMISSION_REQUESTED = booleanPreferencesKey("calendar_permission_requested")
+    val NOTIFICATION_PERMISSION_REQUESTED = booleanPreferencesKey("notification_permission_requested")
 }
 
 class MoneyPreferencesStore(
@@ -341,6 +342,17 @@ class MoneyPreferencesStore(
     suspend fun updateCalendarSettings(transform: (CalendarSettings) -> CalendarSettings) {
         context.moneyPreferencesDataStore.edit { prefs ->
             prefs.writeCalendarSettings(transform(prefs.toCalendarSettings()))
+        }
+    }
+
+    val notificationPermissionRequested: Flow<Boolean> =
+        context.moneyPreferencesDataStore.data.map {
+            it[MoneyPreferenceKeys.NOTIFICATION_PERMISSION_REQUESTED] ?: false
+        }
+
+    suspend fun setNotificationPermissionRequested(requested: Boolean) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs[MoneyPreferenceKeys.NOTIFICATION_PERMISSION_REQUESTED] = requested
         }
     }
 

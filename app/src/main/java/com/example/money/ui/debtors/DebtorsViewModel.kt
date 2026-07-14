@@ -344,6 +344,9 @@ class DebtorsViewModel(
         }
         if (success && debtor != null) {
             recordPaymentGamification(debtor)
+            if (!debtor.isPaid) {
+                syncDebtToCalendar(debtor, force = true)
+            }
         }
         return success
     }
@@ -377,8 +380,10 @@ class DebtorsViewModel(
 
     fun markAsPaid(id: Long) {
         viewModelScope.launch {
+            val debtor = debtorRepository.getDebtorById(id)
             debtorRepository.markAsPaid(id)
             debtReminderScheduler.cancel(id)
+            debtor?.let { syncDebtToCalendar(it, markClosed = true, force = true) }
         }
     }
 
@@ -392,7 +397,7 @@ class DebtorsViewModel(
 
     fun syncDebtToCalendarManually(debtor: Debtor) {
         viewModelScope.launch {
-            syncDebtToCalendar(debtor)
+            syncDebtToCalendar(debtor, force = true)
         }
     }
 
@@ -408,15 +413,20 @@ class DebtorsViewModel(
         preferencesStore.updateCalendarSettings(transform)
     }
 
-    private suspend fun syncDebtToCalendar(debtor: Debtor, markClosed: Boolean = false) {
+    private suspend fun syncDebtToCalendar(
+        debtor: Debtor,
+        markClosed: Boolean = false,
+        force: Boolean = false,
+    ) {
         val settings = preferencesStore.calendarSettings.first()
-        if (!settings.autoSyncEnabled) return
+        if (!force && !settings.autoSyncEnabled) return
         val profile = preferencesStore.userProfile.first()
         val result = debtCalendarSyncService.upsertDebtEvent(
             debtor = debtor,
             settings = settings,
             displayName = profile.resolvedDisplayName(),
             markClosed = markClosed,
+            force = force,
         )
         persistCalendarState(debtor, result.eventId, result.failed)
         if (result.failed) {
@@ -440,6 +450,7 @@ class DebtorsViewModel(
             retryFailedCalendarSyncs()
         }
     }
+
 
     private suspend fun retryFailedCalendarSyncs() {
         val settings = preferencesStore.calendarSettings.first()

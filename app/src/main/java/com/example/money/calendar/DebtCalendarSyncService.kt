@@ -36,8 +36,9 @@ class DebtCalendarSyncService(
         settings: CalendarSettings,
         displayName: String = "",
         markClosed: Boolean = false,
+        force: Boolean = false,
     ): CalendarSyncResult = withContext(Dispatchers.IO) {
-        if (!settings.autoSyncEnabled || !hasPermissions()) {
+        if ((!force && !settings.autoSyncEnabled) || !hasPermissions()) {
             return@withContext CalendarSyncResult(debtor.calendarEventId, failed = !hasPermissions())
         }
 
@@ -143,8 +144,24 @@ class DebtCalendarSyncService(
 
     private fun debtDeepLink(debtorId: Long): String = "money://debt/$debtorId"
 
+    private fun calendarExists(calendarId: Long): Boolean {
+        val resolver = context.contentResolver
+        resolver.query(
+            ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarId),
+            arrayOf(CalendarContract.Calendars._ID),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            return cursor.moveToFirst()
+        }
+        return false
+    }
+
     private fun resolveCalendarId(settings: CalendarSettings): Long? {
-        settings.debtsCalendarId?.let { return it }
+        settings.debtsCalendarId?.let { storedId ->
+            if (calendarExists(storedId)) return storedId
+        }
         val resolver = context.contentResolver
         val projection = arrayOf(
             CalendarContract.Calendars._ID,
@@ -270,7 +287,7 @@ class DebtCalendarSyncService(
     private fun dueDateAtNineAm(dueMillis: Long): Long {
         val calendar = Calendar.getInstance().apply {
             timeInMillis = dueMillis
-            set(Calendar.HOUR_OF_DAY, EVENT_HOUR)
+            set(Calendar.HOUR_OF_DAY, 9)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
@@ -280,7 +297,6 @@ class DebtCalendarSyncService(
 
     companion object {
         const val DEBTS_CALENDAR_NAME = "Долги"
-        private const val EVENT_HOUR = 9
 
         fun debtDeepLinkIntent(debtorId: Long): Intent =
             Intent(Intent.ACTION_VIEW, Uri.parse("money://debt/$debtorId"))

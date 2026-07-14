@@ -34,6 +34,9 @@
     <string name="notification_action_snooze">Напомнить позже</string>
     <string name="notification_snoozed">Напоминание через 1 час</string>
     <string name="notification_permission_needed">Разрешите уведомления в настройках, чтобы получать напоминания</string>
+    <string name="notification_permission_action">Разрешить уведомления</string>
+    <string name="calendar_permission_granted">Доступ к календарю разрешён</string>
+    <string name="calendar_permission_denied">Нет доступа к календарю</string>
     <string name="notification_sent">Напоминание показано</string>
 
     <!-- Widget -->

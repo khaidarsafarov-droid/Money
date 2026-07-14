@@ -37,7 +37,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -87,6 +88,8 @@ import com.example.money.ui.budget.AddExpenseDialog
 import com.example.money.ui.budget.AddTransferDialog
 import com.example.money.ui.budget.BudgetActionResult
 import com.example.money.ui.budget.BudgetViewModel
+import com.example.money.ui.components.MoneyButton
+import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.ConfirmDeleteDialog
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.EmptyStateMessage
@@ -887,6 +890,8 @@ fun HomeScreen(
                     }
                 },
                 onQuickAdd = { showQuickAddDialog = true },
+                notificationsEnabled = notificationsEnabled,
+                onRequestNotificationPermission = onRequestNotificationPermission,
                 showCheckIn = showCheckIn,
                 onDismissCheckIn = debtorsViewModel::dismissCheckIn,
                 gamificationState = gamificationState,
@@ -983,6 +988,8 @@ private fun PhoneHomeLayout(
     onOpenGoalHub: () -> Unit,
     onAddDebt: () -> Unit,
     onQuickAdd: () -> Unit,
+    notificationsEnabled: Boolean,
+    onRequestNotificationPermission: () -> Unit,
     showCheckIn: Boolean,
     onDismissCheckIn: () -> Unit,
     gamificationState: com.example.money.settings.GamificationState,
@@ -1150,6 +1157,17 @@ private fun PhoneHomeLayout(
                         fontWeight = FontWeight.SemiBold,
                         color = GoldPrimary,
                     )
+                }
+                if (!notificationsEnabled) {
+                    item {
+                        NotificationPermissionBanner(
+                            onRequestPermission = onRequestNotificationPermission,
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.lg,
+                                vertical = MoneySpacing.sm,
+                            ),
+                        )
+                    }
                 }
                 item {
                     GlobalBalanceHeader(
@@ -1556,6 +1574,33 @@ private fun PhoneHomeLayout(
                 }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun NotificationPermissionBanner(
+    onRequestPermission: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Column(
+            modifier = Modifier.padding(MoneySpacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        ) {
+            Text(
+                text = stringResource(R.string.notification_permission_needed),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            MoneyButton(
+                text = stringResource(R.string.notification_permission_action),
+                onClick = onRequestPermission,
+                priority = MoneyButtonPriority.Secondary,
+            )
         }
     }
 }

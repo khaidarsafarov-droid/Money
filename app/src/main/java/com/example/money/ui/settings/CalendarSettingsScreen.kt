@@ -34,6 +34,8 @@ import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.theme.FinancePositive
+import com.example.money.ui.theme.OverdueRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +50,7 @@ fun CalendarSettingsScreen(
         factory = CalendarSettingsViewModel.Factory(app),
     )
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val hasCalendarPermissions = app.debtCalendarSyncService.hasPermissions()
 
     Scaffold(
         modifier = modifier,
@@ -77,9 +80,19 @@ fun CalendarSettingsScreen(
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.calendar_settings_title), fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (hasCalendarPermissions) {
+                            stringResource(R.string.calendar_permission_granted)
+                        } else {
+                            stringResource(R.string.calendar_permission_denied)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (hasCalendarPermissions) FinancePositive else OverdueRed,
+                    )
                     SettingSwitch(
                         label = stringResource(R.string.calendar_auto_sync),
                         checked = settings.autoSyncEnabled,
+                        enabled = hasCalendarPermissions,
                         onCheckedChange = { enabled ->
                             viewModel.update { it.copy(autoSyncEnabled = enabled) }
                         },
@@ -87,6 +100,7 @@ fun CalendarSettingsScreen(
                     SettingSwitch(
                         label = stringResource(R.string.calendar_remind_1d),
                         checked = settings.remindOneDayBefore,
+                        enabled = hasCalendarPermissions,
                         onCheckedChange = { checked ->
                             viewModel.update { it.copy(remindOneDayBefore = checked) }
                         },
@@ -94,6 +108,7 @@ fun CalendarSettingsScreen(
                     SettingSwitch(
                         label = stringResource(R.string.calendar_remind_3d),
                         checked = settings.remindThreeDaysBefore,
+                        enabled = hasCalendarPermissions,
                         onCheckedChange = { checked ->
                             viewModel.update { it.copy(remindThreeDaysBefore = checked) }
                         },
@@ -101,6 +116,7 @@ fun CalendarSettingsScreen(
                     SettingSwitch(
                         label = stringResource(R.string.calendar_remind_due),
                         checked = settings.remindOnDueDay,
+                        enabled = hasCalendarPermissions,
                         onCheckedChange = { checked ->
                             viewModel.update { it.copy(remindOnDueDay = checked) }
                         },
@@ -108,14 +124,21 @@ fun CalendarSettingsScreen(
                     SettingSwitch(
                         label = stringResource(R.string.calendar_use_debts_calendar),
                         checked = settings.useDebtsCalendar,
+                        enabled = hasCalendarPermissions,
                         onCheckedChange = { checked ->
                             viewModel.update { it.copy(useDebtsCalendar = checked) }
                         },
                     )
-                    Button(onClick = onRequestPermission, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.calendar_request_permission))
+                    if (!hasCalendarPermissions) {
+                        Button(onClick = onRequestPermission, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.calendar_request_permission))
+                        }
                     }
-                    Button(onClick = viewModel::createDebtsCalendar, modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = viewModel::createDebtsCalendar,
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = hasCalendarPermissions,
+                    ) {
                         Text(stringResource(R.string.calendar_create_debts_calendar))
                     }
                     Text(
@@ -133,6 +156,7 @@ fun CalendarSettingsScreen(
 private fun SettingSwitch(
     label: String,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
@@ -140,7 +164,19 @@ private fun SettingSwitch(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Text(
+            label,
+            modifier = Modifier.weight(1f),
+            color = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+        )
     }
 }

@@ -1,7 +1,9 @@
 package com.example.money.ui.navigation
 
 import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +45,8 @@ fun MoneyNavHost(
     val calendarSettings by app.preferencesStore.calendarSettings.collectAsStateWithLifecycle(
         initialValue = com.example.money.settings.CalendarSettings(),
     )
+    val notificationPermissionRequested by app.preferencesStore.notificationPermissionRequested
+        .collectAsStateWithLifecycle(initialValue = false)
 
     val calendarPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -54,11 +58,30 @@ fun MoneyNavHost(
         }
     }
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { _ ->
+        scope.launch {
+            app.preferencesStore.setNotificationPermissionRequested(true)
+        }
+    }
+
     LaunchedEffect(userProfile.onboardingCompleted, calendarSettings.permissionRequested) {
         if (userProfile.onboardingCompleted && !calendarSettings.permissionRequested) {
             calendarPermissionLauncher.launch(
                 arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR),
             )
+        }
+    }
+
+    LaunchedEffect(userProfile.onboardingCompleted, notificationPermissionRequested, notificationsEnabled) {
+        if (
+            userProfile.onboardingCompleted &&
+            !notificationPermissionRequested &&
+            !notificationsEnabled &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -91,7 +114,13 @@ fun MoneyNavHost(
         else -> HomeScreen(
             launchConfig = launchConfig,
             notificationsEnabled = notificationsEnabled,
-            onRequestNotificationPermission = onRequestNotificationPermission,
+            onRequestNotificationPermission = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    onRequestNotificationPermission()
+                }
+            },
             onLaunchConfigConsumed = onLaunchConfigConsumed,
             onOpenVoiceSettings = { showVoiceSettings = true },
             onOpenAppLanguage = { showAppLanguage = true },

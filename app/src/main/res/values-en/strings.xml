@@ -37,6 +37,7 @@
     <string name="notification_action_snooze">Remind later</string>
     <string name="notification_snoozed">Reminder in 1 hour</string>
     <string name="notification_permission_needed">Allow notifications in settings to receive reminders</string>
+    <string name="notification_permission_action">Allow notifications</string>
     <string name="notification_sent">Reminder shown</string>
 
     <!-- Widget -->
@@ -188,7 +189,8 @@
     <string name="goal_deadline_passed_short">Overdue</string>
     <string name="empty_goals_action">Create goal</string>
     <string name="empty_debtors_action">Add debt</string>
-    <string name="empty_budget_action">Add transaction</string>
+    <string name="calendar_permission_granted">Calendar access granted</string>
+    <string name="calendar_permission_denied">Calendar access denied — calendar reminders unavailable</string>
     <string name="action_more">More</string>
     <string name="dashboard_debts_section">Debts &amp; transactions</string>
     <string name="dashboard_debts_summary">%1$d debts · %2$d transactions</string>

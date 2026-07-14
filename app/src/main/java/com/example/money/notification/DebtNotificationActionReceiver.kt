@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.example.money.MoneyApplication
 import com.example.money.domain.model.DebtType
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class DebtNotificationActionReceiver : BroadcastReceiver() {
@@ -40,6 +41,24 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
         app.debtorRepository.markAsPaid(debtorId, affectsBalance)
         app.debtReminderScheduler.cancel(debtorId)
         DebtNotificationHelper.cancel(context, debtorId)
+
+        val paid = app.debtorRepository.getDebtorById(debtorId) ?: return
+        val settings = app.preferencesStore.calendarSettings.first()
+        val profile = app.preferencesStore.userProfile.first()
+        val result = app.debtCalendarSyncService.upsertDebtEvent(
+            debtor = paid,
+            settings = settings,
+            displayName = profile.resolvedDisplayName(),
+            markClosed = true,
+            force = true,
+        )
+        app.debtorRepository.updateDebtor(
+            paid.copy(
+                calendarEventId = result.eventId,
+                calendarSyncFailed = result.failed,
+            ),
+            paid.affectsBalance,
+        )
     }
 
     private suspend fun handleSnooze(

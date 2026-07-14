@@ -26,6 +26,26 @@ interface DebtReminderScheduler {
         val SNOOZE_DELAY_MS: Long = TimeUnit.HOURS.toMillis(1)
         const val OVERDUE_NOTIFICATION_HOUR = 9
 
+        fun dueDateAtNineAm(dueMillis: Long): Long {
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = dueMillis
+                set(Calendar.HOUR_OF_DAY, OVERDUE_NOTIFICATION_HOUR)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            return calendar.timeInMillis
+        }
+
+        fun delayUntilDueDateReminder(dueMillis: Long, now: Long = System.currentTimeMillis()): Long {
+            val dueAtNine = dueDateAtNineAm(dueMillis)
+            return if (dueAtNine > now) {
+                dueAtNine - now
+            } else {
+                delayUntilNextDailyReminder(now)
+            }
+        }
+
         fun delayUntilNextDailyReminder(now: Long = System.currentTimeMillis()): Long {
             val calendar = Calendar.getInstance().apply { timeInMillis = now }
             calendar.set(Calendar.HOUR_OF_DAY, OVERDUE_NOTIFICATION_HOUR)
@@ -51,13 +71,8 @@ class DebtReminderSchedulerImpl(
 
         try {
             val now = System.currentTimeMillis()
-            val delayUntilDue = debtor.dateDue - now
-            if (delayUntilDue > 0) {
-                enqueueReminder(debtor, delayUntilDue)
-                return
-            }
-
-            enqueueReminder(debtor, DebtReminderScheduler.delayUntilNextDailyReminder(now))
+            val delayUntilDue = DebtReminderScheduler.delayUntilDueDateReminder(debtor.dateDue, now)
+            enqueueReminder(debtor, delayUntilDue)
         } catch (exception: Exception) {
             Log.w(TAG, "Failed to schedule reminder for debtor ${debtor.id}", exception)
         }

@@ -36,6 +36,7 @@
     <string name="notification_action_snooze">Напомнить позже</string>
     <string name="notification_snoozed">Напоминание через 1 час</string>
     <string name="notification_permission_needed">Разрешите уведомления в настройках, чтобы получать напоминания</string>
+    <string name="notification_permission_action">Разрешить уведомления</string>
     <string name="notification_sent">Напоминание показано</string>
 
     <!-- Widget -->
@@ -520,6 +521,8 @@
     <string name="calendar_create_debts_calendar">Создать календарь «Долги»</string>
     <string name="calendar_request_permission">Разрешить доступ к календарю</string>
     <string name="calendar_permission_hint">Без доступа к календарю мы не сможем напоминать о сроках долгов. Вы можете включить доступ в настройках телефона.</string>
+    <string name="calendar_permission_granted">Доступ к календарю разрешён</string>
+    <string name="calendar_permission_denied">Нет доступа к календарю — напоминания в календаре недоступны</string>
     <string name="calendar_sync_failed">Не удалось добавить событие в календарь. Проверьте настройки.</string>
     <string name="calendar_removed">Событие удалено из календаря</string>
     <string name="calendar_action_add">Добавить в календарь</string>
