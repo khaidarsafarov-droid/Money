@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import type { StatusFilter } from "@/types/finance";
 
 const filters: { id: StatusFilter; label: string }[] = [
@@ -15,7 +14,7 @@ interface StatusFilterTabsProps {
 export function StatusFilterTabs({ value, onChange }: StatusFilterTabsProps) {
   return (
     <div
-      className="flex gap-1 rounded-full border border-milk-surface/80 bg-milk-glass p-1 backdrop-blur-sm"
+      className="flex gap-0 border-b border-milk-surface"
       role="tablist"
       aria-label="Фильтр по статусу"
     >
@@ -28,18 +27,13 @@ export function StatusFilterTabs({ value, onChange }: StatusFilterTabsProps) {
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(filter.id)}
-            className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              selected ? "text-milk-bg" : "text-milk-muted hover:text-milk-text"
+            className={`border-b-2 px-3 py-2 text-sm transition-colors ${
+              selected
+                ? "border-milk-text font-medium text-milk-text"
+                : "border-transparent text-milk-muted hover:text-milk-text"
             }`}
           >
-            {selected && (
-              <motion.span
-                layoutId="status-filter-pill"
-                className="absolute inset-0 rounded-full bg-milk-text"
-                transition={{ type: "spring", stiffness: 380, damping: 32 }}
-              />
-            )}
-            <span className="relative z-10">{filter.label}</span>
+            {filter.label}
           </button>
         );
       })}

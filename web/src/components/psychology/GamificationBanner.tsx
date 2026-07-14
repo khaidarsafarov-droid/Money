@@ -11,14 +11,12 @@ export function GamificationBanner({ state }: GamificationBannerProps) {
   }
 
   return (
-    <SurfaceCard className="space-y-2 border border-milk-gold/20 bg-milk-bg/80">
+    <SurfaceCard className="space-y-1 text-sm">
       {state.streakCount > 0 ? (
-        <p className="text-sm font-semibold text-milk-gold">
-          Серия платежей: {state.streakCount}
-        </p>
+        <p className="text-milk-text">Серия платежей: {state.streakCount}</p>
       ) : null}
       {state.lastWinMessage ? (
-        <p className="text-sm text-milk-success">{state.lastWinMessage}</p>
+        <p className="text-milk-success">{state.lastWinMessage}</p>
       ) : null}
       {state.unlockedBadges.length > 0 ? (
         <p className="text-xs text-milk-muted">

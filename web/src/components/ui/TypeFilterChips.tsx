@@ -13,7 +13,7 @@ interface TypeFilterChipsProps {
 
 export function TypeFilterChips({ value, onChange }: TypeFilterChipsProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {filters.map((filter) => {
         const selected = value === filter.id;
         return (
@@ -23,8 +23,8 @@ export function TypeFilterChips({ value, onChange }: TypeFilterChipsProps) {
             onClick={() => onChange(filter.id)}
             className={
               selected
-                ? "pill-btn-secondary text-milk-text ring-1 ring-milk-accent/30"
-                : "pill-btn-ghost border border-transparent"
+                ? "pill-btn-secondary text-milk-text"
+                : "pill-btn-ghost"
             }
           >
             {filter.label}

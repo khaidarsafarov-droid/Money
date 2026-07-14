@@ -18,55 +18,51 @@ export function PsychologySettingsPanel({
   hideAmounts,
 }: PsychologySettingsPanelProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <SurfaceCard className="space-y-4">
+    <div className="grid gap-3 lg:grid-cols-2">
+      <SurfaceCard className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-milk-muted">
-            Приватность
-          </h3>
-          <p className="mt-1 text-sm text-milk-muted">
+          <h3 className="text-sm font-medium text-milk-text">Приватность</h3>
+          <p className="mt-0.5 text-sm text-milk-muted">
             Скрывайте суммы — вместо цифр показывается •••
           </p>
         </div>
 
-        <label className="flex items-start gap-3 text-sm">
+        <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
             checked={privacy.hideAmounts}
             onChange={(event) => onPrivacyChange({ hideAmounts: event.target.checked })}
-            className="mt-1 accent-milk-gold"
+            className="mt-0.5 accent-milk-text"
           />
           <span>
-            <span className="font-medium text-milk-text">Скрывать суммы в веб-приложении</span>
-            <span className="mt-1 block text-milk-muted">
+            <span className="text-milk-text">Скрывать суммы в веб-приложении</span>
+            <span className="mt-0.5 block text-milk-muted">
               Пример: {formatMoney(12_500, { hidden: privacy.hideAmounts })}
             </span>
           </span>
         </label>
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-4">
+      <SurfaceCard className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-milk-muted">
-            Автопилот
-          </h3>
-          <p className="mt-1 text-sm text-milk-muted">
+          <h3 className="text-sm font-medium text-milk-text">Автопилот</h3>
+          <p className="mt-0.5 text-sm text-milk-muted">
             Ежедневный микроплатёж в выбранный долг одной кнопкой.
           </p>
         </div>
 
-        <label className="flex items-center gap-3 text-sm">
+        <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={autopilot.enabled}
             onChange={(event) => onAutopilotChange({ enabled: event.target.checked })}
-            className="accent-milk-gold"
+            className="accent-milk-text"
           />
-          <span className="font-medium text-milk-text">Включить автопилот</span>
+          <span className="text-milk-text">Включить автопилот</span>
         </label>
 
-        <label className="block space-y-2 text-sm">
-          <span className="font-medium text-milk-text">
+        <label className="block space-y-1.5 text-sm">
+          <span className="text-milk-text">
             Сумма в день: {formatMoney(autopilot.dailyAmountCents, { hidden: hideAmounts })}
           </span>
           <input
@@ -78,11 +74,11 @@ export function PsychologySettingsPanel({
             onChange={(event) =>
               onAutopilotChange({ dailyAmountCents: Number(event.target.value) })
             }
-            className="w-full accent-milk-gold"
+            className="w-full accent-milk-text"
           />
         </label>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {(["snowball", "avalanche"] as const).map((strategy) => (
             <button
               key={strategy}

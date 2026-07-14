@@ -1,5 +1,6 @@
 import { RefreshCw, Wifi } from "lucide-react";
 import type { WebSyncStatus } from "@/hooks/useWebSync";
+import { AppIcon, SurfaceCard } from "@/components/ui/SurfaceCard";
 
 interface SyncPanelProps {
   peerUrl: string;
@@ -36,21 +37,20 @@ export function SyncPanel({
   const isBusy = status === "connecting";
 
   return (
-    <section className="rounded-2xl border border-milk-surface bg-white/70 p-4 shadow-sm backdrop-blur-sm">
-      <div className="mb-3 flex items-center gap-2 text-sm font-medium text-milk-text">
-        <Wifi className="size-4 text-milk-accent" aria-hidden />
+    <SurfaceCard className="space-y-3">
+      <div className="flex items-center gap-2 text-sm text-milk-text">
+        <AppIcon icon={Wifi} size={14} />
         <span>{statusLabel(status, lastSyncedAt)}</span>
         <span
-          className={`ml-auto size-2 rounded-full ${
-            status === "synced" ? "bg-finance-positive" : "bg-milk-muted/50"
+          className={`ml-auto size-1.5 rounded-full ${
+            status === "synced" ? "bg-finance-positive" : "bg-milk-surface"
           }`}
           aria-hidden
         />
       </div>
 
-      <p className="mb-3 text-xs text-milk-muted">
-        Скопируйте URL из меню Android-приложения (⋮ → «URL для веб-синхронизации») и нажмите
-        «Синхронизировать».
+      <p className="text-xs text-milk-muted">
+        URL из меню Android (⋮ → «URL для веб-синхронизации»).
       </p>
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -59,21 +59,21 @@ export function SyncPanel({
           value={peerUrl}
           onChange={(event) => onPeerUrlChange(event.target.value)}
           placeholder="ws://192.168.1.10:54321/sync"
-          className="min-w-0 flex-1 rounded-xl border border-milk-surface bg-milk-bg px-3 py-2 text-sm text-milk-text outline-none ring-milk-accent/30 focus:ring-2"
+          className="min-w-0 flex-1 rounded-md border border-milk-surface bg-white px-3 py-2 text-sm text-milk-text outline-none focus:border-milk-accent"
           disabled={isBusy}
         />
         <button
           type="button"
           onClick={onSync}
           disabled={isBusy}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-milk-accent px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-milk-surface bg-white px-3 py-2 text-sm text-milk-text transition hover:bg-milk-bg disabled:opacity-50"
         >
-          <RefreshCw className={`size-4 ${isBusy ? "animate-spin" : ""}`} aria-hidden />
+          <RefreshCw className={`size-3.5 ${isBusy ? "animate-spin" : ""}`} strokeWidth={1.25} aria-hidden />
           Синхронизировать
         </button>
       </div>
 
-      {lastError ? <p className="mt-2 text-xs text-finance-negative">{lastError}</p> : null}
-    </section>
+      {lastError ? <p className="text-xs text-finance-negative">{lastError}</p> : null}
+    </SurfaceCard>
   );
 }

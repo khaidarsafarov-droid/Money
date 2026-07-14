@@ -32,7 +32,7 @@ export function GoalCard({ item, hideAmounts = false, onTransfer, onExpense, onD
                 onClick={() => onTransfer(item)}
                 className="pill-btn-secondary inline-flex flex-1 items-center justify-center gap-2"
               >
-                <AppIcon icon={Wallet} size={18} />
+                <AppIcon icon={Wallet} size={14} />
                 Перевод
               </button>
             ) : null}
@@ -42,7 +42,7 @@ export function GoalCard({ item, hideAmounts = false, onTransfer, onExpense, onD
                 onClick={onExpense}
                 className="pill-btn-ghost inline-flex flex-1 items-center justify-center gap-2 border border-milk-surface"
               >
-                <AppIcon icon={ArrowUpRight} size={18} />
+                <AppIcon icon={ArrowUpRight} size={14} />
                 Расход
               </button>
             ) : null}

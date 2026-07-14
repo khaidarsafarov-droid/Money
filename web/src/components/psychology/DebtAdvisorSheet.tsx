@@ -20,12 +20,12 @@ export function DebtAdvisorSheet({ open, messages, onPrompt, onClose }: DebtAdvi
 
   return (
     <Modal open={open} title="Советник по долгам" onClose={onClose}>
-      <div className="space-y-4">
+      <div className="space-y-3">
         <p className="text-sm text-milk-muted">
           Подсказки на основе ваших данных — без интернета и без осуждения.
         </p>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {PROMPTS.map((prompt) => (
             <button
               key={prompt.id}
@@ -43,14 +43,14 @@ export function DebtAdvisorSheet({ open, messages, onPrompt, onClose }: DebtAdvi
           ))}
         </div>
 
-        <div className="max-h-72 space-y-2 overflow-y-auto">
+        <div className="max-h-72 space-y-1.5 overflow-y-auto">
           {messages.map((message, index) => (
             <div
               key={`${message.atMs}-${index}`}
-              className={`rounded-2xl px-3 py-2 text-sm ${
+              className={`rounded-md px-3 py-2 text-sm ${
                 message.role === "advisor"
-                  ? "bg-milk-surface/80 text-milk-text"
-                  : "bg-milk-bg text-milk-muted"
+                  ? "bg-milk-bg text-milk-text"
+                  : "text-milk-muted"
               }`}
             >
               {message.text}

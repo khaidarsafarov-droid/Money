@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { CalendarHeart } from "lucide-react";
 import { projectDebtFreedom } from "@/lib/debtFreedomEngine";
 import { formatMoney } from "@/lib/money";
-import { AppIcon, SurfaceCard } from "@/components/ui/SurfaceCard";
+import { SurfaceCard } from "@/components/ui/SurfaceCard";
 import type { FinancialItem } from "@/types/finance";
 
 interface FreedomForecastCardProps {
@@ -19,12 +18,9 @@ export function FreedomForecastCard({ debts, hideAmounts = false }: FreedomForec
 
   if (!projection.hasActiveDebts) {
     return (
-      <SurfaceCard className="space-y-2">
-        <div className="flex items-center gap-2 text-milk-muted">
-          <AppIcon icon={CalendarHeart} size={18} />
-          <span className="text-xs font-medium uppercase tracking-widest">Свобода</span>
-        </div>
-        <p className="text-sm text-milk-muted">Нет активных долгов — вы на финишной прямой.</p>
+      <SurfaceCard className="space-y-1">
+        <p className="text-xs text-milk-muted">Свобода</p>
+        <p className="text-sm text-milk-muted">Нет активных долгов.</p>
       </SurfaceCard>
     );
   }
@@ -38,24 +34,21 @@ export function FreedomForecastCard({ debts, hideAmounts = false }: FreedomForec
     : "—";
 
   return (
-    <SurfaceCard className="space-y-4">
-      <div className="flex items-center gap-2 text-milk-muted">
-        <AppIcon icon={CalendarHeart} size={18} />
-        <span className="text-xs font-medium uppercase tracking-widest">Просмотр будущего</span>
-      </div>
+    <SurfaceCard className="space-y-3">
+      <p className="text-xs text-milk-muted">Прогноз</p>
 
       <div>
         <p className="text-sm text-milk-muted">Дата свободы от долгов</p>
-        <p className="text-2xl font-semibold text-milk-gold">{freedomLabel}</p>
+        <p className="text-xl font-medium text-milk-text">{freedomLabel}</p>
       </div>
 
       <p className="text-sm text-milk-muted">
-        Осталось {formatMoney(projection.totalRemainingCents, { hidden: hideAmounts })} · темп{" "}
+        Осталось {formatMoney(projection.totalRemainingCents, { hidden: hideAmounts })} ·{" "}
         {formatMoney(projection.monthlyPaymentCents, { hidden: hideAmounts })}/мес · ~{projection.monthsRemaining} мес.
       </p>
 
-      <label className="block space-y-2">
-        <span className="text-sm font-medium text-milk-text">
+      <label className="block space-y-1.5">
+        <span className="text-sm text-milk-text">
           Дополнительно в месяц: {formatMoney(extraMonthlyCents, { hidden: hideAmounts })}
         </span>
         <input
@@ -65,19 +58,15 @@ export function FreedomForecastCard({ debts, hideAmounts = false }: FreedomForec
           step={2500}
           value={extraMonthlyCents}
           onChange={(event) => setExtraMonthlyCents(Number(event.target.value))}
-          className="w-full accent-milk-gold"
+          className="w-full accent-milk-text"
         />
       </label>
 
       {projection.monthsSavedWithExtra != null && projection.monthsSavedWithExtra > 0 ? (
-        <p className="text-sm font-medium text-milk-success">
+        <p className="text-sm text-milk-success">
           С этой суммой вы освободитесь на {projection.monthsSavedWithExtra} мес. раньше.
         </p>
       ) : null}
-
-      <p className="text-xs text-milk-muted">
-        Прогноз строится по вашим платежам и остаткам — без банков и облака.
-      </p>
     </SurfaceCard>
   );
 }

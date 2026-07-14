@@ -32,37 +32,30 @@ export function TransactionHistory({ transactions, goals }: TransactionHistoryPr
   if (transactions.length === 0) return null;
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-semibold text-milk-text">Операции</h2>
-      <ul className="divide-y divide-milk-surface/80 overflow-hidden rounded-2xl border border-milk-surface bg-milk-bg/60">
+    <section className="space-y-2">
+      <h2 className="text-base font-medium text-milk-text">Операции</h2>
+      <ul className="divide-y divide-milk-surface overflow-hidden rounded-lg border border-milk-surface bg-white">
         {transactions.slice(0, 12).map((tx) => {
           const positive = isPositiveTransaction(tx.kind);
           return (
             <li
               key={tx.id}
-              className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+              className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm"
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <span
-                  className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full ${
-                    positive
-                      ? "bg-finance-positive-soft text-finance-positive"
-                      : "bg-finance-negative-soft text-finance-negative"
-                  }`}
-                >
-                  <AppIcon
-                    icon={
-                      tx.kind === "EXPENSE"
-                        ? ArrowUpRight
-                        : tx.kind === "GOAL_TRANSFER"
-                          ? PiggyBank
-                          : ArrowDownLeft
-                    }
-                    size={16}
-                  />
-                </span>
+              <div className="flex min-w-0 items-center gap-2">
+                <AppIcon
+                  icon={
+                    tx.kind === "EXPENSE"
+                      ? ArrowUpRight
+                      : tx.kind === "GOAL_TRANSFER"
+                        ? PiggyBank
+                        : ArrowDownLeft
+                  }
+                  size={14}
+                  className={positive ? "text-finance-positive" : "text-finance-negative"}
+                />
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-milk-text">
+                  <p className="truncate text-milk-text">
                     {labelForTransaction(tx, goals)}
                   </p>
                   <p className="text-xs text-milk-muted">
@@ -71,7 +64,7 @@ export function TransactionHistory({ transactions, goals }: TransactionHistoryPr
                 </div>
               </div>
               <span
-                className={`shrink-0 font-semibold tabular-nums ${
+                className={`shrink-0 tabular-nums ${
                   positive ? "text-finance-positive" : "text-finance-negative"
                 }`}
               >
