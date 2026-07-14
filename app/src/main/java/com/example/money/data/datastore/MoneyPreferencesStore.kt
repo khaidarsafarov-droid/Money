@@ -17,6 +17,8 @@ import com.example.money.domain.sync.SnapshotVoiceSettings
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.BusinessBranchSettings
+import com.example.money.settings.CurrencyRegion
+import com.example.money.settings.GamificationState
 import com.example.money.settings.FinancialPsychotype
 import com.example.money.settings.GoalPsychologyProfile
 import com.example.money.settings.PrivacySettings
@@ -208,7 +210,7 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.WIDGET_STREAK_COUNT] = snapshot.streakCount
             snapshot.lastWinMessage?.let {
                 prefs[MoneyPreferenceKeys.WIDGET_LAST_WIN] = it
-            } ?: remove(MoneyPreferenceKeys.WIDGET_LAST_WIN)
+            } ?: prefs.remove(MoneyPreferenceKeys.WIDGET_LAST_WIN)
         }
     }
 

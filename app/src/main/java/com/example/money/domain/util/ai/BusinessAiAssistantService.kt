@@ -124,7 +124,7 @@ object BusinessAiAssistantService {
             note = recent.note,
             type = recent.type,
             clientId = recent.clientId,
-            history = transactions,
+            transactions = transactions,
             customCategories = emptyList(),
         )
         return if (suggestion != null) {

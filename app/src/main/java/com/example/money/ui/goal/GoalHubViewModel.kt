@@ -115,9 +115,7 @@ class GoalHubViewModel(
 
     init {
         viewModelScope.launch {
-            debtors
-                .distinctUntilChanged()
-                .collect { list ->
+            debtors.collect { list ->
                     val badges = GoalChallengeEngines.computeGoalBadges(list)
                     val current = profile.value.goalBadges
                     if (badges != current) {

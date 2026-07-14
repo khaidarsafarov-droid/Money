@@ -87,6 +87,7 @@ fun ProfitBarChart(
     }
 }
 
+@Composable
 fun CategoryDistributionChart(
     rows: List<CategoryDistributionRow>,
     title: String,

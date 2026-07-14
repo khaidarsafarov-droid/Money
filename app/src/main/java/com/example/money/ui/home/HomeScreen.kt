@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.AutoMode
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Flag
@@ -41,6 +42,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -125,6 +127,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.StatusActiveBg
 import com.example.money.ui.theme.CreamBackground
+import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.theme.GoldPrimary

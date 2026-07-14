@@ -200,7 +200,7 @@ class DebtCalendarSyncService(
     }
 
     private fun isWritableAccess(accessLevel: Int): Boolean =
-        accessLevel >= CalendarContract.Calendars.CALENDAR_ACCESS_CONTRIBUTOR
+        accessLevel >= CALENDAR_ACCESS_CONTRIBUTOR
 
     private fun createDebtsCalendar(): Long? {
         val resolver = context.contentResolver
@@ -211,7 +211,7 @@ class DebtCalendarSyncService(
             put(CalendarContract.Calendars.NAME, DEBTS_CALENDAR_NAME)
             put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, DEBTS_CALENDAR_NAME)
             put(CalendarContract.Calendars.CALENDAR_COLOR, 0xFF6B6BFF.toInt())
-            put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, CalendarContract.Calendars.CALENDAR_ACCESS_OWNER)
+            put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, CALENDAR_ACCESS_OWNER)
             put(CalendarContract.Calendars.OWNER_ACCOUNT, account.first)
             put(CalendarContract.Calendars.VISIBLE, 1)
             put(CalendarContract.Calendars.SYNC_EVENTS, 1)
@@ -239,7 +239,7 @@ class DebtCalendarSyncService(
                 CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL,
             ),
             "${CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL} >= ?",
-            arrayOf(CalendarContract.Calendars.CALENDAR_ACCESS_CONTRIBUTOR.toString()),
+            arrayOf(CALENDAR_ACCESS_CONTRIBUTOR.toString()),
             null,
         )?.use { cursor ->
             val nameIndex = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.ACCOUNT_NAME)
@@ -296,6 +296,8 @@ class DebtCalendarSyncService(
     }
 
     companion object {
+        private const val CALENDAR_ACCESS_CONTRIBUTOR = 500
+        private const val CALENDAR_ACCESS_OWNER = 700
         const val DEBTS_CALENDAR_NAME = "Долги"
 
         fun debtDeepLinkIntent(debtorId: Long): Intent =
@@ -309,7 +311,7 @@ object DebtCalendarText {
         val amount = Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency)
         return when (debtor.debtType) {
             DebtType.CREDITOR -> "$prefix${debtor.name} должен(на) мне $amount"
-            DebtType.DEBTOR -> "$prefixЯ должен(на) ${debtor.name} $amount"
+            DebtType.DEBTOR -> "${prefix}Я должен(на) ${debtor.name} $amount"
         }
     }
 
@@ -330,10 +332,10 @@ object DebtCalendarText {
 
     private fun loanCategoryLabel(category: LoanCategory): String = when (category) {
         LoanCategory.CREDIT_CARD -> "Кредитная карта"
-        LoanCategory.PERSONAL_LOAN -> "Личный займ"
+        LoanCategory.CONSUMER -> "Потребительский кредит"
+        LoanCategory.AUTO -> "Автокредит"
         LoanCategory.MORTGAGE -> "Ипотека"
-        LoanCategory.STUDENT_LOAN -> "Образование"
-        LoanCategory.MEDICAL -> "Медицина"
+        LoanCategory.EDUCATION -> "Образование"
         LoanCategory.OTHER -> "Другое"
     }
 }

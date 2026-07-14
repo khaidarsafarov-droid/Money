@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -58,6 +57,7 @@ import com.example.money.domain.model.business.BusinessProject
 import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
+import android.content.Context
 import android.content.Intent
 import com.example.money.ui.business.assistant.BusinessAiAssistantScreen
 import com.example.money.ui.business.assistant.BusinessAssistantPrompt
@@ -186,26 +186,27 @@ private fun BusinessHomeScreenContent(
             selectedTab = selectedTab,
             onTabSelected = viewModel::selectTab,
             modifier = Modifier.padding(padding),
-        ) {
-            BusinessTabContent(
-                selectedTab = selectedTab,
-                branchSettings = branchSettings,
-                dashboard = dashboard,
-                clients = clients,
-                projects = projects,
-                invoices = invoices,
-                transactions = transactions,
-                filters = filters,
-                reports = reports,
-                reportFilters = reportFilters,
-                selectedReportTab = selectedReportTab,
-                invoiceRisks = invoiceRisks,
-                categories = categories,
-                assistantMessages = assistantMessages,
-                viewModel = viewModel,
-                context = context,
-            )
-        }
+            content = {
+                BusinessTabContent(
+                    selectedTab = selectedTab,
+                    branchSettings = branchSettings,
+                    dashboard = dashboard,
+                    clients = clients,
+                    projects = projects,
+                    invoices = invoices,
+                    transactions = transactions,
+                    filters = filters,
+                    reports = reports,
+                    reportFilters = reportFilters,
+                    selectedReportTab = selectedReportTab,
+                    invoiceRisks = invoiceRisks,
+                    categories = categories,
+                    assistantMessages = assistantMessages,
+                    viewModel = viewModel,
+                    context = context,
+                )
+            },
+        )
     }
 
     if (showAddDialog) {
@@ -342,10 +343,8 @@ private fun BusinessTabContent(
         BusinessTab.Assistant -> BusinessAiAssistantScreen(
             messages = assistantMessages,
             onPromptSelected = { promptId ->
-                val label = BusinessAssistantPrompt.entries
-                    .find { it.id == promptId }
-                    ?.let { stringResource(it.labelRes) }
-                    ?: promptId
+                val labelRes = BusinessAssistantPrompt.entries.find { it.id == promptId }?.labelRes
+                val label = labelRes?.let { context.getString(it) } ?: promptId
                 viewModel.askAssistant(promptId, label)
             },
             modifier = Modifier.fillMaxSize(),

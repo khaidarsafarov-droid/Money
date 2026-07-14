@@ -36,6 +36,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import com.example.money.contacts.ContactResolver
 import com.example.money.contacts.PickedContact
+import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.ContactDebtHistoryEngine
@@ -120,6 +121,10 @@ fun DebtorFormDialog(
 
     val context = LocalContext.current
 
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var amountError by remember { mutableStateOf<String?>(null) }
+    var dateError by remember { mutableStateOf<String?>(null) }
+
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
     ) { uri ->
@@ -137,10 +142,6 @@ fun DebtorFormDialog(
             ContactDebtHistoryEngine.countExistingDebts(allDebtors, key)
         } ?: 0
     }
-
-    var nameError by remember { mutableStateOf<String?>(null) }
-    var amountError by remember { mutableStateOf<String?>(null) }
-    var dateError by remember { mutableStateOf<String?>(null) }
 
     val titleRes = when {
         isEdit -> R.string.debtor_edit_title

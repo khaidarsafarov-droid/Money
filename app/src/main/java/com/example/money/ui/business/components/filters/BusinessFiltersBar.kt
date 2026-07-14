@@ -1,4 +1,4 @@
-package com.example.money.ui.business.components
+package com.example.money.ui.business.components.filters
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

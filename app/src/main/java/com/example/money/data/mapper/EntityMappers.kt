@@ -11,6 +11,7 @@ import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.Expense
+import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.util.MoneyMath

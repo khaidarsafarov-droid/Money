@@ -6,6 +6,7 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 private val BusinessColorScheme = lightColorScheme(
     primary = BusinessColors.PrimaryBlue,
@@ -26,8 +27,6 @@ private val BusinessColorScheme = lightColorScheme(
     onTertiary = Color.White,
     outline = BusinessColors.Gray300,
 )
-
-import androidx.compose.ui.unit.dp
 
 private val BusinessShapes = Shapes(
     extraSmall = RoundedCornerShape(BusinessSpacing.cardRadius),

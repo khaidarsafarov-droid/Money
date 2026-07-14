@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -123,7 +124,7 @@ fun OnboardingScreen(
 }
 
 @Composable
-private fun OnboardingCard(content: @Composable Column.() -> Unit) {
+private fun OnboardingCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CreamSurface),
@@ -370,15 +371,16 @@ private fun SummaryStep(
     val name = draft.displayName.trim().ifBlank { stringResource(R.string.onboarding_default_name) }
     val psychotype = draft.psychotypeResult
     val goal = draft.goalText.trim().ifBlank { stringResource(R.string.onboarding_default_goal) }
+    val fearLabels = mapOf(
+        "wont_escape" to stringResource(R.string.fear_wont_escape_short),
+        "earn_more_than_parents" to stringResource(R.string.fear_earn_more_parents_short),
+        "ashamed_of_debt" to stringResource(R.string.fear_ashamed_debt_short),
+        "money_corrupts" to stringResource(R.string.fear_money_corrupts_short),
+        "rich_are_bad" to stringResource(R.string.fear_rich_bad_short),
+    )
+    val defaultFearLabel = stringResource(R.string.fear_afraid_numbers_short)
     val fearPreview = draft.selectedFearIds.take(2).joinToString(", ") { fearId ->
-        when (fearId) {
-            "wont_escape" -> stringResource(R.string.fear_wont_escape_short)
-            "earn_more_than_parents" -> stringResource(R.string.fear_earn_more_parents_short)
-            "ashamed_of_debt" -> stringResource(R.string.fear_ashamed_debt_short)
-            "money_corrupts" -> stringResource(R.string.fear_money_corrupts_short)
-            "rich_are_bad" -> stringResource(R.string.fear_rich_bad_short)
-            else -> stringResource(R.string.fear_afraid_numbers_short)
-        }
+        fearLabels[fearId] ?: defaultFearLabel
     }
 
     OnboardingCard {

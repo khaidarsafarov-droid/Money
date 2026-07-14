@@ -28,6 +28,7 @@ import com.example.money.notification.NotificationChannels
 import com.example.money.domain.usecase.BusinessUseCases
 import com.example.money.voice.VoiceReportScheduler
 import com.example.money.autopilot.MicroPaymentScheduler
+import com.example.money.widget.GoalWidgetSnapshotWriter
 import com.example.money.widget.GoalWidgetUpdater
 import com.example.money.widget.WidgetGoalRepository
 import com.example.money.ui.util.AppLocaleContext
