@@ -131,6 +131,12 @@ object MoneyPreferenceKeys {
     val BUSINESS_DASHBOARD_VIEW = stringPreferencesKey("business_dashboard_view")
     val BUSINESS_SAVED_FILTER_PRESETS_JSON = stringPreferencesKey("business_saved_filter_presets_json")
     val BUSINESS_CUSTOM_CATEGORIES_JSON = stringPreferencesKey("business_custom_categories_json")
+    val BUSINESS_INVOICE_REMINDERS_ENABLED = booleanPreferencesKey("business_invoice_reminders_enabled")
+    val BUSINESS_LOW_CASH_ALERTS_ENABLED = booleanPreferencesKey("business_low_cash_alerts_enabled")
+    val BUSINESS_RECURRING_TX_ENABLED = booleanPreferencesKey("business_recurring_tx_enabled")
+    val BUSINESS_INVOICE_REMINDER_HOUR = intPreferencesKey("business_invoice_reminder_hour")
+    val BUSINESS_LOW_CASH_THRESHOLD_CENTS = longPreferencesKey("business_low_cash_threshold_cents")
+    val BUSINESS_RECURRING_RULES_JSON = stringPreferencesKey("business_recurring_rules_json")
 }
 
 class MoneyPreferencesStore(
@@ -620,6 +626,12 @@ private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
         }.getOrDefault(com.example.money.domain.model.business.BusinessDashboardView.FINANCIAL),
         savedFilterPresetsJson = this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] ?: "[]",
         customCategoriesJson = this[MoneyPreferenceKeys.BUSINESS_CUSTOM_CATEGORIES_JSON] ?: "[]",
+        invoiceRemindersEnabled = this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDERS_ENABLED] ?: true,
+        lowCashAlertsEnabled = this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_ALERTS_ENABLED] ?: true,
+        recurringTransactionsEnabled = this[MoneyPreferenceKeys.BUSINESS_RECURRING_TX_ENABLED] ?: false,
+        invoiceReminderHour = this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDER_HOUR] ?: 9,
+        lowCashThresholdCents = this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_THRESHOLD_CENTS] ?: 50_000L,
+        recurringRulesJson = this[MoneyPreferenceKeys.BUSINESS_RECURRING_RULES_JSON] ?: "[]",
     )
 
 private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBranchSettings) {
@@ -628,4 +640,10 @@ private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBra
     this[MoneyPreferenceKeys.BUSINESS_DASHBOARD_VIEW] = settings.dashboardView.name
     this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] = settings.savedFilterPresetsJson
     this[MoneyPreferenceKeys.BUSINESS_CUSTOM_CATEGORIES_JSON] = settings.customCategoriesJson
+    this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDERS_ENABLED] = settings.invoiceRemindersEnabled
+    this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_ALERTS_ENABLED] = settings.lowCashAlertsEnabled
+    this[MoneyPreferenceKeys.BUSINESS_RECURRING_TX_ENABLED] = settings.recurringTransactionsEnabled
+    this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDER_HOUR] = settings.invoiceReminderHour
+    this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_THRESHOLD_CENTS] = settings.lowCashThresholdCents
+    this[MoneyPreferenceKeys.BUSINESS_RECURRING_RULES_JSON] = settings.recurringRulesJson
 }

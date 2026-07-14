@@ -5,6 +5,8 @@ import com.example.money.domain.model.business.BusinessDashboardView
 import com.example.money.domain.model.business.BusinessFilterPreset
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
+import com.example.money.domain.model.business.RecurringBusinessRule
+import com.example.money.domain.model.business.RecurringBusinessRuleCodec
 import com.example.money.domain.model.business.SavedFilterPreset
 import org.json.JSONArray
 import org.json.JSONObject
@@ -15,10 +17,18 @@ data class BusinessBranchSettings(
     val dashboardView: BusinessDashboardView = BusinessDashboardView.FINANCIAL,
     val savedFilterPresetsJson: String = "[]",
     val customCategoriesJson: String = "[]",
+    val invoiceRemindersEnabled: Boolean = true,
+    val lowCashAlertsEnabled: Boolean = true,
+    val recurringTransactionsEnabled: Boolean = false,
+    val invoiceReminderHour: Int = 9,
+    val lowCashThresholdCents: Long = 50_000,
+    val recurringRulesJson: String = "[]",
 ) {
     fun savedFilterPresets(): List<SavedFilterPreset> = decodeSavedFilterPresets(savedFilterPresetsJson)
 
     fun customCategories(): List<String> = decodeStringList(customCategoriesJson)
+
+    fun recurringRules(): List<RecurringBusinessRule> = RecurringBusinessRuleCodec.decode(recurringRulesJson)
 
     companion object {
         fun encodeSavedFilterPresets(presets: List<SavedFilterPreset>): String {

@@ -22,7 +22,10 @@ import com.example.money.domain.repository.GoalRepository
 import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.DebtReminderSchedulerImpl
+import com.example.money.notification.BusinessInvoiceReminderScheduler
+import com.example.money.notification.BusinessInvoiceReminderSchedulerImpl
 import com.example.money.notification.NotificationChannels
+import com.example.money.domain.usecase.BusinessUseCases
 import com.example.money.voice.VoiceReportScheduler
 import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.widget.GoalWidgetUpdater
@@ -129,6 +132,14 @@ class MoneyApplication : Application() {
         )
     }
 
+    val businessUseCases: BusinessUseCases by lazy {
+        BusinessUseCases(businessRepository)
+    }
+
+    val businessInvoiceReminderScheduler: BusinessInvoiceReminderScheduler by lazy {
+        BusinessInvoiceReminderSchedulerImpl(this)
+    }
+
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
         WidgetGoalRepository(this)
     }
@@ -153,6 +164,7 @@ class MoneyApplication : Application() {
         AppLanguageManager.applyStored(this)
         NotificationChannels.create(this)
         rescheduleDebtReminders()
+        rescheduleBusinessReminders()
         startWidgetPipeline()
         syncAutopilotSchedule()
         syncVoiceReportSchedule()
@@ -203,6 +215,14 @@ class MoneyApplication : Application() {
             debtorRepository.getActiveDebtors().first().forEach { debtor ->
                 debtReminderScheduler.schedule(debtor)
             }
+        }
+    }
+
+    fun rescheduleBusinessReminders() {
+        applicationScope.launch {
+            val settings = preferencesStore.businessBranchSettings.first()
+            val invoices = businessRepository.observeInvoices().first()
+            businessInvoiceReminderScheduler.syncAll(invoices, settings)
         }
     }
 }

@@ -23,13 +23,22 @@ import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
 import com.example.money.domain.model.business.SavedFilterPreset
+import com.example.money.domain.model.business.RecurringBusinessRule
+import com.example.money.domain.model.business.RecurringBusinessRuleCodec
+import com.example.money.domain.model.business.CashflowForecastPoint
 import com.example.money.domain.repository.BusinessRepository
+import com.example.money.domain.usecase.BusinessUseCases
+import com.example.money.domain.util.BusinessAutomationService
 import com.example.money.domain.util.BusinessCsvExporter
 import com.example.money.domain.util.BusinessFinanceEngine
 import com.example.money.domain.util.BusinessReportsEngine
 import com.example.money.domain.util.ai.AiInvoiceRiskService
+import com.example.money.domain.util.ai.BusinessAiAssistantService
 import com.example.money.domain.util.MoneyMath
+import com.example.money.notification.BusinessInvoiceReminderScheduler
 import com.example.money.settings.BusinessBranchSettings
+import com.example.money.ui.business.assistant.BusinessAssistantMessage
+import com.example.money.ui.business.assistant.BusinessAssistantRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +48,7 @@ import com.example.money.ui.business.reports.BusinessReportShare
 import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -50,6 +60,7 @@ enum class BusinessTab {
     Invoices,
     Cashflow,
     Reports,
+    Assistant,
     Settings,
 }
 
@@ -63,6 +74,8 @@ enum class BusinessQuickAction {
 class BusinessViewModel(
     private val businessRepository: BusinessRepository,
     private val preferencesStore: MoneyPreferencesStore,
+    private val businessUseCases: BusinessUseCases,
+    private val invoiceReminderScheduler: BusinessInvoiceReminderScheduler? = null,
 ) : ViewModel() {
 
     val branchSettings: StateFlow<BusinessBranchSettings> = preferencesStore.businessBranchSettings.stateIn(
@@ -159,9 +172,42 @@ class BusinessViewModel(
         initialValue = emptyMap(),
     )
 
+    val cashflowForecast: StateFlow<List<CashflowForecastPoint>> = businessUseCases.predictCashflow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList(),
+        )
+
+    private val _assistantMessages = MutableStateFlow<List<BusinessAssistantMessage>>(emptyList())
+    val assistantMessages: StateFlow<List<BusinessAssistantMessage>> = _assistantMessages.asStateFlow()
+
     init {
         viewModelScope.launch {
             businessRepository.refreshInvoiceStatuses()
+            val settings = preferencesStore.businessBranchSettings.first()
+            if (settings.recurringTransactionsEnabled) {
+                processRecurringRules(settings)
+            }
+        }
+        viewModelScope.launch {
+            combine(invoices, branchSettings) { inv, settings ->
+                inv to settings
+            }.collect { (inv, settings) ->
+                invoiceReminderScheduler?.syncAll(inv, settings)
+            }
+        }
+    }
+
+    private suspend fun processRecurringRules(settings: BusinessBranchSettings) {
+        val updatedRules = BusinessAutomationService.processRecurringRules(
+            businessRepository,
+            settings.recurringRules(),
+        )
+        if (updatedRules != settings.recurringRules()) {
+            preferencesStore.updateBusinessBranchSettings {
+                it.copy(recurringRulesJson = RecurringBusinessRuleCodec.encode(updatedRules))
+            }
         }
     }
 
@@ -339,6 +385,7 @@ class BusinessViewModel(
                 ),
             )
             businessRepository.refreshInvoiceStatuses()
+            rescheduleInvoiceReminders()
         }
     }
 
@@ -346,6 +393,7 @@ class BusinessViewModel(
         viewModelScope.launch {
             businessRepository.markInvoicePaid(invoice.id)
             businessRepository.refreshInvoiceStatuses()
+            invoiceReminderScheduler?.cancel(invoice.id)
         }
     }
 
@@ -383,14 +431,89 @@ class BusinessViewModel(
         viewModelScope.launch { businessRepository.deleteTransaction(transaction) }
     }
 
+    fun askAssistant(promptId: String, promptLabel: String) {
+        val response = BusinessAiAssistantService.respond(
+            promptId = promptId,
+            dashboard = dashboard.value,
+            invoices = invoices.value,
+            clients = clients.value,
+            transactions = transactions.value,
+            forecast = cashflowForecast.value,
+            invoiceRisks = invoiceRisks.value,
+        )
+        _assistantMessages.value = _assistantMessages.value + listOf(
+            BusinessAssistantMessage(BusinessAssistantRole.USER, promptLabel),
+            BusinessAssistantMessage(BusinessAssistantRole.ASSISTANT, response),
+        )
+    }
+
+    fun clearAssistantHistory() {
+        _assistantMessages.value = emptyList()
+    }
+
+    fun updateAutomationSettings(transform: (BusinessBranchSettings) -> BusinessBranchSettings) {
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings(transform)
+        }
+    }
+
+    fun addRecurringRule(rule: RecurringBusinessRule) {
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings { settings ->
+                val updated = settings.recurringRules() + rule
+                settings.copy(recurringRulesJson = RecurringBusinessRuleCodec.encode(updated))
+            }
+        }
+    }
+
+    fun deleteRecurringRule(ruleId: String) {
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings { settings ->
+                val updated = settings.recurringRules().filterNot { it.id == ruleId }
+                settings.copy(recurringRulesJson = RecurringBusinessRuleCodec.encode(updated))
+            }
+        }
+    }
+
+    fun toggleRecurringRule(ruleId: String, enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings { settings ->
+                val updated = settings.recurringRules().map { rule ->
+                    if (rule.id == ruleId) rule.copy(enabled = enabled) else rule
+                }
+                settings.copy(recurringRulesJson = RecurringBusinessRuleCodec.encode(updated))
+            }
+        }
+    }
+
+    fun runRecurringRulesNow() {
+        viewModelScope.launch {
+            processRecurringRules(branchSettings.value)
+        }
+    }
+
+    fun rescheduleInvoiceReminders() {
+        viewModelScope.launch {
+            val settings = branchSettings.value
+            invoiceReminderScheduler?.syncAll(invoices.value, settings)
+        }
+    }
+
     class Factory(
         private val businessRepository: BusinessRepository,
         private val preferencesStore: MoneyPreferencesStore,
+        private val businessUseCases: BusinessUseCases,
+        private val invoiceReminderScheduler: BusinessInvoiceReminderScheduler? = null,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(BusinessViewModel::class.java)) {
-                return BusinessViewModel(businessRepository, preferencesStore) as T
+                return BusinessViewModel(
+                    businessRepository,
+                    preferencesStore,
+                    businessUseCases,
+                    invoiceReminderScheduler,
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
         }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,8 +30,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -60,10 +59,21 @@ import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
 import android.content.Intent
+import com.example.money.ui.business.assistant.BusinessAiAssistantScreen
+import com.example.money.ui.business.assistant.BusinessAssistantPrompt
 import com.example.money.ui.business.components.BusinessDashboardContent
 import com.example.money.ui.business.components.clients.ClientList
 import com.example.money.ui.business.components.invoices.InvoiceTable
+import com.example.money.ui.business.components.navigation.BusinessNavigationLayout
+import com.example.money.ui.business.components.settings.BusinessAutomationSettings
 import com.example.money.ui.business.components.transactions.BusinessTransactionTable
+import com.example.money.domain.model.business.BusinessDashboardSummary
+import com.example.money.domain.model.business.BusinessReportFilters
+import com.example.money.domain.model.business.BusinessReportsBundle
+import com.example.money.domain.model.business.InvoiceRiskAssessment
+import com.example.money.settings.BusinessBranchSettings
+import com.example.money.ui.business.assistant.BusinessAssistantMessage
+import com.example.money.ui.business.reports.BusinessReportTab
 import com.example.money.ui.business.reports.BusinessReportsContent
 import com.example.money.ui.business.theme.BusinessTheme
 import com.example.money.ui.theme.GoldPrimary
@@ -89,7 +99,14 @@ private fun BusinessHomeScreenContent(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as MoneyApplication
-    val viewModel: BusinessViewModel = viewModel(factory = BusinessViewModel.Factory(app.businessRepository, app.preferencesStore))
+    val viewModel: BusinessViewModel = viewModel(
+        factory = BusinessViewModel.Factory(
+            app.businessRepository,
+            app.preferencesStore,
+            app.businessUseCases,
+            app.businessInvoiceReminderScheduler,
+        ),
+    )
 
     val branchSettings by viewModel.branchSettings.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
@@ -104,6 +121,7 @@ private fun BusinessHomeScreenContent(
     val selectedReportTab by viewModel.selectedReportTab.collectAsStateWithLifecycle()
     val invoiceRisks by viewModel.invoiceRisks.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val assistantMessages by viewModel.assistantMessages.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var quickActionDialog by remember { mutableStateOf<BusinessQuickAction?>(null) }
@@ -150,7 +168,11 @@ private fun BusinessHomeScreenContent(
             )
         },
         floatingActionButton = {
-            if (selectedTab != BusinessTab.Dashboard && selectedTab != BusinessTab.Reports && selectedTab != BusinessTab.Settings) {
+            if (selectedTab != BusinessTab.Dashboard &&
+                selectedTab != BusinessTab.Reports &&
+                selectedTab != BusinessTab.Settings &&
+                selectedTab != BusinessTab.Assistant
+            ) {
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
                     containerColor = GoldPrimary,
@@ -160,90 +182,29 @@ private fun BusinessHomeScreenContent(
             }
         },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            ScrollableTabRow(selectedTabIndex = selectedTab.ordinal, edgePadding = 8.dp) {
-                BusinessTab.entries.forEachIndexed { index, tab ->
-                    Tab(
-                        selected = selectedTab.ordinal == index,
-                        onClick = { viewModel.selectTab(tab) },
-                        text = {
-                            Text(
-                                when (tab) {
-                                    BusinessTab.Dashboard -> stringResource(R.string.business_tab_dashboard)
-                                    BusinessTab.Clients -> stringResource(R.string.business_tab_clients)
-                                    BusinessTab.Projects -> stringResource(R.string.business_tab_projects)
-                                    BusinessTab.Invoices -> stringResource(R.string.business_tab_invoices)
-                                    BusinessTab.Cashflow -> stringResource(R.string.business_tab_cashflow)
-                                    BusinessTab.Reports -> stringResource(R.string.business_tab_reports)
-                                    BusinessTab.Settings -> stringResource(R.string.business_tab_settings)
-                                },
-                            )
-                        },
-                    )
-                }
-            }
-
-            when (selectedTab) {
-                BusinessTab.Dashboard -> {
-                    val availableCategories = BusinessCategories.mergeWithCustom(
-                        branchSettings.customCategories() +
-                            categories.map { it.name } +
-                            transactions.map { it.category },
-                    )
-                    BusinessDashboardContent(
-                        dashboard = dashboard,
-                        clients = clients,
-                        projects = projects,
-                        transactions = transactions,
-                        filters = filters,
-                        dashboardView = branchSettings.dashboardView,
-                        savedPresets = branchSettings.savedFilterPresets(),
-                        availableCategories = availableCategories,
-                        onFiltersChange = { newFilters -> viewModel.updateFilters { newFilters } },
-                        onApplyPreset = viewModel::applyFilterPreset,
-                        onApplySavedPreset = viewModel::applySavedFilterPreset,
-                        onSavePreset = viewModel::saveCurrentFilterPreset,
-                        onDeleteSavedPreset = viewModel::deleteSavedFilterPreset,
-                        onClearFilters = viewModel::clearFilters,
-                        onDashboardViewChange = viewModel::setDashboardView,
-                        onQuickAction = viewModel::requestQuickAction,
-                    )
-                }
-                BusinessTab.Clients -> ClientList(clients = clients)
-                BusinessTab.Projects -> BusinessListTab(
-                    items = projects.map { project ->
-                        val clientName = clients.find { it.id == project.clientId }?.name ?: "—"
-                        project.name to clientName
-                    },
-                    emptyText = stringResource(R.string.business_empty_projects),
-                )
-                BusinessTab.Invoices -> InvoiceTable(
-                    invoices = invoices,
-                    clients = clients,
-                    invoiceRisks = invoiceRisks,
-                    onMarkPaid = viewModel::markInvoicePaid,
-                )
-                BusinessTab.Cashflow -> BusinessTransactionTable(transactions = transactions)
-                BusinessTab.Reports -> BusinessReportsContent(
-                    reports = reports,
-                    filters = reportFilters,
-                    selectedTab = selectedReportTab,
-                    onTabSelected = viewModel::selectReportTab,
-                    onPeriodChange = viewModel::setReportPeriod,
-                    onExport = { type ->
-                        context.startActivity(
-                            Intent.createChooser(
-                                viewModel.createReportExportIntent(context, type),
-                                context.getString(R.string.business_report_export_csv),
-                            ),
-                        )
-                    },
-                )
-                BusinessTab.Settings -> BusinessSettingsTab(
-                    businessName = branchSettings.businessName,
-                    onSaveName = viewModel::updateBusinessName,
-                )
-            }
+        BusinessNavigationLayout(
+            selectedTab = selectedTab,
+            onTabSelected = viewModel::selectTab,
+            modifier = Modifier.padding(padding),
+        ) {
+            BusinessTabContent(
+                selectedTab = selectedTab,
+                branchSettings = branchSettings,
+                dashboard = dashboard,
+                clients = clients,
+                projects = projects,
+                invoices = invoices,
+                transactions = transactions,
+                filters = filters,
+                reports = reports,
+                reportFilters = reportFilters,
+                selectedReportTab = selectedReportTab,
+                invoiceRisks = invoiceRisks,
+                categories = categories,
+                assistantMessages = assistantMessages,
+                viewModel = viewModel,
+                context = context,
+            )
         }
     }
 
@@ -304,6 +265,105 @@ private fun BusinessHomeScreenContent(
 }
 
 @Composable
+private fun BusinessTabContent(
+    selectedTab: BusinessTab,
+    branchSettings: BusinessBranchSettings,
+    dashboard: BusinessDashboardSummary,
+    clients: List<BusinessClient>,
+    projects: List<BusinessProject>,
+    invoices: List<BusinessInvoice>,
+    transactions: List<BusinessTransaction>,
+    filters: com.example.money.domain.model.business.BusinessDashboardFilters,
+    reports: BusinessReportsBundle,
+    reportFilters: BusinessReportFilters,
+    selectedReportTab: BusinessReportTab,
+    invoiceRisks: Map<Long, InvoiceRiskAssessment>,
+    categories: List<com.example.money.domain.model.business.BusinessCategory>,
+    assistantMessages: List<BusinessAssistantMessage>,
+    viewModel: BusinessViewModel,
+    context: Context,
+) {
+    when (selectedTab) {
+        BusinessTab.Dashboard -> {
+            val availableCategories = BusinessCategories.mergeWithCustom(
+                branchSettings.customCategories() +
+                    categories.map { it.name } +
+                    transactions.map { it.category },
+            )
+            BusinessDashboardContent(
+                dashboard = dashboard,
+                clients = clients,
+                projects = projects,
+                transactions = transactions,
+                filters = filters,
+                dashboardView = branchSettings.dashboardView,
+                savedPresets = branchSettings.savedFilterPresets(),
+                availableCategories = availableCategories,
+                onFiltersChange = { newFilters -> viewModel.updateFilters { newFilters } },
+                onApplyPreset = viewModel::applyFilterPreset,
+                onApplySavedPreset = viewModel::applySavedFilterPreset,
+                onSavePreset = viewModel::saveCurrentFilterPreset,
+                onDeleteSavedPreset = viewModel::deleteSavedFilterPreset,
+                onClearFilters = viewModel::clearFilters,
+                onDashboardViewChange = viewModel::setDashboardView,
+                onQuickAction = viewModel::requestQuickAction,
+            )
+        }
+        BusinessTab.Clients -> ClientList(clients = clients)
+        BusinessTab.Projects -> BusinessListTab(
+            items = projects.map { project ->
+                val clientName = clients.find { it.id == project.clientId }?.name ?: "—"
+                project.name to clientName
+            },
+            emptyText = stringResource(R.string.business_empty_projects),
+        )
+        BusinessTab.Invoices -> InvoiceTable(
+            invoices = invoices,
+            clients = clients,
+            invoiceRisks = invoiceRisks,
+            onMarkPaid = viewModel::markInvoicePaid,
+        )
+        BusinessTab.Cashflow -> BusinessTransactionTable(transactions = transactions)
+        BusinessTab.Reports -> BusinessReportsContent(
+            reports = reports,
+            filters = reportFilters,
+            selectedTab = selectedReportTab,
+            onTabSelected = viewModel::selectReportTab,
+            onPeriodChange = viewModel::setReportPeriod,
+            onExport = { type ->
+                context.startActivity(
+                    Intent.createChooser(
+                        viewModel.createReportExportIntent(context, type),
+                        context.getString(R.string.business_report_export_csv),
+                    ),
+                )
+            },
+        )
+        BusinessTab.Assistant -> BusinessAiAssistantScreen(
+            messages = assistantMessages,
+            onPromptSelected = { promptId ->
+                val label = BusinessAssistantPrompt.entries
+                    .find { it.id == promptId }
+                    ?.let { stringResource(it.labelRes) }
+                    ?: promptId
+                viewModel.askAssistant(promptId, label)
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+        BusinessTab.Settings -> BusinessSettingsTab(
+            businessName = branchSettings.businessName,
+            settings = branchSettings,
+            onSaveName = viewModel::updateBusinessName,
+            onAutomationChange = viewModel::updateAutomationSettings,
+            onAddRule = viewModel::addRecurringRule,
+            onDeleteRule = viewModel::deleteRecurringRule,
+            onToggleRule = viewModel::toggleRecurringRule,
+            onRunNow = viewModel::runRecurringRulesNow,
+        )
+    }
+}
+
+@Composable
 fun BranchToggle(
     activeBranch: FinanceBranch,
     onSwitch: (FinanceBranch) -> Unit,
@@ -350,19 +410,37 @@ private fun BusinessPlaceholderTab(message: String) {
 @Composable
 private fun BusinessSettingsTab(
     businessName: String,
+    settings: BusinessBranchSettings,
     onSaveName: (String) -> Unit,
+    onAutomationChange: ((BusinessBranchSettings) -> BusinessBranchSettings) -> Unit,
+    onAddRule: (com.example.money.domain.model.business.RecurringBusinessRule) -> Unit,
+    onDeleteRule: (String) -> Unit,
+    onToggleRule: (String, Boolean) -> Unit,
+    onRunNow: () -> Unit,
 ) {
     var name by remember(businessName) { mutableStateOf(businessName) }
-    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text(stringResource(R.string.business_settings_name)) },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        TextButton(onClick = { onSaveName(name) }) {
-            Text(stringResource(R.string.action_save))
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.business_settings_name)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            TextButton(onClick = { onSaveName(name) }) {
+                Text(stringResource(R.string.action_save))
+            }
         }
+        BusinessAutomationSettings(
+            settings = settings,
+            recurringRules = settings.recurringRules(),
+            onAutomationChange = onAutomationChange,
+            onAddRule = onAddRule,
+            onDeleteRule = onDeleteRule,
+            onToggleRule = onToggleRule,
+            onRunNow = onRunNow,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
