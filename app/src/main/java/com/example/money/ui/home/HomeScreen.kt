@@ -4,7 +4,12 @@ import android.content.Intent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -13,10 +18,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.AutoMode
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
@@ -51,7 +67,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -102,10 +118,14 @@ import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.goal.GoalFormDialog
 import com.example.money.ui.goal.GoalViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import com.example.money.ui.theme.MoneySpacing
+import com.example.money.ui.theme.StatusActiveBg
 import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
+import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.launch
 
 private sealed class PendingDelete {
@@ -858,6 +878,15 @@ fun HomeScreen(
                 onOpenCalendarSettings = onOpenCalendarSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onOpenGoalHub = onOpenGoalHub,
+                onAddDebt = {
+                    if (canAddDebtor) {
+                        showAddDebtorDialog = true
+                    } else {
+                        debtorsViewModel.setDebtTab(DebtTab.OwesMe)
+                        showAddDebtorDialog = true
+                    }
+                },
+                onQuickAdd = { showQuickAddDialog = true },
                 showCheckIn = showCheckIn,
                 onDismissCheckIn = debtorsViewModel::dismissCheckIn,
                 gamificationState = gamificationState,
@@ -952,6 +981,8 @@ private fun PhoneHomeLayout(
     onOpenCalendarSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
     onOpenGoalHub: () -> Unit,
+    onAddDebt: () -> Unit,
+    onQuickAdd: () -> Unit,
     showCheckIn: Boolean,
     onDismissCheckIn: () -> Unit,
     gamificationState: com.example.money.settings.GamificationState,
@@ -963,67 +994,130 @@ private fun PhoneHomeLayout(
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
 ) {
+    var showDebtsSection by rememberSaveable { mutableStateOf(false) }
+    val activeDebtCount = allDebtors.count { !it.isPaid }
+    val transactionCount = transfers.size + expenses.size
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Column(modifier = Modifier.padding(vertical = 24.dp)) {
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.goal_add_title)) },
-                        selected = false,
-                        onClick = {
-                            onAddGoal()
-                            scope.launch { drawerState.close() }
-                        },
-                    )
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.app_language_menu)) },
-                        selected = false,
-                        onClick = {
-                            onOpenAppLanguage()
-                            scope.launch { drawerState.close() }
-                        },
-                    )
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.privacy_settings_title)) },
-                        selected = false,
-                        onClick = {
-                            onOpenPrivacySettings()
-                            scope.launch { drawerState.close() }
-                        },
-                    )
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.autopilot_settings_title)) },
-                        selected = false,
-                        onClick = {
-                            onOpenAutopilotSettings()
-                            scope.launch { drawerState.close() }
-                        },
-                    )
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.calendar_settings_title)) },
-                        selected = false,
-                        onClick = {
-                            onOpenCalendarSettings()
-                            scope.launch { drawerState.close() }
-                        },
-                    )
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.income_ideas_title)) },
-                        selected = false,
-                        onClick = {
-                            onOpenIncomeIdeas()
-                            scope.launch { drawerState.close() }
-                        },
-                    )
-                    NavigationDrawerItem(
-                        label = { Text(stringResource(R.string.voice_settings_menu)) },
-                        selected = false,
-                        onClick = {
-                            onOpenVoiceSettings()
-                            scope.launch { drawerState.close() }
-                        },
-                    )
+                LazyColumn(
+                    modifier = Modifier.padding(vertical = MoneySpacing.lg),
+                    contentPadding = PaddingValues(bottom = MoneySpacing.xl),
+                ) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.drawer_group_goals),
+                            style = moneySubheadingStyle(),
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.xl,
+                                vertical = MoneySpacing.sm,
+                            ),
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.goal_add_title),
+                            icon = Icons.Outlined.Flag,
+                            onClick = {
+                                onAddGoal()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.goal_hub_open),
+                            icon = Icons.Outlined.Flag,
+                            onClick = {
+                                onOpenGoalHub()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(MoneySpacing.md))
+                        Text(
+                            text = stringResource(R.string.drawer_group_settings),
+                            style = moneySubheadingStyle(),
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.xl,
+                                vertical = MoneySpacing.sm,
+                            ),
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.app_language_menu),
+                            icon = Icons.Outlined.Translate,
+                            onClick = {
+                                onOpenAppLanguage()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.privacy_settings_title),
+                            icon = Icons.Outlined.Lock,
+                            onClick = {
+                                onOpenPrivacySettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.autopilot_settings_title),
+                            icon = Icons.Outlined.AutoMode,
+                            onClick = {
+                                onOpenAutopilotSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.calendar_settings_title),
+                            icon = Icons.Outlined.CalendarMonth,
+                            onClick = {
+                                onOpenCalendarSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(MoneySpacing.md))
+                        Text(
+                            text = stringResource(R.string.drawer_group_tools),
+                            style = moneySubheadingStyle(),
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.xl,
+                                vertical = MoneySpacing.sm,
+                            ),
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.income_ideas_title),
+                            icon = Icons.Outlined.Lightbulb,
+                            onClick = {
+                                onOpenIncomeIdeas()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.voice_settings_menu),
+                            icon = Icons.Outlined.Mic,
+                            onClick = {
+                                onOpenVoiceSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
                 }
             }
         },
@@ -1048,7 +1142,10 @@ private fun PhoneHomeLayout(
                         } else {
                             stringResource(R.string.home_greeting_simple, greetingName)
                         },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(
+                            horizontal = MoneySpacing.lg,
+                            vertical = MoneySpacing.sm,
+                        ),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = GoldPrimary,
@@ -1060,22 +1157,31 @@ private fun PhoneHomeLayout(
                         goalMetrics = goalMetrics,
                         debtMetrics = debtMetrics,
                         onOwesMeClick = {
+                            showDebtsSection = true
                             onTabSelected(HomeTab.Debts.ordinal)
                             onDebtTabChange(DebtTab.OwesMe)
                         },
                         onIOweClick = {
+                            showDebtsSection = true
                             onTabSelected(HomeTab.Debts.ordinal)
                             onDebtTabChange(DebtTab.IOwe)
                         },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(
+                            horizontal = MoneySpacing.lg,
+                            vertical = MoneySpacing.sm,
+                        ),
                     )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(MoneySpacing.sm))
                 }
 
                 item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                            .padding(horizontal = MoneySpacing.lg),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                     ) {
@@ -1084,13 +1190,8 @@ private fun PhoneHomeLayout(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
-                        Row {
-                            TextButton(onClick = onOpenGoalHub) {
-                                Text(stringResource(R.string.goal_hub_open))
-                            }
-                            TextButton(onClick = onAddGoal) {
-                                Text(stringResource(R.string.goal_add_title))
-                            }
+                        TextButton(onClick = onOpenGoalHub) {
+                            Text(stringResource(R.string.goal_hub_open))
                         }
                     }
                 }
@@ -1100,13 +1201,23 @@ private fun PhoneHomeLayout(
                         EmptyStateMessage(
                             title = stringResource(R.string.empty_goals_title),
                             hint = stringResource(R.string.empty_goals_hint),
+                            actionLabel = stringResource(R.string.empty_goals_action),
+                            onAction = onAddGoal,
+                            icon = Icons.Outlined.Flag,
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.lg,
+                                vertical = MoneySpacing.sm,
+                            ),
                         )
                     }
                 } else {
                     items(goals, key = { "goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteGoal(goal) },
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.lg,
+                                vertical = MoneySpacing.sm,
+                            ),
                         ) {
                             GoalListItem(
                                 goal = goal,
@@ -1124,6 +1235,44 @@ private fun PhoneHomeLayout(
                 }
 
                 item {
+                    Spacer(modifier = Modifier.height(MoneySpacing.sectionGap))
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDebtsSection = !showDebtsSection }
+                            .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.dashboard_debts_section),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.dashboard_debts_summary,
+                                    activeDebtCount,
+                                    transactionCount,
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Icon(
+                            imageVector = if (showDebtsSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = GoldPrimary,
+                        )
+                    }
+                }
+
+                if (showDebtsSection) {
+                item {
                     TabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = CreamBackground,
@@ -1132,7 +1281,7 @@ private fun PhoneHomeLayout(
                             if (selectedTab < tabPositions.size) {
                                 TabRowDefaults.SecondaryIndicator(
                                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = GoldPrimary,
                                     height = 3.dp,
                                 )
                             }
@@ -1140,14 +1289,26 @@ private fun PhoneHomeLayout(
                         divider = {},
                     ) {
                         HomeTab.entries.forEachIndexed { index, tab ->
+                            val selected = selectedTab == index
                             Tab(
-                                selected = selectedTab == index,
+                                selected = selected,
                                 onClick = { onTabSelected(index) },
+                                modifier = Modifier.then(
+                                    if (selected) {
+                                        Modifier.background(
+                                            StatusActiveBg,
+                                            MaterialTheme.shapes.small,
+                                        )
+                                    } else {
+                                        Modifier
+                                    },
+                                ),
                                 text = {
                                     Text(
                                         text = stringResource(tab.titleRes),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (selected) GoldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 },
                             )
@@ -1256,6 +1417,12 @@ private fun PhoneHomeLayout(
                                     EmptyStateMessage(
                                         title = emptyDebtorsTitle(debtorFilter),
                                         hint = emptyDebtorsHint(debtorFilter),
+                                        actionLabel = stringResource(R.string.empty_debtors_action),
+                                        onAction = onAddDebt,
+                                        modifier = Modifier.padding(
+                                            horizontal = MoneySpacing.lg,
+                                            vertical = MoneySpacing.sm,
+                                        ),
                                     )
                                 }
                             } else {
@@ -1305,6 +1472,12 @@ private fun PhoneHomeLayout(
                                 EmptyStateMessage(
                                     title = stringResource(R.string.empty_budget),
                                     hint = stringResource(R.string.empty_budget_hint),
+                                    actionLabel = stringResource(R.string.empty_budget_action),
+                                    onAction = onQuickAdd,
+                                    modifier = Modifier.padding(
+                                        horizontal = MoneySpacing.lg,
+                                        vertical = MoneySpacing.sm,
+                                    ),
                                 )
                             }
                         } else {
@@ -1381,9 +1554,30 @@ private fun PhoneHomeLayout(
                         }
                     }
                 }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun SettingsDrawerItem(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+) {
+    NavigationDrawerItem(
+        label = { Text(label) },
+        selected = false,
+        onClick = onClick,
+        icon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+            )
+        },
+        modifier = Modifier.padding(horizontal = MoneySpacing.md),
+    )
 }
 
 @Composable

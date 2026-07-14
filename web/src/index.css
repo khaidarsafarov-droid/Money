@@ -6,7 +6,7 @@
   --color-milk-bg: #fafaf9;
   --color-milk-surface: #e8e6e3;
   --color-milk-text: #1c1917;
-  --color-milk-muted: #78716c;
+  --color-milk-muted: #57534e;
   --color-milk-accent: #57534e;
   --color-milk-accent-dark: #44403c;
   --color-milk-glass: #ffffff;
@@ -36,7 +36,7 @@
   }
 
   .pill-btn {
-    @apply rounded-md px-4 py-2 text-sm font-medium transition-colors duration-150;
+    @apply min-h-11 rounded-md px-4 py-2.5 text-sm font-medium transition-colors duration-150 active:scale-[0.98];
   }
 
   .pill-btn-primary {
@@ -52,7 +52,23 @@
   }
 
   .balance-card {
-    @apply rounded-lg border border-milk-surface bg-white p-4;
+    @apply rounded-lg border border-milk-surface bg-white p-5;
+  }
+
+  .text-display {
+    @apply text-2xl font-bold tracking-tight text-milk-text;
+  }
+
+  .text-heading {
+    @apply text-lg font-semibold text-milk-text;
+  }
+
+  .text-subheading {
+    @apply text-sm font-medium text-milk-muted;
+  }
+
+  .text-body {
+    @apply text-sm text-milk-text;
   }
 
   .goal-card-active {

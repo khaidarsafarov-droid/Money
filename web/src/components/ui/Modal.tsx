@@ -34,7 +34,7 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
           <button
             type="button"
             aria-label="Закрыть"
-            className="absolute inset-0 bg-milk-text/10"
+            className="absolute inset-0 bg-milk-text/40 backdrop-blur-[1px]"
             onClick={onClose}
           />
           <motion.div

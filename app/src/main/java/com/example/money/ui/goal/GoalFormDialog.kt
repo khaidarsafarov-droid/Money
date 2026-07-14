@@ -6,12 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -26,6 +24,7 @@ import com.example.money.R
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.DatePickerField
+import com.example.money.ui.components.MoneyDialog
 import com.example.money.ui.components.MoneyTextField
 import com.example.money.ui.util.InputValidators
 import java.util.Calendar
@@ -73,116 +72,102 @@ fun GoalFormDialog(
     var nameError by remember { mutableStateOf<String?>(null) }
     var targetError by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                if (isEdit) {
-                    stringResource(R.string.goal_edit_title, existingGoal!!.name)
-                } else {
-                    stringResource(R.string.goal_add_title)
-                },
+    MoneyDialog(
+        title = if (isEdit) {
+            stringResource(R.string.goal_edit_title, existingGoal!!.name)
+        } else {
+            stringResource(R.string.goal_add_title)
+        },
+        onDismiss = onDismiss,
+        confirmLabel = if (isEdit) {
+            stringResource(R.string.action_save)
+        } else {
+            stringResource(R.string.goal_add_confirm)
+        },
+        onConfirm = {
+            nameError = InputValidators.validateGoalPurpose(name)
+            targetError = InputValidators.validateTargetAmount(targetText)
+
+            val target = InputValidators.parseAmount(targetText) ?: return@MoneyDialog
+
+            if (nameError != null || targetError != null) return@MoneyDialog
+
+            onConfirm(
+                name.trim(),
+                target,
+                if (isEdit) MoneyMath.fromCents(existingGoal!!.currentAmountCents) else 0.0,
+                deadlineMillis.takeIf { hasDeadline },
             )
         },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = {
+                    name = it
+                    nameError = null
+                },
+                label = { Text(stringResource(R.string.goal_name_label)) },
+                placeholder = { Text(stringResource(R.string.goal_name_hint)) },
+                isError = nameError != null,
+                supportingText = nameError?.let { { Text(it) } },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            MoneyTextField(
+                value = targetText,
+                onValueChange = {
+                    targetText = it
+                    targetError = null
+                },
+                label = stringResource(R.string.goal_target_label),
+                isError = targetError != null,
+                supportingText = targetError,
+            )
+            if (isEdit) {
+                Text(
+                    text = stringResource(
+                        R.string.goal_current_readonly,
+                        formatAmountForInput(MoneyMath.fromCents(existingGoal!!.currentAmountCents)),
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.goal_starts_at_zero_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        nameError = null
-                    },
-                    label = { Text(stringResource(R.string.goal_name_label)) },
-                    placeholder = { Text(stringResource(R.string.goal_name_hint)) },
-                    isError = nameError != null,
-                    supportingText = nameError?.let { { Text(it) } },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                MoneyTextField(
-                    value = targetText,
-                    onValueChange = {
-                        targetText = it
-                        targetError = null
-                    },
-                    label = stringResource(R.string.goal_target_label),
-                    isError = targetError != null,
-                    supportingText = targetError,
-                )
-                if (isEdit) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = stringResource(R.string.goal_deadline_toggle))
                     Text(
-                        text = stringResource(
-                            R.string.goal_current_readonly,
-                            formatAmountForInput(MoneyMath.fromCents(existingGoal!!.currentAmountCents)),
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.goal_starts_at_zero_hint),
+                        text = stringResource(R.string.goal_deadline_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(text = stringResource(R.string.goal_deadline_toggle))
-                        Text(
-                            text = stringResource(R.string.goal_deadline_hint),
-                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Switch(
-                        checked = hasDeadline,
-                        onCheckedChange = { hasDeadline = it },
-                    )
-                }
-                if (hasDeadline) {
-                    DatePickerField(
-                        label = stringResource(R.string.goal_deadline_label),
-                        selectedDateMillis = deadlineMillis,
-                        onDateSelected = { deadlineMillis = it },
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    nameError = InputValidators.validateGoalPurpose(name)
-                    targetError = InputValidators.validateTargetAmount(targetText)
-
-                    val target = InputValidators.parseAmount(targetText) ?: return@TextButton
-
-                    if (nameError != null || targetError != null) return@TextButton
-
-                    onConfirm(
-                        name.trim(),
-                        target,
-                        if (isEdit) MoneyMath.fromCents(existingGoal!!.currentAmountCents) else 0.0,
-                        deadlineMillis.takeIf { hasDeadline },
-                    )
-                },
-            ) {
-                Text(
-                    if (isEdit) stringResource(R.string.action_save)
-                    else stringResource(R.string.goal_add_confirm),
+                Switch(
+                    checked = hasDeadline,
+                    onCheckedChange = { hasDeadline = it },
                 )
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
+            if (hasDeadline) {
+                DatePickerField(
+                    label = stringResource(R.string.goal_deadline_label),
+                    selectedDateMillis = deadlineMillis,
+                    onDateSelected = { deadlineMillis = it },
+                )
             }
-        },
-    )
+        }
+    }
 }

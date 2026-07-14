@@ -27,10 +27,10 @@ export function StatusFilterTabs({ value, onChange }: StatusFilterTabsProps) {
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(filter.id)}
-            className={`border-b-2 px-3 py-2 text-sm transition-colors ${
+            className={`border-b-2 px-3 py-2.5 text-sm transition-colors ${
               selected
-                ? "border-milk-text font-medium text-milk-text"
-                : "border-transparent text-milk-muted hover:text-milk-text"
+                ? "border-milk-gold bg-milk-bg font-semibold text-milk-gold"
+                : "border-transparent text-milk-muted hover:bg-milk-bg hover:text-milk-text"
             }`}
           >
             {filter.label}

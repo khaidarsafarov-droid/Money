@@ -34,6 +34,8 @@ interface FinanceCardShellProps {
   onDelete?: (item: FinancialItem) => void;
   action?: ReactNode;
   meta?: ReactNode;
+  menu?: ReactNode;
+  primaryAmountCents?: number;
 }
 
 export function FinanceCardShell({
@@ -47,8 +49,11 @@ export function FinanceCardShell({
   onDelete,
   action,
   meta,
+  menu,
+  primaryAmountCents,
 }: FinanceCardShellProps) {
   const remaining = remainingAmount(item);
+  const displayAmount = primaryAmountCents ?? remaining;
   const progress = item.type === "GOAL" ? displayProgressFraction(item) : progressFraction(item);
   const progressPercent = progressPercentRaw(item);
   const overAchieved = item.type === "GOAL" && isGoalOverAchieved(item);
@@ -59,33 +64,37 @@ export function FinanceCardShell({
       className={`space-y-3 ${overdue ? "border-milk-error/40" : ""} ${overAchieved ? "border-milk-gold/40" : ""} ${item.type === "GOAL" && item.status !== "COMPLETED" ? "goal-card-active" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-0.5">
-          <div className="flex flex-wrap items-center gap-2 text-milk-muted">
-            <AppIcon icon={typeIcon} size={14} />
-            <span className="text-xs">{typeLabel}</span>
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <AppIcon icon={typeIcon} size={14} className="text-milk-muted" />
+            <span className="text-subheading">{typeLabel}</span>
             <span
-              className={`text-xs ${
+              className={`rounded px-2 py-0.5 text-xs font-medium ${
                 item.status === "COMPLETED"
-                  ? "text-milk-success"
+                  ? "bg-finance-positive-soft text-milk-success"
                   : overdue
-                    ? "text-milk-error"
-                    : "text-milk-muted"
+                    ? "bg-finance-negative-soft text-milk-error"
+                    : "bg-milk-bg text-milk-muted"
               }`}
             >
-              · {overdue ? "Просрочен" : statusLabels[item.status]}
+              {overdue ? "Просрочен" : statusLabels[item.status]}
             </span>
           </div>
-          <h3 className="truncate text-base font-medium text-milk-text">{item.name}</h3>
+          <h3 className="truncate text-heading">{item.name}</h3>
+          <p className="text-display tabular-nums">
+            {formatMoney(displayAmount, { hidden: hideAmounts })}
+          </p>
           {meta}
         </div>
 
         <div className="flex shrink-0 items-start gap-1">
-          <span className="text-sm tabular-nums text-milk-muted">{progressPercent}%</span>
+          <span className="text-sm font-semibold tabular-nums text-milk-muted">{progressPercent}%</span>
+          {menu}
           {onDelete && (
             <button
               type="button"
               onClick={() => onDelete(item)}
-              className="rounded p-1 text-milk-muted transition hover:bg-milk-bg hover:text-milk-error"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-milk-muted transition hover:bg-milk-bg hover:text-milk-error"
               aria-label="Удалить"
             >
               <AppIcon icon={Trash2} size={14} />

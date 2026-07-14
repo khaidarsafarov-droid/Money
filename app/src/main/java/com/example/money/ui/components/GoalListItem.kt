@@ -2,21 +2,30 @@ package com.example.money.ui.components
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,7 +36,10 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.OverdueRed
+import com.example.money.ui.theme.moneyCaptionStyle
+import com.example.money.ui.theme.moneyDisplayStyle
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -39,12 +51,16 @@ fun GoalListItem(
     onExpense: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val isDeadlinePassed = goal.deadlineMillis != null &&
+        GoalProgress.isDeadlinePassed(goal.deadlineMillis) &&
+        !goal.isCompleted
     val progressColor = when {
         goal.isOverAchieved -> GoldPrimary
         goal.isCompleted -> MaterialTheme.colorScheme.primary
-        goal.deadlineMillis != null && GoalProgress.isDeadlinePassed(goal.deadlineMillis) -> OverdueRed
+        isDeadlinePassed -> OverdueRed
         else -> GoldPrimary
     }
+    var showMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier
@@ -59,41 +75,136 @@ fun GoalListItem(
         colors = CardDefaults.cardColors(containerColor = CreamSurface),
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (!goal.isCompleted) 6.dp else 1.dp,
+            defaultElevation = if (!goal.isCompleted) 2.dp else 1.dp,
         ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(MoneySpacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
         ) {
-            Text(
-                text = stringResource(R.string.goal_purpose_card_label),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = goal.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        GoalStatusBadge(
+                            label = when {
+                                goal.isCompleted -> stringResource(R.string.goal_status_completed)
+                                isDeadlinePassed -> stringResource(R.string.goal_deadline_passed_short)
+                                else -> stringResource(R.string.goal_status_active)
+                            },
+                            isCompleted = goal.isCompleted,
+                            isOverdue = isDeadlinePassed,
+                        )
+                    }
 
-            Text(
-                text = goal.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
+                    Text(
+                        text = if (goal.isOverAchieved) {
+                            Formatters.currencyFromCents(goal.currentAmountCents)
+                        } else {
+                            Formatters.currencyFromCents(goal.currentAmountCents)
+                        },
+                        style = moneyDisplayStyle(),
+                    )
 
-            goal.deadlineMillis?.let { deadline ->
-                Text(
-                    text = stringResource(
-                        R.string.goal_deadline_date,
-                        Formatters.shortDate(deadline),
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                    Text(
+                        text = if (goal.isOverAchieved) {
+                            stringResource(
+                                R.string.goal_over_achieved,
+                                Formatters.currencyFromCents(goal.surplusAmountCents),
+                            )
+                        } else {
+                            stringResource(
+                                R.string.goal_remaining,
+                                Formatters.currencyFromCents(goal.remainingAmountCents),
+                                Formatters.currencyFromCents(goal.targetAmountCents),
+                            )
+                        },
+                        style = moneyCaptionStyle(),
+                    )
+
+                    goal.deadlineMillis?.let { deadline ->
+                        Text(
+                            text = stringResource(
+                                R.string.goal_deadline_date,
+                                Formatters.shortDate(deadline),
+                            ),
+                            style = moneyCaptionStyle(),
+                        )
+                    }
+                }
+
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(MoneySpacing.minTouchTarget),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.action_more),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_edit)) },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Edit, contentDescription = null)
+                            },
+                        )
+                        if (!goal.isCompleted && onTransfer != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.goal_action_transfer)) },
+                                onClick = {
+                                    showMenu = false
+                                    onTransfer()
+                                },
+                            )
+                        }
+                        if (onExpense != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.goal_action_expense)) },
+                                onClick = {
+                                    showMenu = false
+                                    onExpense()
+                                },
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_delete)) },
+                            onClick = {
+                                showMenu = false
+                                onDelete()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Delete, contentDescription = null)
+                            },
+                        )
+                    }
+                }
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(MoneySpacing.md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 LinearProgressIndicator(
@@ -110,106 +221,27 @@ fun GoalListItem(
                 )
             }
 
-            if (goal.isOverAchieved) {
-                Text(
-                    text = stringResource(
-                        R.string.goal_over_achieved,
-                        Formatters.currencyFromCents(goal.surplusAmountCents),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = GoldPrimary,
-                )
-            } else {
-                Text(
-                    text = stringResource(
-                        R.string.goal_remaining,
-                        Formatters.currencyFromCents(goal.remainingAmountCents),
-                        Formatters.currencyFromCents(goal.targetAmountCents),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-
-            goal.dailyGoalCents?.let { dailyCents ->
-                Text(
-                    text = stringResource(
-                        R.string.goal_daily_target,
-                        Formatters.currencyFromCents(dailyCents),
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            goal.deadlineMillis?.let { deadline ->
-                if (GoalProgress.isDeadlinePassed(deadline) && !goal.isCompleted) {
-                    Text(
-                        text = stringResource(R.string.goal_deadline_passed),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        color = OverdueRed,
-                    )
-                }
-            }
-
-            Text(
-                text = stringResource(
-                    R.string.goal_saved_progress,
-                    Formatters.currencyFromCents(goal.currentAmountCents),
-                    Formatters.currencyFromCents(goal.targetAmountCents),
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (!goal.isCompleted && onTransfer != null) {
-                    OutlinedButton(
-                        onClick = onTransfer,
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Text(stringResource(R.string.goal_action_transfer))
-                    }
-                }
-                if (onExpense != null) {
-                    OutlinedButton(
-                        onClick = onExpense,
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Text(stringResource(R.string.goal_action_expense))
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedButton(
-                    onClick = onEdit,
-                    modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.small,
+            if (!goal.isCompleted) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
                 ) {
-                    Icon(Icons.Outlined.Edit, contentDescription = null)
-                    Text(
-                        text = stringResource(R.string.action_edit),
-                        modifier = Modifier.padding(start = 4.dp),
-                    )
-                }
-                OutlinedButton(
-                    onClick = onDelete,
-                    shape = MaterialTheme.shapes.small,
-                ) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.action_delete),
-                    )
+                    if (onTransfer != null) {
+                        MoneyButton(
+                            text = stringResource(R.string.goal_action_transfer),
+                            onClick = onTransfer,
+                            priority = MoneyButtonPriority.Primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (onExpense != null) {
+                        MoneyButton(
+                            text = stringResource(R.string.goal_action_expense),
+                            onClick = onExpense,
+                            priority = MoneyButtonPriority.Secondary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
         }

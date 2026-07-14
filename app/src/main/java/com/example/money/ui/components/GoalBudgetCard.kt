@@ -10,9 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.ui.theme.CardBorder
+import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 
@@ -66,24 +65,22 @@ fun GoalBudgetCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(MoneySpacing.md),
             ) {
-                OutlinedButton(
+                MoneyButton(
+                    text = stringResource(R.string.brother_add_transfer),
                     onClick = onNewTransfer,
+                    priority = MoneyButtonPriority.Primary,
+                    icon = Icons.Default.Add,
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Text(stringResource(R.string.brother_add_transfer), modifier = Modifier.padding(start = 4.dp))
-                }
-                OutlinedButton(
+                )
+                MoneyButton(
+                    text = stringResource(R.string.brother_add_expense),
                     onClick = onNewExpense,
+                    priority = MoneyButtonPriority.Secondary,
+                    icon = Icons.Default.Add,
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Text(stringResource(R.string.brother_add_expense), modifier = Modifier.padding(start = 4.dp))
-                }
+                )
             }
         }
     }

@@ -155,6 +155,8 @@
     <string name="debtor_remaining">Осталось: %1$s</string>
     <string name="debtor_paid_progress">Внесено %1$s из %2$s</string>
     <string name="action_remind">Напомнить</string>
+    <string name="action_more">Ещё</string>
+    <string name="action_close">Закрыть</string>
     <string name="debt_remind_subject">Напоминание о долге — %1$s</string>
     <string name="debt_remind_chooser_title">Отправить напоминание</string>
     <string name="debt_remind_message">Здравствуйте, %1$s! Напоминаю о возврате %2$s. Срок: %3$s. Спасибо!</string>
@@ -181,6 +183,20 @@
     <string name="msg_insufficient_funds">Недостаточно средств на общем остатке.</string>
     <string name="msg_goal_transfer_added">Перевод в цель выполнен.</string>
     <string name="global_balance_available">Доступно: %1$s</string>
+    <string name="global_balance_label">Доступный остаток</string>
+    <string name="dashboard_see_more">Подробнее</string>
+    <string name="dashboard_see_less">Свернуть</string>
+    <string name="drawer_group_goals">Цели</string>
+    <string name="drawer_group_settings">Настройки</string>
+    <string name="drawer_group_tools">Инструменты</string>
+    <string name="goal_status_active">Активна</string>
+    <string name="goal_status_completed">Выполнена</string>
+    <string name="goal_deadline_passed_short">Просрочена</string>
+    <string name="empty_goals_action">Создать цель</string>
+    <string name="empty_debtors_action">Добавить долг</string>
+    <string name="empty_budget_action">Добавить операцию</string>
+    <string name="dashboard_debts_section">Долги и операции</string>
+    <string name="dashboard_debts_summary">%1$d долгов · %2$d операций</string>
     <string name="global_balance_available_hint">Доходы − расходы: %1$s (без учёта переводов в цели)</string>
     <string name="global_balance_income_minus_expenses">Доходы − расходы</string>
     <string name="global_balance_accumulated_label">В целях</string>
@@ -343,7 +359,6 @@
     <string name="celebration_postcard_body">Ещё один шаг к финансовой свободе — без цифр, только победа.</string>
     <string name="celebration_share">Поделиться</string>
     <string name="celebration_share_text">Я закрыл(а) долг! Ещё один шаг к финансовой свободе 🎉</string>
-    <string name="action_close">Закрыть</string>
 
     <!-- Weekly check-in -->
     <string name="weekly_checkin_title">Еженедельный чек-ин</string>

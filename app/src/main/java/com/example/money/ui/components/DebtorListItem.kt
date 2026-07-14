@@ -1,7 +1,7 @@
 package com.example.money.ui.components
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,21 +11,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
@@ -41,11 +46,12 @@ import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.initials
 import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.OverdueRed
-import com.example.money.ui.theme.UrgentYellowBg
-import com.example.money.ui.theme.UrgentYellowText
+import com.example.money.ui.theme.moneyCaptionStyle
+import com.example.money.ui.theme.moneyDisplayStyle
+import com.example.money.ui.theme.moneySubheadingStyle
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -65,19 +71,7 @@ fun DebtorListItem(
     val dueStatus = debtor.dueStatus()
     val isOverdue = dueStatus == DebtDueStatus.OVERDUE
     val showRemind = debtor.debtType == DebtType.CREDITOR && !debtor.isPaid
-    val milestones = com.example.money.domain.util.DebtFreedomEngine.computeMilestones(
-        currentCents = debtor.currentAmountCents,
-        targetCents = debtor.targetAmountCents,
-    )
-    val accelerateCents = com.example.money.domain.util.DebtFreedomEngine.suggestAcceleratePaymentCents(
-        remainingCents = debtor.remainingAmountCents,
-        targetCents = debtor.targetAmountCents,
-        currentCents = debtor.currentAmountCents,
-    )
-    val paymentsToClose = com.example.money.domain.util.DebtFreedomEngine.estimatePaymentsToClose(
-        remainingCents = debtor.remainingAmountCents,
-        paymentCents = accelerateCents,
-    )
+    var showMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier
@@ -96,69 +90,150 @@ fun DebtorListItem(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(MoneySpacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(MoneySpacing.md),
             ) {
                 DebtorAvatar(name = debtor.name)
 
                 Column(modifier = Modifier.weight(1f)) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = debtor.name,
                             style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
                         )
-                        DebtDisplayStatusChip(dueStatus = dueStatus)
-                        if (debtor.isHighPriorityDebt && !debtor.isPaid) {
-                            Text(
-                                text = stringResource(R.string.loan_priority_badge),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = OverdueRed,
-                                modifier = Modifier
-                                    .background(OverdueRed.copy(alpha = 0.1f), MaterialTheme.shapes.small)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                        DebtStatusBadge(
+                            label = when (dueStatus) {
+                                DebtDueStatus.PAID -> stringResource(R.string.debtor_paid)
+                                DebtDueStatus.OVERDUE -> stringResource(R.string.debtor_overdue)
+                                else -> stringResource(R.string.debt_status_active)
+                            },
+                            status = dueStatus.toVisual(),
+                        )
+                    }
+
+                    Text(
+                        text = Formatters.currencyFromCents(
+                            if (debtor.isPaid) debtor.targetAmountCents else debtor.remainingAmountCents,
+                            debtor.currency,
+                            hide = hideAmounts,
+                        ),
+                        style = moneyDisplayStyle(),
+                    )
+
+                    DebtDueStatusLabel(status = dueStatus, dateDue = debtor.dateDue)
+                }
+
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.size(MoneySpacing.minTouchTarget),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.action_more),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                    ) {
+                        if (!debtor.isPaid) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_edit)) },
+                                onClick = {
+                                    showMenu = false
+                                    onEdit()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                                },
                             )
-                        }
-                        if (!debtor.isPaid && onAccelerate != null) {
-                            TextButton(
-                                onClick = onAccelerate,
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.debt_accelerate),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = GoldPrimary,
+                            if (showRemind) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.action_remind)) },
+                                    onClick = {
+                                        showMenu = false
+                                        onRemind()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Outlined.Share, contentDescription = null)
+                                    },
                                 )
                             }
+                            if (onViewContactHistory != null) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.contact_history_action)) },
+                                    onClick = {
+                                        showMenu = false
+                                        onViewContactHistory()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Outlined.History, contentDescription = null)
+                                    },
+                                )
+                            }
+                            if (onCalendar != null) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            stringResource(
+                                                if (calendarSynced) {
+                                                    R.string.calendar_action_update
+                                                } else {
+                                                    R.string.calendar_action_add
+                                                },
+                                            ),
+                                        )
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        onCalendar()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
+                                    },
+                                )
+                            }
+                            if (onAccelerate != null) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.debt_accelerate)) },
+                                    onClick = {
+                                        showMenu = false
+                                        onAccelerate()
+                                    },
+                                )
+                            }
+                        } else {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_edit)) },
+                                onClick = {
+                                    showMenu = false
+                                    onEdit()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                                },
+                            )
                         }
-                    }
-                    Text(
-                        text = stringResource(
-                            R.string.debtor_target_amount,
-                            Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency, hide = hideAmounts),
-                        ),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = stringResource(
-                            if (debtor.debtType == DebtType.CREDITOR) {
-                                R.string.debtor_given_date
-                            } else {
-                                R.string.debt_received_date
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_delete)) },
+                            onClick = {
+                                showMenu = false
+                                onDelete()
                             },
-                            Formatters.shortDate(debtor.dateGiven),
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    DebtDueStatusLabel(status = dueStatus, dateDue = debtor.dateDue)
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Delete, contentDescription = null)
+                            },
+                        )
+                    }
                 }
             }
 
@@ -171,218 +246,29 @@ fun DebtorListItem(
                 )
                 Text(
                     text = stringResource(
-                        R.string.debt_journey_progress,
-                        milestones.progressPercent,
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                milestones.nextMilestone?.let { milestone ->
-                    Text(
-                        text = stringResource(
-                            R.string.debt_next_milestone,
-                            milestone.percent,
-                            Formatters.currencyFromCents(milestone.centsToReach, debtor.currency, hide = hideAmounts),
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GoldPrimary,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-                if (com.example.money.domain.util.DebtFreedomEngine.isSmallDebt(debtor.remainingAmountCents)) {
-                    Text(
-                        text = stringResource(
-                            R.string.debt_small_win_hint,
-                            paymentsToClose,
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = FinancePositive,
-                    )
-                }
-                Text(
-                    text = stringResource(
-                        R.string.debtor_remaining,
-                        Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency, hide = hideAmounts),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
-                    text = stringResource(
                         R.string.debtor_paid_progress,
                         Formatters.currencyFromCents(debtor.currentAmountCents, debtor.currency, hide = hideAmounts),
                         Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency, hide = hideAmounts),
                     ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = moneyCaptionStyle(),
                 )
-            }
 
-            if (!debtor.isPaid) {
-                Column(
+                MoneyButton(
+                    text = stringResource(
+                        if (debtor.debtType == DebtType.CREDITOR) {
+                            R.string.action_add_payment
+                        } else {
+                            R.string.action_make_payment
+                        },
+                    ),
+                    onClick = onAddPayment,
+                    priority = MoneyButtonPriority.Primary,
+                    icon = Icons.Default.Payments,
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedButton(
-                        onClick = onAddPayment,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Payments,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = stringResource(
-                                if (debtor.debtType == DebtType.CREDITOR) {
-                                    R.string.action_add_payment
-                                } else {
-                                    R.string.action_make_payment
-                                },
-                            ),
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(start = 8.dp),
-                            maxLines = 1,
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                    OutlinedButton(
-                        onClick = onEdit,
-                        shape = MaterialTheme.shapes.small,
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                            horizontal = 8.dp,
-                            vertical = 4.dp,
-                        ),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = stringResource(R.string.action_edit),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                    if (showRemind) {
-                        OutlinedButton(
-                            onClick = onRemind,
-                            shape = MaterialTheme.shapes.small,
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                horizontal = 8.dp,
-                                vertical = 4.dp,
-                            ),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Share,
-                                contentDescription = stringResource(R.string.action_remind),
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                    if (onViewContactHistory != null && !debtor.contactLookupKey.isNullOrBlank()) {
-                        OutlinedButton(
-                            onClick = onViewContactHistory,
-                            shape = MaterialTheme.shapes.small,
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                horizontal = 8.dp,
-                                vertical = 4.dp,
-                            ),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.History,
-                                contentDescription = stringResource(R.string.contact_history_action),
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                    if (onCalendar != null) {
-                        OutlinedButton(
-                            onClick = onCalendar,
-                            shape = MaterialTheme.shapes.small,
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                horizontal = 8.dp,
-                                vertical = 4.dp,
-                            ),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.CalendarMonth,
-                                contentDescription = stringResource(
-                                    if (calendarSynced) {
-                                        R.string.calendar_action_update
-                                    } else {
-                                        R.string.calendar_action_add
-                                    },
-                                ),
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                    OutlinedButton(
-                        onClick = onDelete,
-                        shape = MaterialTheme.shapes.small,
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                            horizontal = 8.dp,
-                            vertical = 4.dp,
-                        ),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = stringResource(R.string.action_delete),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                    }
-                }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedButton(
-                        onClick = onEdit,
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = stringResource(R.string.action_edit),
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Text(
-                            text = stringResource(R.string.action_edit),
-                            modifier = Modifier.padding(start = 4.dp),
-                        )
-                    }
-                    OutlinedButton(
-                        onClick = onDelete,
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = stringResource(R.string.action_delete),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
+                )
             }
         }
     }
-}
-
-@Composable
-private fun DebtDisplayStatusChip(dueStatus: DebtDueStatus) {
-    val (label, color) = when (dueStatus) {
-        DebtDueStatus.PAID -> stringResource(R.string.debtor_paid) to GoldPrimary
-        DebtDueStatus.OVERDUE -> stringResource(R.string.debtor_overdue) to OverdueRed
-        else -> stringResource(R.string.debt_status_active) to MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    Text(
-        text = label,
-        color = color,
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.SemiBold,
-    )
 }
 
 @Composable
@@ -390,7 +276,7 @@ private fun DebtorAvatar(name: String) {
     val avatarColor = avatarColorForName(name)
     Box(
         modifier = Modifier
-            .size(52.dp)
+            .size(48.dp)
             .clip(CircleShape)
             .background(avatarColor),
         contentAlignment = Alignment.Center,
@@ -399,7 +285,7 @@ private fun DebtorAvatar(name: String) {
             text = name.initials(),
             color = Color.White,
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
+            style = MaterialTheme.typography.titleSmall,
         )
     }
 }
@@ -411,36 +297,29 @@ private fun DebtDueStatusLabel(status: DebtDueStatus, dateDue: Long) {
             Text(
                 text = stringResource(R.string.debtor_due_date, Formatters.shortDate(dateDue)),
                 color = OverdueRed,
-                style = MaterialTheme.typography.bodySmall,
+                style = moneySubheadingStyle(),
                 fontWeight = FontWeight.SemiBold,
             )
         }
         DebtDueStatus.URGENT -> {
-            Box(
-                modifier = Modifier
-                    .background(UrgentYellowBg, MaterialTheme.shapes.small)
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.debtor_due_short, Formatters.shortDayMonth(dateDue)),
-                    color = UrgentYellowText,
-                    style = MaterialTheme.typography.labelMedium,
-                )
-            }
+            Text(
+                text = stringResource(R.string.debtor_due_short, Formatters.shortDayMonth(dateDue)),
+                color = OverdueRed,
+                style = moneyCaptionStyle(),
+                fontWeight = FontWeight.Medium,
+            )
         }
         DebtDueStatus.PAID -> {
             Text(
                 text = stringResource(R.string.debtor_paid),
+                style = moneyCaptionStyle(),
                 color = GoldPrimary,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium,
             )
         }
         DebtDueStatus.NORMAL -> {
             Text(
                 text = stringResource(R.string.debtor_due_date, Formatters.shortDate(dateDue)),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = moneyCaptionStyle(),
             )
         }
     }

@@ -2,14 +2,20 @@ package com.example.money.ui.debtors
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.MoneySpacing
+import com.example.money.ui.theme.StatusActiveBg
 
 @Composable
 fun DebtTabRow(
@@ -17,15 +23,35 @@ fun DebtTabRow(
     onTabSelected: (DebtTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    FlowRow(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
     ) {
         DebtTab.entries.forEach { tab ->
+            val selected = selectedTab == tab
             FilterChip(
-                selected = selectedTab == tab,
+                selected = selected,
                 onClick = { onTabSelected(tab) },
-                label = { Text(stringResource(tab.titleRes)) },
+                label = {
+                    Text(
+                        text = stringResource(tab.titleRes),
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = StatusActiveBg,
+                    selectedLabelColor = GoldPrimary,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = selected,
+                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    selectedBorderColor = GoldPrimary,
+                ),
+                shape = RoundedCornerShape(20.dp),
             )
         }
     }
@@ -39,14 +65,25 @@ fun DebtorFilterRow(
 ) {
     FlowRow(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
     ) {
         DebtorFilter.entries.forEach { option ->
+            val selected = selectedFilter == option
             FilterChip(
-                selected = selectedFilter == option,
+                selected = selected,
                 onClick = { onFilterSelected(option) },
-                label = { Text(stringResource(option.labelRes)) },
+                label = {
+                    Text(
+                        text = stringResource(option.labelRes),
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = StatusActiveBg,
+                    selectedLabelColor = GoldPrimary,
+                ),
+                shape = RoundedCornerShape(20.dp),
             )
         }
     }
