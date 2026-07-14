@@ -606,4 +606,6 @@
     <string name="business_filter_clear">Сбросить</string>
     <string name="business_reports_coming_soon">Детальные отчёты и экспорт CSV — в следующем обновлении</string>
     <string name="business_settings_name">Название бизнеса</string>
+    <string name="business_chart_cashflow">Денежный поток</string>
+    <string name="business_chart_pnl">Прибыль и убытки</string>
 </resources>

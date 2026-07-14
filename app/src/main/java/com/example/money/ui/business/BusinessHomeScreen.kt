@@ -59,16 +59,25 @@ import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
 import com.example.money.ui.business.components.BusinessDashboardContent
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
+import com.example.money.ui.business.theme.BusinessTheme
 import com.example.money.ui.theme.GoldPrimary
-import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.util.Formatters
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BusinessHomeScreen(
+    onSwitchBranch: (FinanceBranch) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    BusinessTheme {
+        BusinessHomeScreenContent(onSwitchBranch = onSwitchBranch, modifier = modifier)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BusinessHomeScreenContent(
     onSwitchBranch: (FinanceBranch) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -89,7 +98,7 @@ fun BusinessHomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -117,7 +126,7 @@ fun BusinessHomeScreen(
                         onSwitch = onSwitchBranch,
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
         floatingActionButton = {

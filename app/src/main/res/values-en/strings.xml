@@ -373,4 +373,6 @@
     <string name="business_filter_clear">Clear</string>
     <string name="business_reports_coming_soon">Detailed reports and CSV export coming soon</string>
     <string name="business_settings_name">Business name</string>
+    <string name="business_chart_cashflow">Cashflow</string>
+    <string name="business_chart_pnl">Profit &amp; Loss</string>
 </resources>

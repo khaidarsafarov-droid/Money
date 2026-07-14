@@ -1,36 +1,38 @@
 package com.example.money.ui.business.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessProject
 import com.example.money.domain.model.business.InvoiceStatus
-import com.example.money.ui.theme.FinanceInfo
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
-import com.example.money.ui.util.Formatters
+import com.example.money.ui.business.components.cards.BusinessKpiCard
+import com.example.money.ui.business.components.charts.CashflowLineChart
+import com.example.money.ui.business.components.charts.ProfitBarChart
+import com.example.money.ui.business.components.widgets.AiInsightsWidget
+import com.example.money.ui.business.components.widgets.ClientProfitabilityWidget
+import com.example.money.ui.business.components.widgets.OverdueInvoicesWidget
+import com.example.money.ui.business.components.widgets.ProjectPerformanceWidget
+import com.example.money.ui.business.components.widgets.UpcomingPaymentsWidget
+import com.example.money.ui.business.theme.BusinessKpiType
+import com.example.money.ui.business.theme.BusinessSpacing
 
 @Composable
 fun BusinessDashboardContent(
@@ -44,13 +46,20 @@ fun BusinessDashboardContent(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(BusinessSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(BusinessSpacing.md),
     ) {
+        item {
+            Text(
+                stringResource(R.string.business_tab_dashboard),
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+
         item {
             DashboardFilterRow(
                 clients = clients,
-                projects = projects,
                 filters = filters,
                 onFiltersChange = onFiltersChange,
                 onClearFilters = onClearFilters,
@@ -58,32 +67,34 @@ fun BusinessDashboardContent(
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BusinessKpiCard(
-                    title = stringResource(R.string.business_metric_revenue),
-                    amountCents = dashboard.monthRevenueCents,
-                    accentColor = FinancePositive,
-                    changePercent = dashboard.revenueChangePercent,
-                    sparklineValues = dashboard.revenueSparkline,
-                    modifier = Modifier.weight(1f),
-                )
-                BusinessKpiCard(
-                    title = stringResource(R.string.business_metric_expenses),
-                    amountCents = dashboard.monthExpenseCents,
-                    accentColor = FinanceNegative,
-                    changePercent = dashboard.expenseChangePercent,
-                    sparklineValues = dashboard.expenseSparkline,
-                    modifier = Modifier.weight(1f),
-                )
+            AnimatedVisibility(visible = true, enter = fadeIn()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
+                    BusinessKpiCard(
+                        title = stringResource(R.string.business_metric_revenue),
+                        amountCents = dashboard.monthRevenueCents,
+                        type = BusinessKpiType.Revenue,
+                        changePercent = dashboard.revenueChangePercent,
+                        sparklineValues = dashboard.revenueSparkline,
+                        modifier = Modifier.weight(1f),
+                    )
+                    BusinessKpiCard(
+                        title = stringResource(R.string.business_metric_expenses),
+                        amountCents = dashboard.monthExpenseCents,
+                        type = BusinessKpiType.Expense,
+                        changePercent = dashboard.expenseChangePercent,
+                        sparklineValues = dashboard.expenseSparkline,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
                 BusinessKpiCard(
                     title = stringResource(R.string.business_metric_profit),
                     amountCents = dashboard.monthNetProfitCents,
-                    accentColor = FinanceInfo,
+                    type = BusinessKpiType.Profit,
                     changePercent = dashboard.profitChangePercent,
                     sparklineValues = dashboard.profitSparkline,
                     modifier = Modifier.weight(1f),
@@ -91,7 +102,7 @@ fun BusinessDashboardContent(
                 BusinessKpiCard(
                     title = stringResource(R.string.business_metric_cash_on_hand),
                     amountCents = dashboard.cashOnHandCents,
-                    accentColor = GoldPrimary,
+                    type = BusinessKpiType.Cash,
                     changePercent = dashboard.cashChangePercent,
                     sparklineValues = dashboard.cashSparkline,
                     modifier = Modifier.weight(1f),
@@ -104,6 +115,7 @@ fun BusinessDashboardContent(
                 incomeValues = dashboard.cashflowWeekly.map { it.incomeCents },
                 expenseValues = dashboard.cashflowWeekly.map { it.expenseCents },
                 labels = dashboard.cashflowWeekly.map { it.label },
+                title = stringResource(R.string.business_chart_cashflow),
             )
         }
 
@@ -111,79 +123,31 @@ fun BusinessDashboardContent(
             ProfitBarChart(
                 values = dashboard.monthlyProfit.map { it.profitCents },
                 labels = dashboard.monthlyProfit.map { it.label },
+                title = stringResource(R.string.business_chart_pnl),
             )
         }
 
-        if (dashboard.clientTable.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.business_top_clients_table)) }
-            items(dashboard.clientTable) { row ->
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                        Text(row.clientName, fontWeight = FontWeight.SemiBold)
-                        Text("${stringResource(R.string.business_col_revenue)}: ${Formatters.currencyFromCents(row.revenueCents)}")
-                        Text("${stringResource(R.string.business_col_profit)}: ${Formatters.currencyFromCents(row.profitCents)}")
-                        row.lastInvoiceStatus?.let { status ->
-                            Text("${stringResource(R.string.business_col_invoice_status)}: ${status.name}")
-                        }
-                    }
-                }
-            }
+        item {
+            ClientProfitabilityWidget(
+                title = stringResource(R.string.business_top_clients_table),
+                clients = dashboard.clientTable,
+            )
         }
 
-        if (dashboard.projectCards.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.business_project_performance)) }
-            items(dashboard.projectCards) { project ->
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(project.projectName, fontWeight = FontWeight.SemiBold)
-                        Text("${Formatters.currencyFromCents(project.actualCents)} / ${Formatters.currencyFromCents(project.budgetCents)}")
-                        Text(project.status.name, style = MaterialTheme.typography.labelSmall)
-                        LinearProgressIndicator(
-                            progress = { project.progressFraction.coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                }
-            }
+        item {
+            ProjectPerformanceWidget(projects = dashboard.projectCards)
         }
 
-        if (dashboard.overdueInvoices.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.business_overdue_invoices)) }
-            items(dashboard.overdueInvoices) { row ->
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(row.clientName, fontWeight = FontWeight.SemiBold)
-                        Text(Formatters.currencyFromCents(row.amountCents), color = FinanceNegative)
-                        Text(stringResource(R.string.business_days_overdue, row.daysOverdue))
-                    }
-                }
-            }
+        item {
+            OverdueInvoicesWidget(items = dashboard.overdueInvoices)
         }
 
-        if (dashboard.upcomingPayments.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.business_upcoming_payments)) }
-            items(dashboard.upcomingPayments) { row ->
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(row.clientName, fontWeight = FontWeight.SemiBold)
-                        Text(Formatters.currencyFromCents(row.amountCents))
-                        Text(Formatters.shortDate(row.dueDate))
-                    }
-                }
-            }
+        item {
+            UpcomingPaymentsWidget(items = dashboard.upcomingPayments)
         }
 
-        if (dashboard.insights.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.business_insights_title)) }
-            item {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        dashboard.insights.forEach { insight ->
-                            Text("• $insight", style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
+        item {
+            AiInsightsWidget(insights = dashboard.insights)
         }
     }
 }
@@ -191,14 +155,13 @@ fun BusinessDashboardContent(
 @Composable
 private fun DashboardFilterRow(
     clients: List<BusinessClient>,
-    projects: List<BusinessProject>,
     filters: BusinessDashboardFilters,
     onFiltersChange: (BusinessDashboardFilters) -> Unit,
     onClearFilters: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.business_filters), fontWeight = FontWeight.SemiBold)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
+        Text(stringResource(R.string.business_filters), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleLarge)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
             item {
                 FilterChip(
                     selected = filters.clientId == null,
@@ -214,7 +177,7 @@ private fun DashboardFilterRow(
                 )
             }
         }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
             item {
                 FilterChip(
                     selected = filters.invoiceStatus == null,
@@ -238,9 +201,4 @@ private fun DashboardFilterRow(
             )
         }
     }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(text, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
 }
