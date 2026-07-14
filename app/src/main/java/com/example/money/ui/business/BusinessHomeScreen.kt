@@ -59,7 +59,10 @@ import com.example.money.domain.model.business.BusinessProject
 import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
+import android.content.Intent
 import com.example.money.ui.business.components.BusinessDashboardContent
+import com.example.money.ui.business.reports.BusinessReportsContent
+import com.example.money.ui.business.components.ai.InvoiceRiskBadge
 import com.example.money.ui.business.theme.BusinessTheme
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
@@ -94,6 +97,10 @@ private fun BusinessHomeScreenContent(
     val invoices by viewModel.invoices.collectAsStateWithLifecycle()
     val transactions by viewModel.transactions.collectAsStateWithLifecycle()
     val filters by viewModel.filters.collectAsStateWithLifecycle()
+    val reports by viewModel.reports.collectAsStateWithLifecycle()
+    val reportFilters by viewModel.reportFilters.collectAsStateWithLifecycle()
+    val selectedReportTab by viewModel.selectedReportTab.collectAsStateWithLifecycle()
+    val invoiceRisks by viewModel.invoiceRisks.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var quickActionDialog by remember { mutableStateOf<BusinessQuickAction?>(null) }
@@ -208,9 +215,28 @@ private fun BusinessHomeScreenContent(
                     },
                     emptyText = stringResource(R.string.business_empty_projects),
                 )
-                BusinessTab.Invoices -> BusinessInvoiceTab(invoices, clients, viewModel::markInvoicePaid)
+                BusinessTab.Invoices -> BusinessInvoiceTab(
+                    invoices = invoices,
+                    clients = clients,
+                    invoiceRisks = invoiceRisks,
+                    onMarkPaid = viewModel::markInvoicePaid,
+                )
                 BusinessTab.Cashflow -> BusinessCashflowTab(transactions)
-                BusinessTab.Reports -> BusinessPlaceholderTab(stringResource(R.string.business_reports_coming_soon))
+                BusinessTab.Reports -> BusinessReportsContent(
+                    reports = reports,
+                    filters = reportFilters,
+                    selectedTab = selectedReportTab,
+                    onTabSelected = viewModel::selectReportTab,
+                    onPeriodChange = viewModel::setReportPeriod,
+                    onExport = { type ->
+                        context.startActivity(
+                            Intent.createChooser(
+                                viewModel.createReportExportIntent(context, type),
+                                context.getString(R.string.business_report_export_csv),
+                            ),
+                        )
+                    },
+                )
                 BusinessTab.Settings -> BusinessSettingsTab(
                     businessName = branchSettings.businessName,
                     onSaveName = viewModel::updateBusinessName,
@@ -318,6 +344,7 @@ private fun BusinessListTab(items: List<Pair<String, String>>, emptyText: String
 private fun BusinessInvoiceTab(
     invoices: List<BusinessInvoice>,
     clients: List<BusinessClient>,
+    invoiceRisks: Map<Long, com.example.money.domain.model.business.InvoiceRiskAssessment>,
     onMarkPaid: (BusinessInvoice) -> Unit,
 ) {
     if (invoices.isEmpty()) {
@@ -329,7 +356,13 @@ private fun BusinessInvoiceTab(
             val clientName = clients.find { it.id == invoice.clientId }?.name ?: "—"
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(clientName, fontWeight = FontWeight.SemiBold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(clientName, fontWeight = FontWeight.SemiBold)
+                        InvoiceRiskBadge(assessment = invoiceRisks[invoice.id])
+                    }
                     Text(Formatters.currencyFromCents(invoice.amountCents))
                     Text("${stringResource(R.string.business_invoice_due)}: ${Formatters.shortDate(invoice.dueDate)}")
                     Text(invoice.status.name)

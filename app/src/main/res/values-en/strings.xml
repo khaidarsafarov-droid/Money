@@ -407,4 +407,22 @@
     <string name="business_view_financial">Financial</string>
     <string name="business_view_client">Client</string>
     <string name="business_view_project">Project</string>
+    <string name="business_report_pnl">Profit &amp; Loss</string>
+    <string name="business_report_cashflow">Cashflow</string>
+    <string name="business_report_clients">Clients</string>
+    <string name="business_report_categories">Categories</string>
+    <string name="business_report_projects">Projects</string>
+    <string name="business_report_tax">Tax</string>
+    <string name="business_report_year">Year</string>
+    <string name="business_report_export_csv">Export CSV</string>
+    <string name="business_report_empty">No data for selected period</string>
+    <string name="business_report_net_cashflow">Net cashflow</string>
+    <string name="business_report_taxable_income">Taxable income</string>
+    <string name="business_report_deductible">Deductible expenses</string>
+    <string name="business_report_net_taxable">Net taxable amount</string>
+    <string name="business_report_tax_lines">Transactions</string>
+    <string name="business_ai_forecast_title">Cashflow forecast (30 days)</string>
+    <string name="business_risk_low">Low risk</string>
+    <string name="business_risk_medium">Medium risk</string>
+    <string name="business_risk_high">High risk</string>
 </resources>

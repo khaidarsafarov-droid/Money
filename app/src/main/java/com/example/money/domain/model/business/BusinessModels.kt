@@ -142,6 +142,8 @@ data class BusinessDashboardSummary(
     val overdueInvoices: List<OverdueInvoiceRow> = emptyList(),
     val upcomingPayments: List<UpcomingPaymentRow> = emptyList(),
     val insights: List<String> = emptyList(),
+    val aiInsights: List<AiBusinessInsight> = emptyList(),
+    val cashflowForecast: List<CashflowForecastPoint> = emptyList(),
     val attentionAlerts: List<BusinessAttentionAlert> = emptyList(),
     val categoryDistribution: List<CategoryDistributionRow> = emptyList(),
 )

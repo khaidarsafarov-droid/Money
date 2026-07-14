@@ -640,4 +640,22 @@
     <string name="business_view_financial">Финансовый</string>
     <string name="business_view_client">Клиентский</string>
     <string name="business_view_project">Проектный</string>
+    <string name="business_report_pnl">Прибыль и убытки</string>
+    <string name="business_report_cashflow">Денежный поток</string>
+    <string name="business_report_clients">Клиенты</string>
+    <string name="business_report_categories">Категории</string>
+    <string name="business_report_projects">Проекты</string>
+    <string name="business_report_tax">Налоги</string>
+    <string name="business_report_year">Год</string>
+    <string name="business_report_export_csv">Экспорт CSV</string>
+    <string name="business_report_empty">Нет данных за выбранный период</string>
+    <string name="business_report_net_cashflow">Чистый денежный поток</string>
+    <string name="business_report_taxable_income">Налогооблагаемый доход</string>
+    <string name="business_report_deductible">Вычитаемые расходы</string>
+    <string name="business_report_net_taxable">Чистая налогооблагаемая база</string>
+    <string name="business_report_tax_lines">Операции</string>
+    <string name="business_ai_forecast_title">Прогноз cashflow (30 дней)</string>
+    <string name="business_risk_low">Низкий риск</string>
+    <string name="business_risk_medium">Средний риск</string>
+    <string name="business_risk_high">Высокий риск</string>
 </resources>

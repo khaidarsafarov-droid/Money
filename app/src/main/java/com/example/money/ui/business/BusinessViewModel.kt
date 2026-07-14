@@ -10,6 +10,11 @@ import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessDashboardView
 import com.example.money.domain.model.business.BusinessFilterPreset
+import com.example.money.domain.model.business.BusinessReportFilters
+import com.example.money.domain.model.business.BusinessReportPeriod
+import com.example.money.domain.model.business.BusinessReportType
+import com.example.money.domain.model.business.BusinessReportsBundle
+import com.example.money.domain.model.business.InvoiceRiskAssessment
 import com.example.money.domain.model.business.BusinessInvoice
 import com.example.money.domain.model.business.BusinessLedgerType
 import com.example.money.domain.model.business.BusinessProject
@@ -18,13 +23,21 @@ import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
 import com.example.money.domain.model.business.SavedFilterPreset
 import com.example.money.domain.repository.BusinessRepository
+import com.example.money.domain.util.BusinessCsvExporter
 import com.example.money.domain.util.BusinessFinanceEngine
+import com.example.money.domain.util.BusinessReportsEngine
+import com.example.money.domain.util.ai.AiInvoiceRiskService
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.BusinessBranchSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.example.money.ui.business.reports.BusinessReportTab
+import com.example.money.ui.business.reports.BusinessReportShare
+import android.content.Context
+import android.content.Intent
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -108,6 +121,36 @@ class BusinessViewModel(
 
     private val _pendingQuickAction = MutableStateFlow<BusinessQuickAction?>(null)
     val pendingQuickAction: StateFlow<BusinessQuickAction?> = _pendingQuickAction.asStateFlow()
+
+    private val _reportFilters = MutableStateFlow(BusinessReportFilters())
+    val reportFilters: StateFlow<BusinessReportFilters> = _reportFilters.asStateFlow()
+
+    private val _selectedReportTab = MutableStateFlow(BusinessReportTab.PROFIT_LOSS)
+    val selectedReportTab: StateFlow<BusinessReportTab> = _selectedReportTab.asStateFlow()
+
+    val reports: StateFlow<BusinessReportsBundle> = combine(
+        transactions,
+        invoices,
+        clients,
+        projects,
+        _reportFilters,
+    ) { tx, inv, cl, pr, filters ->
+        BusinessReportsEngine.generateAll(tx, inv, cl, pr, filters)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = BusinessReportsEngine.generateAll(
+            emptyList(), emptyList(), emptyList(), emptyList(), BusinessReportFilters(),
+        ),
+    )
+
+    val invoiceRisks: StateFlow<Map<Long, InvoiceRiskAssessment>> = combine(invoices, clients) { inv, cl ->
+        AiInvoiceRiskService.assessAll(inv, cl)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyMap(),
+    )
 
     init {
         viewModelScope.launch {
@@ -195,6 +238,19 @@ class BusinessViewModel(
 
     fun consumeQuickAction() {
         _pendingQuickAction.value = null
+    }
+
+    fun selectReportTab(tab: BusinessReportTab) {
+        _selectedReportTab.value = tab
+    }
+
+    fun setReportPeriod(period: BusinessReportPeriod) {
+        _reportFilters.value = _reportFilters.value.copy(period = period)
+    }
+
+    fun createReportExportIntent(context: Context, type: BusinessReportType): Intent {
+        val csv = BusinessCsvExporter.export(type, reports.value)
+        return BusinessReportShare.createShareIntent(context, type, csv)
     }
 
     fun switchToPersonal() {

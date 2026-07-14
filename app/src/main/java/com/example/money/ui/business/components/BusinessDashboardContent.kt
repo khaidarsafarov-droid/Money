@@ -40,6 +40,7 @@ import com.example.money.ui.business.BusinessQuickAction
 import com.example.money.ui.business.components.cards.BusinessKpiCard
 import com.example.money.ui.business.components.charts.CashflowLineChart
 import com.example.money.ui.business.components.charts.CategoryDistributionChart
+import com.example.money.ui.business.components.charts.ForecastChart
 import com.example.money.ui.business.components.charts.ProfitBarChart
 import com.example.money.ui.business.components.filters.BusinessFiltersBar
 import com.example.money.ui.business.components.widgets.AiInsightsWidget
@@ -265,7 +266,8 @@ private fun ClientDashboardBody(dashboard: BusinessDashboardSummary) {
                 modifier = Modifier.weight(1f),
             )
         }
-        AiInsightsWidget(insights = dashboard.insights)
+        AiInsightsWidget(insights = dashboard.insights, structuredInsights = dashboard.aiInsights)
+        ForecastChart(points = dashboard.cashflowForecast)
     }
 }
 
@@ -310,7 +312,8 @@ private fun FinancialMainColumn(
             title = stringResource(R.string.business_top_categories),
             categories = dashboard.categoryDistribution,
         )
-        AiInsightsWidget(insights = dashboard.insights)
+        AiInsightsWidget(insights = dashboard.insights, structuredInsights = dashboard.aiInsights)
+        ForecastChart(points = dashboard.cashflowForecast)
     }
 }
 

@@ -1,5 +1,8 @@
 package com.example.money.domain.util
 
+import com.example.money.domain.model.business.BusinessClient
+import com.example.money.domain.util.ai.AiBusinessInsightsService
+import com.example.money.domain.util.ai.AiCashflowPredictionService
 import com.example.money.domain.model.business.BusinessAttentionAlert
 import com.example.money.domain.model.business.BusinessAttentionSeverity
 import com.example.money.domain.model.business.BusinessAttentionType
@@ -184,6 +187,23 @@ object BusinessFinanceEngine {
 
         val overdueInvoices = buildOverdueInvoices(filteredInvoices, clients, nowMillis)
 
+        val clientTableRows = buildClientTable(filteredTx, filteredInvoices, clients, monthStartMillis, monthEndMillis)
+        val aiInsights = AiBusinessInsightsService.generate(
+            summary = BusinessDashboardSummary(
+                monthRevenueCents = revenueCents,
+                monthExpenseCents = expenseCents,
+                monthNetProfitCents = netProfit,
+                overdueReceivablesCents = overdueReceivables,
+                expectedReceivablesCents = expectedReceivables,
+                topClients = revenueByClient,
+                topExpenseCategories = expenseByCategory,
+            ),
+            clientTable = clientTableRows,
+            overdueInvoices = overdueInvoices,
+            expenseCategories = expenseByCategory,
+        )
+        val cashflowForecast = AiCashflowPredictionService.predict(filteredTx, horizonDays = 30, nowMillis = nowMillis)
+
         return BusinessDashboardSummary(
             monthRevenueCents = revenueCents,
             monthExpenseCents = expenseCents,
@@ -203,24 +223,13 @@ object BusinessFinanceEngine {
             cashSparkline = cashSparkline,
             cashflowWeekly = weeklyPoints,
             monthlyProfit = monthlyProfit,
-            clientTable = buildClientTable(filteredTx, filteredInvoices, clients, monthStartMillis, monthEndMillis),
+            clientTable = clientTableRows,
             projectCards = buildProjectCards(filteredTx, projects, nowMillis),
             overdueInvoices = overdueInvoices,
             upcomingPayments = buildUpcomingPayments(filteredInvoices, clients, nowMillis),
-            insights = BusinessInsightEngine.generate(
-                summary = BusinessDashboardSummary(
-                    monthRevenueCents = revenueCents,
-                    monthExpenseCents = expenseCents,
-                    monthNetProfitCents = netProfit,
-                    overdueReceivablesCents = overdueReceivables,
-                    expectedReceivablesCents = expectedReceivables,
-                    topClients = revenueByClient,
-                    topExpenseCategories = expenseByCategory,
-                ),
-                clientTable = buildClientTable(filteredTx, filteredInvoices, clients, monthStartMillis, monthEndMillis),
-                overdueInvoices = overdueInvoices,
-                expenseCategories = expenseByCategory,
-            ),
+            insights = aiInsights.map { it.message },
+            aiInsights = aiInsights,
+            cashflowForecast = cashflowForecast,
             attentionAlerts = buildAttentionAlerts(
                 cashOnHandCents = cashOnHand,
                 overdueInvoices = overdueInvoices,

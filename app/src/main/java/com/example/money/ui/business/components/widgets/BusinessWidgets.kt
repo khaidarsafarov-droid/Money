@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.example.money.R
+import com.example.money.domain.model.business.AiBusinessInsight
+import com.example.money.domain.model.business.AiInsightSeverity
 import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.ClientProfitRow
@@ -35,17 +37,26 @@ import com.example.money.ui.util.Formatters
 @Composable
 fun AiInsightsWidget(
     insights: List<String>,
+    structuredInsights: List<AiBusinessInsight> = emptyList(),
     modifier: Modifier = Modifier,
 ) {
-    if (insights.isEmpty()) return
+    val items = structuredInsights.ifEmpty {
+        insights.map { AiBusinessInsight(message = it, severity = AiInsightSeverity.INFO) }
+    }
+    if (items.isEmpty()) return
     BusinessCard(modifier = modifier.fillMaxWidth()) {
         RowWithIcon(
             icon = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null, tint = BusinessColors.PrimaryBlue) },
             title = stringResource(R.string.business_insights_title),
         )
         Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.sm), modifier = Modifier.padding(top = BusinessSpacing.sm)) {
-            insights.forEach { insight ->
-                Text("• $insight", style = MaterialTheme.typography.bodyMedium)
+            items.forEach { insight ->
+                val color = when (insight.severity) {
+                    AiInsightSeverity.INFO -> BusinessColors.PrimaryBlue
+                    AiInsightSeverity.WARNING -> BusinessColors.WarningYellow
+                    AiInsightSeverity.CRITICAL -> BusinessColors.LossRed
+                }
+                Text("• ${insight.message}", style = MaterialTheme.typography.bodyMedium, color = color)
             }
         }
     }
