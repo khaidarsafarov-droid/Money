@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.example.money.R
+import com.example.money.domain.model.business.BusinessTransaction
+import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.ClientProfitRow
 import com.example.money.domain.model.business.OverdueInvoiceRow
 import com.example.money.domain.model.business.ProjectPerformanceRow
@@ -132,10 +134,10 @@ fun ClientProfitabilityWidget(
 ) {
     if (clients.isEmpty()) return
     val columns = listOf(
-        com.example.money.ui.business.components.tables.BusinessTableColumn(stringResource(R.string.business_field_name), 1.2f),
-        com.example.money.ui.business.components.tables.BusinessTableColumn(stringResource(R.string.business_col_revenue), 1f),
-        com.example.money.ui.business.components.tables.BusinessTableColumn(stringResource(R.string.business_col_profit), 1f),
-        com.example.money.ui.business.components.tables.BusinessTableColumn(stringResource(R.string.business_col_invoice_status), 1f),
+        BusinessTableColumn(stringResource(R.string.business_field_name), 1.2f),
+        BusinessTableColumn(stringResource(R.string.business_col_revenue), 1f),
+        BusinessTableColumn(stringResource(R.string.business_col_profit), 1f),
+        BusinessTableColumn(stringResource(R.string.business_col_invoice_status), 1f),
     )
     val rows = clients.map { row ->
         listOf(
@@ -145,7 +147,7 @@ fun ClientProfitabilityWidget(
             row.lastInvoiceStatus?.name ?: "—",
         )
     }
-    com.example.money.ui.business.components.tables.BusinessTable(
+    BusinessTable(
         title = title,
         columns = columns,
         rows = rows,
@@ -158,9 +160,9 @@ private fun RowWithIcon(
     icon: @Composable () -> Unit,
     title: String,
 ) {
-    androidx.compose.foundation.layout.Row(
+    Row(
         horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         icon()
         Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleLarge)
