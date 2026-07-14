@@ -118,6 +118,15 @@ class MoneyApplication : Application() {
         DebtCalendarSyncService(this)
     }
 
+    val businessRepository: com.example.money.domain.repository.BusinessRepository by lazy {
+        com.example.money.data.repository.BusinessRepositoryImpl(
+            clientDao = database.businessClientDao(),
+            projectDao = database.businessProjectDao(),
+            invoiceDao = database.businessInvoiceDao(),
+            transactionDao = database.businessTransactionDao(),
+        )
+    }
+
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
         WidgetGoalRepository(this)
     }

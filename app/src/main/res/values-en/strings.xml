@@ -316,4 +316,43 @@
     <string name="autopilot_apply_failed">Could not apply micro-payment</string>
     <string name="autopilot_notification_title">Debt micro-payment</string>
     <string name="autopilot_notification_body">You can pay %1$s today — one step toward freedom</string>
+
+    <!-- Business branch -->
+    <string name="branch_personal">Personal</string>
+    <string name="branch_business">Business</string>
+    <string name="business_branch_menu">Business branch</string>
+    <string name="business_branch_default_name">My business</string>
+    <string name="business_branch_subtitle">Cashflow and client tracking</string>
+    <string name="business_switch_personal">Back to personal branch</string>
+    <string name="business_tab_dashboard">Dashboard</string>
+    <string name="business_tab_clients">Clients</string>
+    <string name="business_tab_projects">Projects</string>
+    <string name="business_tab_invoices">Invoices</string>
+    <string name="business_tab_cashflow">Cashflow</string>
+    <string name="business_metric_revenue">Monthly revenue</string>
+    <string name="business_metric_expenses">Monthly expenses</string>
+    <string name="business_metric_profit">Net profit</string>
+    <string name="business_metric_receivables">Expected receivables</string>
+    <string name="business_metric_overdue">Overdue receivables</string>
+    <string name="business_top_clients">Top clients</string>
+    <string name="business_top_expenses">Top expenses</string>
+    <string name="business_empty_clients">Add your first client</string>
+    <string name="business_empty_projects">Add your first project</string>
+    <string name="business_empty_invoices">No invoices yet</string>
+    <string name="business_empty_cashflow">No transactions yet</string>
+    <string name="business_invoice_due">Due</string>
+    <string name="business_mark_paid">Mark paid</string>
+    <string name="business_add_client">New client</string>
+    <string name="business_add_project">New project</string>
+    <string name="business_add_invoice">New invoice</string>
+    <string name="business_add_transaction">New transaction</string>
+    <string name="business_field_name">Name</string>
+    <string name="business_field_email">Email</string>
+    <string name="business_field_phone">Phone</string>
+    <string name="business_field_contact">Contact</string>
+    <string name="business_field_project">Project</string>
+    <string name="business_field_budget">Budget</string>
+    <string name="business_field_amount">Amount</string>
+    <string name="business_field_category">Category</string>
+    <string name="business_need_client_first">Add a client first</string>
 </resources>

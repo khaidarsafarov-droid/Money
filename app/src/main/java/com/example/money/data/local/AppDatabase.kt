@@ -10,6 +10,16 @@ import com.example.money.data.local.dao.ExpenseDao
 import com.example.money.data.local.dao.SavingsGoalDao
 import com.example.money.data.local.dao.SyncQueueDao
 import com.example.money.data.local.dao.TransferDao
+import com.example.money.data.local.dao.BusinessClientDao
+import com.example.money.data.local.dao.BusinessInvoiceDao
+import com.example.money.data.local.dao.BusinessProjectDao
+import com.example.money.data.local.dao.BusinessTransactionDao
+import com.example.money.data.local.dao.DebtorDao
+import com.example.money.data.local.entity.BusinessClientEntity
+import com.example.money.data.local.entity.BusinessInvoiceEntity
+import com.example.money.data.local.entity.BusinessProjectEntity
+import com.example.money.data.local.entity.BusinessTransactionEntity
+import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.data.local.entity.ExpenseEntity
@@ -28,6 +38,7 @@ import com.example.money.data.local.migration.MIGRATION_9_10
 import com.example.money.data.local.migration.MIGRATION_10_11
 import com.example.money.data.local.migration.MIGRATION_11_12
 import com.example.money.data.local.migration.MIGRATION_12_13
+import com.example.money.data.local.migration.MIGRATION_13_14
 
 @Database(
     entities = [
@@ -38,8 +49,12 @@ import com.example.money.data.local.migration.MIGRATION_12_13
         SavingsGoalEntity::class,
         SyncQueueEntity::class,
         LuckDiaryEntryEntity::class,
+        BusinessClientEntity::class,
+        BusinessProjectEntity::class,
+        BusinessInvoiceEntity::class,
+        BusinessTransactionEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -52,6 +67,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
     abstract fun savingsGoalDao(): SavingsGoalDao
     abstract fun syncQueueDao(): SyncQueueDao
+    abstract fun businessClientDao(): BusinessClientDao
+    abstract fun businessProjectDao(): BusinessProjectDao
+    abstract fun businessInvoiceDao(): BusinessInvoiceDao
+    abstract fun businessTransactionDao(): BusinessTransactionDao
 
     companion object {
         private const val DATABASE_NAME = "money.db"
@@ -65,7 +84,11 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     DATABASE_NAME,
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13).build().also { instance = it }
+                ).addMigrations(
+                    MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+                    MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
+                    MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14,
+                ).build().also { instance = it }
             }
         }
     }

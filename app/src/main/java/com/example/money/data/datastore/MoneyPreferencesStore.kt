@@ -12,9 +12,11 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.example.money.data.sync.SyncQueueRecorder
+import com.example.money.domain.model.FinanceBranch
 import com.example.money.domain.sync.SnapshotVoiceSettings
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
+import com.example.money.settings.BusinessBranchSettings
 import com.example.money.settings.FinancialPsychotype
 import com.example.money.settings.GoalPsychologyProfile
 import com.example.money.settings.PrivacySettings
@@ -124,6 +126,8 @@ object MoneyPreferenceKeys {
     val CALENDAR_DEBTS_CAL_ID = longPreferencesKey("calendar_debts_cal_id")
     val CALENDAR_PERMISSION_REQUESTED = booleanPreferencesKey("calendar_permission_requested")
     val NOTIFICATION_PERMISSION_REQUESTED = booleanPreferencesKey("notification_permission_requested")
+    val ACTIVE_FINANCE_BRANCH = stringPreferencesKey("active_finance_branch")
+    val BUSINESS_BRANCH_NAME = stringPreferencesKey("business_branch_name")
 }
 
 class MoneyPreferencesStore(
@@ -356,6 +360,19 @@ class MoneyPreferencesStore(
         }
     }
 
+    val businessBranchSettings: Flow<BusinessBranchSettings> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toBusinessBranchSettings() }
+
+    suspend fun updateBusinessBranchSettings(transform: (BusinessBranchSettings) -> BusinessBranchSettings) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writeBusinessBranchSettings(transform(prefs.toBusinessBranchSettings()))
+        }
+    }
+
+    suspend fun setActiveFinanceBranch(branch: FinanceBranch) {
+        updateBusinessBranchSettings { it.copy(activeBranch = branch) }
+    }
+
     private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
         val array = JSONArray()
         items.forEach { item ->
@@ -584,4 +601,17 @@ private fun MutablePreferences.writeCalendarSettings(settings: CalendarSettings)
         this[MoneyPreferenceKeys.CALENDAR_DEBTS_CAL_ID] = it
     } ?: remove(MoneyPreferenceKeys.CALENDAR_DEBTS_CAL_ID)
     this[MoneyPreferenceKeys.CALENDAR_PERMISSION_REQUESTED] = settings.permissionRequested
+}
+
+private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
+    BusinessBranchSettings(
+        activeBranch = runCatching {
+            FinanceBranch.valueOf(this[MoneyPreferenceKeys.ACTIVE_FINANCE_BRANCH] ?: FinanceBranch.PERSONAL.name)
+        }.getOrDefault(FinanceBranch.PERSONAL),
+        businessName = this[MoneyPreferenceKeys.BUSINESS_BRANCH_NAME] ?: "",
+    )
+
+private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBranchSettings) {
+    this[MoneyPreferenceKeys.ACTIVE_FINANCE_BRANCH] = settings.activeBranch.name
+    this[MoneyPreferenceKeys.BUSINESS_BRANCH_NAME] = settings.businessName
 }

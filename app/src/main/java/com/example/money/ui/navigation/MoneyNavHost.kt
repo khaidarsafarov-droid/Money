@@ -4,7 +4,6 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.money.MoneyApplication
+import com.example.money.domain.model.FinanceBranch
 import com.example.money.settings.UserProfile
+import com.example.money.ui.business.BusinessHomeScreen
 import com.example.money.ui.goal.GoalScreen
 import com.example.money.ui.home.HomeLaunchConfig
 import com.example.money.ui.home.HomeScreen
@@ -47,6 +48,13 @@ fun MoneyNavHost(
     )
     val notificationPermissionRequested by app.preferencesStore.notificationPermissionRequested
         .collectAsStateWithLifecycle(initialValue = false)
+    val branchSettings by app.preferencesStore.businessBranchSettings.collectAsStateWithLifecycle(
+        initialValue = com.example.money.settings.BusinessBranchSettings(),
+    )
+
+    fun switchBranch(branch: FinanceBranch) {
+        scope.launch { app.preferencesStore.setActiveFinanceBranch(branch) }
+    }
 
     val calendarPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -111,6 +119,10 @@ fun MoneyNavHost(
             modifier = modifier,
         )
         showVoiceSettings -> VoiceSettingsScreen(onBack = { showVoiceSettings = false }, modifier = modifier)
+        branchSettings.activeBranch == FinanceBranch.BUSINESS -> BusinessHomeScreen(
+            onSwitchBranch = ::switchBranch,
+            modifier = modifier,
+        )
         else -> HomeScreen(
             launchConfig = launchConfig,
             notificationsEnabled = notificationsEnabled,
@@ -128,6 +140,7 @@ fun MoneyNavHost(
             onOpenAutopilotSettings = { showAutopilotSettings = true },
             onOpenCalendarSettings = { showCalendarSettings = true },
             onOpenGoalHub = { showGoalHub = true },
+            onOpenBusinessBranch = { switchBranch(FinanceBranch.BUSINESS) },
             modifier = modifier,
         )
     }

@@ -549,4 +549,43 @@
     <string name="contact_history_owes_me">Должен мне</string>
     <string name="contact_history_i_owe">Я должен</string>
     <string name="contact_history_debt_dates">%1$s — срок %2$s</string>
+
+    <!-- Business branch -->
+    <string name="branch_personal">Личное</string>
+    <string name="branch_business">Бизнес</string>
+    <string name="business_branch_menu">Бизнес-ветка</string>
+    <string name="business_branch_default_name">Мой бизнес</string>
+    <string name="business_branch_subtitle">Учёт денежного потока и клиентов</string>
+    <string name="business_switch_personal">Вернуться в личную ветку</string>
+    <string name="business_tab_dashboard">Обзор</string>
+    <string name="business_tab_clients">Клиенты</string>
+    <string name="business_tab_projects">Проекты</string>
+    <string name="business_tab_invoices">Счета</string>
+    <string name="business_tab_cashflow">Касса</string>
+    <string name="business_metric_revenue">Доход за месяц</string>
+    <string name="business_metric_expenses">Расход за месяц</string>
+    <string name="business_metric_profit">Чистая прибыль</string>
+    <string name="business_metric_receivables">Ожидаемые поступления</string>
+    <string name="business_metric_overdue">Просроченная дебиторка</string>
+    <string name="business_top_clients">Топ клиентов</string>
+    <string name="business_top_expenses">Топ расходов</string>
+    <string name="business_empty_clients">Добавьте первого клиента</string>
+    <string name="business_empty_projects">Добавьте первый проект</string>
+    <string name="business_empty_invoices">Счетов пока нет</string>
+    <string name="business_empty_cashflow">Операций пока нет</string>
+    <string name="business_invoice_due">Срок</string>
+    <string name="business_mark_paid">Отметить оплаченным</string>
+    <string name="business_add_client">Новый клиент</string>
+    <string name="business_add_project">Новый проект</string>
+    <string name="business_add_invoice">Новый счёт</string>
+    <string name="business_add_transaction">Новая операция</string>
+    <string name="business_field_name">Имя</string>
+    <string name="business_field_email">Email</string>
+    <string name="business_field_phone">Телефон</string>
+    <string name="business_field_contact">Контакт</string>
+    <string name="business_field_project">Проект</string>
+    <string name="business_field_budget">Бюджет</string>
+    <string name="business_field_amount">Сумма</string>
+    <string name="business_field_category">Категория</string>
+    <string name="business_need_client_first">Сначала добавьте клиента</string>
 </resources>
