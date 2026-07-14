@@ -8,13 +8,15 @@ import com.example.money.domain.model.FinanceBranch
 import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
+import com.example.money.domain.model.business.BusinessDashboardView
+import com.example.money.domain.model.business.BusinessFilterPreset
 import com.example.money.domain.model.business.BusinessInvoice
 import com.example.money.domain.model.business.BusinessLedgerType
 import com.example.money.domain.model.business.BusinessProject
 import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.InvoiceStatus
-import com.example.money.domain.model.business.ProjectStatus
+import com.example.money.domain.model.business.SavedFilterPreset
 import com.example.money.domain.repository.BusinessRepository
 import com.example.money.domain.util.BusinessFinanceEngine
 import com.example.money.domain.util.MoneyMath
@@ -37,12 +39,16 @@ enum class BusinessTab {
     Settings,
 }
 
+enum class BusinessQuickAction {
+    CREATE_INVOICE,
+    ADD_TRANSACTION,
+    CREATE_PROJECT,
+}
+
 class BusinessViewModel(
     private val businessRepository: BusinessRepository,
     private val preferencesStore: MoneyPreferencesStore,
 ) : ViewModel() {
-
-    private val monthRange = BusinessFinanceEngine.monthRange()
 
     val branchSettings: StateFlow<BusinessBranchSettings> = preferencesStore.businessBranchSettings.stateIn(
         scope = viewModelScope,
@@ -79,7 +85,8 @@ class BusinessViewModel(
 
     val dashboard: StateFlow<BusinessDashboardSummary> = _filters
         .flatMapLatest { filters ->
-            businessRepository.observeDashboard(monthRange.first, monthRange.second, filters)
+            val range = BusinessFinanceEngine.periodRangeForPreset(filters.periodPreset)
+            businessRepository.observeDashboard(range.first, range.second, filters)
         }
         .stateIn(
             scope = viewModelScope,
@@ -98,6 +105,9 @@ class BusinessViewModel(
     private val _selectedTab = MutableStateFlow(BusinessTab.Dashboard)
     val selectedTab: StateFlow<BusinessTab> = _selectedTab.asStateFlow()
 
+    private val _pendingQuickAction = MutableStateFlow<BusinessQuickAction?>(null)
+    val pendingQuickAction: StateFlow<BusinessQuickAction?> = _pendingQuickAction.asStateFlow()
+
     init {
         viewModelScope.launch {
             businessRepository.refreshInvoiceStatuses()
@@ -112,8 +122,74 @@ class BusinessViewModel(
         _filters.value = transform(_filters.value)
     }
 
+    fun applyFilterPreset(preset: BusinessFilterPreset) {
+        _filters.value = when (preset) {
+            BusinessFilterPreset.BY_CLIENT -> _filters.value.copy(periodPreset = preset)
+            BusinessFilterPreset.BY_PROJECT -> _filters.value.copy(periodPreset = preset)
+            else -> _filters.value.copy(
+                periodPreset = preset,
+                clientId = null,
+                projectId = null,
+            )
+        }
+    }
+
+    fun applySavedFilterPreset(preset: SavedFilterPreset) {
+        _filters.value = BusinessDashboardFilters(
+            clientId = preset.clientId,
+            projectId = preset.projectId,
+            periodPreset = preset.periodPreset,
+            invoiceStatus = preset.invoiceStatus,
+        )
+    }
+
+    fun saveCurrentFilterPreset(name: String) {
+        if (name.isBlank()) return
+        val current = _filters.value
+        val preset = SavedFilterPreset(
+            name = name.trim(),
+            clientId = current.clientId,
+            projectId = current.projectId,
+            invoiceStatus = current.invoiceStatus,
+            periodPreset = current.periodPreset,
+        )
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings { settings ->
+                val existing = settings.savedFilterPresets().filterNot { it.name == preset.name }
+                settings.copy(
+                    savedFilterPresetsJson = BusinessBranchSettings.encodeSavedFilterPresets(existing + preset),
+                )
+            }
+        }
+    }
+
+    fun deleteSavedFilterPreset(name: String) {
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings { settings ->
+                val updated = settings.savedFilterPresets().filterNot { it.name == name }
+                settings.copy(
+                    savedFilterPresetsJson = BusinessBranchSettings.encodeSavedFilterPresets(updated),
+                )
+            }
+        }
+    }
+
     fun clearFilters() {
         _filters.value = BusinessDashboardFilters()
+    }
+
+    fun setDashboardView(view: BusinessDashboardView) {
+        viewModelScope.launch {
+            preferencesStore.updateBusinessBranchSettings { it.copy(dashboardView = view) }
+        }
+    }
+
+    fun requestQuickAction(action: BusinessQuickAction) {
+        _pendingQuickAction.value = action
+    }
+
+    fun consumeQuickAction() {
+        _pendingQuickAction.value = null
     }
 
     fun switchToPersonal() {

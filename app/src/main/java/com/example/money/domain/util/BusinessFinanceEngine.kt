@@ -1,6 +1,9 @@
 package com.example.money.domain.util
 
-import com.example.money.domain.model.business.BusinessClient
+import com.example.money.domain.model.business.BusinessAttentionAlert
+import com.example.money.domain.model.business.BusinessAttentionSeverity
+import com.example.money.domain.model.business.BusinessAttentionType
+import com.example.money.domain.model.business.BusinessFilterPreset
 import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
 import com.example.money.domain.model.business.BusinessInvoice
@@ -46,6 +49,59 @@ object BusinessFinanceEngine {
         return monthRange(cal.timeInMillis)
     }
 
+    fun periodRangeForPreset(
+        preset: BusinessFilterPreset,
+        referenceMillis: Long = System.currentTimeMillis(),
+    ): Pair<Long, Long> {
+        val cal = Calendar.getInstance().apply { timeInMillis = referenceMillis }
+        return when (preset) {
+            BusinessFilterPreset.TODAY -> {
+                val start = cal.apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+                start to start + TimeUnit.DAYS.toMillis(1)
+            }
+            BusinessFilterPreset.THIS_WEEK -> {
+                val start = cal.apply {
+                    set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+                start to start + TimeUnit.DAYS.toMillis(7)
+            }
+            BusinessFilterPreset.THIS_MONTH,
+            BusinessFilterPreset.BY_CLIENT,
+            BusinessFilterPreset.BY_PROJECT,
+            -> monthRange(referenceMillis)
+        }
+    }
+
+    fun previousPeriodRangeForPreset(
+        preset: BusinessFilterPreset,
+        referenceMillis: Long = System.currentTimeMillis(),
+    ): Pair<Long, Long> {
+        val cal = Calendar.getInstance().apply { timeInMillis = referenceMillis }
+        return when (preset) {
+            BusinessFilterPreset.TODAY -> {
+                cal.add(Calendar.DAY_OF_MONTH, -1)
+                periodRangeForPreset(BusinessFilterPreset.TODAY, cal.timeInMillis)
+            }
+            BusinessFilterPreset.THIS_WEEK -> {
+                cal.add(Calendar.WEEK_OF_YEAR, -1)
+                periodRangeForPreset(BusinessFilterPreset.THIS_WEEK, cal.timeInMillis)
+            }
+            BusinessFilterPreset.THIS_MONTH,
+            BusinessFilterPreset.BY_CLIENT,
+            BusinessFilterPreset.BY_PROJECT,
+            -> previousMonthRange(referenceMillis)
+        }
+    }
+
     fun computeDashboard(
         transactions: List<BusinessTransaction>,
         invoices: List<BusinessInvoice>,
@@ -63,7 +119,7 @@ object BusinessFinanceEngine {
             tx.date >= monthStartMillis && tx.date < monthEndMillis &&
                 tx.ledgerType != BusinessLedgerType.PERSONAL
         }
-        val (prevStart, prevEnd) = previousMonthRange(monthEndMillis - 1)
+        val (prevStart, prevEnd) = previousPeriodRangeForPreset(filters.periodPreset, monthEndMillis - 1)
         val prevMonthTx = filteredTx.filter { tx ->
             tx.date >= prevStart && tx.date < prevEnd &&
                 tx.ledgerType != BusinessLedgerType.PERSONAL
@@ -123,6 +179,8 @@ object BusinessFinanceEngine {
             runningCash
         }
 
+        val overdueInvoices = buildOverdueInvoices(filteredInvoices, clients, nowMillis)
+
         return BusinessDashboardSummary(
             monthRevenueCents = revenueCents,
             monthExpenseCents = expenseCents,
@@ -144,7 +202,7 @@ object BusinessFinanceEngine {
             monthlyProfit = monthlyProfit,
             clientTable = buildClientTable(filteredTx, filteredInvoices, clients, monthStartMillis, monthEndMillis),
             projectCards = buildProjectCards(filteredTx, projects, nowMillis),
-            overdueInvoices = buildOverdueInvoices(filteredInvoices, clients, nowMillis),
+            overdueInvoices = overdueInvoices,
             upcomingPayments = buildUpcomingPayments(filteredInvoices, clients, nowMillis),
             insights = BusinessInsightEngine.generate(
                 summary = BusinessDashboardSummary(
@@ -157,8 +215,15 @@ object BusinessFinanceEngine {
                     topExpenseCategories = expenseByCategory,
                 ),
                 clientTable = buildClientTable(filteredTx, filteredInvoices, clients, monthStartMillis, monthEndMillis),
-                overdueInvoices = buildOverdueInvoices(filteredInvoices, clients, nowMillis),
+                overdueInvoices = overdueInvoices,
                 expenseCategories = expenseByCategory,
+            ),
+            attentionAlerts = buildAttentionAlerts(
+                cashOnHandCents = cashOnHand,
+                overdueInvoices = overdueInvoices,
+                periodTransactions = monthTx,
+                allTransactions = filteredTx.filter { it.ledgerType != BusinessLedgerType.PERSONAL },
+                nowMillis = nowMillis,
             ),
         )
     }
@@ -347,4 +412,69 @@ object BusinessFinanceEngine {
                 )
             }
     }
+
+    private const val LOW_CASH_THRESHOLD_CENTS = 10_000L
+
+    private fun buildAttentionAlerts(
+        cashOnHandCents: Long,
+        overdueInvoices: List<OverdueInvoiceRow>,
+        periodTransactions: List<BusinessTransaction>,
+        allTransactions: List<BusinessTransaction>,
+        nowMillis: Long,
+    ): List<BusinessAttentionAlert> = buildList {
+        overdueInvoices.forEach { invoice ->
+            add(
+                BusinessAttentionAlert(
+                    type = BusinessAttentionType.OVERDUE_INVOICE,
+                    severity = if (invoice.daysOverdue > 14) {
+                        BusinessAttentionSeverity.CRITICAL
+                    } else {
+                        BusinessAttentionSeverity.WARNING
+                    },
+                    clientName = invoice.clientName,
+                    daysOverdue = invoice.daysOverdue,
+                    amountCents = invoice.amountCents,
+                ),
+            )
+        }
+
+        if (cashOnHandCents in 0 until LOW_CASH_THRESHOLD_CENTS) {
+            add(
+                BusinessAttentionAlert(
+                    type = BusinessAttentionType.LOW_CASH,
+                    severity = if (cashOnHandCents < LOW_CASH_THRESHOLD_CENTS / 2) {
+                        BusinessAttentionSeverity.CRITICAL
+                    } else {
+                        BusinessAttentionSeverity.WARNING
+                    },
+                    amountCents = cashOnHandCents,
+                ),
+            )
+        }
+
+        val weekAgo = nowMillis - TimeUnit.DAYS.toMillis(7)
+        val recentExpenses = periodTransactions.filter {
+            it.type == BusinessTransactionType.EXPENSE && it.date >= weekAgo
+        }
+        if (recentExpenses.isNotEmpty() && allTransactions.size >= 3) {
+            val avgWeeklyExpense = allTransactions
+                .filter { it.type == BusinessTransactionType.EXPENSE }
+                .sumOf { it.amountCents }
+                .toDouble() / 8.0
+            recentExpenses
+                .filter { it.amountCents > avgWeeklyExpense * 2 && avgWeeklyExpense > 0 }
+                .sortedByDescending { it.amountCents }
+                .take(2)
+                .forEach { tx ->
+                    add(
+                        BusinessAttentionAlert(
+                            type = BusinessAttentionType.LARGE_EXPENSE,
+                            severity = BusinessAttentionSeverity.INFO,
+                            amountCents = tx.amountCents,
+                            category = tx.category,
+                        ),
+                    )
+                }
+        }
+    }.take(6)
 }

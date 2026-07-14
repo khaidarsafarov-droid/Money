@@ -36,6 +36,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,6 +96,15 @@ private fun BusinessHomeScreenContent(
     val filters by viewModel.filters.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var quickActionDialog by remember { mutableStateOf<BusinessQuickAction?>(null) }
+
+    val pendingQuickAction by viewModel.pendingQuickAction.collectAsStateWithLifecycle()
+    LaunchedEffect(pendingQuickAction) {
+        pendingQuickAction?.let { action ->
+            quickActionDialog = action
+            viewModel.consumeQuickAction()
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -170,8 +180,16 @@ private fun BusinessHomeScreenContent(
                     projects = projects,
                     transactions = transactions,
                     filters = filters,
+                    dashboardView = branchSettings.dashboardView,
+                    savedPresets = branchSettings.savedFilterPresets(),
                     onFiltersChange = { newFilters -> viewModel.updateFilters { newFilters } },
+                    onApplyPreset = viewModel::applyFilterPreset,
+                    onApplySavedPreset = viewModel::applySavedFilterPreset,
+                    onSavePreset = viewModel::saveCurrentFilterPreset,
+                    onDeleteSavedPreset = viewModel::deleteSavedFilterPreset,
                     onClearFilters = viewModel::clearFilters,
+                    onDashboardViewChange = viewModel::setDashboardView,
+                    onQuickAction = viewModel::requestQuickAction,
                 )
                 BusinessTab.Clients -> BusinessListTab(
                     items = clients.map { it.name to (it.email.ifBlank { it.phone }.ifBlank { it.contactInfo }) },
@@ -216,6 +234,27 @@ private fun BusinessHomeScreenContent(
             onAddTransaction = { type, amount, category, ledger, clientId, projectId, date, note ->
                 viewModel.addTransaction(type, amount, category, ledger, clientId, projectId, date, note)
                 showAddDialog = false
+            },
+        )
+    }
+
+    quickActionDialog?.let { action ->
+        BusinessQuickActionDialog(
+            action = action,
+            clients = clients,
+            projects = projects,
+            onDismiss = { quickActionDialog = null },
+            onAddProject = { clientId, name, budget ->
+                viewModel.addProject(clientId, name, budget)
+                quickActionDialog = null
+            },
+            onAddInvoice = { clientId, projectId, amount, issue, due, status ->
+                viewModel.addInvoice(clientId, projectId, amount, issue, due, status)
+                quickActionDialog = null
+            },
+            onAddTransaction = { type, amount, category, ledger, clientId, projectId, date, note ->
+                viewModel.addTransaction(type, amount, category, ledger, clientId, projectId, date, note)
+                quickActionDialog = null
             },
         )
     }
@@ -339,6 +378,33 @@ private fun ListRow(title: String, subtitle: String) {
             Text(subtitle, style = MaterialTheme.typography.bodySmall)
         }
     }
+}
+
+@Composable
+private fun BusinessQuickActionDialog(
+    action: BusinessQuickAction,
+    clients: List<BusinessClient>,
+    projects: List<BusinessProject>,
+    onDismiss: () -> Unit,
+    onAddProject: (Long, String, Double) -> Unit,
+    onAddInvoice: (Long, Long?, Double, Long, Long, InvoiceStatus) -> Unit,
+    onAddTransaction: (BusinessTransactionType, Double, String, BusinessLedgerType, Long?, Long?, Long, String) -> Unit,
+) {
+    val tab = when (action) {
+        BusinessQuickAction.CREATE_INVOICE -> BusinessTab.Invoices
+        BusinessQuickAction.ADD_TRANSACTION -> BusinessTab.Cashflow
+        BusinessQuickAction.CREATE_PROJECT -> BusinessTab.Projects
+    }
+    BusinessAddDialog(
+        tab = tab,
+        clients = clients,
+        projects = projects,
+        onDismiss = onDismiss,
+        onAddClient = { _, _, _, _ -> },
+        onAddProject = onAddProject,
+        onAddInvoice = onAddInvoice,
+        onAddTransaction = onAddTransaction,
+    )
 }
 
 @Composable

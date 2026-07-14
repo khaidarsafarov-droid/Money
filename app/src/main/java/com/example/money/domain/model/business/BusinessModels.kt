@@ -73,6 +73,49 @@ data class BusinessTransaction(
     val note: String = "",
 )
 
+enum class BusinessDashboardView {
+    FINANCIAL,
+    CLIENT,
+    PROJECT,
+}
+
+enum class BusinessFilterPreset {
+    TODAY,
+    THIS_WEEK,
+    THIS_MONTH,
+    BY_CLIENT,
+    BY_PROJECT,
+}
+
+enum class BusinessAttentionSeverity {
+    INFO,
+    WARNING,
+    CRITICAL,
+}
+
+enum class BusinessAttentionType {
+    OVERDUE_INVOICE,
+    LOW_CASH,
+    LARGE_EXPENSE,
+}
+
+data class BusinessAttentionAlert(
+    val type: BusinessAttentionType,
+    val severity: BusinessAttentionSeverity,
+    val clientName: String? = null,
+    val daysOverdue: Long? = null,
+    val amountCents: Long? = null,
+    val category: String? = null,
+)
+
+data class SavedFilterPreset(
+    val name: String,
+    val clientId: Long? = null,
+    val projectId: Long? = null,
+    val invoiceStatus: InvoiceStatus? = null,
+    val periodPreset: BusinessFilterPreset = BusinessFilterPreset.THIS_MONTH,
+)
+
 data class BusinessDashboardSummary(
     val monthRevenueCents: Long,
     val monthExpenseCents: Long,
@@ -97,6 +140,7 @@ data class BusinessDashboardSummary(
     val overdueInvoices: List<OverdueInvoiceRow> = emptyList(),
     val upcomingPayments: List<UpcomingPaymentRow> = emptyList(),
     val insights: List<String> = emptyList(),
+    val attentionAlerts: List<BusinessAttentionAlert> = emptyList(),
 )
 
 data class CashflowWeekPoint(
@@ -144,7 +188,7 @@ data class UpcomingPaymentRow(
 data class BusinessDashboardFilters(
     val clientId: Long? = null,
     val projectId: Long? = null,
-    val periodMonths: Int = 1,
+    val periodPreset: BusinessFilterPreset = BusinessFilterPreset.THIS_MONTH,
     val transactionType: BusinessTransactionType? = null,
     val invoiceStatus: InvoiceStatus? = null,
 )

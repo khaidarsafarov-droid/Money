@@ -616,4 +616,21 @@
     <string name="business_recent_transactions">Последние операции</string>
     <string name="business_tx_income">Доход</string>
     <string name="business_tx_expense">Расход</string>
+    <string name="business_action_create_invoice">Создать счёт</string>
+    <string name="business_action_add_transaction">Добавить операцию</string>
+    <string name="business_action_create_project">Создать проект</string>
+    <string name="business_attention_title">Что требует внимания сегодня</string>
+    <string name="business_alert_overdue_invoice">Счёт «%1$s» просрочен на %2$d дн. (%3$s)</string>
+    <string name="business_alert_low_cash">Низкий остаток: %1$s</string>
+    <string name="business_alert_large_expense">Крупный расход «%1$s»: %2$s</string>
+    <string name="business_filter_today">Сегодня</string>
+    <string name="business_filter_this_week">Эта неделя</string>
+    <string name="business_filter_this_month">Этот месяц</string>
+    <string name="business_filter_by_client">По клиенту</string>
+    <string name="business_filter_by_project">По проекту</string>
+    <string name="business_filter_save_preset">Сохранить вид</string>
+    <string name="business_filter_preset_name">Название вида</string>
+    <string name="business_view_financial">Финансовый</string>
+    <string name="business_view_client">Клиентский</string>
+    <string name="business_view_project">Проектный</string>
 </resources>

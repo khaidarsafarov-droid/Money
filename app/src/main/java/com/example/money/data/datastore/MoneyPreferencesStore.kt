@@ -128,6 +128,8 @@ object MoneyPreferenceKeys {
     val NOTIFICATION_PERMISSION_REQUESTED = booleanPreferencesKey("notification_permission_requested")
     val ACTIVE_FINANCE_BRANCH = stringPreferencesKey("active_finance_branch")
     val BUSINESS_BRANCH_NAME = stringPreferencesKey("business_branch_name")
+    val BUSINESS_DASHBOARD_VIEW = stringPreferencesKey("business_dashboard_view")
+    val BUSINESS_SAVED_FILTER_PRESETS_JSON = stringPreferencesKey("business_saved_filter_presets_json")
 }
 
 class MoneyPreferencesStore(
@@ -609,9 +611,18 @@ private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
             FinanceBranch.valueOf(this[MoneyPreferenceKeys.ACTIVE_FINANCE_BRANCH] ?: FinanceBranch.PERSONAL.name)
         }.getOrDefault(FinanceBranch.PERSONAL),
         businessName = this[MoneyPreferenceKeys.BUSINESS_BRANCH_NAME] ?: "",
+        dashboardView = runCatching {
+            com.example.money.domain.model.business.BusinessDashboardView.valueOf(
+                this[MoneyPreferenceKeys.BUSINESS_DASHBOARD_VIEW]
+                    ?: com.example.money.domain.model.business.BusinessDashboardView.FINANCIAL.name,
+            )
+        }.getOrDefault(com.example.money.domain.model.business.BusinessDashboardView.FINANCIAL),
+        savedFilterPresetsJson = this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] ?: "[]",
     )
 
 private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBranchSettings) {
     this[MoneyPreferenceKeys.ACTIVE_FINANCE_BRANCH] = settings.activeBranch.name
     this[MoneyPreferenceKeys.BUSINESS_BRANCH_NAME] = settings.businessName
+    this[MoneyPreferenceKeys.BUSINESS_DASHBOARD_VIEW] = settings.dashboardView.name
+    this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] = settings.savedFilterPresetsJson
 }

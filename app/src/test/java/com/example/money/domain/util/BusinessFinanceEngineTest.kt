@@ -69,4 +69,45 @@ class BusinessFinanceEngineTest {
         )
         assertEquals(InvoiceStatus.OVERDUE, BusinessFinanceEngine.resolveInvoiceStatus(invoice, nowMillis = 6_000))
     }
+
+    @Test
+    fun periodRangeForPreset_todayIsOneDay() {
+        val cal = java.util.Calendar.getInstance().apply {
+            set(2026, java.util.Calendar.JULY, 14, 15, 30, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val (start, end) = BusinessFinanceEngine.periodRangeForPreset(
+            com.example.money.domain.model.business.BusinessFilterPreset.TODAY,
+            cal.timeInMillis,
+        )
+        assertEquals(end - start, java.util.concurrent.TimeUnit.DAYS.toMillis(1))
+    }
+
+    @Test
+    fun computeDashboard_includesAttentionAlertsForOverdue() {
+        val monthStart = 1_000L
+        val monthEnd = 9_000_000L
+        val now = 8_000_000L
+        val summary = BusinessFinanceEngine.computeDashboard(
+            transactions = emptyList(),
+            invoices = listOf(
+                BusinessInvoice(
+                    id = 1,
+                    clientId = 1,
+                    issueDate = 1_000,
+                    dueDate = 5_000,
+                    amountCents = 10_000,
+                    status = InvoiceStatus.SENT,
+                ),
+            ),
+            clients = listOf(BusinessClient(id = 1, name = "Acme")),
+            projects = emptyList(),
+            monthStartMillis = monthStart,
+            monthEndMillis = monthEnd,
+            nowMillis = now,
+        )
+        assertEquals(true, summary.attentionAlerts.any {
+            it.type == com.example.money.domain.model.business.BusinessAttentionType.OVERDUE_INVOICE
+        })
+    }
 }

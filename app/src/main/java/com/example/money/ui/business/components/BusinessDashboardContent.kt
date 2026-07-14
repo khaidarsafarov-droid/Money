@@ -8,16 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Wallet
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -28,13 +31,18 @@ import com.example.money.R
 import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessDashboardFilters
 import com.example.money.domain.model.business.BusinessDashboardSummary
+import com.example.money.domain.model.business.BusinessDashboardView
+import com.example.money.domain.model.business.BusinessFilterPreset
 import com.example.money.domain.model.business.BusinessProject
 import com.example.money.domain.model.business.BusinessTransaction
-import com.example.money.domain.model.business.InvoiceStatus
+import com.example.money.domain.model.business.SavedFilterPreset
+import com.example.money.ui.business.BusinessQuickAction
 import com.example.money.ui.business.components.cards.BusinessKpiCard
 import com.example.money.ui.business.components.charts.CashflowLineChart
 import com.example.money.ui.business.components.charts.ProfitBarChart
+import com.example.money.ui.business.components.filters.BusinessFiltersBar
 import com.example.money.ui.business.components.widgets.AiInsightsWidget
+import com.example.money.ui.business.components.widgets.AttentionCenterWidget
 import com.example.money.ui.business.components.widgets.ClientProfitabilityWidget
 import com.example.money.ui.business.components.widgets.OverdueInvoicesWidget
 import com.example.money.ui.business.components.widgets.ProjectPerformanceWidget
@@ -45,9 +53,7 @@ import com.example.money.ui.business.theme.BusinessSpacing
 
 private val WideLayoutBreakpoint = 720.dp
 
-/**
- * Compose equivalent of BusinessDashboardPage.tsx — two-column on wide screens.
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BusinessDashboardContent(
     dashboard: BusinessDashboardSummary,
@@ -55,8 +61,16 @@ fun BusinessDashboardContent(
     projects: List<BusinessProject>,
     transactions: List<BusinessTransaction>,
     filters: BusinessDashboardFilters,
+    dashboardView: BusinessDashboardView,
+    savedPresets: List<SavedFilterPreset>,
     onFiltersChange: (BusinessDashboardFilters) -> Unit,
+    onApplyPreset: (BusinessFilterPreset) -> Unit,
+    onApplySavedPreset: (SavedFilterPreset) -> Unit,
+    onSavePreset: (String) -> Unit,
+    onDeleteSavedPreset: (String) -> Unit,
     onClearFilters: () -> Unit,
+    onDashboardViewChange: (BusinessDashboardView) -> Unit,
+    onQuickAction: (BusinessQuickAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -66,36 +80,37 @@ fun BusinessDashboardContent(
     ) {
         item { DashboardHeader() }
         item {
-            DashboardFilterRow(
+            DashboardViewSwitcher(
+                selectedView = dashboardView,
+                onViewChange = onDashboardViewChange,
+            )
+        }
+        item {
+            BusinessActionShortcuts(onAction = onQuickAction)
+        }
+        item {
+            BusinessFiltersBar(
                 clients = clients,
+                projects = projects,
                 filters = filters,
+                savedPresets = savedPresets,
                 onFiltersChange = onFiltersChange,
+                onApplyPreset = onApplyPreset,
+                onApplySavedPreset = onApplySavedPreset,
+                onSavePreset = onSavePreset,
+                onDeleteSavedPreset = onDeleteSavedPreset,
                 onClearFilters = onClearFilters,
             )
         }
+        item {
+            AttentionCenterWidget(alerts = dashboard.attentionAlerts)
+        }
         item { KpiGrid(dashboard) }
         item {
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                if (maxWidth >= WideLayoutBreakpoint) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.md),
-                    ) {
-                        DashboardMainColumn(
-                            dashboard = dashboard,
-                            modifier = Modifier.weight(2f),
-                        )
-                        DashboardSideColumn(
-                            dashboard = dashboard,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.md)) {
-                        DashboardMainColumn(dashboard = dashboard)
-                        DashboardSideColumn(dashboard = dashboard)
-                    }
-                }
+            when (dashboardView) {
+                BusinessDashboardView.FINANCIAL -> FinancialDashboardBody(dashboard)
+                BusinessDashboardView.CLIENT -> ClientDashboardBody(dashboard)
+                BusinessDashboardView.PROJECT -> ProjectDashboardBody(dashboard)
             }
         }
         item {
@@ -126,6 +141,39 @@ private fun DashboardHeader() {
             onClick = {},
             label = { Text(stringResource(R.string.business_mode_chip)) },
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DashboardViewSwitcher(
+    selectedView: BusinessDashboardView,
+    onViewChange: (BusinessDashboardView) -> Unit,
+) {
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        BusinessDashboardView.entries.forEachIndexed { index, view ->
+            SegmentedButton(
+                selected = selectedView == view,
+                onClick = { onViewChange(view) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = BusinessDashboardView.entries.size),
+                icon = {
+                    val icon = when (view) {
+                        BusinessDashboardView.FINANCIAL -> Icons.Outlined.AccountBalance
+                        BusinessDashboardView.CLIENT -> Icons.Outlined.Groups
+                        BusinessDashboardView.PROJECT -> Icons.Outlined.Work
+                    }
+                    androidx.compose.material3.Icon(icon, contentDescription = null)
+                },
+            ) {
+                Text(
+                    when (view) {
+                        BusinessDashboardView.FINANCIAL -> stringResource(R.string.business_view_financial)
+                        BusinessDashboardView.CLIENT -> stringResource(R.string.business_view_client)
+                        BusinessDashboardView.PROJECT -> stringResource(R.string.business_view_project)
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -177,7 +225,61 @@ private fun KpiGrid(dashboard: BusinessDashboardSummary) {
 }
 
 @Composable
-private fun DashboardMainColumn(
+private fun FinancialDashboardBody(dashboard: BusinessDashboardSummary) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        if (maxWidth >= WideLayoutBreakpoint) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.md),
+            ) {
+                FinancialMainColumn(dashboard = dashboard, modifier = Modifier.weight(2f))
+                FinancialSideColumn(dashboard = dashboard, modifier = Modifier.weight(1f))
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.md)) {
+                FinancialMainColumn(dashboard = dashboard)
+                FinancialSideColumn(dashboard = dashboard)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClientDashboardBody(dashboard: BusinessDashboardSummary) {
+    Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.md)) {
+        ClientProfitabilityWidget(
+            title = stringResource(R.string.business_top_clients_table),
+            clients = dashboard.clientTable,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
+            OverdueInvoicesWidget(
+                items = dashboard.overdueInvoices,
+                modifier = Modifier.weight(1f),
+            )
+            UpcomingPaymentsWidget(
+                items = dashboard.upcomingPayments,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        AiInsightsWidget(insights = dashboard.insights)
+    }
+}
+
+@Composable
+private fun ProjectDashboardBody(dashboard: BusinessDashboardSummary) {
+    Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.md)) {
+        ProjectPerformanceWidget(projects = dashboard.projectCards)
+        CashflowLineChart(
+            incomeValues = dashboard.cashflowWeekly.map { it.incomeCents },
+            expenseValues = dashboard.cashflowWeekly.map { it.expenseCents },
+            labels = dashboard.cashflowWeekly.map { it.label },
+            title = stringResource(R.string.business_chart_cashflow),
+        )
+    }
+}
+
+@Composable
+private fun FinancialMainColumn(
     dashboard: BusinessDashboardSummary,
     modifier: Modifier = Modifier,
 ) {
@@ -201,7 +303,7 @@ private fun DashboardMainColumn(
 }
 
 @Composable
-private fun DashboardSideColumn(
+private fun FinancialSideColumn(
     dashboard: BusinessDashboardSummary,
     modifier: Modifier = Modifier,
 ) {
@@ -223,56 +325,6 @@ private fun DashboardSideColumn(
                 items = dashboard.upcomingPayments,
                 modifier = Modifier.weight(1f),
             )
-        }
-    }
-}
-
-@Composable
-private fun DashboardFilterRow(
-    clients: List<BusinessClient>,
-    filters: BusinessDashboardFilters,
-    onFiltersChange: (BusinessDashboardFilters) -> Unit,
-    onClearFilters: () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.sm)) {
-            item {
-                FilterChip(
-                    selected = filters.clientId == null,
-                    onClick = { onFiltersChange(filters.copy(clientId = null)) },
-                    label = { Text(stringResource(R.string.business_filter_all_clients)) },
-                )
-            }
-            items(clients.take(6)) { client ->
-                FilterChip(
-                    selected = filters.clientId == client.id,
-                    onClick = { onFiltersChange(filters.copy(clientId = client.id)) },
-                    label = { Text(client.name) },
-                )
-            }
-            item {
-                FilterChip(
-                    selected = filters.invoiceStatus == null,
-                    onClick = { onFiltersChange(filters.copy(invoiceStatus = null)) },
-                    label = { Text(stringResource(R.string.business_filter_all_invoices)) },
-                )
-            }
-            items(InvoiceStatus.entries) { status ->
-                FilterChip(
-                    selected = filters.invoiceStatus == status,
-                    onClick = { onFiltersChange(filters.copy(invoiceStatus = status)) },
-                    label = { Text(status.name) },
-                )
-            }
-            if (filters.clientId != null || filters.projectId != null || filters.invoiceStatus != null) {
-                item {
-                    FilterChip(
-                        selected = false,
-                        onClick = onClearFilters,
-                        label = { Text(stringResource(R.string.business_filter_clear)) },
-                    )
-                }
-            }
         }
     }
 }

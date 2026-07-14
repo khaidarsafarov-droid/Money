@@ -383,4 +383,21 @@
     <string name="business_recent_transactions">Recent Business Transactions</string>
     <string name="business_tx_income">Income</string>
     <string name="business_tx_expense">Expense</string>
+    <string name="business_action_create_invoice">Create Invoice</string>
+    <string name="business_action_add_transaction">Add Transaction</string>
+    <string name="business_action_create_project">Create Project</string>
+    <string name="business_attention_title">Today\'s Alerts</string>
+    <string name="business_alert_overdue_invoice">Invoice for %1$s is %2$d days overdue (%3$s)</string>
+    <string name="business_alert_low_cash">Low cash balance: %1$s</string>
+    <string name="business_alert_large_expense">Large expense in %1$s: %2$s</string>
+    <string name="business_filter_today">Today</string>
+    <string name="business_filter_this_week">This Week</string>
+    <string name="business_filter_this_month">This Month</string>
+    <string name="business_filter_by_client">By Client</string>
+    <string name="business_filter_by_project">By Project</string>
+    <string name="business_filter_save_preset">Save view</string>
+    <string name="business_filter_preset_name">View name</string>
+    <string name="business_view_financial">Financial</string>
+    <string name="business_view_client">Client</string>
+    <string name="business_view_project">Project</string>
 </resources>
