@@ -5,13 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.money.data.datastore.MoneyPreferencesStore
+import com.example.money.domain.model.business.BusinessCommunicationSendResult
 import com.example.money.domain.model.business.workflow.WorkflowBill
 import com.example.money.domain.model.business.workflow.WorkflowCategory
 import com.example.money.domain.model.business.workflow.WorkflowDebtWithParticipant
 import com.example.money.domain.model.business.workflow.WorkflowParticipantDraft
 import com.example.money.domain.model.business.workflow.WorkflowProcess
-import com.example.money.domain.model.business.workflow.WorkflowWhatsAppSendResult
+import com.example.money.domain.usecase.BusinessCommunicationUseCases
 import com.example.money.domain.usecase.BusinessWorkflowUseCases
+import com.example.money.messaging.MessagingChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +37,7 @@ sealed interface WorkflowRoute {
 @OptIn(ExperimentalCoroutinesApi::class)
 class BusinessWorkflowViewModel(
     private val workflowUseCases: BusinessWorkflowUseCases,
+    private val communicationUseCases: BusinessCommunicationUseCases,
     private val preferencesStore: MoneyPreferencesStore,
 ) : ViewModel() {
 
@@ -207,7 +210,7 @@ class BusinessWorkflowViewModel(
         viewModelScope.launch {
             val first = debts.value.firstOrNull { it.debt.id in _selectedDebtIds.value } ?: return@launch
             val settings = preferencesStore.businessBranchSettings.first()
-            _messageBody.value = workflowUseCases.aiGenerateReminderMessage(
+            _messageBody.value = communicationUseCases.aiGenerateWorkflowMessage(
                 billId = billId,
                 debt = first,
                 businessName = settings.businessName,
@@ -215,16 +218,63 @@ class BusinessWorkflowViewModel(
         }
     }
 
-    suspend fun sendWhatsAppReminders(
+    private fun selectedDebts(): List<WorkflowDebtWithParticipant> =
+        debts.value.filter { it.debt.id in _selectedDebtIds.value }
+
+    suspend fun sendReminders(
         context: Context,
         billId: Long,
-    ): WorkflowWhatsAppSendResult {
-        val selected = debts.value.filter { it.debt.id in _selectedDebtIds.value }
-        return workflowUseCases.sendWhatsAppReminders(
+        channel: MessagingChannel,
+        useDirectSms: Boolean = false,
+    ): BusinessCommunicationSendResult {
+        val settings = preferencesStore.businessBranchSettings.first()
+        return communicationUseCases.sendWorkflowReminders(
             context = context,
             billId = billId,
-            selectedDebts = selected,
+            channel = channel,
+            selectedDebts = selectedDebts(),
             messageBody = _messageBody.value,
+            useDirectSms = useDirectSms,
+            businessName = settings.businessName,
+        )
+    }
+
+    suspend fun sendPushReminders(
+        context: Context,
+        billId: Long,
+    ): BusinessCommunicationSendResult {
+        val settings = preferencesStore.businessBranchSettings.first()
+        return communicationUseCases.sendWorkflowPushReminders(
+            context = context,
+            billId = billId,
+            selectedDebts = selectedDebts(),
+            messageBody = _messageBody.value,
+            businessName = settings.businessName,
+        )
+    }
+
+    suspend fun sendAllChannels(
+        context: Context,
+        billId: Long,
+        useDirectSms: Boolean,
+        includePush: Boolean,
+    ): BusinessCommunicationSendResult {
+        val settings = preferencesStore.businessBranchSettings.first()
+        val channels = listOf(
+            MessagingChannel.WHATSAPP,
+            MessagingChannel.SMS,
+            MessagingChannel.TELEGRAM,
+            MessagingChannel.EMAIL,
+        )
+        return communicationUseCases.sendWorkflowBulk(
+            context = context,
+            billId = billId,
+            channels = channels,
+            selectedDebts = selectedDebts(),
+            messageBody = _messageBody.value,
+            useDirectSms = useDirectSms,
+            includePush = includePush,
+            businessName = settings.businessName,
         )
     }
 
@@ -234,12 +284,17 @@ class BusinessWorkflowViewModel(
 
     class Factory(
         private val workflowUseCases: BusinessWorkflowUseCases,
+        private val communicationUseCases: BusinessCommunicationUseCases,
         private val preferencesStore: MoneyPreferencesStore,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(BusinessWorkflowViewModel::class.java)) {
-                return BusinessWorkflowViewModel(workflowUseCases, preferencesStore) as T
+                return BusinessWorkflowViewModel(
+                    workflowUseCases,
+                    communicationUseCases,
+                    preferencesStore,
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
         }

@@ -109,6 +109,8 @@ private fun BusinessHomeScreenContent(
             app.businessSmsUseCases,
             app.businessInvoiceReminderScheduler,
             app.businessSmsScheduler,
+            app.workflowDebtScheduler,
+            app.businessCommunicationUseCases,
         ),
     )
 
@@ -387,7 +389,7 @@ private fun BusinessTabContent(
             onAddRule = viewModel::addRecurringRule,
             onDeleteRule = viewModel::deleteRecurringRule,
             onToggleRule = viewModel::toggleRecurringRule,
-            onRunNow = viewModel::runRecurringRulesNow,
+            onRunNow = { viewModel.runAutomationNow(context) },
         )
     }
 }

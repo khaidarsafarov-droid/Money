@@ -157,6 +157,35 @@ fun BusinessAutomationSettings(
         }
 
         item {
+            Text(
+                text = stringResource(R.string.business_workflow_automation_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_workflow_debt_automation),
+                checked = settings.workflowDebtAutomationEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(workflowDebtAutomationEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_workflow_debt_push),
+                checked = settings.workflowDebtPushEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(workflowDebtPushEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
             TextButton(onClick = onRunNow) {
                 Text(stringResource(R.string.business_automation_run_now))
             }

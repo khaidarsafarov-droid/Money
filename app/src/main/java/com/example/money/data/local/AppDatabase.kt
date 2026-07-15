@@ -59,6 +59,7 @@ import com.example.money.data.local.migration.MIGRATION_14_15
 import com.example.money.data.local.migration.MIGRATION_15_16
 import com.example.money.data.local.migration.MIGRATION_16_17
 import com.example.money.data.local.migration.MIGRATION_17_18
+import com.example.money.data.local.migration.MIGRATION_18_19
 
 @Database(
     entities = [
@@ -82,7 +83,7 @@ import com.example.money.data.local.migration.MIGRATION_17_18
         WorkflowParticipantEntity::class,
         WorkflowDebtEntity::class,
     ],
-    version = 18,
+    version = 19,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -127,6 +128,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_15_16,
                     MIGRATION_16_17,
                     MIGRATION_17_18,
+                    MIGRATION_18_19,
                 ).build().also { instance = it }
             }
         }

@@ -146,6 +146,8 @@ object MoneyPreferenceKeys {
     val BUSINESS_WHATSAPP_AUTOMATION_ENABLED = booleanPreferencesKey("business_whatsapp_automation_enabled")
     val BUSINESS_TELEGRAM_AUTOMATION_ENABLED = booleanPreferencesKey("business_telegram_automation_enabled")
     val BUSINESS_EMAIL_AUTOMATION_ENABLED = booleanPreferencesKey("business_email_automation_enabled")
+    val BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED = booleanPreferencesKey("business_workflow_debt_automation_enabled")
+    val BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED = booleanPreferencesKey("business_workflow_debt_push_enabled")
     val PERSONAL_DEBT_NOTIFICATIONS_ENABLED = booleanPreferencesKey("personal_debt_notifications_enabled")
     val PERSONAL_DEBT_ADVANCE_1D = booleanPreferencesKey("personal_debt_advance_1d")
     val PERSONAL_DEBT_ADVANCE_3D = booleanPreferencesKey("personal_debt_advance_3d")
@@ -696,6 +698,8 @@ private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
         whatsappAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] ?: true,
         telegramAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] ?: false,
         emailAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] ?: true,
+        workflowDebtAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED] ?: false,
+        workflowDebtPushEnabled = this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED] ?: true,
     )
 
 private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
@@ -729,6 +733,8 @@ private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBra
     this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] = settings.whatsappAutomationEnabled
     this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] = settings.telegramAutomationEnabled
     this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] = settings.emailAutomationEnabled
+    this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED] = settings.workflowDebtAutomationEnabled
+    this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED] = settings.workflowDebtPushEnabled
 }
 
 private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBranchSettings) {

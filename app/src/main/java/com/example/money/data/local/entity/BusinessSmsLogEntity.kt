@@ -34,6 +34,9 @@ data class BusinessSmsLogEntity(
     val body: String,
     @ColumnInfo(name = "template_id")
     val templateId: String? = null,
+    val channel: String = "SMS",
+    @ColumnInfo(name = "workflow_debt_id")
+    val workflowDebtId: Long? = null,
     val status: String = "PENDING",
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),

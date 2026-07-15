@@ -30,6 +30,8 @@ data class BusinessBranchSettings(
     val whatsappAutomationEnabled: Boolean = true,
     val telegramAutomationEnabled: Boolean = false,
     val emailAutomationEnabled: Boolean = true,
+    val workflowDebtAutomationEnabled: Boolean = false,
+    val workflowDebtPushEnabled: Boolean = true,
 ) {
     fun savedFilterPresets(): List<SavedFilterPreset> = decodeSavedFilterPresets(savedFilterPresetsJson)
 
@@ -41,6 +43,17 @@ data class BusinessBranchSettings(
     }
 
     fun hasOverdueInvoiceAutomation(): Boolean = enabledOverdueAutomationChannels().isNotEmpty()
+
+    fun enabledWorkflowAutomationChannels(): List<MessagingChannel> = buildList {
+        if (smsAutomationEnabled) add(MessagingChannel.SMS)
+        if (whatsappAutomationEnabled) add(MessagingChannel.WHATSAPP)
+        if (telegramAutomationEnabled) add(MessagingChannel.TELEGRAM)
+        if (emailAutomationEnabled) add(MessagingChannel.EMAIL)
+    }
+
+    fun hasWorkflowDebtAutomation(): Boolean =
+        workflowDebtAutomationEnabled &&
+            (enabledWorkflowAutomationChannels().isNotEmpty() || workflowDebtPushEnabled)
 
     fun customCategories(): List<String> = decodeStringList(customCategoriesJson)
 

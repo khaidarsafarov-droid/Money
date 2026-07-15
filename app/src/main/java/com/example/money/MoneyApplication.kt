@@ -26,9 +26,12 @@ import com.example.money.notification.BusinessInvoiceReminderScheduler
 import com.example.money.notification.BusinessInvoiceReminderSchedulerImpl
 import com.example.money.notification.BusinessSmsScheduler
 import com.example.money.notification.BusinessSmsSchedulerImpl
+import com.example.money.notification.WorkflowDebtScheduler
+import com.example.money.notification.WorkflowDebtSchedulerImpl
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.NotificationChannels
+import com.example.money.domain.usecase.BusinessCommunicationUseCases
 import com.example.money.domain.usecase.BusinessSmsUseCases
 import com.example.money.domain.usecase.BusinessUseCases
 import com.example.money.data.repository.BusinessWorkflowRepositoryImpl
@@ -173,12 +176,24 @@ class MoneyApplication : Application() {
         BusinessWorkflowUseCases(businessWorkflowRepository)
     }
 
+    val businessCommunicationUseCases: BusinessCommunicationUseCases by lazy {
+        BusinessCommunicationUseCases(
+            workflowRepository = businessWorkflowRepository,
+            workflowUseCases = businessWorkflowUseCases,
+            smsRepository = businessSmsRepository,
+        )
+    }
+
     val businessInvoiceReminderScheduler: BusinessInvoiceReminderScheduler by lazy {
         BusinessInvoiceReminderSchedulerImpl(this)
     }
 
     val businessSmsScheduler: BusinessSmsScheduler by lazy {
         BusinessSmsSchedulerImpl(this)
+    }
+
+    val workflowDebtScheduler: WorkflowDebtScheduler by lazy {
+        WorkflowDebtSchedulerImpl(this)
     }
 
     val personalDebtMessageScheduler: PersonalDebtMessageScheduler by lazy {
@@ -211,6 +226,7 @@ class MoneyApplication : Application() {
         rescheduleDebtReminders()
         rescheduleBusinessReminders()
         syncBusinessSmsSchedule()
+        syncWorkflowDebtSchedule()
         syncPersonalDebtMessageSchedule()
         startWidgetPipeline()
         syncAutopilotSchedule()
@@ -279,6 +295,13 @@ class MoneyApplication : Application() {
         applicationScope.launch {
             val settings = preferencesStore.businessBranchSettings.first()
             businessSmsScheduler.syncSchedule(settings)
+        }
+    }
+
+    fun syncWorkflowDebtSchedule() {
+        applicationScope.launch {
+            val settings = preferencesStore.businessBranchSettings.first()
+            workflowDebtScheduler.syncSchedule(settings)
         }
     }
 

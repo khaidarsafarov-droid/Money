@@ -535,6 +535,10 @@
     <string name="workflow_message_label">Reminder message</string>
     <string name="workflow_ai_generate">Generate message</string>
     <string name="workflow_send_whatsapp">Send via WhatsApp</string>
+    <string name="workflow_send_sms">Send SMS</string>
+    <string name="workflow_send_push">Push notification</string>
+    <string name="workflow_send_all">Send to all</string>
+    <string name="workflow_send_result">Sent: %1$d, skipped: %2$d, failed: %3$d</string>
     <string name="workflow_whatsapp_result">WhatsApp: sent %1$d, skipped %2$d, failed %3$d</string>
     <string name="workflow_status_open">Unpaid</string>
     <string name="workflow_status_partial">Partial</string>
@@ -568,4 +572,10 @@
     <string name="business_whatsapp_automation">Auto WhatsApp (overdue)</string>
     <string name="business_telegram_automation">Auto Telegram (overdue)</string>
     <string name="business_email_automation">Auto Email (overdue)</string>
+    <string name="business_workflow_automation_title">Workflow automation</string>
+    <string name="business_workflow_debt_automation">Auto debt reminders (WorkManager)</string>
+    <string name="business_workflow_debt_push">Push for workflow debts</string>
+    <string name="notification_workflow_debt_title">Debt: %1$s</string>
+    <string name="notification_workflow_debt_body">%1$s — %2$s\n%3$s</string>
+    <string name="notification_workflow_debt_body_short">%1$s\n%2$s</string>
 </resources>

@@ -10,6 +10,7 @@ import com.example.money.messaging.MessagePayload
 import com.example.money.messaging.MessagingChannel
 import com.example.money.messaging.MessagingContact
 import com.example.money.messaging.UniversalMessageSender
+import com.example.money.domain.model.business.workflow.WorkflowDebtWithParticipant
 import com.example.money.ui.util.Formatters
 import java.util.concurrent.TimeUnit
 
@@ -111,6 +112,78 @@ object BusinessNotificationHelper {
         }
     }
 
+    fun showWorkflowDebtReminder(
+        context: Context,
+        debt: WorkflowDebtWithParticipant,
+        billTitle: String,
+        body: String,
+    ): Boolean {
+        if (!com.example.money.ui.util.NotificationPermissions.areEnabled(context)) return false
+
+        val amount = Formatters.currencyFromCents(debt.debt.remainingAmountCents)
+        val title = context.getString(R.string.notification_workflow_debt_title, debt.participant.name)
+        val notificationBody = if (billTitle.isNotBlank()) {
+            context.getString(
+                R.string.notification_workflow_debt_body,
+                billTitle,
+                amount,
+                body,
+            )
+        } else {
+            context.getString(R.string.notification_workflow_debt_body_short, amount, body)
+        }
+
+        val builder = androidx.core.app.NotificationCompat.Builder(context, NotificationChannels.BUSINESS_ALERTS)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(notificationBody)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(notificationBody))
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+
+        val phone = debt.participant.phone.trim()
+        if (phone.isNotBlank()) {
+            val contact = MessagingContact(phone = phone, name = debt.participant.name)
+            val launchIntent = UniversalMessageSender.createLaunchIntent(
+                context,
+                MessagingChannel.WHATSAPP,
+                contact,
+                MessagePayload(body = body),
+            )
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    workflowDebtRequestCode(debt.debt.id),
+                    launchIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                )
+                builder.setContentIntent(pendingIntent)
+                builder.addAction(
+                    R.drawable.ic_notification,
+                    context.getString(
+                        R.string.notification_action_send_now,
+                        context.getString(R.string.messaging_channel_whatsapp),
+                    ),
+                    pendingIntent,
+                )
+            }
+        }
+
+        return try {
+            androidx.core.app.NotificationManagerCompat.from(context)
+                .notify(workflowDebtNotificationId(debt.debt.id), builder.build())
+            true
+        } catch (exception: SecurityException) {
+            false
+        }
+    }
+
+    fun cancelWorkflowDebt(context: Context, debtId: Long) {
+        androidx.core.app.NotificationManagerCompat.from(context)
+            .cancel(workflowDebtNotificationId(debtId))
+    }
+
     fun showLowCashAlert(context: Context, balanceCents: Long, thresholdCents: Long): Boolean {
         if (!com.example.money.ui.util.NotificationPermissions.areEnabled(context)) return false
 
@@ -163,4 +236,8 @@ object BusinessNotificationHelper {
 
     private fun messagingRequestCode(invoiceId: Long, channel: MessagingChannel): Int =
         (300_000 + invoiceId * 10 + channel.ordinal).toInt()
+
+    private fun workflowDebtNotificationId(debtId: Long): Int = (400_000 + debtId).toInt()
+
+    private fun workflowDebtRequestCode(debtId: Long): Int = (500_000 + debtId).toInt()
 }

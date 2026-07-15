@@ -26,6 +26,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -60,7 +61,9 @@ import com.example.money.domain.model.business.workflow.WorkflowParticipantDraft
 import com.example.money.domain.model.business.workflow.WorkflowProcess
 import com.example.money.domain.util.MoneyMath
 import com.example.money.messaging.ContactInfoResolver
+import com.example.money.messaging.MessagingChannel
 import com.example.money.ui.util.Formatters
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +74,7 @@ fun BusinessWorkflowScreen(modifier: Modifier = Modifier) {
     val viewModel: BusinessWorkflowViewModel = viewModel(
         factory = BusinessWorkflowViewModel.Factory(
             app.businessWorkflowUseCases,
+            app.businessCommunicationUseCases,
             app.preferencesStore,
         ),
     )
@@ -83,6 +87,41 @@ fun BusinessWorkflowScreen(modifier: Modifier = Modifier) {
     val messageBody by viewModel.messageBody.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var pendingSmsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val smsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) pendingSmsAction?.invoke()
+        pendingSmsAction = null
+    }
+
+    fun showSendResult(result: com.example.money.domain.model.business.BusinessCommunicationSendResult) {
+        scope.launch {
+            snackbarHostState.showSnackbar(
+                context.getString(
+                    R.string.workflow_send_result,
+                    result.sentCount,
+                    result.skippedCount,
+                    result.failedCount,
+                ),
+            )
+        }
+    }
+
+    fun sendWithSmsPermission(useDirectSms: Boolean, action: suspend () -> com.example.money.domain.model.business.BusinessCommunicationSendResult) {
+        scope.launch {
+            if (useDirectSms && !BusinessSmsPermissions.canSendDirect(context)) {
+                pendingSmsAction = {
+                    scope.launch {
+                        showSendResult(action())
+                    }
+                }
+                smsPermissionLauncher.launch(BusinessSmsPermissions.sendSmsPermission)
+            } else {
+                showSendResult(action())
+            }
+        }
+    }
 
     val title = when (val r = route) {
         WorkflowRoute.Categories -> stringResource(R.string.workflow_title_categories)
@@ -155,15 +194,38 @@ fun BusinessWorkflowScreen(modifier: Modifier = Modifier) {
                 onMarkPaid = viewModel::markDebtPaid,
                 onSendWhatsApp = {
                     scope.launch {
-                        val result = viewModel.sendWhatsAppReminders(context, r.billId)
-                        snackbarHostState.showSnackbar(
-                            context.getString(
-                                R.string.workflow_whatsapp_result,
-                                result.sentCount,
-                                result.skippedCount,
-                                result.failedCount,
-                            ),
-                        )
+                        showSendResult(viewModel.sendReminders(context, r.billId, MessagingChannel.WHATSAPP))
+                    }
+                },
+                onSendSms = {
+                    scope.launch {
+                        val settings = app.preferencesStore.businessBranchSettings.first()
+                        sendWithSmsPermission(settings.smsDirectSendEnabled) {
+                            viewModel.sendReminders(
+                                context,
+                                r.billId,
+                                MessagingChannel.SMS,
+                                settings.smsDirectSendEnabled,
+                            )
+                        }
+                    }
+                },
+                onSendPush = {
+                    scope.launch {
+                        showSendResult(viewModel.sendPushReminders(context, r.billId))
+                    }
+                },
+                onSendAll = {
+                    scope.launch {
+                        val settings = app.preferencesStore.businessBranchSettings.first()
+                        sendWithSmsPermission(settings.smsDirectSendEnabled) {
+                            viewModel.sendAllChannels(
+                                context,
+                                r.billId,
+                                settings.smsDirectSendEnabled,
+                                includePush = true,
+                            )
+                        }
                     }
                 },
                 modifier = Modifier.padding(padding),
@@ -323,6 +385,9 @@ private fun BillDetailScreen(
     onAiGenerate: () -> Unit,
     onMarkPaid: (Long) -> Unit,
     onSendWhatsApp: () -> Unit,
+    onSendSms: () -> Unit,
+    onSendPush: () -> Unit,
+    onSendAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val totalCents = debts.sumOf { it.debt.amountCents }
@@ -363,12 +428,43 @@ private fun BillDetailScreen(
                     Text(stringResource(R.string.workflow_ai_generate))
                 }
             }
-            Button(
-                onClick = onSendWhatsApp,
-                enabled = selectedDebtIds.isNotEmpty(),
+            Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(stringResource(R.string.workflow_send_whatsapp))
+                OutlinedButton(
+                    onClick = onSendWhatsApp,
+                    enabled = selectedDebtIds.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.workflow_send_whatsapp))
+                }
+                OutlinedButton(
+                    onClick = onSendSms,
+                    enabled = selectedDebtIds.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.workflow_send_sms))
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onSendPush,
+                    enabled = selectedDebtIds.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.workflow_send_push))
+                }
+                Button(
+                    onClick = onSendAll,
+                    enabled = selectedDebtIds.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.workflow_send_all))
+                }
             }
         }
     }

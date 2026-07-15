@@ -768,6 +768,10 @@
     <string name="workflow_message_label">Текст напоминания</string>
     <string name="workflow_ai_generate">Сгенерировать текст</string>
     <string name="workflow_send_whatsapp">Отправить через WhatsApp</string>
+    <string name="workflow_send_sms">Отправить SMS</string>
+    <string name="workflow_send_push">Push-уведомление</string>
+    <string name="workflow_send_all">Отправить всем</string>
+    <string name="workflow_send_result">Отправлено: %1$d, пропущено: %2$d, ошибок: %3$d</string>
     <string name="workflow_whatsapp_result">WhatsApp: отправлено %1$d, пропущено %2$d, ошибок %3$d</string>
     <string name="workflow_status_open">Не оплачен</string>
     <string name="workflow_status_partial">Частично</string>
@@ -801,4 +805,10 @@
     <string name="business_whatsapp_automation">Авто WhatsApp (просрочки)</string>
     <string name="business_telegram_automation">Авто Telegram (просрочки)</string>
     <string name="business_email_automation">Авто Email (просрочки)</string>
+    <string name="business_workflow_automation_title">Автоматизация процессов</string>
+    <string name="business_workflow_debt_automation">Авто-напоминания по долгам (WorkManager)</string>
+    <string name="business_workflow_debt_push">Push по долгам процессов</string>
+    <string name="notification_workflow_debt_title">Долг: %1$s</string>
+    <string name="notification_workflow_debt_body">%1$s — %2$s\n%3$s</string>
+    <string name="notification_workflow_debt_body_short">%1$s\n%2$s</string>
 </resources>
