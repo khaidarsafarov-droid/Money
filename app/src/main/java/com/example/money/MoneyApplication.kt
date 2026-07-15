@@ -31,6 +31,9 @@ import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.NotificationChannels
 import com.example.money.domain.usecase.BusinessSmsUseCases
 import com.example.money.domain.usecase.BusinessUseCases
+import com.example.money.data.repository.BusinessWorkflowRepositoryImpl
+import com.example.money.domain.repository.BusinessWorkflowRepository
+import com.example.money.domain.usecase.BusinessWorkflowUseCases
 import com.example.money.voice.VoiceReportScheduler
 import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.widget.GoalWidgetSnapshotWriter
@@ -154,6 +157,20 @@ class MoneyApplication : Application() {
             businessRepository = businessRepository,
             smsRepository = businessSmsRepository,
         )
+    }
+
+    val businessWorkflowRepository: BusinessWorkflowRepository by lazy {
+        BusinessWorkflowRepositoryImpl(
+            categoryDao = database.workflowCategoryDao(),
+            processDao = database.workflowProcessDao(),
+            billDao = database.workflowBillDao(),
+            participantDao = database.workflowParticipantDao(),
+            debtDao = database.workflowDebtDao(),
+        )
+    }
+
+    val businessWorkflowUseCases: BusinessWorkflowUseCases by lazy {
+        BusinessWorkflowUseCases(businessWorkflowRepository)
     }
 
     val businessInvoiceReminderScheduler: BusinessInvoiceReminderScheduler by lazy {

@@ -558,6 +558,7 @@
     <string name="business_branch_subtitle">Учёт денежного потока и клиентов</string>
     <string name="business_switch_personal">Вернуться в личную ветку</string>
     <string name="business_tab_dashboard">Обзор</string>
+    <string name="business_tab_workflows">Процессы</string>
     <string name="business_tab_clients">Клиенты</string>
     <string name="business_tab_projects">Проекты</string>
     <string name="business_tab_invoices">Счета</string>
@@ -742,6 +743,36 @@
     <string name="debt_remind_need_email">Нужен email</string>
     <string name="debt_remind_telegram_unavailable">Telegram не установлен</string>
     <string name="debt_remind_channel_unavailable">Недоступно на этом устройстве</string>
+
+    <!-- Business workflow: categories → processes → bills → debts → WhatsApp -->
+    <string name="workflow_title_categories">Категории</string>
+    <string name="workflow_categories_subtitle">Выберите сценарий: клиенты, торговля, семейные или общие счета</string>
+    <string name="workflow_empty_processes">Создайте первый процесс</string>
+    <string name="workflow_empty_bills">Создайте первый общий счёт</string>
+    <string name="workflow_create_process">Новый процесс</string>
+    <string name="workflow_create_bill">Новый счёт</string>
+    <string name="workflow_bill_detail_title">Долги по счёту</string>
+    <string name="workflow_process_name">Название процесса</string>
+    <string name="workflow_process_description">Описание</string>
+    <string name="workflow_create">Создать</string>
+    <string name="workflow_bill_title">Название счёта</string>
+    <string name="workflow_bill_total">Общая сумма ($)</string>
+    <string name="workflow_bill_period">Период (например, август)</string>
+    <string name="workflow_bill_description">Описание</string>
+    <string name="workflow_add_participant">Добавить из контактов</string>
+    <string name="workflow_split_equally">Разделить поровну</string>
+    <string name="workflow_participant_amount">Сумма ($)</string>
+    <string name="workflow_total_bill">Общий счёт: %1$s</string>
+    <string name="workflow_select_all">Выбрать всех</string>
+    <string name="workflow_clear_selection">Снять выбор</string>
+    <string name="workflow_message_label">Текст напоминания</string>
+    <string name="workflow_ai_generate">Сгенерировать текст</string>
+    <string name="workflow_send_whatsapp">Отправить через WhatsApp</string>
+    <string name="workflow_whatsapp_result">WhatsApp: отправлено %1$d, пропущено %2$d, ошибок %3$d</string>
+    <string name="workflow_status_open">Не оплачен</string>
+    <string name="workflow_status_partial">Частично</string>
+    <string name="workflow_status_paid">Оплачен</string>
+    <string name="workflow_mark_paid">Оплачен</string>
     <string name="debt_notification_settings_title">Уведомления о долгах</string>
     <string name="debt_notification_settings_subtitle">Напоминания, авто-сообщения и каналы связи</string>
     <string name="debt_notification_enabled">Push-уведомления о долгах</string>

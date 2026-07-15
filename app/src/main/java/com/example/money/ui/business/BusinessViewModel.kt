@@ -64,6 +64,7 @@ import kotlinx.coroutines.launch
 
 enum class BusinessTab {
     Dashboard,
+    Workflows,
     Clients,
     Projects,
     Invoices,

@@ -76,6 +76,7 @@ import com.example.money.ui.business.assistant.BusinessAssistantMessage
 import com.example.money.ui.business.reports.BusinessReportTab
 import com.example.money.ui.business.reports.BusinessReportsContent
 import com.example.money.ui.business.sms.BusinessSmsScreen
+import com.example.money.ui.business.workflow.BusinessWorkflowScreen
 import com.example.money.ui.business.theme.BusinessTheme
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
@@ -319,6 +320,7 @@ private fun BusinessTabContent(
                 onQuickAction = viewModel::requestQuickAction,
             )
         }
+        BusinessTab.Workflows -> BusinessWorkflowScreen(modifier = Modifier.fillMaxSize())
         BusinessTab.Clients -> ClientList(clients = clients)
         BusinessTab.Projects -> BusinessListTab(
             items = projects.map { project ->

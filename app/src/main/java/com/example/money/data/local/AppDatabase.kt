@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.money.data.local.dao.DebtorDao
 import com.example.money.data.local.dao.DebtPaymentDao
 import com.example.money.data.local.dao.LuckDiaryDao
 import com.example.money.data.local.dao.ExpenseDao
@@ -17,7 +18,11 @@ import com.example.money.data.local.dao.BusinessInvoiceDao
 import com.example.money.data.local.dao.BusinessProjectDao
 import com.example.money.data.local.dao.BusinessSmsLogDao
 import com.example.money.data.local.dao.BusinessTransactionDao
-import com.example.money.data.local.dao.DebtorDao
+import com.example.money.data.local.dao.WorkflowBillDao
+import com.example.money.data.local.dao.WorkflowCategoryDao
+import com.example.money.data.local.dao.WorkflowDebtDao
+import com.example.money.data.local.dao.WorkflowParticipantDao
+import com.example.money.data.local.dao.WorkflowProcessDao
 import com.example.money.data.local.entity.BusinessAssetEntity
 import com.example.money.data.local.entity.BusinessCategoryEntity
 import com.example.money.data.local.entity.BusinessClientEntity
@@ -25,6 +30,11 @@ import com.example.money.data.local.entity.BusinessInvoiceEntity
 import com.example.money.data.local.entity.BusinessProjectEntity
 import com.example.money.data.local.entity.BusinessSmsLogEntity
 import com.example.money.data.local.entity.BusinessTransactionEntity
+import com.example.money.data.local.entity.workflow.WorkflowBillEntity
+import com.example.money.data.local.entity.workflow.WorkflowCategoryEntity
+import com.example.money.data.local.entity.workflow.WorkflowDebtEntity
+import com.example.money.data.local.entity.workflow.WorkflowParticipantEntity
+import com.example.money.data.local.entity.workflow.WorkflowProcessEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
@@ -48,6 +58,7 @@ import com.example.money.data.local.migration.MIGRATION_13_14
 import com.example.money.data.local.migration.MIGRATION_14_15
 import com.example.money.data.local.migration.MIGRATION_15_16
 import com.example.money.data.local.migration.MIGRATION_16_17
+import com.example.money.data.local.migration.MIGRATION_17_18
 
 @Database(
     entities = [
@@ -65,8 +76,13 @@ import com.example.money.data.local.migration.MIGRATION_16_17
         BusinessCategoryEntity::class,
         BusinessAssetEntity::class,
         BusinessSmsLogEntity::class,
+        WorkflowCategoryEntity::class,
+        WorkflowProcessEntity::class,
+        WorkflowBillEntity::class,
+        WorkflowParticipantEntity::class,
+        WorkflowDebtEntity::class,
     ],
-    version = 17,
+    version = 18,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -86,6 +102,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun businessCategoryDao(): BusinessCategoryDao
     abstract fun businessAssetDao(): BusinessAssetDao
     abstract fun businessSmsLogDao(): BusinessSmsLogDao
+    abstract fun workflowCategoryDao(): WorkflowCategoryDao
+    abstract fun workflowProcessDao(): WorkflowProcessDao
+    abstract fun workflowBillDao(): WorkflowBillDao
+    abstract fun workflowParticipantDao(): WorkflowParticipantDao
+    abstract fun workflowDebtDao(): WorkflowDebtDao
 
     companion object {
         private const val DATABASE_NAME = "money.db"
@@ -105,6 +126,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15,
                     MIGRATION_15_16,
                     MIGRATION_16_17,
+                    MIGRATION_17_18,
                 ).build().also { instance = it }
             }
         }

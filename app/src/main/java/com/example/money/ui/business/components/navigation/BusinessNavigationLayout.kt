@@ -60,6 +60,7 @@ fun BusinessNavigationLayout(
 private fun tabLabel(tab: BusinessTab): String = stringResource(
     when (tab) {
         BusinessTab.Dashboard -> R.string.business_tab_dashboard
+        BusinessTab.Workflows -> R.string.business_tab_workflows
         BusinessTab.Clients -> R.string.business_tab_clients
         BusinessTab.Projects -> R.string.business_tab_projects
         BusinessTab.Invoices -> R.string.business_tab_invoices

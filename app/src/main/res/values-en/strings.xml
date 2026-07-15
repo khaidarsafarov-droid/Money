@@ -325,6 +325,7 @@
     <string name="business_branch_subtitle">Cashflow and client tracking</string>
     <string name="business_switch_personal">Back to personal branch</string>
     <string name="business_tab_dashboard">Dashboard</string>
+    <string name="business_tab_workflows">Workflows</string>
     <string name="business_tab_clients">Clients</string>
     <string name="business_tab_projects">Projects</string>
     <string name="business_tab_invoices">Invoices</string>
@@ -509,6 +510,36 @@
     <string name="debt_remind_need_email">Email required</string>
     <string name="debt_remind_telegram_unavailable">Telegram is not installed</string>
     <string name="debt_remind_channel_unavailable">Unavailable on this device</string>
+
+    <!-- Business workflow -->
+    <string name="workflow_title_categories">Categories</string>
+    <string name="workflow_categories_subtitle">Pick a scenario: clients, trade, family or shared bills</string>
+    <string name="workflow_empty_processes">Create your first process</string>
+    <string name="workflow_empty_bills">Create your first shared bill</string>
+    <string name="workflow_create_process">New process</string>
+    <string name="workflow_create_bill">New bill</string>
+    <string name="workflow_bill_detail_title">Bill debts</string>
+    <string name="workflow_process_name">Process name</string>
+    <string name="workflow_process_description">Description</string>
+    <string name="workflow_create">Create</string>
+    <string name="workflow_bill_title">Bill title</string>
+    <string name="workflow_bill_total">Total amount ($)</string>
+    <string name="workflow_bill_period">Period (e.g. August)</string>
+    <string name="workflow_bill_description">Description</string>
+    <string name="workflow_add_participant">Add from contacts</string>
+    <string name="workflow_split_equally">Split equally</string>
+    <string name="workflow_participant_amount">Amount ($)</string>
+    <string name="workflow_total_bill">Total bill: %1$s</string>
+    <string name="workflow_select_all">Select all</string>
+    <string name="workflow_clear_selection">Clear selection</string>
+    <string name="workflow_message_label">Reminder message</string>
+    <string name="workflow_ai_generate">Generate message</string>
+    <string name="workflow_send_whatsapp">Send via WhatsApp</string>
+    <string name="workflow_whatsapp_result">WhatsApp: sent %1$d, skipped %2$d, failed %3$d</string>
+    <string name="workflow_status_open">Unpaid</string>
+    <string name="workflow_status_partial">Partial</string>
+    <string name="workflow_status_paid">Paid</string>
+    <string name="workflow_mark_paid">Mark paid</string>
     <string name="debt_notification_settings_title">Debt notifications</string>
     <string name="debt_notification_settings_subtitle">Reminders, auto-messages, and channels</string>
     <string name="debt_notification_enabled">Debt push notifications</string>
