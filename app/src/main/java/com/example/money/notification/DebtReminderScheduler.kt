@@ -7,6 +7,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.money.domain.model.Debtor
+import com.example.money.settings.PersonalBranchSettings
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -21,6 +22,10 @@ interface DebtReminderScheduler {
     fun cancel(debtorId: Long)
 
     fun scheduleDailyFollowUp(debtor: Debtor)
+
+    fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings)
+
+    fun cancelAdvanceReminders(debtorId: Long)
 
     companion object {
         val SNOOZE_DELAY_MS: Long = TimeUnit.HOURS.toMillis(1)
@@ -56,6 +61,19 @@ interface DebtReminderScheduler {
                 calendar.add(Calendar.DAY_OF_YEAR, 1)
             }
             return calendar.timeInMillis - now
+        }
+
+        fun delayUntilAdvanceReminder(dueMillis: Long, daysBefore: Int, now: Long = System.currentTimeMillis()): Long? {
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = dueMillis
+                add(Calendar.DAY_OF_YEAR, -daysBefore)
+                set(Calendar.HOUR_OF_DAY, OVERDUE_NOTIFICATION_HOUR)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val target = calendar.timeInMillis
+            return if (target > now) target - now else null
         }
     }
 }
@@ -95,7 +113,43 @@ class DebtReminderSchedulerImpl(
 
     override fun cancel(debtorId: Long) {
         workManager.cancelUniqueWork(DebtReminderWorker.uniqueWorkName(debtorId))
+        cancelAdvanceReminders(debtorId)
         DebtNotificationHelper.cancel(context, debtorId)
+    }
+
+    override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
+        if (debtor.isPaid || debtor.id == 0L || !settings.debtNotificationsEnabled) return
+        cancelAdvanceReminders(debtor.id)
+        val now = System.currentTimeMillis()
+        if (settings.debtAdvanceRemind3Days) {
+            scheduleAdvance(debtor, daysBefore = 3, now)
+        }
+        if (settings.debtAdvanceRemind1Day) {
+            scheduleAdvance(debtor, daysBefore = 1, now)
+        }
+    }
+
+    override fun cancelAdvanceReminders(debtorId: Long) {
+        workManager.cancelUniqueWork(DebtAdvanceReminderWorker.uniqueWorkName(debtorId, 1))
+        workManager.cancelUniqueWork(DebtAdvanceReminderWorker.uniqueWorkName(debtorId, 3))
+    }
+
+    private fun scheduleAdvance(debtor: Debtor, daysBefore: Int, now: Long) {
+        val delay = DebtReminderScheduler.delayUntilAdvanceReminder(debtor.dateDue, daysBefore, now)
+            ?: return
+        val inputData = Data.Builder()
+            .putLong(DebtAdvanceReminderWorker.KEY_DEBTOR_ID, debtor.id)
+            .putInt(DebtAdvanceReminderWorker.KEY_DAYS_BEFORE, daysBefore)
+            .build()
+        val request = OneTimeWorkRequestBuilder<DebtAdvanceReminderWorker>()
+            .setInitialDelay(delay.coerceIn(MIN_SCHEDULE_DELAY_MS, MAX_SCHEDULE_DELAY_MS), TimeUnit.MILLISECONDS)
+            .setInputData(inputData)
+            .build()
+        workManager.enqueueUniqueWork(
+            DebtAdvanceReminderWorker.uniqueWorkName(debtor.id, daysBefore),
+            ExistingWorkPolicy.REPLACE,
+            request,
+        )
     }
 
     override fun scheduleDailyFollowUp(debtor: Debtor) {

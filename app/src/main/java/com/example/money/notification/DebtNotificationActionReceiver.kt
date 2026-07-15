@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import com.example.money.MoneyApplication
 import com.example.money.domain.model.DebtType
+import com.example.money.messaging.MessagingChannel
+import com.example.money.ui.debtors.DebtReminderShare
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -21,6 +23,7 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
                 when (intent.action) {
                     ACTION_MARK_PAID -> handleMarkPaid(app, context, intent)
                     ACTION_SNOOZE -> handleSnooze(app, context, intent)
+                    ACTION_SEND_MESSAGE -> handleSendMessage(app, context, intent)
                 }
             } finally {
                 pendingResult.finish()
@@ -74,12 +77,29 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
         DebtNotificationHelper.cancel(context, debtorId)
     }
 
+    private suspend fun handleSendMessage(
+        app: MoneyApplication,
+        context: Context,
+        intent: Intent,
+    ) {
+        val debtorId = intent.getLongExtra(EXTRA_DEBTOR_ID, -1L)
+        val channelName = intent.getStringExtra(EXTRA_MESSAGING_CHANNEL) ?: return
+        if (debtorId <= 0L) return
+
+        val channel = runCatching { MessagingChannel.valueOf(channelName) }.getOrNull() ?: return
+        val debtor = app.debtorRepository.getDebtorById(debtorId) ?: return
+        val settings = app.preferencesStore.personalBranchSettings.first()
+        DebtReminderShare.send(context, debtor, channel, settings.debtDirectSmsEnabled)
+    }
+
     companion object {
         const val ACTION_MARK_PAID = "com.example.money.action.MARK_DEBT_PAID"
         const val ACTION_SNOOZE = "com.example.money.action.SNOOZE_DEBT_REMINDER"
+        const val ACTION_SEND_MESSAGE = "com.example.money.action.SEND_DEBT_MESSAGE"
 
         const val EXTRA_DEBTOR_ID = "extra_debtor_id"
         const val EXTRA_DEBTOR_NAME = "extra_debtor_name"
         const val EXTRA_DEBTOR_AMOUNT = "extra_debtor_amount"
+        const val EXTRA_MESSAGING_CHANNEL = "extra_messaging_channel"
     }
 }

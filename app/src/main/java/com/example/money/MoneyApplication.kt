@@ -26,6 +26,8 @@ import com.example.money.notification.BusinessInvoiceReminderScheduler
 import com.example.money.notification.BusinessInvoiceReminderSchedulerImpl
 import com.example.money.notification.BusinessSmsScheduler
 import com.example.money.notification.BusinessSmsSchedulerImpl
+import com.example.money.notification.PersonalDebtMessageScheduler
+import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.NotificationChannels
 import com.example.money.domain.usecase.BusinessSmsUseCases
 import com.example.money.domain.usecase.BusinessUseCases
@@ -162,6 +164,10 @@ class MoneyApplication : Application() {
         BusinessSmsSchedulerImpl(this)
     }
 
+    val personalDebtMessageScheduler: PersonalDebtMessageScheduler by lazy {
+        PersonalDebtMessageSchedulerImpl(this)
+    }
+
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
         WidgetGoalRepository(this)
     }
@@ -188,6 +194,7 @@ class MoneyApplication : Application() {
         rescheduleDebtReminders()
         rescheduleBusinessReminders()
         syncBusinessSmsSchedule()
+        syncPersonalDebtMessageSchedule()
         startWidgetPipeline()
         syncAutopilotSchedule()
         syncVoiceReportSchedule()
@@ -253,6 +260,13 @@ class MoneyApplication : Application() {
         applicationScope.launch {
             val settings = preferencesStore.businessBranchSettings.first()
             businessSmsScheduler.syncSchedule(settings)
+        }
+    }
+
+    fun syncPersonalDebtMessageSchedule() {
+        applicationScope.launch {
+            val settings = preferencesStore.personalBranchSettings.first()
+            personalDebtMessageScheduler.syncSchedule(settings)
         }
     }
 }

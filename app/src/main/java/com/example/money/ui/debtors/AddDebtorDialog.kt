@@ -36,6 +36,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import com.example.money.contacts.ContactResolver
 import com.example.money.contacts.PickedContact
+import com.example.money.messaging.ContactInfoResolver
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
@@ -71,6 +72,8 @@ fun DebtorFormDialog(
         contactLookupKey: String?,
         contactUri: String?,
         contactPhotoUri: String?,
+        phone: String,
+        email: String,
     ) -> Unit,
 ) {
     val isEdit = existingDebtor != null
@@ -118,6 +121,12 @@ fun DebtorFormDialog(
             },
         )
     }
+    var phone by remember(existingDebtor?.id, debtType) {
+        mutableStateOf(existingDebtor?.phone.orEmpty())
+    }
+    var email by remember(existingDebtor?.id, debtType) {
+        mutableStateOf(existingDebtor?.email.orEmpty())
+    }
 
     val context = LocalContext.current
 
@@ -133,6 +142,10 @@ fun DebtorFormDialog(
                 pickedContact = contact
                 name = contact.displayName
                 nameError = null
+                ContactInfoResolver.resolve(context, uri)?.let { info ->
+                    if (info.phone.isNotBlank()) phone = info.phone
+                    if (info.email.isNotBlank()) email = info.email
+                }
             }
         }
     }
@@ -234,6 +247,20 @@ fun DebtorFormDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text(stringResource(R.string.debtor_phone_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text(stringResource(R.string.debtor_email_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 MoneyTextField(
                     value = amountText,
                     onValueChange = {
@@ -367,6 +394,8 @@ fun DebtorFormDialog(
                         pickedContact?.lookupKey,
                         pickedContact?.contactUri,
                         pickedContact?.photoUri,
+                        phone.trim(),
+                        email.trim(),
                     )
                 },
             ) {
@@ -402,6 +431,8 @@ fun AddDebtorDialog(
         contactLookupKey: String?,
         contactUri: String?,
         contactPhotoUri: String?,
+        phone: String,
+        email: String,
     ) -> Unit,
 ) = DebtorFormDialog(
     debtType = debtType,

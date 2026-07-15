@@ -26,6 +26,9 @@ data class BusinessBranchSettings(
     val smsAutomationEnabled: Boolean = false,
     val smsOverdueInvoiceEnabled: Boolean = true,
     val smsDirectSendEnabled: Boolean = false,
+    val whatsappAutomationEnabled: Boolean = true,
+    val telegramAutomationEnabled: Boolean = false,
+    val emailAutomationEnabled: Boolean = true,
 ) {
     fun savedFilterPresets(): List<SavedFilterPreset> = decodeSavedFilterPresets(savedFilterPresetsJson)
 

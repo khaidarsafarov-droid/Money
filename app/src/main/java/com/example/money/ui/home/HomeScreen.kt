@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
@@ -103,6 +104,7 @@ import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
+import com.example.money.ui.debtors.DebtMessageChannelSheet
 import com.example.money.ui.debtors.DebtReminderShare
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
@@ -152,6 +154,7 @@ fun HomeScreen(
     onOpenPrivacySettings: () -> Unit = {},
     onOpenAutopilotSettings: () -> Unit = {},
     onOpenCalendarSettings: () -> Unit = {},
+    onOpenDebtNotificationSettings: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
     onOpenBusinessBranch: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
@@ -214,6 +217,9 @@ fun HomeScreen(
     var showAdvisorSheet by remember { mutableStateOf(false) }
     var showIncomeIdeas by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
+    var remindDebtor by remember { mutableStateOf<Debtor?>(null) }
+
+    val personalBranchSettings by debtorsViewModel.personalBranchSettings.collectAsStateWithLifecycle()
 
     val celebrationDebtor by debtorsViewModel.celebrationDebtor.collectAsStateWithLifecycle()
     val pendingCalendarClose by debtorsViewModel.pendingCalendarClose.collectAsStateWithLifecycle()
@@ -385,7 +391,7 @@ fun HomeScreen(
             allDebtors = allDebtors,
             onViewContactHistory = openContactHistory,
             onDismiss = { showAddDebtorDialog = false },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri ->
+            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri, phone, email ->
                 debtorsViewModel.addDebtor(
                     name = name,
                     amount = amount,
@@ -403,6 +409,8 @@ fun HomeScreen(
                     contactLookupKey = contactLookupKey,
                     contactUri = contactUri,
                     contactPhotoUri = contactPhotoUri,
+                    phone = phone,
+                    email = email,
                 )
                 showAddDebtorDialog = false
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_added)) }
@@ -417,7 +425,7 @@ fun HomeScreen(
             allDebtors = allDebtors,
             onViewContactHistory = openContactHistory,
             onDismiss = { editDebtor = null },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri ->
+            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri, phone, email ->
                 debtorsViewModel.updateDebtor(
                     debtor = debtor,
                     name = name,
@@ -431,6 +439,8 @@ fun HomeScreen(
                     contactLookupKey = contactLookupKey,
                     contactUri = contactUri,
                     contactPhotoUri = contactPhotoUri,
+                    phone = phone,
+                    email = email,
                 )
                 editDebtor = null
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_updated)) }
@@ -448,6 +458,13 @@ fun HomeScreen(
                 contactHistoryTarget = null
                 editDebtor = debtor
             },
+        )
+    }
+    remindDebtor?.let { debtor ->
+        DebtMessageChannelSheet(
+            debtor = debtor,
+            settings = personalBranchSettings,
+            onDismiss = { remindDebtor = null },
         )
     }
     showDebtPaymentDialog?.let { debtor ->
@@ -764,15 +781,7 @@ fun HomeScreen(
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onExpense = { showExpenseDialog = true },
-                onRemindDebtor = { debtor ->
-                    val intent = DebtReminderShare.createShareIntent(context, debtor)
-                    context.startActivity(
-                        Intent.createChooser(
-                            intent,
-                            context.getString(R.string.debt_remind_chooser_title),
-                        ),
-                    )
-                },
+                onRemindDebtor = { debtor -> remindDebtor = debtor },
                 onAddDebtPayment = { debtor ->
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
@@ -845,15 +854,7 @@ fun HomeScreen(
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onExpense = { showExpenseDialog = true },
-                onRemindDebtor = { debtor ->
-                    val intent = DebtReminderShare.createShareIntent(context, debtor)
-                    context.startActivity(
-                        Intent.createChooser(
-                            intent,
-                            context.getString(R.string.debt_remind_chooser_title),
-                        ),
-                    )
-                },
+                onRemindDebtor = { debtor -> remindDebtor = debtor },
                 onAddDebtPayment = { debtor ->
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
@@ -883,6 +884,7 @@ fun HomeScreen(
                 onOpenPrivacySettings = onOpenPrivacySettings,
                 onOpenAutopilotSettings = onOpenAutopilotSettings,
                 onOpenCalendarSettings = onOpenCalendarSettings,
+                onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onOpenGoalHub = onOpenGoalHub,
                 onOpenBusinessBranch = onOpenBusinessBranch,
@@ -989,6 +991,7 @@ private fun PhoneHomeLayout(
     onOpenPrivacySettings: () -> Unit,
     onOpenAutopilotSettings: () -> Unit,
     onOpenCalendarSettings: () -> Unit,
+    onOpenDebtNotificationSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
     onOpenGoalHub: () -> Unit,
     onOpenBusinessBranch: () -> Unit,
@@ -1086,6 +1089,16 @@ private fun PhoneHomeLayout(
                             icon = Icons.Outlined.AutoMode,
                             onClick = {
                                 onOpenAutopilotSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.debt_notification_settings_title),
+                            icon = Icons.Outlined.Notifications,
+                            onClick = {
+                                onOpenDebtNotificationSettings()
                                 scope.launch { drawerState.close() }
                             },
                         )

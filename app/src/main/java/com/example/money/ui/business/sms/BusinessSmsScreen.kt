@@ -47,7 +47,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.business.sms.BusinessSmsPermissions
-import com.example.money.business.sms.ContactPhoneResolver
+import com.example.money.messaging.MessagePayload
+import com.example.money.messaging.MessagingChannel
+import com.example.money.messaging.MessagingContact
+import com.example.money.messaging.UniversalMessageSender
+import com.example.money.messaging.ContactInfoResolver
 import com.example.money.contacts.ContactResolver
 import com.example.money.domain.model.business.BusinessClient
 import com.example.money.domain.model.business.BusinessSmsLog
@@ -98,6 +102,7 @@ fun BusinessSmsScreen(
     var selectedPanel by remember { mutableStateOf(SmsPanel.COMPOSE) }
     var messageBody by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var recipientName by remember { mutableStateOf("") }
     var selectedClientId by remember { mutableStateOf<Long?>(null) }
     var selectedTemplateId by remember { mutableStateOf<BusinessSmsTemplateId?>(null) }
@@ -111,8 +116,9 @@ fun BusinessSmsScreen(
         if (uri != null) {
             ContactResolver.resolve(context, uri)?.let { contact ->
                 recipientName = contact.displayName
-                ContactPhoneResolver.resolvePhones(context, uri).firstOrNull()?.let { resolved ->
-                    phone = resolved
+                ContactInfoResolver.resolve(context, uri)?.let { info ->
+                    if (info.phone.isNotBlank()) phone = info.phone
+                    if (info.email.isNotBlank()) email = info.email
                 }
             }
         }
@@ -154,6 +160,7 @@ fun BusinessSmsScreen(
             SmsPanel.COMPOSE -> SmsComposePanel(
                 clients = clients,
                 phone = phone,
+                email = email,
                 recipientName = recipientName,
                 messageBody = messageBody,
                 selectedClientId = selectedClientId,
@@ -167,6 +174,7 @@ fun BusinessSmsScreen(
                     selectedClientId = client.id
                     recipientName = client.name
                     phone = client.phone
+                    email = client.email
                 },
                 onTemplateSelected = { templateId ->
                     selectedTemplateId = templateId
@@ -252,6 +260,7 @@ fun BusinessSmsScreen(
 private fun SmsComposePanel(
     clients: List<BusinessClient>,
     phone: String,
+    email: String,
     recipientName: String,
     messageBody: String,
     selectedClientId: Long?,
@@ -381,6 +390,34 @@ private fun SmsComposePanel(
             ) {
                 Icon(Icons.Outlined.Send, contentDescription = null)
                 Text(stringResource(R.string.business_sms_send))
+            }
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val contact = MessagingContact(phone = phone, email = email, name = recipientName)
+                val payload = MessagePayload(body = messageBody)
+                listOf(
+                    MessagingChannel.WHATSAPP,
+                    MessagingChannel.TELEGRAM,
+                    MessagingChannel.EMAIL,
+                ).forEach { channel ->
+                    if (UniversalMessageSender.canSend(channel, contact)) {
+                        TextButton(
+                            onClick = {
+                                UniversalMessageSender.send(
+                                    context,
+                                    channel,
+                                    contact,
+                                    payload,
+                                    useDirectSend,
+                                )
+                            },
+                            enabled = messageBody.isNotBlank(),
+                        ) {
+                            Text(stringResource(channel.labelRes()))
+                        }
+                    }
+                }
             }
         }
     }
@@ -595,4 +632,11 @@ private fun BusinessSmsStatus.labelRes(): Int = when (this) {
     BusinessSmsStatus.FAILED -> R.string.business_sms_status_failed
     BusinessSmsStatus.PENDING -> R.string.business_sms_status_pending
     BusinessSmsStatus.OPENED_APP -> R.string.business_sms_status_opened_app
+}
+
+private fun MessagingChannel.labelRes(): Int = when (this) {
+    MessagingChannel.SMS -> R.string.messaging_channel_sms
+    MessagingChannel.WHATSAPP -> R.string.messaging_channel_whatsapp
+    MessagingChannel.TELEGRAM -> R.string.messaging_channel_telegram
+    MessagingChannel.EMAIL -> R.string.messaging_channel_email
 }

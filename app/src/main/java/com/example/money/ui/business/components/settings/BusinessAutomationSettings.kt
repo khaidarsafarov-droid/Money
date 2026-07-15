@@ -127,6 +127,36 @@ fun BusinessAutomationSettings(
         }
 
         item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_whatsapp_automation),
+                checked = settings.whatsappAutomationEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(whatsappAutomationEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_telegram_automation),
+                checked = settings.telegramAutomationEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(telegramAutomationEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_email_automation),
+                checked = settings.emailAutomationEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(emailAutomationEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
             TextButton(onClick = onRunNow) {
                 Text(stringResource(R.string.business_automation_run_now))
             }

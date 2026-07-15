@@ -116,16 +116,7 @@ fun HomeDetailPane(
                 )
                 DebtorListItem(
                     debtor = selection.debtor,
-                    onRemind = {
-                        onRemindDebtor(selection.debtor)
-                        val intent = DebtReminderShare.createShareIntent(context, selection.debtor)
-                        context.startActivity(
-                            Intent.createChooser(
-                                intent,
-                                context.getString(R.string.debt_remind_chooser_title),
-                            ),
-                        )
-                    },
+                    onRemind = { onRemindDebtor(selection.debtor) },
                     onAddPayment = { onAddDebtPayment(selection.debtor) },
                     onAccelerate = { onAccelerateDebtPayment(selection.debtor, accelerateCents) },
                     onEdit = { onEditDebtor(selection.debtor) },

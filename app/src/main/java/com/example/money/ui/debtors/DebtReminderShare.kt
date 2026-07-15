@@ -1,9 +1,12 @@
 package com.example.money.ui.debtors
 
 import android.content.Context
-import android.content.Intent
 import com.example.money.R
 import com.example.money.domain.model.Debtor
+import com.example.money.messaging.ContactInfoResolver
+import com.example.money.messaging.MessagePayload
+import com.example.money.messaging.MessagingChannel
+import com.example.money.messaging.UniversalMessageSender
 import com.example.money.ui.util.Formatters
 
 object DebtReminderShare {
@@ -27,12 +30,35 @@ object DebtReminderShare {
         }
     }
 
-    fun createShareIntent(context: Context, debtor: Debtor): Intent {
-        val message = buildMessage(context, debtor)
-        return Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, message)
-            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.debt_remind_subject, debtor.name))
-        }
+    fun buildSubject(context: Context, debtor: Debtor): String =
+        context.getString(R.string.debt_remind_subject, debtor.name)
+
+    fun resolveContact(context: Context, debtor: Debtor) =
+        ContactInfoResolver.resolveFromStored(
+            phoneField = debtor.phone,
+            emailField = debtor.email,
+            contactUri = debtor.contactUri,
+            context = context,
+        ).copy(name = debtor.name)
+
+    fun send(
+        context: Context,
+        debtor: Debtor,
+        channel: MessagingChannel,
+        useDirectSms: Boolean = false,
+    ): Boolean {
+        val contact = resolveContact(context, debtor)
+        val payload = MessagePayload(
+            subject = buildSubject(context, debtor),
+            body = buildMessage(context, debtor),
+        )
+        if (!UniversalMessageSender.canSend(channel, contact)) return false
+        return UniversalMessageSender.send(context, channel, contact, payload, useDirectSms) !=
+            com.example.money.messaging.MessageSendResult.FAILED
+    }
+
+    fun availableChannels(context: Context, debtor: Debtor): List<MessagingChannel> {
+        val contact = resolveContact(context, debtor)
+        return MessagingChannel.entries.filter { UniversalMessageSender.canSend(it, contact) }
     }
 }

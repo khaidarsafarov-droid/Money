@@ -21,6 +21,8 @@ data class Debtor(
     val contactLookupKey: String? = null,
     val contactUri: String? = null,
     val contactPhotoUri: String? = null,
+    val phone: String = "",
+    val email: String = "",
 ) {
     val remainingAmountCents: Long
         get() = com.example.money.domain.util.MoneyMath.remainingCents(

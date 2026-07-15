@@ -25,6 +25,7 @@ import com.example.money.ui.onboarding.OnboardingScreen
 import com.example.money.ui.settings.AppLanguageScreen
 import com.example.money.ui.settings.AutopilotSettingsScreen
 import com.example.money.ui.settings.CalendarSettingsScreen
+import com.example.money.ui.settings.DebtNotificationSettingsScreen
 import com.example.money.ui.settings.PrivacySettingsScreen
 import com.example.money.ui.settings.VoiceSettingsScreen
 import kotlinx.coroutines.launch
@@ -98,6 +99,7 @@ fun MoneyNavHost(
     var showPrivacySettings by remember { mutableStateOf(false) }
     var showAutopilotSettings by remember { mutableStateOf(false) }
     var showCalendarSettings by remember { mutableStateOf(false) }
+    var showDebtNotificationSettings by remember { mutableStateOf(false) }
     var showGoalHub by remember { mutableStateOf(false) }
 
     when {
@@ -116,6 +118,10 @@ fun MoneyNavHost(
                     arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR),
                 )
             },
+            modifier = modifier,
+        )
+        showDebtNotificationSettings -> DebtNotificationSettingsScreen(
+            onBack = { showDebtNotificationSettings = false },
             modifier = modifier,
         )
         showVoiceSettings -> VoiceSettingsScreen(onBack = { showVoiceSettings = false }, modifier = modifier)
@@ -139,6 +145,7 @@ fun MoneyNavHost(
             onOpenPrivacySettings = { showPrivacySettings = true },
             onOpenAutopilotSettings = { showAutopilotSettings = true },
             onOpenCalendarSettings = { showCalendarSettings = true },
+            onOpenDebtNotificationSettings = { showDebtNotificationSettings = true },
             onOpenGoalHub = { showGoalHub = true },
             onOpenBusinessBranch = { switchBranch(FinanceBranch.BUSINESS) },
             modifier = modifier,

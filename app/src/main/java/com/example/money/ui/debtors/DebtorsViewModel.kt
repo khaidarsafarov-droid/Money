@@ -20,6 +20,7 @@ import com.example.money.notification.DebtReminderScheduler
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.CalendarSettings
 import com.example.money.settings.GamificationState
+import com.example.money.settings.PersonalBranchSettings
 import com.example.money.settings.PrivacySettings
 import com.example.money.settings.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -152,6 +153,29 @@ class DebtorsViewModel(
         initialValue = CalendarSettings(),
     )
 
+    val personalBranchSettings: StateFlow<PersonalBranchSettings> =
+        preferencesStore.personalBranchSettings.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = PersonalBranchSettings(),
+        )
+
+    init {
+        viewModelScope.launch {
+            personalBranchSettings.collect { settings ->
+                allDebtorsList.value.filter { !it.isPaid }.forEach { debtor ->
+                    debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
+                }
+            }
+        }
+    }
+
+    fun updatePersonalBranchSettings(transform: (PersonalBranchSettings) -> PersonalBranchSettings) {
+        viewModelScope.launch {
+            preferencesStore.updatePersonalBranchSettings(transform)
+        }
+    }
+
     val debtors: StateFlow<List<Debtor>> = combine(
         allDebtors,
         _debtTab,
@@ -255,6 +279,8 @@ class DebtorsViewModel(
         contactLookupKey: String? = null,
         contactUri: String? = null,
         contactPhotoUri: String? = null,
+        phone: String = "",
+        email: String = "",
     ) {
         viewModelScope.launch {
             try {
@@ -279,11 +305,13 @@ class DebtorsViewModel(
                         contactLookupKey = contactLookupKey,
                         contactUri = contactUri,
                         contactPhotoUri = contactPhotoUri,
+                        phone = phone.trim(),
+                        email = email.trim(),
                     ),
                 )
                 val created = debtorRepository.getDebtorById(id)
                 if (created != null && !created.isPaid) {
-                    debtReminderScheduler.schedule(created)
+                    scheduleDebtReminders(created)
                     syncDebtToCalendar(created)
                 }
             } catch (exception: Exception) {
@@ -305,6 +333,8 @@ class DebtorsViewModel(
         contactLookupKey: String? = debtor.contactLookupKey,
         contactUri: String? = debtor.contactUri,
         contactPhotoUri: String? = debtor.contactPhotoUri,
+        phone: String = debtor.phone,
+        email: String = debtor.email,
     ) {
         viewModelScope.launch {
             val targetCents = MoneyMath.toCents(amount)
@@ -321,14 +351,22 @@ class DebtorsViewModel(
                 contactLookupKey = contactLookupKey,
                 contactUri = contactUri,
                 contactPhotoUri = contactPhotoUri,
+                phone = phone.trim(),
+                email = email.trim(),
             )
             debtorRepository.updateDebtor(updated, previousAffectsBalance)
             if (!updated.isPaid) {
                 debtReminderScheduler.cancel(debtor.id)
-                debtReminderScheduler.schedule(updated)
+                scheduleDebtReminders(updated)
                 syncDebtToCalendar(updated)
             }
         }
+    }
+
+    private suspend fun scheduleDebtReminders(debtor: Debtor) {
+        val settings = preferencesStore.personalBranchSettings.first()
+        debtReminderScheduler.schedule(debtor)
+        debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
     }
 
     suspend fun processPaymentSync(debtorId: Long, amount: Double, affectsBalance: Boolean): Boolean {

@@ -39,6 +39,8 @@ fun DebtorEntity.toDomain(payments: List<DebtPaymentEntity> = emptyList()): Debt
     contactLookupKey = contactLookupKey,
     contactUri = contactUri,
     contactPhotoUri = contactPhotoUri,
+    phone = phone,
+    email = email,
 )
 
 fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
@@ -61,6 +63,8 @@ fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
     contactLookupKey = contactLookupKey,
     contactUri = contactUri,
     contactPhotoUri = contactPhotoUri,
+    phone = phone,
+    email = email,
 )
 
 fun DebtPaymentEntity.toDomain(): DebtPayment = DebtPayment(

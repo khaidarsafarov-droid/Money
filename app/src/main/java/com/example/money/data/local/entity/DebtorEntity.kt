@@ -48,4 +48,6 @@ data class DebtorEntity(
     val contactUri: String? = null,
     @ColumnInfo(name = "contact_photo_uri")
     val contactPhotoUri: String? = null,
+    val phone: String = "",
+    val email: String = "",
 )

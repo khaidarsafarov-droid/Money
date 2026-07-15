@@ -21,6 +21,7 @@ import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.GamificationState
 import com.example.money.settings.FinancialPsychotype
 import com.example.money.settings.GoalPsychologyProfile
+import com.example.money.settings.PersonalBranchSettings
 import com.example.money.settings.PrivacySettings
 import com.example.money.settings.CalendarSettings
 import com.example.money.settings.UserEmotion
@@ -142,6 +143,18 @@ object MoneyPreferenceKeys {
     val BUSINESS_SMS_AUTOMATION_ENABLED = booleanPreferencesKey("business_sms_automation_enabled")
     val BUSINESS_SMS_OVERDUE_INVOICE_ENABLED = booleanPreferencesKey("business_sms_overdue_invoice_enabled")
     val BUSINESS_SMS_DIRECT_SEND_ENABLED = booleanPreferencesKey("business_sms_direct_send_enabled")
+    val BUSINESS_WHATSAPP_AUTOMATION_ENABLED = booleanPreferencesKey("business_whatsapp_automation_enabled")
+    val BUSINESS_TELEGRAM_AUTOMATION_ENABLED = booleanPreferencesKey("business_telegram_automation_enabled")
+    val BUSINESS_EMAIL_AUTOMATION_ENABLED = booleanPreferencesKey("business_email_automation_enabled")
+    val PERSONAL_DEBT_NOTIFICATIONS_ENABLED = booleanPreferencesKey("personal_debt_notifications_enabled")
+    val PERSONAL_DEBT_ADVANCE_1D = booleanPreferencesKey("personal_debt_advance_1d")
+    val PERSONAL_DEBT_ADVANCE_3D = booleanPreferencesKey("personal_debt_advance_3d")
+    val PERSONAL_DEBT_AUTO_MESSAGE_ENABLED = booleanPreferencesKey("personal_debt_auto_message_enabled")
+    val PERSONAL_DEBT_AUTO_SMS = booleanPreferencesKey("personal_debt_auto_sms")
+    val PERSONAL_DEBT_AUTO_WHATSAPP = booleanPreferencesKey("personal_debt_auto_whatsapp")
+    val PERSONAL_DEBT_AUTO_TELEGRAM = booleanPreferencesKey("personal_debt_auto_telegram")
+    val PERSONAL_DEBT_AUTO_EMAIL = booleanPreferencesKey("personal_debt_auto_email")
+    val PERSONAL_DEBT_DIRECT_SMS = booleanPreferencesKey("personal_debt_direct_sms")
 }
 
 class MoneyPreferencesStore(
@@ -385,6 +398,15 @@ class MoneyPreferencesStore(
 
     suspend fun setActiveFinanceBranch(branch: FinanceBranch) {
         updateBusinessBranchSettings { it.copy(activeBranch = branch) }
+    }
+
+    val personalBranchSettings: Flow<PersonalBranchSettings> =
+        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toPersonalBranchSettings() }
+
+    suspend fun updatePersonalBranchSettings(transform: (PersonalBranchSettings) -> PersonalBranchSettings) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs.writePersonalBranchSettings(transform(prefs.toPersonalBranchSettings()))
+        }
     }
 
     private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
@@ -640,6 +662,22 @@ private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
         smsAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_AUTOMATION_ENABLED] ?: false,
         smsOverdueInvoiceEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_OVERDUE_INVOICE_ENABLED] ?: true,
         smsDirectSendEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_DIRECT_SEND_ENABLED] ?: false,
+        whatsappAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] ?: true,
+        telegramAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] ?: false,
+        emailAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] ?: true,
+    )
+
+private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
+    PersonalBranchSettings(
+        debtNotificationsEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_NOTIFICATIONS_ENABLED] ?: true,
+        debtAdvanceRemind1Day = this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_1D] ?: true,
+        debtAdvanceRemind3Days = this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_3D] ?: true,
+        debtAutoMessageEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_MESSAGE_ENABLED] ?: false,
+        debtAutoMessageSms = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_SMS] ?: true,
+        debtAutoMessageWhatsapp = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_WHATSAPP] ?: true,
+        debtAutoMessageTelegram = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_TELEGRAM] ?: false,
+        debtAutoMessageEmail = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_EMAIL] ?: true,
+        debtDirectSmsEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_DIRECT_SMS] ?: false,
     )
 
 private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBranchSettings) {
@@ -657,4 +695,19 @@ private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBra
     this[MoneyPreferenceKeys.BUSINESS_SMS_AUTOMATION_ENABLED] = settings.smsAutomationEnabled
     this[MoneyPreferenceKeys.BUSINESS_SMS_OVERDUE_INVOICE_ENABLED] = settings.smsOverdueInvoiceEnabled
     this[MoneyPreferenceKeys.BUSINESS_SMS_DIRECT_SEND_ENABLED] = settings.smsDirectSendEnabled
+    this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] = settings.whatsappAutomationEnabled
+    this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] = settings.telegramAutomationEnabled
+    this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] = settings.emailAutomationEnabled
+}
+
+private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBranchSettings) {
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_NOTIFICATIONS_ENABLED] = settings.debtNotificationsEnabled
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_1D] = settings.debtAdvanceRemind1Day
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_3D] = settings.debtAdvanceRemind3Days
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_MESSAGE_ENABLED] = settings.debtAutoMessageEnabled
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_SMS] = settings.debtAutoMessageSms
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_WHATSAPP] = settings.debtAutoMessageWhatsapp
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_TELEGRAM] = settings.debtAutoMessageTelegram
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_EMAIL] = settings.debtAutoMessageEmail
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_DIRECT_SMS] = settings.debtDirectSmsEnabled
 }
