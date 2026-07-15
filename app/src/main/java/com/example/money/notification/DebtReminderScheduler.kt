@@ -63,7 +63,7 @@ interface DebtReminderScheduler {
             return calendar.timeInMillis - now
         }
 
-        fun delayUntilAdvanceReminder(dueMillis: Long, daysBefore: Int, now: Long = System.currentTimeMillis()): Long? {
+        fun advanceReminderAt(dueMillis: Long, daysBefore: Int): Long {
             val calendar = Calendar.getInstance().apply {
                 timeInMillis = dueMillis
                 add(Calendar.DAY_OF_YEAR, -daysBefore)
@@ -72,7 +72,11 @@ interface DebtReminderScheduler {
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
-            val target = calendar.timeInMillis
+            return calendar.timeInMillis
+        }
+
+        fun delayUntilAdvanceReminder(dueMillis: Long, daysBefore: Int, now: Long = System.currentTimeMillis()): Long? {
+            val target = advanceReminderAt(dueMillis, daysBefore)
             return if (target > now) target - now else null
         }
     }
@@ -118,7 +122,11 @@ class DebtReminderSchedulerImpl(
     }
 
     override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
-        if (debtor.isPaid || debtor.id == 0L || !settings.debtNotificationsEnabled) return
+        if (debtor.isPaid || debtor.id == 0L) return
+        if (!settings.debtNotificationsEnabled) {
+            cancelAdvanceReminders(debtor.id)
+            return
+        }
         cancelAdvanceReminders(debtor.id)
         val now = System.currentTimeMillis()
         if (settings.debtAdvanceRemind3Days) {

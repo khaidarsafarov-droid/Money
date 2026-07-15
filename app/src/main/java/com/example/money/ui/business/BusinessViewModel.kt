@@ -476,6 +476,8 @@ class BusinessViewModel(
     fun updateAutomationSettings(transform: (BusinessBranchSettings) -> BusinessBranchSettings) {
         viewModelScope.launch {
             preferencesStore.updateBusinessBranchSettings(transform)
+            val settings = preferencesStore.businessBranchSettings.first()
+            businessSmsScheduler?.syncSchedule(settings)
         }
     }
 

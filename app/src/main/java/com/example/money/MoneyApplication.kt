@@ -242,8 +242,10 @@ class MoneyApplication : Application() {
 
     fun rescheduleDebtReminders() {
         applicationScope.launch {
+            val settings = preferencesStore.personalBranchSettings.first()
             debtorRepository.getActiveDebtors().first().forEach { debtor ->
                 debtReminderScheduler.schedule(debtor)
+                debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
             }
         }
     }

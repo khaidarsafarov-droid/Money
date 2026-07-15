@@ -119,8 +119,8 @@ class BusinessFinanceEngineTest {
             monthEndMillis = monthEnd,
         )
         val services = summary.categoryDistribution.find { it.category == "Services" }
-        assertEquals(30_000, services?.incomeCents)
-        assertEquals(10_000, services?.expenseCents)
+        assertEquals(30_000L, services?.incomeCents)
+        assertEquals(10_000L, services?.expenseCents)
         assertEquals(true, summary.categoryDistribution.isNotEmpty())
     }
 

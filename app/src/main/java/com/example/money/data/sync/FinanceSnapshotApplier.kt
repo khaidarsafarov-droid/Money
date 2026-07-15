@@ -89,6 +89,15 @@ class FinanceSnapshotApplier(
                 dateGiven = SyncDates.parseDate(debt.dateGiven),
                 dateDue = debt.dateDue?.let(SyncDates::parseDate)
                     ?: SyncDates.parseDate(debt.dateGiven),
+                loanCategory = existing?.loanCategory ?: "OTHER",
+                interestRateBps = existing?.interestRateBps ?: 0,
+                calendarEventId = existing?.calendarEventId,
+                calendarSyncFailed = existing?.calendarSyncFailed ?: false,
+                contactLookupKey = existing?.contactLookupKey,
+                contactUri = existing?.contactUri,
+                contactPhotoUri = existing?.contactPhotoUri,
+                phone = existing?.phone.orEmpty(),
+                email = existing?.email.orEmpty(),
             )
             if (existing == null) {
                 dao.insert(entity)

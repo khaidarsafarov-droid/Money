@@ -105,7 +105,6 @@ import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.debtors.DebtMessageChannelSheet
-import com.example.money.ui.debtors.DebtReminderShare
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.ContactDebtHistorySheet
@@ -175,6 +174,7 @@ fun HomeScreen(
             app.debtReminderScheduler,
             app.preferencesStore,
             app.debtCalendarSyncService,
+            app.personalDebtMessageScheduler,
         ),
     )
 

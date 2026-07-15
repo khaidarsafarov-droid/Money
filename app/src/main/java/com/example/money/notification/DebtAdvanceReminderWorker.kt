@@ -28,6 +28,13 @@ class DebtAdvanceReminderWorker(
         val debtor = entity.toDomain()
         if (debtor.debtType != DebtType.CREDITOR) return Result.success()
 
+        val now = System.currentTimeMillis()
+        val advanceAt = DebtReminderScheduler.advanceReminderAt(debtor.dateDue, daysBefore)
+        if (now < advanceAt) {
+            app.debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
+            return Result.success()
+        }
+
         DebtNotificationHelper.showAdvanceReminder(applicationContext, debtor, daysBefore)
         return Result.success()
     }

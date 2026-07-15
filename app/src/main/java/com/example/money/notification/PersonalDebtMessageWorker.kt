@@ -4,13 +4,13 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.money.MoneyApplication
-import com.example.money.data.mapper.toDomain
 import com.example.money.domain.model.DebtType
 import com.example.money.messaging.MessagePayload
 import com.example.money.messaging.MessagingChannel
 import com.example.money.messaging.UniversalMessageSender
 import com.example.money.ui.debtors.DebtReminderShare
 import kotlinx.coroutines.flow.first
+import java.util.concurrent.TimeUnit
 
 class PersonalDebtMessageWorker(
     context: Context,
@@ -33,16 +33,27 @@ class PersonalDebtMessageWorker(
                     body = DebtReminderShare.buildMessage(applicationContext, debtor),
                 )
                 settings.enabledAutoChannels().forEach { channel ->
-                    if (!UniversalMessageSender.canSend(channel, contact)) return@forEach
+                    if (!UniversalMessageSender.canSend(channel, contact, applicationContext)) return@forEach
+                    if (app.preferencesStore.wasPersonalDebtAutoMessageSentRecently(
+                            debtor.id,
+                            channel,
+                            DEDUP_WINDOW_MS,
+                        )
+                    ) {
+                        return@forEach
+                    }
                     when (channel) {
                         MessagingChannel.SMS -> {
-                            UniversalMessageSender.send(
+                            val result = UniversalMessageSender.send(
                                 applicationContext,
                                 channel,
                                 contact,
                                 payload,
                                 settings.debtDirectSmsEnabled,
                             )
+                            if (result != com.example.money.messaging.MessageSendResult.FAILED) {
+                                app.preferencesStore.markPersonalDebtAutoMessageSent(debtor.id, channel)
+                            }
                         }
                         else -> {
                             DebtNotificationHelper.showMessagingAction(
@@ -54,6 +65,7 @@ class PersonalDebtMessageWorker(
                                     debtor.name,
                                 ),
                             )
+                            app.preferencesStore.markPersonalDebtAutoMessageSent(debtor.id, channel)
                         }
                     }
                 }
@@ -63,6 +75,7 @@ class PersonalDebtMessageWorker(
 
     companion object {
         const val UNIQUE_WORK_NAME = "personal_debt_auto_message"
+        val DEDUP_WINDOW_MS: Long = TimeUnit.HOURS.toMillis(24)
 
         fun uniqueWorkName(): String = UNIQUE_WORK_NAME
     }

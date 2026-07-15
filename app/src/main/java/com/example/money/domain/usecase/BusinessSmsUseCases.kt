@@ -18,8 +18,15 @@ import com.example.money.domain.repository.BusinessRepository
 import com.example.money.domain.repository.BusinessSmsRepository
 import com.example.money.domain.util.ai.AiBusinessSmsService
 import com.example.money.domain.util.ai.BusinessSmsTone
+import com.example.money.messaging.MessagePayload
+import com.example.money.messaging.MessagingChannel
+import com.example.money.messaging.MessagingContact
+import com.example.money.messaging.UniversalMessageSender
+import com.example.money.notification.BusinessNotificationHelper
+import com.example.money.settings.BusinessBranchSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import java.util.concurrent.TimeUnit
 
 /**
  * Offline Business SMS "API" — mirrors REST SMS endpoints.
@@ -105,40 +112,107 @@ class BusinessSmsUseCases(
         )
     }
 
-    suspend fun buildOverdueInvoiceSms(
-        businessName: String,
-        useDirectSend: Boolean,
-    ): BusinessSmsSendResult {
+    suspend fun runOverdueInvoiceAutomation(settings: BusinessBranchSettings): BusinessSmsSendResult {
+        val channels = settings.enabledOverdueAutomationChannels()
+        if (channels.isEmpty()) return BusinessSmsSendResult(0, 0, 0)
+
+        val businessName = settings.businessName.ifBlank { "Business" }
         val clients = businessRepository.observeClients().first()
         val invoices = businessRepository.observeInvoices().first()
         val now = System.currentTimeMillis()
         val overdue = invoices.filter {
             it.status != InvoiceStatus.PAID && it.dueDate < now
         }
+        val templateId = BusinessSmsTemplateId.DEBT_REMINDER
+
         var sent = 0
         var failed = 0
         var opened = 0
+
         overdue.forEach { invoice ->
             val client = clients.find { it.id == invoice.clientId } ?: return@forEach
-            val recipient = client.toSmsRecipient() ?: return@forEach
+            if (smsRepository.wasAutomationSentRecently(
+                    client.id,
+                    templateId.name,
+                    AUTOMATION_DEDUP_MS,
+                )
+            ) {
+                return@forEach
+            }
+
             val body = BusinessSmsTemplates.render(
-                BusinessSmsTemplateId.DEBT_REMINDER,
+                templateId,
                 BusinessSmsTemplateContext.forInvoice(businessName, client, invoice),
             )
-            val partial = sendSms(
-                BusinessSmsSendRequest(
-                    recipients = listOf(recipient),
-                    body = body,
-                    templateId = BusinessSmsTemplateId.DEBT_REMINDER,
-                    useDirectSend = useDirectSend,
-                ),
+            val contact = MessagingContact(
+                phone = client.phone,
+                email = client.email,
+                name = client.name,
             )
-            sent += partial.sentCount
-            failed += partial.failedCount
-            opened += partial.openedAppCount
+
+            channels.forEach { channel ->
+                if (!UniversalMessageSender.canSend(channel, contact, context)) return@forEach
+                when (channel) {
+                    MessagingChannel.SMS -> {
+                        val recipient = client.toSmsRecipient() ?: return@forEach
+                        val partial = sendSms(
+                            BusinessSmsSendRequest(
+                                recipients = listOf(recipient),
+                                body = body,
+                                templateId = templateId,
+                                useDirectSend = settings.smsDirectSendEnabled,
+                            ),
+                        )
+                        sent += partial.sentCount
+                        failed += partial.failedCount
+                        opened += partial.openedAppCount
+                    }
+                    else -> {
+                        val shown = BusinessNotificationHelper.showOverdueMessagingAction(
+                            context = context,
+                            invoice = invoice,
+                            clientName = client.name,
+                            channel = channel,
+                            contact = contact,
+                            body = body,
+                        )
+                        val status = if (shown) BusinessSmsStatus.OPENED_APP else BusinessSmsStatus.FAILED
+                        if (status == BusinessSmsStatus.OPENED_APP) {
+                            opened++
+                        } else {
+                            failed++
+                        }
+                        smsRepository.logSms(
+                            BusinessSmsLog(
+                                recipientPhone = contact.phone,
+                                recipientName = client.name,
+                                clientId = client.id,
+                                body = body,
+                                templateId = templateId.name,
+                                status = status,
+                            ),
+                        )
+                    }
+                }
+            }
         }
         return BusinessSmsSendResult(sent, failed, opened)
     }
+
+    suspend fun buildOverdueInvoiceSms(
+        businessName: String,
+        useDirectSend: Boolean,
+    ): BusinessSmsSendResult = runOverdueInvoiceAutomation(
+        BusinessBranchSettings(
+            businessName = businessName,
+            smsAutomationEnabled = true,
+            smsOverdueInvoiceEnabled = true,
+            smsDirectSendEnabled = useDirectSend,
+            whatsappAutomationEnabled = false,
+            telegramAutomationEnabled = false,
+            emailAutomationEnabled = false,
+        ),
+    )
 
     private fun sendToRecipient(
         recipient: BusinessSmsRecipient,
@@ -152,6 +226,10 @@ class BusinessSmsUseCases(
         } else {
             BusinessSmsStatus.FAILED
         }
+    }
+
+    private companion object {
+        val AUTOMATION_DEDUP_MS: Long = TimeUnit.HOURS.toMillis(24)
     }
 }
 

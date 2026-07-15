@@ -1,6 +1,7 @@
 package com.example.money.settings
 
 import com.example.money.domain.model.FinanceBranch
+import com.example.money.messaging.MessagingChannel
 import com.example.money.domain.model.business.BusinessDashboardView
 import com.example.money.domain.model.business.BusinessFilterPreset
 import com.example.money.domain.model.business.BusinessTransactionType
@@ -31,6 +32,15 @@ data class BusinessBranchSettings(
     val emailAutomationEnabled: Boolean = true,
 ) {
     fun savedFilterPresets(): List<SavedFilterPreset> = decodeSavedFilterPresets(savedFilterPresetsJson)
+
+    fun enabledOverdueAutomationChannels(): List<MessagingChannel> = buildList {
+        if (smsAutomationEnabled && smsOverdueInvoiceEnabled) add(MessagingChannel.SMS)
+        if (whatsappAutomationEnabled) add(MessagingChannel.WHATSAPP)
+        if (telegramAutomationEnabled) add(MessagingChannel.TELEGRAM)
+        if (emailAutomationEnabled) add(MessagingChannel.EMAIL)
+    }
+
+    fun hasOverdueInvoiceAutomation(): Boolean = enabledOverdueAutomationChannels().isNotEmpty()
 
     fun customCategories(): List<String> = decodeStringList(customCategoriesJson)
 

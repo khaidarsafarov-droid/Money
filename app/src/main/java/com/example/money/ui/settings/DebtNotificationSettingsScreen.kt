@@ -30,7 +30,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
-import com.example.money.settings.PersonalBranchSettings
 import com.example.money.ui.debtors.DebtorsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +46,7 @@ fun DebtNotificationSettingsScreen(
             app.debtReminderScheduler,
             app.preferencesStore,
             app.debtCalendarSyncService,
+            app.personalDebtMessageScheduler,
         ),
     )
     val settings by viewModel.personalBranchSettings.collectAsStateWithLifecycle()

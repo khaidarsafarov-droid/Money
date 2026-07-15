@@ -155,6 +155,7 @@ object MoneyPreferenceKeys {
     val PERSONAL_DEBT_AUTO_TELEGRAM = booleanPreferencesKey("personal_debt_auto_telegram")
     val PERSONAL_DEBT_AUTO_EMAIL = booleanPreferencesKey("personal_debt_auto_email")
     val PERSONAL_DEBT_DIRECT_SMS = booleanPreferencesKey("personal_debt_direct_sms")
+    val PERSONAL_DEBT_AUTO_MSG_DEDUP_JSON = stringPreferencesKey("personal_debt_auto_msg_dedup_json")
 }
 
 class MoneyPreferencesStore(
@@ -408,6 +409,36 @@ class MoneyPreferencesStore(
             prefs.writePersonalBranchSettings(transform(prefs.toPersonalBranchSettings()))
         }
     }
+
+    suspend fun wasPersonalDebtAutoMessageSentRecently(
+        debtorId: Long,
+        channel: com.example.money.messaging.MessagingChannel,
+        withinMillis: Long,
+    ): Boolean {
+        val key = personalDebtAutoMessageDedupKey(debtorId, channel)
+        val prefs = context.moneyPreferencesDataStore.data.first()
+        val lastSent = prefs.toPersonalDebtAutoMessageDedupMap()[key] ?: return false
+        return System.currentTimeMillis() - lastSent < withinMillis
+    }
+
+    suspend fun markPersonalDebtAutoMessageSent(
+        debtorId: Long,
+        channel: com.example.money.messaging.MessagingChannel,
+    ) {
+        val key = personalDebtAutoMessageDedupKey(debtorId, channel)
+        context.moneyPreferencesDataStore.edit { prefs ->
+            val map = prefs.toPersonalDebtAutoMessageDedupMap().toMutableMap()
+            map[key] = System.currentTimeMillis()
+            val cutoff = System.currentTimeMillis() - java.util.concurrent.TimeUnit.DAYS.toMillis(7)
+            map.entries.removeIf { it.value < cutoff }
+            prefs[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_MSG_DEDUP_JSON] = encodeLongMap(map)
+        }
+    }
+
+    private fun personalDebtAutoMessageDedupKey(
+        debtorId: Long,
+        channel: com.example.money.messaging.MessagingChannel,
+    ): String = "${debtorId}_${channel.name}"
 
     private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
         val array = JSONArray()
@@ -710,4 +741,20 @@ private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBra
     this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_TELEGRAM] = settings.debtAutoMessageTelegram
     this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_EMAIL] = settings.debtAutoMessageEmail
     this[MoneyPreferenceKeys.PERSONAL_DEBT_DIRECT_SMS] = settings.debtDirectSmsEnabled
+}
+
+private fun Preferences.toPersonalDebtAutoMessageDedupMap(): Map<String, Long> = runCatching {
+    val json = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_MSG_DEDUP_JSON] ?: return emptyMap()
+    val objectJson = JSONObject(json)
+    buildMap {
+        objectJson.keys().forEach { key ->
+            put(key, objectJson.getLong(key))
+        }
+    }
+}.getOrDefault(emptyMap())
+
+private fun encodeLongMap(map: Map<String, Long>): String {
+    val objectJson = JSONObject()
+    map.forEach { (key, value) -> objectJson.put(key, value) }
+    return objectJson.toString()
 }

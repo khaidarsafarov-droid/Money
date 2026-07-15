@@ -20,7 +20,7 @@ class BusinessSmsSchedulerImpl(
     private val workManager = WorkManager.getInstance(context)
 
     override fun syncSchedule(settings: BusinessBranchSettings) {
-        if (!settings.smsAutomationEnabled) {
+        if (!settings.hasOverdueInvoiceAutomation()) {
             cancel()
             return
         }

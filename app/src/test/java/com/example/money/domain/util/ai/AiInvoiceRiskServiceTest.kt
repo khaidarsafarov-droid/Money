@@ -19,7 +19,8 @@ class AiInvoiceRiskServiceTest {
             amountCents = 10_000,
             status = InvoiceStatus.OVERDUE,
         )
-        val result = AiInvoiceRiskService.assess(invoice, clientOverdueCount = 0, nowMillis = 10_000)
+        val nowMillis = 5_000 + java.util.concurrent.TimeUnit.DAYS.toMillis(15)
+        val result = AiInvoiceRiskService.assess(invoice, clientOverdueCount = 0, nowMillis = nowMillis)
         assertEquals(InvoiceRiskLevel.HIGH, result.riskLevel)
         assertTrue(result.probabilityPercent >= 60)
     }

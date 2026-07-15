@@ -16,10 +16,14 @@ enum class MessageSendResult {
 
 object UniversalMessageSender {
 
-    fun canSend(channel: MessagingChannel, contact: MessagingContact): Boolean = when (channel) {
-        MessagingChannel.SMS -> !contact.phone.isBlank()
-        MessagingChannel.WHATSAPP -> !contact.phone.isBlank()
-        MessagingChannel.TELEGRAM -> true
+    fun canSend(
+        channel: MessagingChannel,
+        contact: MessagingContact,
+        context: Context? = null,
+    ): Boolean = when (channel) {
+        MessagingChannel.SMS -> contact.phone.isNotBlank()
+        MessagingChannel.WHATSAPP -> contact.phone.isNotBlank()
+        MessagingChannel.TELEGRAM -> isTelegramAvailable(context)
         MessagingChannel.EMAIL -> contact.email.isNotBlank()
     }
 
@@ -50,7 +54,17 @@ object UniversalMessageSender {
         MessagingChannel.EMAIL -> createEmailIntent(contact.email, payload.subject, payload.body)
     }?.takeIf { intent ->
         intent.resolveActivity(context.packageManager) != null ||
-            channel == MessagingChannel.TELEGRAM
+            channel == MessagingChannel.TELEGRAM && isTelegramAvailable(context)
+    }
+
+    private fun isTelegramAvailable(context: Context?): Boolean {
+        if (context == null) return false
+        val packageManager = context.packageManager
+        return createTelegramIntent("").resolveActivity(packageManager) != null ||
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://t.me/share/url"),
+            ).resolveActivity(packageManager) != null
     }
 
     private fun sendSms(

@@ -52,13 +52,13 @@ object DebtReminderShare {
             subject = buildSubject(context, debtor),
             body = buildMessage(context, debtor),
         )
-        if (!UniversalMessageSender.canSend(channel, contact)) return false
+        if (!UniversalMessageSender.canSend(channel, contact, context)) return false
         return UniversalMessageSender.send(context, channel, contact, payload, useDirectSms) !=
             com.example.money.messaging.MessageSendResult.FAILED
     }
 
     fun availableChannels(context: Context, debtor: Debtor): List<MessagingChannel> {
         val contact = resolveContact(context, debtor)
-        return MessagingChannel.entries.filter { UniversalMessageSender.canSend(it, contact) }
+        return MessagingChannel.entries.filter { UniversalMessageSender.canSend(it, contact, context) }
     }
 }

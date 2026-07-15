@@ -27,7 +27,6 @@ import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalProgress
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.GoalListItem
-import com.example.money.ui.debtors.DebtReminderShare
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.util.Formatters

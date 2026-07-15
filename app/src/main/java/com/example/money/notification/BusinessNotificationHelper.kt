@@ -1,9 +1,15 @@
 package com.example.money.notification
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import com.example.money.R
 import com.example.money.domain.model.business.BusinessInvoice
 import com.example.money.domain.model.business.InvoiceStatus
+import com.example.money.messaging.MessagePayload
+import com.example.money.messaging.MessagingChannel
+import com.example.money.messaging.MessagingContact
+import com.example.money.messaging.UniversalMessageSender
 import com.example.money.ui.util.Formatters
 import java.util.concurrent.TimeUnit
 
@@ -44,6 +50,67 @@ object BusinessNotificationHelper {
         }
     }
 
+    fun showOverdueMessagingAction(
+        context: Context,
+        invoice: BusinessInvoice,
+        clientName: String,
+        channel: MessagingChannel,
+        contact: MessagingContact,
+        body: String,
+    ): Boolean {
+        if (!com.example.money.ui.util.NotificationPermissions.areEnabled(context)) return false
+
+        val channelLabel = when (channel) {
+            MessagingChannel.WHATSAPP -> context.getString(R.string.messaging_channel_whatsapp)
+            MessagingChannel.TELEGRAM -> context.getString(R.string.messaging_channel_telegram)
+            MessagingChannel.EMAIL -> context.getString(R.string.messaging_channel_email)
+            MessagingChannel.SMS -> context.getString(R.string.messaging_channel_sms)
+        }
+        val title = context.getString(R.string.notification_business_overdue_title)
+        val notificationBody = context.getString(
+            R.string.notification_debt_auto_message_body,
+            channelLabel,
+            clientName,
+        )
+        val launchIntent = UniversalMessageSender.createLaunchIntent(
+            context,
+            channel,
+            contact,
+            MessagePayload(body = body),
+        ) ?: return false
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            messagingRequestCode(invoice.id, channel),
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(context, NotificationChannels.BUSINESS_ALERTS)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(notificationBody)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(notificationBody))
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .addAction(
+                R.drawable.ic_notification,
+                context.getString(R.string.notification_action_send_now, channelLabel),
+                pendingIntent,
+            )
+            .build()
+
+        return try {
+            androidx.core.app.NotificationManagerCompat.from(context)
+                .notify(messagingNotificationId(invoice.id, channel), notification)
+            true
+        } catch (exception: SecurityException) {
+            false
+        }
+    }
+
     fun showLowCashAlert(context: Context, balanceCents: Long, thresholdCents: Long): Boolean {
         if (!com.example.money.ui.util.NotificationPermissions.areEnabled(context)) return false
 
@@ -73,6 +140,10 @@ object BusinessNotificationHelper {
     fun cancelInvoice(context: Context, invoiceId: Long) {
         androidx.core.app.NotificationManagerCompat.from(context)
             .cancel(notificationId(invoiceId))
+        MessagingChannel.entries.forEach { channel ->
+            androidx.core.app.NotificationManagerCompat.from(context)
+                .cancel(messagingNotificationId(invoiceId, channel))
+        }
     }
 
     fun cancelAll(context: Context) {
@@ -86,4 +157,10 @@ object BusinessNotificationHelper {
     private const val LOW_CASH_NOTIFICATION_ID = 90_001
 
     private fun notificationId(invoiceId: Long): Int = (100_000 + invoiceId).toInt()
+
+    private fun messagingNotificationId(invoiceId: Long, channel: MessagingChannel): Int =
+        (200_000 + invoiceId * 10 + channel.ordinal).toInt()
+
+    private fun messagingRequestCode(invoiceId: Long, channel: MessagingChannel): Int =
+        (300_000 + invoiceId * 10 + channel.ordinal).toInt()
 }

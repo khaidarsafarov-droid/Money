@@ -14,14 +14,11 @@ class BusinessSmsReminderWorker(
     override suspend fun doWork(): Result {
         val app = applicationContext as MoneyApplication
         val settings = app.preferencesStore.businessBranchSettings.first()
-        if (!settings.smsAutomationEnabled || !settings.smsOverdueInvoiceEnabled) {
+        if (!settings.hasOverdueInvoiceAutomation()) {
             return Result.success()
         }
 
-        app.businessSmsUseCases.buildOverdueInvoiceSms(
-            businessName = settings.businessName.ifBlank { "Business" },
-            useDirectSend = settings.smsDirectSendEnabled,
-        )
+        app.businessSmsUseCases.runOverdueInvoiceAutomation(settings)
         return Result.success()
     }
 

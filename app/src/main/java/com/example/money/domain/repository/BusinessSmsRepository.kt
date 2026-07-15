@@ -7,4 +7,9 @@ interface BusinessSmsRepository {
     fun observeSmsLogs(): Flow<List<BusinessSmsLog>>
     suspend fun logSms(log: BusinessSmsLog): Long
     suspend fun pruneOldLogs(olderThanMillis: Long)
+    suspend fun wasAutomationSentRecently(
+        clientId: Long,
+        templateId: String,
+        withinMillis: Long,
+    ): Boolean
 }

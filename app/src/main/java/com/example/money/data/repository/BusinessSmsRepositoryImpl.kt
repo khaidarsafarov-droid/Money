@@ -21,4 +21,13 @@ class BusinessSmsRepositoryImpl(
     override suspend fun pruneOldLogs(olderThanMillis: Long) {
         smsLogDao.deleteOlderThan(olderThanMillis)
     }
+
+    override suspend fun wasAutomationSentRecently(
+        clientId: Long,
+        templateId: String,
+        withinMillis: Long,
+    ): Boolean {
+        val sinceMillis = System.currentTimeMillis() - withinMillis
+        return smsLogDao.countRecentAutomation(clientId, templateId, sinceMillis) > 0
+    }
 }

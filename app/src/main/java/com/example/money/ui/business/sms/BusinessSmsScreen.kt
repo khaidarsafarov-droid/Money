@@ -109,6 +109,8 @@ fun BusinessSmsScreen(
     var selectedBulkClientIds by remember { mutableStateOf(setOf<Long>()) }
     var aiTone by remember { mutableStateOf(BusinessSmsTone.FRIENDLY) }
     var pendingSend by remember { mutableStateOf(false) }
+    var pendingBulkSend by remember { mutableStateOf(false) }
+    var awaitingBulkPermission by remember { mutableStateOf(false) }
 
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
@@ -128,8 +130,14 @@ fun BusinessSmsScreen(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
         if (granted) {
-            pendingSend = true
+            if (awaitingBulkPermission) {
+                pendingBulkSend = true
+                awaitingBulkPermission = false
+            } else {
+                pendingSend = true
+            }
         } else {
+            awaitingBulkPermission = false
             scope.launch {
                 snackbarHostState.showSnackbar(context.getString(R.string.business_sms_permission_denied))
             }
@@ -142,6 +150,19 @@ fun BusinessSmsScreen(
         val recipients = buildRecipients(phone, recipientName, selectedClientId)
         if (recipients.isEmpty() || messageBody.isBlank()) return@LaunchedEffect
         val result = onSendSms(recipients, messageBody, selectedTemplateId, settings.smsDirectSendEnabled)
+        snackbarHostState.showSnackbar(formatSendResult(context, result))
+    }
+
+    LaunchedEffect(pendingBulkSend) {
+        if (!pendingBulkSend) return@LaunchedEffect
+        pendingBulkSend = false
+        if (selectedBulkClientIds.isEmpty() || messageBody.isBlank()) return@LaunchedEffect
+        val result = onSendBulk(
+            selectedBulkClientIds.toList(),
+            messageBody,
+            selectedTemplateId,
+            settings.smsDirectSendEnabled,
+        )
         snackbarHostState.showSnackbar(formatSendResult(context, result))
     }
 
@@ -226,6 +247,7 @@ fun BusinessSmsScreen(
                     scope.launch {
                         if (selectedBulkClientIds.isEmpty() || messageBody.isBlank()) return@launch
                         if (settings.smsDirectSendEnabled && !BusinessSmsPermissions.canSendDirect(context)) {
+                            awaitingBulkPermission = true
                             smsPermissionLauncher.launch(BusinessSmsPermissions.sendSmsPermission)
                             return@launch
                         }
@@ -401,7 +423,7 @@ private fun SmsComposePanel(
                     MessagingChannel.TELEGRAM,
                     MessagingChannel.EMAIL,
                 ).forEach { channel ->
-                    if (UniversalMessageSender.canSend(channel, contact)) {
+                    if (UniversalMessageSender.canSend(channel, contact, context)) {
                         TextButton(
                             onClick = {
                                 UniversalMessageSender.send(

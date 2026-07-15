@@ -16,7 +16,7 @@ class DebtFreedomEngineTest {
         val result = DebtFreedomEngine.computeMilestones(2_000, 20_000)
         assertEquals(10, result.progressPercent)
         assertEquals(25, result.nextMilestone?.percent)
-        assertEquals(3_000, result.nextMilestone?.centsToReach)
+        assertEquals(3_000L, result.nextMilestone?.centsToReach)
     }
 
     @Test

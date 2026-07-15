@@ -17,6 +17,7 @@ import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
+import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.CalendarSettings
 import com.example.money.settings.GamificationState
@@ -41,6 +42,7 @@ class DebtorsViewModel(
     private val debtReminderScheduler: DebtReminderScheduler,
     private val preferencesStore: MoneyPreferencesStore,
     private val debtCalendarSyncService: DebtCalendarSyncService,
+    private val personalDebtMessageScheduler: PersonalDebtMessageScheduler? = null,
 ) : ViewModel() {
 
     private val _debtTab = MutableStateFlow(DebtTab.OwesMe)
@@ -162,8 +164,13 @@ class DebtorsViewModel(
 
     init {
         viewModelScope.launch {
-            personalBranchSettings.collect { settings ->
-                allDebtorsList.value.filter { !it.isPaid }.forEach { debtor ->
+            combine(
+                preferencesStore.personalBranchSettings,
+                allDebtors,
+            ) { settings, debtors ->
+                settings to debtors
+            }.collect { (settings, debtors) ->
+                debtors.filter { !it.isPaid }.forEach { debtor ->
                     debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
                 }
             }
@@ -173,6 +180,8 @@ class DebtorsViewModel(
     fun updatePersonalBranchSettings(transform: (PersonalBranchSettings) -> PersonalBranchSettings) {
         viewModelScope.launch {
             preferencesStore.updatePersonalBranchSettings(transform)
+            val settings = preferencesStore.personalBranchSettings.first()
+            personalDebtMessageScheduler?.syncSchedule(settings)
         }
     }
 
@@ -551,6 +560,7 @@ class DebtorsViewModel(
         private val debtReminderScheduler: DebtReminderScheduler,
         private val preferencesStore: MoneyPreferencesStore,
         private val debtCalendarSyncService: DebtCalendarSyncService,
+        private val personalDebtMessageScheduler: PersonalDebtMessageScheduler? = null,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -560,6 +570,7 @@ class DebtorsViewModel(
                     debtReminderScheduler,
                     preferencesStore,
                     debtCalendarSyncService,
+                    personalDebtMessageScheduler,
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
