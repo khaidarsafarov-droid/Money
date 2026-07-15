@@ -737,6 +737,11 @@
     <string name="debtor_phone_label">Телефон</string>
     <string name="debtor_email_label">Email</string>
     <string name="debt_remind_no_contact">Добавьте телефон или email должника</string>
+    <string name="debt_remind_add_contact_hint">Для WhatsApp и SMS укажите телефон должника в карточке долга</string>
+    <string name="debt_remind_need_phone">Нужен номер телефона</string>
+    <string name="debt_remind_need_email">Нужен email</string>
+    <string name="debt_remind_telegram_unavailable">Telegram не установлен</string>
+    <string name="debt_remind_channel_unavailable">Недоступно на этом устройстве</string>
     <string name="debt_notification_settings_title">Уведомления о долгах</string>
     <string name="debt_notification_settings_subtitle">Напоминания, авто-сообщения и каналы связи</string>
     <string name="debt_notification_enabled">Push-уведомления о долгах</string>

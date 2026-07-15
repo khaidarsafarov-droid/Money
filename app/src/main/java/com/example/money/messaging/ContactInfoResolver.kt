@@ -3,11 +3,15 @@ package com.example.money.messaging
 import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
+import com.example.money.business.sms.BusinessSmsPermissions
+import com.example.money.business.sms.ContactPhoneResolver
 import com.example.money.business.sms.PhoneNormalizer
 
 object ContactInfoResolver {
 
     fun resolve(context: Context, contactUri: Uri): MessagingContact? {
+        if (!BusinessSmsPermissions.canReadContacts(context)) return null
+
         val resolver = context.contentResolver
         val contactId = resolver.query(
             contactUri,
@@ -35,15 +39,22 @@ object ContactInfoResolver {
         contactUri: String?,
         context: Context,
     ): MessagingContact {
-        val normalizedPhone = PhoneNormalizer.normalize(phoneField)
-        val trimmedEmail = emailField.trim()
-        if (!normalizedPhone.isNullOrBlank() || trimmedEmail.isNotBlank()) {
-            return MessagingContact(phone = normalizedPhone.orEmpty(), email = trimmedEmail)
-        }
+        var phone = PhoneNormalizer.normalize(phoneField).orEmpty()
+        var email = emailField.trim()
+        var name = ""
+
         if (!contactUri.isNullOrBlank()) {
-            resolve(context, Uri.parse(contactUri))?.let { return it }
+            resolve(context, Uri.parse(contactUri))?.let { fromContact ->
+                if (phone.isBlank()) phone = fromContact.phone
+                if (email.isBlank()) email = fromContact.email
+                name = fromContact.name
+            }
+            if (phone.isBlank()) {
+                ContactPhoneResolver.primaryPhoneForClient(phoneField, contactUri, context)?.let { phone = it }
+            }
         }
-        return MessagingContact()
+
+        return MessagingContact(phone = phone, email = email, name = name)
     }
 
     private fun resolvePrimaryPhone(

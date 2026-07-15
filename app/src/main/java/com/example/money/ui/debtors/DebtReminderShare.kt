@@ -9,6 +9,12 @@ import com.example.money.messaging.MessagingChannel
 import com.example.money.messaging.UniversalMessageSender
 import com.example.money.ui.util.Formatters
 
+data class DebtRemindChannelOption(
+    val channel: MessagingChannel,
+    val enabled: Boolean,
+    val disabledReasonRes: Int? = null,
+)
+
 object DebtReminderShare {
 
     fun buildMessage(context: Context, debtor: Debtor): String {
@@ -57,8 +63,27 @@ object DebtReminderShare {
             com.example.money.messaging.MessageSendResult.FAILED
     }
 
-    fun availableChannels(context: Context, debtor: Debtor): List<MessagingChannel> {
+    fun availableChannels(context: Context, debtor: Debtor): List<MessagingChannel> =
+        channelOptions(context, debtor)
+            .filter { it.enabled }
+            .map { it.channel }
+
+    fun channelOptions(context: Context, debtor: Debtor): List<DebtRemindChannelOption> {
         val contact = resolveContact(context, debtor)
-        return MessagingChannel.entries.filter { UniversalMessageSender.canSend(it, contact, context) }
+        return MessagingChannel.entries.map { channel ->
+            val enabled = UniversalMessageSender.canSend(channel, contact, context)
+            val disabledReasonRes = when {
+                enabled -> null
+                channel == MessagingChannel.SMS || channel == MessagingChannel.WHATSAPP -> {
+                    if (contact.phone.isBlank()) R.string.debt_remind_need_phone else R.string.debt_remind_channel_unavailable
+                }
+                channel == MessagingChannel.EMAIL -> {
+                    if (contact.email.isBlank()) R.string.debt_remind_need_email else R.string.debt_remind_channel_unavailable
+                }
+                channel == MessagingChannel.TELEGRAM -> R.string.debt_remind_telegram_unavailable
+                else -> R.string.debt_remind_channel_unavailable
+            }
+            DebtRemindChannelOption(channel, enabled, disabledReasonRes)
+        }
     }
 }

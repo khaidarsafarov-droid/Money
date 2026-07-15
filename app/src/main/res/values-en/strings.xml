@@ -504,6 +504,11 @@
     <string name="debtor_phone_label">Phone</string>
     <string name="debtor_email_label">Email</string>
     <string name="debt_remind_no_contact">Add debtor phone or email</string>
+    <string name="debt_remind_add_contact_hint">Add the debtor phone in the debt card for WhatsApp and SMS</string>
+    <string name="debt_remind_need_phone">Phone number required</string>
+    <string name="debt_remind_need_email">Email required</string>
+    <string name="debt_remind_telegram_unavailable">Telegram is not installed</string>
+    <string name="debt_remind_channel_unavailable">Unavailable on this device</string>
     <string name="debt_notification_settings_title">Debt notifications</string>
     <string name="debt_notification_settings_subtitle">Reminders, auto-messages, and channels</string>
     <string name="debt_notification_enabled">Debt push notifications</string>
