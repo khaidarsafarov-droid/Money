@@ -10,6 +10,7 @@ import com.example.money.messaging.MessagePayload
 import com.example.money.messaging.MessagingChannel
 import com.example.money.messaging.MessagingContact
 import com.example.money.messaging.UniversalMessageSender
+import com.example.money.domain.model.business.BusinessTransaction
 import com.example.money.domain.model.business.workflow.WorkflowDebtWithParticipant
 import com.example.money.ui.util.Formatters
 import java.util.concurrent.TimeUnit
@@ -184,6 +185,70 @@ object BusinessNotificationHelper {
             .cancel(workflowDebtNotificationId(debtId))
     }
 
+    fun showLargeTransactionAlert(
+        context: Context,
+        transaction: BusinessTransaction,
+        thresholdCents: Long,
+    ): Boolean {
+        if (!com.example.money.ui.util.NotificationPermissions.areEnabled(context)) return false
+
+        val amount = Formatters.currencyFromCents(transaction.amountCents)
+        val threshold = Formatters.currencyFromCents(thresholdCents)
+        val body = context.getString(
+            R.string.notification_business_large_tx_body,
+            amount,
+            transaction.category,
+            threshold,
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(context, NotificationChannels.BUSINESS_ALERTS)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.notification_business_large_tx_title))
+            .setContentText(body)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        return try {
+            androidx.core.app.NotificationManagerCompat.from(context)
+                .notify(largeTransactionNotificationId(transaction.id), notification)
+            true
+        } catch (exception: SecurityException) {
+            false
+        }
+    }
+
+    fun showWeeklyAiInsight(
+        context: Context,
+        businessName: String,
+        body: String,
+    ): Boolean {
+        if (!com.example.money.ui.util.NotificationPermissions.areEnabled(context)) return false
+
+        val title = context.getString(
+            R.string.notification_business_weekly_ai_title,
+            businessName.ifBlank { context.getString(R.string.business_branch_default_name) },
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(context, NotificationChannels.BUSINESS_ALERTS)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        return try {
+            androidx.core.app.NotificationManagerCompat.from(context)
+                .notify(WEEKLY_AI_INSIGHT_NOTIFICATION_ID, notification)
+            true
+        } catch (exception: SecurityException) {
+            false
+        }
+    }
+
     fun showLowCashAlert(context: Context, balanceCents: Long, thresholdCents: Long): Boolean {
         if (!com.example.money.ui.util.NotificationPermissions.areEnabled(context)) return false
 
@@ -228,6 +293,7 @@ object BusinessNotificationHelper {
         invoice.status != InvoiceStatus.PAID && invoice.dueDate < now
 
     private const val LOW_CASH_NOTIFICATION_ID = 90_001
+    private const val WEEKLY_AI_INSIGHT_NOTIFICATION_ID = 90_002
 
     private fun notificationId(invoiceId: Long): Int = (100_000 + invoiceId).toInt()
 
@@ -240,4 +306,6 @@ object BusinessNotificationHelper {
     private fun workflowDebtNotificationId(debtId: Long): Int = (400_000 + debtId).toInt()
 
     private fun workflowDebtRequestCode(debtId: Long): Int = (500_000 + debtId).toInt()
+
+    private fun largeTransactionNotificationId(transactionId: Long): Int = (600_000 + transactionId).toInt()
 }

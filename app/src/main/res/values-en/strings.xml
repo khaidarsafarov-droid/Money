@@ -638,6 +638,12 @@
     <string name="business_workflow_automation_title">Workflow automation</string>
     <string name="business_workflow_debt_automation">Auto debt reminders (WorkManager)</string>
     <string name="business_workflow_debt_push">Push for workflow debts</string>
+    <string name="business_automation_insights_title">Insights and alerts</string>
+    <string name="business_large_tx_alerts">Large transactions (24h)</string>
+    <string name="business_weekly_ai_insights">Weekly AI insights</string>
+    <string name="notification_business_large_tx_title">Large transaction</string>
+    <string name="notification_business_large_tx_body">%1$s · %2$s (threshold %3$s)</string>
+    <string name="notification_business_weekly_ai_title">AI insight: %1$s</string>
     <string name="notification_workflow_debt_title">Debt: %1$s</string>
     <string name="notification_workflow_debt_body">%1$s — %2$s\n%3$s</string>
     <string name="notification_workflow_debt_body_short">%1$s\n%2$s</string>

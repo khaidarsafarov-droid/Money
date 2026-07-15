@@ -15,7 +15,7 @@ import com.example.money.messaging.MessagePayload
 import com.example.money.messaging.MessagingChannel
 import com.example.money.messaging.MessagingContact
 import com.example.money.messaging.UniversalMessageSender
-import com.example.money.notification.BusinessNotificationHelper
+import com.example.money.business.push.BusinessPushDelivery
 import com.example.money.settings.BusinessBranchSettings
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
@@ -98,7 +98,7 @@ class BusinessCommunicationUseCases(
             .filter { it.debt.status != WorkflowDebtStatus.PAID }
             .forEach { item ->
                 val body = resolveBody(billId, item, messageBody, businessName)
-                val shown = BusinessNotificationHelper.showWorkflowDebtReminder(
+                val shown = BusinessPushDelivery.sendWorkflowDebtReminder(
                     context = context,
                     debt = item,
                     billTitle = bill?.title.orEmpty(),

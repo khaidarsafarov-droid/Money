@@ -871,6 +871,12 @@
     <string name="business_workflow_automation_title">Автоматизация процессов</string>
     <string name="business_workflow_debt_automation">Авто-напоминания по долгам (WorkManager)</string>
     <string name="business_workflow_debt_push">Push по долгам процессов</string>
+    <string name="business_automation_insights_title">Аналитика и оповещения</string>
+    <string name="business_large_tx_alerts">Крупные транзакции (24 ч)</string>
+    <string name="business_weekly_ai_insights">Еженедельные AI-инсайты</string>
+    <string name="notification_business_large_tx_title">Крупная транзакция</string>
+    <string name="notification_business_large_tx_body">%1$s · %2$s (порог %3$s)</string>
+    <string name="notification_business_weekly_ai_title">AI-инсайт: %1$s</string>
     <string name="notification_workflow_debt_title">Долг: %1$s</string>
     <string name="notification_workflow_debt_body">%1$s — %2$s\n%3$s</string>
     <string name="notification_workflow_debt_body_short">%1$s\n%2$s</string>

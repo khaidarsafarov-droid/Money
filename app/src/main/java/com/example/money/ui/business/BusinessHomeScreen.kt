@@ -110,7 +110,9 @@ private fun BusinessHomeScreenContent(
             app.businessInvoiceReminderScheduler,
             app.businessSmsScheduler,
             app.workflowDebtScheduler,
+            app.businessAutomationCenterScheduler,
             app.businessCommunicationUseCases,
+            app.businessApi,
         ),
     )
 

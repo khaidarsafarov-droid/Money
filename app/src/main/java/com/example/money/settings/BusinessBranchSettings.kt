@@ -32,6 +32,9 @@ data class BusinessBranchSettings(
     val emailAutomationEnabled: Boolean = true,
     val workflowDebtAutomationEnabled: Boolean = false,
     val workflowDebtPushEnabled: Boolean = true,
+    val largeTransactionAlertsEnabled: Boolean = false,
+    val weeklyAiInsightsEnabled: Boolean = false,
+    val largeTransactionThresholdCents: Long = 500_000,
 ) {
     fun savedFilterPresets(): List<SavedFilterPreset> = decodeSavedFilterPresets(savedFilterPresetsJson)
 
@@ -54,6 +57,12 @@ data class BusinessBranchSettings(
     fun hasWorkflowDebtAutomation(): Boolean =
         workflowDebtAutomationEnabled &&
             (enabledWorkflowAutomationChannels().isNotEmpty() || workflowDebtPushEnabled)
+
+    fun hasAnyAutomationCenterJob(): Boolean =
+        hasWorkflowDebtAutomation() ||
+            hasOverdueInvoiceAutomation() ||
+            largeTransactionAlertsEnabled ||
+            weeklyAiInsightsEnabled
 
     fun customCategories(): List<String> = decodeStringList(customCategoriesJson)
 

@@ -186,6 +186,35 @@ fun BusinessAutomationSettings(
         }
 
         item {
+            Text(
+                text = stringResource(R.string.business_automation_insights_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_large_tx_alerts),
+                checked = settings.largeTransactionAlertsEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(largeTransactionAlertsEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_weekly_ai_insights),
+                checked = settings.weeklyAiInsightsEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(weeklyAiInsightsEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
             TextButton(onClick = onRunNow) {
                 Text(stringResource(R.string.business_automation_run_now))
             }

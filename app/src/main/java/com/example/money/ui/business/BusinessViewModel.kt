@@ -33,6 +33,7 @@ import com.example.money.domain.model.business.RecurringBusinessRule
 import com.example.money.domain.model.business.RecurringBusinessRuleCodec
 import com.example.money.domain.model.business.CashflowForecastPoint
 import com.example.money.domain.repository.BusinessRepository
+import com.example.money.business.api.BusinessApi
 import com.example.money.domain.usecase.BusinessCommunicationUseCases
 import com.example.money.domain.usecase.BusinessSmsUseCases
 import com.example.money.domain.usecase.BusinessUseCases
@@ -44,6 +45,7 @@ import com.example.money.domain.util.ai.AiInvoiceRiskService
 import com.example.money.domain.util.ai.BusinessSmsTone
 import com.example.money.domain.util.ai.BusinessAiAssistantService
 import com.example.money.domain.util.MoneyMath
+import com.example.money.notification.BusinessAutomationCenterScheduler
 import com.example.money.notification.BusinessInvoiceReminderScheduler
 import com.example.money.notification.BusinessSmsScheduler
 import com.example.money.notification.WorkflowDebtScheduler
@@ -92,7 +94,9 @@ class BusinessViewModel(
     private val invoiceReminderScheduler: BusinessInvoiceReminderScheduler? = null,
     private val businessSmsScheduler: BusinessSmsScheduler? = null,
     private val workflowDebtScheduler: WorkflowDebtScheduler? = null,
+    private val businessAutomationCenterScheduler: BusinessAutomationCenterScheduler? = null,
     private val businessCommunicationUseCases: BusinessCommunicationUseCases? = null,
+    private val businessApi: BusinessApi? = null,
 ) : ViewModel() {
 
     val branchSettings: StateFlow<BusinessBranchSettings> = preferencesStore.businessBranchSettings.stateIn(
@@ -485,13 +489,15 @@ class BusinessViewModel(
             val settings = preferencesStore.businessBranchSettings.first()
             businessSmsScheduler?.syncSchedule(settings)
             workflowDebtScheduler?.syncSchedule(settings)
+            businessAutomationCenterScheduler?.syncSchedule(settings)
         }
     }
 
     fun runWorkflowDebtAutomationNow(context: Context) {
         viewModelScope.launch {
             val settings = preferencesStore.businessBranchSettings.first()
-            businessCommunicationUseCases?.runWorkflowAutomation(context, settings)
+            businessApi?.runAutomation(context, settings)
+                ?: businessCommunicationUseCases?.runWorkflowAutomation(context, settings)
         }
     }
 
@@ -532,7 +538,11 @@ class BusinessViewModel(
 
     fun runAutomationNow(context: Context) {
         runRecurringRulesNow()
-        runWorkflowDebtAutomationNow(context)
+        viewModelScope.launch {
+            val settings = preferencesStore.businessBranchSettings.first()
+            businessApi?.runAutomation(context, settings)
+                ?: businessCommunicationUseCases?.runWorkflowAutomation(context, settings)
+        }
     }
 
     fun rescheduleInvoiceReminders() {
@@ -541,6 +551,7 @@ class BusinessViewModel(
             invoiceReminderScheduler?.syncAll(invoices.value, settings)
             businessSmsScheduler?.syncSchedule(settings)
             workflowDebtScheduler?.syncSchedule(settings)
+            businessAutomationCenterScheduler?.syncSchedule(settings)
         }
     }
 
@@ -591,7 +602,9 @@ class BusinessViewModel(
         private val invoiceReminderScheduler: BusinessInvoiceReminderScheduler? = null,
         private val businessSmsScheduler: BusinessSmsScheduler? = null,
         private val workflowDebtScheduler: WorkflowDebtScheduler? = null,
+        private val businessAutomationCenterScheduler: BusinessAutomationCenterScheduler? = null,
         private val businessCommunicationUseCases: BusinessCommunicationUseCases? = null,
+        private val businessApi: BusinessApi? = null,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -604,7 +617,9 @@ class BusinessViewModel(
                     invoiceReminderScheduler,
                     businessSmsScheduler,
                     workflowDebtScheduler,
+                    businessAutomationCenterScheduler,
                     businessCommunicationUseCases,
+                    businessApi,
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
