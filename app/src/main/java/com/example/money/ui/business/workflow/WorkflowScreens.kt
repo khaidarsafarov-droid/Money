@@ -50,6 +50,8 @@ import com.example.money.domain.model.business.workflow.WorkflowCategory
 import com.example.money.domain.model.business.workflow.WorkflowDebtWithParticipant
 import com.example.money.domain.model.business.workflow.WorkflowProcess
 import com.example.money.messaging.ContactInfoResolver
+import com.example.money.ui.business.designsystem.BusinessChannelCard
+import com.example.money.ui.business.designsystem.BusinessScreenHeader
 import com.example.money.ui.business.theme.BusinessSpacing
 import com.example.money.ui.util.Formatters
 
@@ -74,13 +76,10 @@ fun WorkflowCategoriesScreen(
             )
         }
         items(categories, key = { it.id }) { category ->
-            val selected = category.id == selectedCategoryId
             WorkflowCategoryCard(
                 category = category,
                 onClick = { onSelectCategory(category.id) },
-                modifier = Modifier.then(
-                    if (selected) Modifier.padding(2.dp) else Modifier,
-                ),
+                selected = category.id == selectedCategoryId,
             )
         }
         item {
@@ -604,7 +603,7 @@ fun WorkflowCommunicationCenterScreen(
             )
         }
         item {
-            WorkflowHubTile(
+            BusinessChannelCard(
                 title = stringResource(R.string.messaging_channel_whatsapp),
                 subtitle = stringResource(R.string.workflow_ux_hub_whatsapp),
                 icon = Icons.Outlined.Store,
@@ -612,7 +611,7 @@ fun WorkflowCommunicationCenterScreen(
             )
         }
         item {
-            WorkflowHubTile(
+            BusinessChannelCard(
                 title = stringResource(R.string.messaging_channel_sms),
                 subtitle = stringResource(R.string.workflow_ux_hub_sms),
                 icon = Icons.Outlined.Sms,
@@ -620,7 +619,7 @@ fun WorkflowCommunicationCenterScreen(
             )
         }
         item {
-            WorkflowHubTile(
+            BusinessChannelCard(
                 title = stringResource(R.string.workflow_ux_hub_push_title),
                 subtitle = stringResource(R.string.workflow_ux_hub_push),
                 icon = Icons.Outlined.Notifications,
@@ -628,7 +627,7 @@ fun WorkflowCommunicationCenterScreen(
             )
         }
         item {
-            WorkflowHubTile(
+            BusinessChannelCard(
                 title = stringResource(R.string.business_automation_title),
                 subtitle = stringResource(R.string.workflow_ux_hub_automation),
                 icon = Icons.Outlined.Tune,
@@ -636,35 +635,20 @@ fun WorkflowCommunicationCenterScreen(
             )
         }
         item {
-            WorkflowHubTile(
-                title = stringResource(R.string.workflow_ux_hub_history_title),
-                subtitle = stringResource(R.string.workflow_ux_hub_history),
+            BusinessChannelCard(
+                title = stringResource(R.string.business_ds_history_title),
+                subtitle = stringResource(R.string.business_ds_history_subtitle),
                 icon = Icons.Outlined.History,
                 onClick = onOpenSmsTab,
             )
         }
         item {
-            WorkflowHubTile(
-                title = stringResource(R.string.workflow_ux_hub_templates_title),
-                subtitle = stringResource(R.string.workflow_ux_hub_templates),
+            BusinessChannelCard(
+                title = stringResource(R.string.business_ds_templates_title),
+                subtitle = stringResource(R.string.business_ds_templates_subtitle),
                 icon = Icons.Outlined.AutoAwesome,
                 onClick = onOpenSmsTab,
             )
         }
     }
-}
-
-@Composable
-private fun WorkflowHubTile(
-    title: String,
-    subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-) {
-    WorkflowListCard(
-        title = title,
-        subtitle = subtitle,
-        leadingIcon = icon,
-        onClick = onClick,
-    )
 }

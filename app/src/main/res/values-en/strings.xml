@@ -441,6 +441,11 @@
     <string name="business_assistant_prompt_risks">Invoice risks</string>
     <string name="business_assistant_prompt_category">Category</string>
     <string name="business_automation_title">Automation</string>
+    <string name="business_ds_automation_subtitle">Configure automatic reminders.</string>
+    <string name="business_ds_history_title">Message history</string>
+    <string name="business_ds_history_subtitle">All sent notifications in one place.</string>
+    <string name="business_ds_templates_title">Templates</string>
+    <string name="business_ds_templates_subtitle">Create and edit message templates.</string>
     <string name="business_automation_invoice_reminders">Overdue invoice reminders</string>
     <string name="business_automation_low_cash">Low cash alerts</string>
     <string name="business_automation_recurring_tx">Recurring transactions</string>

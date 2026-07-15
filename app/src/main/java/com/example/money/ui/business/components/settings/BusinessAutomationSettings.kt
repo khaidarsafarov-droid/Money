@@ -30,6 +30,7 @@ import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.RecurringBusinessRule
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.BusinessBranchSettings
+import com.example.money.ui.business.designsystem.BusinessScreenHeader
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -50,10 +51,9 @@ fun BusinessAutomationSettings(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Text(
-                text = stringResource(R.string.business_automation_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+            BusinessScreenHeader(
+                title = stringResource(R.string.business_automation_title),
+                subtitle = stringResource(R.string.business_ds_automation_subtitle),
             )
         }
 

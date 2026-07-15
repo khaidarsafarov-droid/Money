@@ -64,6 +64,13 @@ import com.example.money.domain.model.business.workflow.WorkflowCategoryType
 import com.example.money.domain.model.business.workflow.WorkflowDebtStatus
 import com.example.money.domain.model.business.workflow.WorkflowDebtWithParticipant
 import com.example.money.domain.model.business.workflow.WorkflowProcess
+import com.example.money.ui.business.designsystem.BusinessCategoryCard
+import com.example.money.ui.business.designsystem.BusinessChannelCard
+import com.example.money.ui.business.designsystem.BusinessEmptyState
+import com.example.money.ui.business.designsystem.BusinessListRow
+import com.example.money.ui.business.designsystem.BusinessScreenHeader
+import com.example.money.ui.business.designsystem.BusinessStatusChip
+import com.example.money.ui.business.designsystem.BusinessDesignTokens
 import com.example.money.ui.business.theme.BusinessColors
 import com.example.money.ui.business.theme.BusinessSpacing
 import com.example.money.ui.util.Formatters
@@ -96,26 +103,7 @@ fun WorkflowHeroHeader(
     subtitle: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f))
-            .padding(BusinessSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(BusinessSpacing.xs),
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    BusinessScreenHeader(title = title, subtitle = subtitle, modifier = modifier)
 }
 
 @Composable
@@ -141,30 +129,7 @@ fun WorkflowEmptyState(
     onAction: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(BusinessSpacing.lg),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(BusinessSpacing.md),
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Hub,
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-        )
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (actionLabel != null && onAction != null) {
-            FilledTonalButton(onClick = onAction) {
-                Text(actionLabel)
-            }
-        }
-    }
+    BusinessEmptyState(message = message, actionLabel = actionLabel, onAction = onAction, modifier = modifier)
 }
 
 @Composable
@@ -172,49 +137,17 @@ fun WorkflowCategoryCard(
     category: WorkflowCategory,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
 ) {
-    val accent = category.type.accentColor()
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = BusinessSpacing.cardElevation),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(BusinessSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(BusinessSpacing.md),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(accent.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = category.type.icon(),
-                    contentDescription = null,
-                    tint = accent,
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = category.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = category.type.subtitle(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
+    BusinessCategoryCard(
+        title = category.name,
+        description = category.type.subtitle(),
+        icon = category.type.icon(),
+        accentColor = category.type.accentColor(),
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -226,50 +159,14 @@ fun WorkflowListCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = BusinessSpacing.cardElevation),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(BusinessSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            leadingIcon?.let { icon ->
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(end = BusinessSpacing.md),
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                if (!subtitle.isNullOrBlank()) {
-                    Text(
-                        subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            if (!trailing.isNullOrBlank()) {
-                Spacer(modifier = Modifier.width(BusinessSpacing.sm))
-                Text(
-                    trailing,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
-    }
+    BusinessListRow(
+        title = title,
+        subtitle = subtitle,
+        trailing = trailing,
+        leadingIcon = leadingIcon,
+        onClick = onClick,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -350,22 +247,11 @@ fun WorkflowBillSummaryCard(
 @Composable
 fun WorkflowDebtStatusChip(status: WorkflowDebtStatus) {
     val (label, color) = when (status) {
-        WorkflowDebtStatus.PAID -> stringResource(R.string.workflow_status_paid) to BusinessColors.ProfitGreen
-        WorkflowDebtStatus.PARTIAL -> stringResource(R.string.workflow_status_partial) to BusinessColors.WarningYellow
-        WorkflowDebtStatus.OPEN -> stringResource(R.string.workflow_status_open) to BusinessColors.LossRed
+        WorkflowDebtStatus.PAID -> stringResource(R.string.workflow_status_paid) to BusinessDesignTokens.SuccessGreen
+        WorkflowDebtStatus.PARTIAL -> stringResource(R.string.workflow_status_partial) to BusinessDesignTokens.WarningAmber
+        WorkflowDebtStatus.OPEN -> stringResource(R.string.workflow_status_open) to BusinessDesignTokens.ErrorRed
     }
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = color.copy(alpha = 0.15f),
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
+    BusinessStatusChip(label = label, color = color)
 }
 
 @Composable

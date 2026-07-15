@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
  */
 object BusinessColors {
     val PrimaryBlue = Color(0xFF1E88E5)
+    val AccentViolet = Color(0xFF5E35B1)
     val PrimaryDark = Color(0xFF0D47A1)
     val ProfitGreen = Color(0xFF43A047)
     val LossRed = Color(0xFFE53935)

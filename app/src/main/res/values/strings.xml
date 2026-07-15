@@ -674,6 +674,11 @@
     <string name="business_assistant_prompt_risks">Риски счетов</string>
     <string name="business_assistant_prompt_category">Категория</string>
     <string name="business_automation_title">Автоматизация</string>
+    <string name="business_ds_automation_subtitle">Настройте автоматические напоминания.</string>
+    <string name="business_ds_history_title">История сообщений</string>
+    <string name="business_ds_history_subtitle">Все отправленные уведомления в одном месте.</string>
+    <string name="business_ds_templates_title">Шаблоны</string>
+    <string name="business_ds_templates_subtitle">Создавайте и редактируйте шаблоны сообщений.</string>
     <string name="business_automation_invoice_reminders">Напоминания о просроченных счетах</string>
     <string name="business_automation_low_cash">Оповещения о низком остатке</string>
     <string name="business_automation_recurring_tx">Повторяющиеся операции</string>
