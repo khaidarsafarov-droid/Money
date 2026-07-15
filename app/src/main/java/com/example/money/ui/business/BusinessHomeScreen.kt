@@ -322,7 +322,10 @@ private fun BusinessTabContent(
                 onQuickAction = viewModel::requestQuickAction,
             )
         }
-        BusinessTab.Workflows -> BusinessWorkflowScreen(modifier = Modifier.fillMaxSize())
+        BusinessTab.Workflows -> BusinessWorkflowScreen(
+            onSelectBusinessTab = viewModel::selectTab,
+            modifier = Modifier.fillMaxSize(),
+        )
         BusinessTab.Clients -> ClientList(clients = clients)
         BusinessTab.Projects -> BusinessListTab(
             items = projects.map { project ->
