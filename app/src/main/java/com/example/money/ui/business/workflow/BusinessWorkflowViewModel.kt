@@ -201,9 +201,34 @@ class BusinessWorkflowViewModel(
         bindBillScope(billId)
     }
 
+    fun bindMessageComposerScope(billId: Long) {
+        _scopedBillId.value = billId
+        val current = _route.value
+        if (current !is WorkflowRoute.MessageComposer || current.billId != billId) {
+            _route.value = WorkflowRoute.MessageComposer(billId)
+        }
+        if (_selectedDebtIds.value.isEmpty() && debts.value.isNotEmpty()) {
+            _selectedDebtIds.value = BusinessWorkflowDebtSelection.resolveSelectedDebtIds(
+                debts = debts.value,
+                currentSelection = _selectedDebtIds.value,
+            )
+        }
+    }
+
     fun openMessageComposer(billId: Long) {
+        val current = _route.value
+        if (current is WorkflowRoute.MessageComposer &&
+            current.billId == billId &&
+            _scopedBillId.value == billId
+        ) {
+            return
+        }
         _scopedBillId.value = billId
         _route.value = WorkflowRoute.MessageComposer(billId)
+        _selectedDebtIds.value = BusinessWorkflowDebtSelection.resolveSelectedDebtIds(
+            debts = debts.value,
+            currentSelection = _selectedDebtIds.value,
+        )
         if (_messageBody.value.isBlank()) {
             generateMessageForFirstSelected(billId)
         }
@@ -388,7 +413,7 @@ class BusinessWorkflowViewModel(
     }
 
     private fun selectedDebts(): List<WorkflowDebtWithParticipant> =
-        debts.value.filter { it.debt.id in _selectedDebtIds.value }
+        BusinessWorkflowDebtSelection.debtsForSend(debts.value, _selectedDebtIds.value)
 
     suspend fun sendReminders(
         context: Context,
