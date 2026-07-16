@@ -33,6 +33,7 @@ import com.example.money.business.sms.BusinessSmsPermissions
 import com.example.money.domain.model.business.workflow.WorkflowProcess
 import com.example.money.messaging.MessagingChannel
 import com.example.money.ui.business.BusinessTab
+import com.example.money.ui.business.sms.BusinessSmsPanel
 import com.example.money.ui.theme.GoldPrimary
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BusinessWorkflowScreen(
-    onSelectBusinessTab: (BusinessTab) -> Unit = {},
+    onSelectBusinessTab: (BusinessTab, BusinessSmsPanel?) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -165,8 +166,10 @@ fun BusinessWorkflowScreen(
                 modifier = Modifier.padding(padding),
             )
             WorkflowRoute.CommunicationCenter -> WorkflowCommunicationCenterScreen(
-                onOpenSmsTab = { onSelectBusinessTab(BusinessTab.Sms) },
-                onOpenAutomation = { onSelectBusinessTab(BusinessTab.Settings) },
+                onOpenSmsCompose = { onSelectBusinessTab(BusinessTab.Sms, BusinessSmsPanel.COMPOSE) },
+                onOpenHistory = { onSelectBusinessTab(BusinessTab.Sms, BusinessSmsPanel.HISTORY) },
+                onOpenTemplates = { onSelectBusinessTab(BusinessTab.Sms, BusinessSmsPanel.TEMPLATES) },
+                onOpenAutomation = { onSelectBusinessTab(BusinessTab.Settings, null) },
                 modifier = Modifier.padding(padding),
             )
             is WorkflowRoute.Processes -> WorkflowProcessesScreen(

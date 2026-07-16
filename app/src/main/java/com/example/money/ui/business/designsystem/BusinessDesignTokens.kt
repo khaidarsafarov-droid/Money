@@ -38,10 +38,15 @@ object BusinessDesignTokens {
     val SpaceMd: Dp = 16.dp
     val SpaceLg: Dp = 24.dp
     val SpaceXl: Dp = 32.dp
+    val SpaceXxl: Dp = 48.dp
 
     // Elevation
     val ElevationCard: Dp = 2.dp
     val ElevationRaised: Dp = 4.dp
+
+    // Shadows (elevation mapping)
+    val ShadowSoft: Dp = ElevationCard
+    val ShadowMedium: Dp = ElevationRaised
 
     // Touch
     val MinTouchTarget: Dp = 48.dp

@@ -30,7 +30,8 @@ import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.RecurringBusinessRule
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.BusinessBranchSettings
-import com.example.money.ui.business.designsystem.BusinessScreenHeader
+import com.example.money.ui.business.designsystem.AutomationItem
+import com.example.money.ui.business.designsystem.HeaderPrimary
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -51,14 +52,14 @@ fun BusinessAutomationSettings(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            BusinessScreenHeader(
+            HeaderPrimary(
                 title = stringResource(R.string.business_automation_title),
                 subtitle = stringResource(R.string.business_ds_automation_subtitle),
             )
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_automation_invoice_reminders),
                 checked = settings.invoiceRemindersEnabled,
                 onCheckedChange = { enabled ->
@@ -68,7 +69,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_automation_low_cash),
                 checked = settings.lowCashAlertsEnabled,
                 onCheckedChange = { enabled ->
@@ -78,7 +79,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_automation_recurring_tx),
                 checked = settings.recurringTransactionsEnabled,
                 onCheckedChange = { enabled ->
@@ -97,7 +98,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_sms_automation_enabled),
                 checked = settings.smsAutomationEnabled,
                 onCheckedChange = { enabled ->
@@ -107,7 +108,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_sms_overdue_enabled),
                 checked = settings.smsOverdueInvoiceEnabled,
                 onCheckedChange = { enabled ->
@@ -117,7 +118,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_sms_direct_send),
                 checked = settings.smsDirectSendEnabled,
                 onCheckedChange = { enabled ->
@@ -127,7 +128,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_whatsapp_automation),
                 checked = settings.whatsappAutomationEnabled,
                 onCheckedChange = { enabled ->
@@ -137,7 +138,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_telegram_automation),
                 checked = settings.telegramAutomationEnabled,
                 onCheckedChange = { enabled ->
@@ -147,7 +148,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_email_automation),
                 checked = settings.emailAutomationEnabled,
                 onCheckedChange = { enabled ->
@@ -166,7 +167,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_workflow_debt_automation),
                 checked = settings.workflowDebtAutomationEnabled,
                 onCheckedChange = { enabled ->
@@ -176,7 +177,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_workflow_debt_push),
                 checked = settings.workflowDebtPushEnabled,
                 onCheckedChange = { enabled ->
@@ -195,7 +196,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_large_tx_alerts),
                 checked = settings.largeTransactionAlertsEnabled,
                 onCheckedChange = { enabled ->
@@ -205,7 +206,7 @@ fun BusinessAutomationSettings(
         }
 
         item {
-            AutomationToggleRow(
+            AutomationItem(
                 label = stringResource(R.string.business_weekly_ai_insights),
                 checked = settings.weeklyAiInsightsEnabled,
                 onCheckedChange = { enabled ->
@@ -264,22 +265,6 @@ fun BusinessAutomationSettings(
                 showAddRule = false
             },
         )
-    }
-}
-
-@Composable
-private fun AutomationToggleRow(
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(label, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

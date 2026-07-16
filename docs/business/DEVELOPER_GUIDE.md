@@ -86,6 +86,7 @@ Wrap all Business UI in `BusinessTheme { }`.
 
 ## Related docs
 
+- [FIGMA_STRUCTURE.md](./FIGMA_STRUCTURE.md)
 - [API_REFERENCE.md](./API_REFERENCE.md)
 - [ARCHITECTURE.md](./ARCHITECTURE.md)
 - [FCM_SETUP.md](./FCM_SETUP.md)
