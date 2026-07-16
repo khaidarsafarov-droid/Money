@@ -16,10 +16,6 @@ class BootReceiver : BroadcastReceiver() {
         app.applicationScope.launch {
             try {
                 app.rescheduleDebtReminders()
-                app.rescheduleBusinessReminders()
-                app.syncBusinessSmsSchedule()
-                app.syncWorkflowDebtSchedule()
-                app.syncBusinessAutomationCenterSchedule()
                 app.syncPersonalDebtMessageSchedule()
                 VoiceReportScheduler.syncSchedule(context)
             } finally {

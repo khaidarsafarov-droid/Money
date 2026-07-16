@@ -3,14 +3,11 @@ package com.example.money.messaging
 import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
-import com.example.money.business.sms.BusinessSmsPermissions
-import com.example.money.business.sms.ContactPhoneResolver
-import com.example.money.business.sms.PhoneNormalizer
 
 object ContactInfoResolver {
 
     fun resolve(context: Context, contactUri: Uri): MessagingContact? {
-        if (!BusinessSmsPermissions.canReadContacts(context)) return null
+        if (!SmsPermissions.canReadContacts(context)) return null
 
         val resolver = context.contentResolver
         val contactId = resolver.query(
