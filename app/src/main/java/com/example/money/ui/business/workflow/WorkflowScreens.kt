@@ -528,7 +528,7 @@ fun WorkflowDebtListScreen(
         item {
             Button(
                 onClick = onSendReminders,
-                enabled = selectedDebtIds.isNotEmpty(),
+                enabled = BusinessWorkflowDebtSelection.canSendReminders(debts),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.workflow_ux_send_reminders))

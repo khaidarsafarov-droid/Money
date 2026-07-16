@@ -105,13 +105,13 @@ fun BusinessSmsScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedPanel by remember { mutableStateOf(initialPanel ?: BusinessSmsPanel.COMPOSE) }
+    var selectedPanel by remember { mutableStateOf(BusinessSmsPanel.COMPOSE) }
 
     LaunchedEffect(initialPanel) {
-        if (initialPanel != null) {
-            selectedPanel = initialPanel
-            onInitialPanelConsumed()
-        }
+        val panel = initialPanel ?: return@LaunchedEffect
+        selectedPanel = panel
+        kotlinx.coroutines.yield()
+        onInitialPanelConsumed()
     }
     var messageBody by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }

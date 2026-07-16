@@ -149,7 +149,7 @@ fun BusinessWorkflowScreen(
             }
             currentRoute.startsWith("business_message_composer") -> {
                 args?.getString(BusinessRoute.MessageComposer.ARG_BILL_ID)?.toLongOrNull()
-                    ?.let { viewModel.openMessageComposer(it) }
+                    ?.let { viewModel.bindMessageComposerScope(it) }
             }
             currentRoute == BusinessRoute.CommunicationCenter.route -> {
                 viewModel.bindCommunicationCenterScope()

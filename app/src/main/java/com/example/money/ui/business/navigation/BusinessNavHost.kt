@@ -31,6 +31,7 @@ import com.example.money.ui.business.screens.ProcessBillsScreen
 import com.example.money.ui.business.screens.ProcessCreateScreen
 import com.example.money.ui.business.screens.TemplatesScreen
 import com.example.money.ui.business.sms.BusinessSmsPanel
+import com.example.money.ui.business.workflow.BusinessWorkflowDebtSelection
 import com.example.money.ui.business.workflow.BusinessWorkflowViewModel
 import com.example.money.ui.business.workflow.CreateBillDraft
 import com.example.money.ui.business.workflow.WorkflowDebtFilter
@@ -200,9 +201,11 @@ fun BusinessNavHost(
         composable(BusinessRoute.MessageComposer.route) { entry ->
             val billId = entry.arguments?.getString(BusinessRoute.MessageComposer.ARG_BILL_ID)?.toLongOrNull()
                 ?: return@composable
+            val effectiveSelectedCount = selectedDebtIds.size.takeIf { it > 0 }
+                ?: BusinessWorkflowDebtSelection.unpaidDebtIds(allDebts).size
             MessageComposerScreen(
                 messageBody = messageBody,
-                selectedCount = selectedDebtIds.size,
+                selectedCount = effectiveSelectedCount,
                 onMessageChange = viewModel::updateMessageBody,
                 onAiImprove = { viewModel.aiImproveMessage(billId) },
                 onAiShorten = viewModel::aiShortenMessage,
