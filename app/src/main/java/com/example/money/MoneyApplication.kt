@@ -22,25 +22,9 @@ import com.example.money.domain.repository.GoalRepository
 import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.DebtReminderSchedulerImpl
-import com.example.money.notification.BusinessInvoiceReminderScheduler
-import com.example.money.notification.BusinessInvoiceReminderSchedulerImpl
-import com.example.money.notification.BusinessSmsScheduler
-import com.example.money.notification.BusinessSmsSchedulerImpl
-import com.example.money.notification.BusinessAutomationCenterScheduler
-import com.example.money.notification.BusinessAutomationCenterSchedulerImpl
-import com.example.money.notification.WorkflowDebtScheduler
-import com.example.money.notification.WorkflowDebtSchedulerImpl
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.NotificationChannels
-import com.example.money.business.api.BusinessApi
-import com.example.money.business.automation.BusinessAutomationCenterUseCases
-import com.example.money.domain.usecase.BusinessCommunicationUseCases
-import com.example.money.domain.usecase.BusinessSmsUseCases
-import com.example.money.domain.usecase.BusinessUseCases
-import com.example.money.data.repository.BusinessWorkflowRepositoryImpl
-import com.example.money.domain.repository.BusinessWorkflowRepository
-import com.example.money.domain.usecase.BusinessWorkflowUseCases
 import com.example.money.voice.VoiceReportScheduler
 import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.widget.GoalWidgetSnapshotWriter
@@ -137,90 +121,6 @@ class MoneyApplication : Application() {
         DebtCalendarSyncService(this)
     }
 
-    val businessRepository: com.example.money.domain.repository.BusinessRepository by lazy {
-        com.example.money.data.repository.BusinessRepositoryImpl(
-            clientDao = database.businessClientDao(),
-            projectDao = database.businessProjectDao(),
-            invoiceDao = database.businessInvoiceDao(),
-            transactionDao = database.businessTransactionDao(),
-            categoryDao = database.businessCategoryDao(),
-            assetDao = database.businessAssetDao(),
-        )
-    }
-
-    val businessUseCases: BusinessUseCases by lazy {
-        BusinessUseCases(businessRepository)
-    }
-
-    val businessSmsRepository: com.example.money.domain.repository.BusinessSmsRepository by lazy {
-        com.example.money.data.repository.BusinessSmsRepositoryImpl(
-            smsLogDao = database.businessSmsLogDao(),
-        )
-    }
-
-    val businessSmsUseCases: BusinessSmsUseCases by lazy {
-        BusinessSmsUseCases(
-            context = this,
-            businessRepository = businessRepository,
-            smsRepository = businessSmsRepository,
-        )
-    }
-
-    val businessWorkflowRepository: BusinessWorkflowRepository by lazy {
-        BusinessWorkflowRepositoryImpl(
-            categoryDao = database.workflowCategoryDao(),
-            processDao = database.workflowProcessDao(),
-            billDao = database.workflowBillDao(),
-            participantDao = database.workflowParticipantDao(),
-            debtDao = database.workflowDebtDao(),
-        )
-    }
-
-    val businessWorkflowUseCases: BusinessWorkflowUseCases by lazy {
-        BusinessWorkflowUseCases(businessWorkflowRepository)
-    }
-
-    val businessCommunicationUseCases: BusinessCommunicationUseCases by lazy {
-        BusinessCommunicationUseCases(
-            workflowRepository = businessWorkflowRepository,
-            workflowUseCases = businessWorkflowUseCases,
-            smsRepository = businessSmsRepository,
-        )
-    }
-
-    val businessAutomationCenterUseCases: BusinessAutomationCenterUseCases by lazy {
-        BusinessAutomationCenterUseCases(
-            businessRepository = businessRepository,
-            communicationUseCases = businessCommunicationUseCases,
-            smsUseCases = businessSmsUseCases,
-            preferencesStore = preferencesStore,
-        )
-    }
-
-    val businessApi: BusinessApi by lazy {
-        BusinessApi(
-            workflowUseCases = businessWorkflowUseCases,
-            communicationUseCases = businessCommunicationUseCases,
-            automationCenter = businessAutomationCenterUseCases,
-        )
-    }
-
-    val businessInvoiceReminderScheduler: BusinessInvoiceReminderScheduler by lazy {
-        BusinessInvoiceReminderSchedulerImpl(this)
-    }
-
-    val businessSmsScheduler: BusinessSmsScheduler by lazy {
-        BusinessSmsSchedulerImpl(this)
-    }
-
-    val workflowDebtScheduler: WorkflowDebtScheduler by lazy {
-        WorkflowDebtSchedulerImpl(this)
-    }
-
-    val businessAutomationCenterScheduler: BusinessAutomationCenterScheduler by lazy {
-        BusinessAutomationCenterSchedulerImpl(this)
-    }
-
     val personalDebtMessageScheduler: PersonalDebtMessageScheduler by lazy {
         PersonalDebtMessageSchedulerImpl(this)
     }
@@ -249,10 +149,6 @@ class MoneyApplication : Application() {
         AppLanguageManager.applyStored(this)
         NotificationChannels.create(this)
         rescheduleDebtReminders()
-        rescheduleBusinessReminders()
-        syncBusinessSmsSchedule()
-        syncWorkflowDebtSchedule()
-        syncBusinessAutomationCenterSchedule()
         syncPersonalDebtMessageSchedule()
         startWidgetPipeline()
         syncAutopilotSchedule()
@@ -306,35 +202,6 @@ class MoneyApplication : Application() {
                 debtReminderScheduler.schedule(debtor)
                 debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
             }
-        }
-    }
-
-    fun rescheduleBusinessReminders() {
-        applicationScope.launch {
-            val settings = preferencesStore.businessBranchSettings.first()
-            val invoices = businessRepository.observeInvoices().first()
-            businessInvoiceReminderScheduler.syncAll(invoices, settings)
-        }
-    }
-
-    fun syncBusinessSmsSchedule() {
-        applicationScope.launch {
-            val settings = preferencesStore.businessBranchSettings.first()
-            businessSmsScheduler.syncSchedule(settings)
-        }
-    }
-
-    fun syncWorkflowDebtSchedule() {
-        applicationScope.launch {
-            val settings = preferencesStore.businessBranchSettings.first()
-            workflowDebtScheduler.syncSchedule(settings)
-        }
-    }
-
-    fun syncBusinessAutomationCenterSchedule() {
-        applicationScope.launch {
-            val settings = preferencesStore.businessBranchSettings.first()
-            businessAutomationCenterScheduler.syncSchedule(settings)
         }
     }
 

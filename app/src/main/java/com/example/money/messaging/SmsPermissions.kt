@@ -1,11 +1,11 @@
-package com.example.money.business.sms
+package com.example.money.messaging
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 
-object BusinessSmsPermissions {
+object SmsPermissions {
 
     fun canSendDirect(context: Context): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) ==

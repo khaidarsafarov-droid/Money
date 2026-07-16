@@ -12,11 +12,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.example.money.data.sync.SyncQueueRecorder
-import com.example.money.domain.model.FinanceBranch
 import com.example.money.domain.sync.SnapshotVoiceSettings
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
-import com.example.money.settings.BusinessBranchSettings
 import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.GamificationState
 import com.example.money.settings.FinancialPsychotype
@@ -129,30 +127,6 @@ object MoneyPreferenceKeys {
     val CALENDAR_DEBTS_CAL_ID = longPreferencesKey("calendar_debts_cal_id")
     val CALENDAR_PERMISSION_REQUESTED = booleanPreferencesKey("calendar_permission_requested")
     val NOTIFICATION_PERMISSION_REQUESTED = booleanPreferencesKey("notification_permission_requested")
-    val ACTIVE_FINANCE_BRANCH = stringPreferencesKey("active_finance_branch")
-    val BUSINESS_BRANCH_NAME = stringPreferencesKey("business_branch_name")
-    val BUSINESS_DASHBOARD_VIEW = stringPreferencesKey("business_dashboard_view")
-    val BUSINESS_SAVED_FILTER_PRESETS_JSON = stringPreferencesKey("business_saved_filter_presets_json")
-    val BUSINESS_CUSTOM_CATEGORIES_JSON = stringPreferencesKey("business_custom_categories_json")
-    val BUSINESS_INVOICE_REMINDERS_ENABLED = booleanPreferencesKey("business_invoice_reminders_enabled")
-    val BUSINESS_LOW_CASH_ALERTS_ENABLED = booleanPreferencesKey("business_low_cash_alerts_enabled")
-    val BUSINESS_RECURRING_TX_ENABLED = booleanPreferencesKey("business_recurring_tx_enabled")
-    val BUSINESS_INVOICE_REMINDER_HOUR = intPreferencesKey("business_invoice_reminder_hour")
-    val BUSINESS_LOW_CASH_THRESHOLD_CENTS = longPreferencesKey("business_low_cash_threshold_cents")
-    val BUSINESS_RECURRING_RULES_JSON = stringPreferencesKey("business_recurring_rules_json")
-    val BUSINESS_SMS_AUTOMATION_ENABLED = booleanPreferencesKey("business_sms_automation_enabled")
-    val BUSINESS_SMS_OVERDUE_INVOICE_ENABLED = booleanPreferencesKey("business_sms_overdue_invoice_enabled")
-    val BUSINESS_SMS_DIRECT_SEND_ENABLED = booleanPreferencesKey("business_sms_direct_send_enabled")
-    val BUSINESS_WHATSAPP_AUTOMATION_ENABLED = booleanPreferencesKey("business_whatsapp_automation_enabled")
-    val BUSINESS_TELEGRAM_AUTOMATION_ENABLED = booleanPreferencesKey("business_telegram_automation_enabled")
-    val BUSINESS_EMAIL_AUTOMATION_ENABLED = booleanPreferencesKey("business_email_automation_enabled")
-    val BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED = booleanPreferencesKey("business_workflow_debt_automation_enabled")
-    val BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED = booleanPreferencesKey("business_workflow_debt_push_enabled")
-    val BUSINESS_LARGE_TX_ALERTS_ENABLED = booleanPreferencesKey("business_large_tx_alerts_enabled")
-    val BUSINESS_WEEKLY_AI_INSIGHTS_ENABLED = booleanPreferencesKey("business_weekly_ai_insights_enabled")
-    val BUSINESS_LARGE_TX_THRESHOLD_CENTS = longPreferencesKey("business_large_tx_threshold_cents")
-    val BUSINESS_LAST_WEEKLY_AI_INSIGHT_MILLIS = longPreferencesKey("business_last_weekly_ai_insight_millis")
-    val BUSINESS_ALERTED_LARGE_TX_IDS_JSON = stringPreferencesKey("business_alerted_large_tx_ids_json")
     val PERSONAL_DEBT_NOTIFICATIONS_ENABLED = booleanPreferencesKey("personal_debt_notifications_enabled")
     val PERSONAL_DEBT_ADVANCE_1D = booleanPreferencesKey("personal_debt_advance_1d")
     val PERSONAL_DEBT_ADVANCE_3D = booleanPreferencesKey("personal_debt_advance_3d")
@@ -393,41 +367,6 @@ class MoneyPreferencesStore(
         context.moneyPreferencesDataStore.edit { prefs ->
             prefs[MoneyPreferenceKeys.NOTIFICATION_PERMISSION_REQUESTED] = requested
         }
-    }
-
-    val businessBranchSettings: Flow<BusinessBranchSettings> =
-        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toBusinessBranchSettings() }
-
-    val lastWeeklyAiInsightMillis: Flow<Long> =
-        context.moneyPreferencesDataStore.data.map {
-            it[MoneyPreferenceKeys.BUSINESS_LAST_WEEKLY_AI_INSIGHT_MILLIS] ?: 0L
-        }
-
-    val alertedLargeTransactionIds: Flow<Set<Long>> =
-        context.moneyPreferencesDataStore.data.map { prefs ->
-            decodeLongIdSet(prefs[MoneyPreferenceKeys.BUSINESS_ALERTED_LARGE_TX_IDS_JSON])
-        }
-
-    suspend fun setLastWeeklyAiInsightMillis(millis: Long) {
-        context.moneyPreferencesDataStore.edit { prefs ->
-            prefs[MoneyPreferenceKeys.BUSINESS_LAST_WEEKLY_AI_INSIGHT_MILLIS] = millis
-        }
-    }
-
-    suspend fun setAlertedLargeTransactionIds(ids: Set<Long>) {
-        context.moneyPreferencesDataStore.edit { prefs ->
-            prefs[MoneyPreferenceKeys.BUSINESS_ALERTED_LARGE_TX_IDS_JSON] = encodeLongIdSet(ids)
-        }
-    }
-
-    suspend fun updateBusinessBranchSettings(transform: (BusinessBranchSettings) -> BusinessBranchSettings) {
-        context.moneyPreferencesDataStore.edit { prefs ->
-            prefs.writeBusinessBranchSettings(transform(prefs.toBusinessBranchSettings()))
-        }
-    }
-
-    suspend fun setActiveFinanceBranch(branch: FinanceBranch) {
-        updateBusinessBranchSettings { it.copy(activeBranch = branch) }
     }
 
     val personalBranchSettings: Flow<PersonalBranchSettings> =
@@ -699,39 +638,6 @@ private fun MutablePreferences.writeCalendarSettings(settings: CalendarSettings)
     this[MoneyPreferenceKeys.CALENDAR_PERMISSION_REQUESTED] = settings.permissionRequested
 }
 
-private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
-    BusinessBranchSettings(
-        activeBranch = runCatching {
-            FinanceBranch.valueOf(this[MoneyPreferenceKeys.ACTIVE_FINANCE_BRANCH] ?: FinanceBranch.PERSONAL.name)
-        }.getOrDefault(FinanceBranch.PERSONAL),
-        businessName = this[MoneyPreferenceKeys.BUSINESS_BRANCH_NAME] ?: "",
-        dashboardView = runCatching {
-            com.example.money.domain.model.business.BusinessDashboardView.valueOf(
-                this[MoneyPreferenceKeys.BUSINESS_DASHBOARD_VIEW]
-                    ?: com.example.money.domain.model.business.BusinessDashboardView.FINANCIAL.name,
-            )
-        }.getOrDefault(com.example.money.domain.model.business.BusinessDashboardView.FINANCIAL),
-        savedFilterPresetsJson = this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] ?: "[]",
-        customCategoriesJson = this[MoneyPreferenceKeys.BUSINESS_CUSTOM_CATEGORIES_JSON] ?: "[]",
-        invoiceRemindersEnabled = this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDERS_ENABLED] ?: true,
-        lowCashAlertsEnabled = this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_ALERTS_ENABLED] ?: true,
-        recurringTransactionsEnabled = this[MoneyPreferenceKeys.BUSINESS_RECURRING_TX_ENABLED] ?: false,
-        invoiceReminderHour = this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDER_HOUR] ?: 9,
-        lowCashThresholdCents = this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_THRESHOLD_CENTS] ?: 50_000L,
-        recurringRulesJson = this[MoneyPreferenceKeys.BUSINESS_RECURRING_RULES_JSON] ?: "[]",
-        smsAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_AUTOMATION_ENABLED] ?: false,
-        smsOverdueInvoiceEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_OVERDUE_INVOICE_ENABLED] ?: true,
-        smsDirectSendEnabled = this[MoneyPreferenceKeys.BUSINESS_SMS_DIRECT_SEND_ENABLED] ?: false,
-        whatsappAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] ?: true,
-        telegramAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] ?: false,
-        emailAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] ?: true,
-        workflowDebtAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED] ?: false,
-        workflowDebtPushEnabled = this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED] ?: true,
-        largeTransactionAlertsEnabled = this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_ALERTS_ENABLED] ?: false,
-        weeklyAiInsightsEnabled = this[MoneyPreferenceKeys.BUSINESS_WEEKLY_AI_INSIGHTS_ENABLED] ?: false,
-        largeTransactionThresholdCents = this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_THRESHOLD_CENTS] ?: 500_000L,
-    )
-
 private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
     PersonalBranchSettings(
         debtNotificationsEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_NOTIFICATIONS_ENABLED] ?: true,
@@ -744,31 +650,6 @@ private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
         debtAutoMessageEmail = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_EMAIL] ?: true,
         debtDirectSmsEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_DIRECT_SMS] ?: false,
     )
-
-private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBranchSettings) {
-    this[MoneyPreferenceKeys.ACTIVE_FINANCE_BRANCH] = settings.activeBranch.name
-    this[MoneyPreferenceKeys.BUSINESS_BRANCH_NAME] = settings.businessName
-    this[MoneyPreferenceKeys.BUSINESS_DASHBOARD_VIEW] = settings.dashboardView.name
-    this[MoneyPreferenceKeys.BUSINESS_SAVED_FILTER_PRESETS_JSON] = settings.savedFilterPresetsJson
-    this[MoneyPreferenceKeys.BUSINESS_CUSTOM_CATEGORIES_JSON] = settings.customCategoriesJson
-    this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDERS_ENABLED] = settings.invoiceRemindersEnabled
-    this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_ALERTS_ENABLED] = settings.lowCashAlertsEnabled
-    this[MoneyPreferenceKeys.BUSINESS_RECURRING_TX_ENABLED] = settings.recurringTransactionsEnabled
-    this[MoneyPreferenceKeys.BUSINESS_INVOICE_REMINDER_HOUR] = settings.invoiceReminderHour
-    this[MoneyPreferenceKeys.BUSINESS_LOW_CASH_THRESHOLD_CENTS] = settings.lowCashThresholdCents
-    this[MoneyPreferenceKeys.BUSINESS_RECURRING_RULES_JSON] = settings.recurringRulesJson
-    this[MoneyPreferenceKeys.BUSINESS_SMS_AUTOMATION_ENABLED] = settings.smsAutomationEnabled
-    this[MoneyPreferenceKeys.BUSINESS_SMS_OVERDUE_INVOICE_ENABLED] = settings.smsOverdueInvoiceEnabled
-    this[MoneyPreferenceKeys.BUSINESS_SMS_DIRECT_SEND_ENABLED] = settings.smsDirectSendEnabled
-    this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] = settings.whatsappAutomationEnabled
-    this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] = settings.telegramAutomationEnabled
-    this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] = settings.emailAutomationEnabled
-    this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED] = settings.workflowDebtAutomationEnabled
-    this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED] = settings.workflowDebtPushEnabled
-    this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_ALERTS_ENABLED] = settings.largeTransactionAlertsEnabled
-    this[MoneyPreferenceKeys.BUSINESS_WEEKLY_AI_INSIGHTS_ENABLED] = settings.weeklyAiInsightsEnabled
-    this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_THRESHOLD_CENTS] = settings.largeTransactionThresholdCents
-}
 
 private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBranchSettings) {
     this[MoneyPreferenceKeys.PERSONAL_DEBT_NOTIFICATIONS_ENABLED] = settings.debtNotificationsEnabled

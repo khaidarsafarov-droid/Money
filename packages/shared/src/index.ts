@@ -23,4 +23,3 @@ export * from "./deviceId";
 export * from "./snapshotCodec";
 export * from "./snapshotAdapter";
 export * from "./syncPeerSession";
-export * from "./business";

@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AutoMode
-import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -155,7 +154,6 @@ fun HomeScreen(
     onOpenCalendarSettings: () -> Unit = {},
     onOpenDebtNotificationSettings: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
-    onOpenBusinessBranch: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -887,7 +885,6 @@ fun HomeScreen(
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onOpenGoalHub = onOpenGoalHub,
-                onOpenBusinessBranch = onOpenBusinessBranch,
                 onAddDebt = {
                     if (canAddDebtor) {
                         showAddDebtorDialog = true
@@ -994,7 +991,6 @@ private fun PhoneHomeLayout(
     onOpenDebtNotificationSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
     onOpenGoalHub: () -> Unit,
-    onOpenBusinessBranch: () -> Unit,
     onAddDebt: () -> Unit,
     onQuickAdd: () -> Unit,
     notificationsEnabled: Boolean,
@@ -1109,16 +1105,6 @@ private fun PhoneHomeLayout(
                             icon = Icons.Outlined.CalendarMonth,
                             onClick = {
                                 onOpenCalendarSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.business_branch_menu),
-                            icon = Icons.Outlined.Business,
-                            onClick = {
-                                onOpenBusinessBranch()
                                 scope.launch { drawerState.close() }
                             },
                         )

@@ -3,10 +3,6 @@ package com.example.money.messaging
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.example.money.business.sms.BusinessSmsPermissions
-import com.example.money.business.sms.BusinessSmsSender
-import com.example.money.business.sms.PhoneNormalizer
-import com.example.money.domain.model.business.BusinessSmsStatus
 
 enum class MessageSendResult {
     SENT,
@@ -73,14 +69,10 @@ object UniversalMessageSender {
         body: String,
         useDirectSms: Boolean,
     ): MessageSendResult {
-        if (useDirectSms && BusinessSmsPermissions.canSendDirect(context)) {
-            return when (BusinessSmsSender.sendDirect(context, phone, body)) {
-                BusinessSmsStatus.SENT -> MessageSendResult.SENT
-                BusinessSmsStatus.OPENED_APP -> MessageSendResult.OPENED_APP
-                BusinessSmsStatus.FAILED, BusinessSmsStatus.PENDING -> MessageSendResult.FAILED
-            }
+        if (useDirectSms && SmsPermissions.canSendDirect(context)) {
+            return SmsSender.sendDirect(context, phone, body)
         }
-        return if (BusinessSmsSender.openSmsApp(context, phone, body)) {
+        return if (SmsSender.openSmsApp(context, phone, body)) {
             MessageSendResult.OPENED_APP
         } else {
             MessageSendResult.FAILED
