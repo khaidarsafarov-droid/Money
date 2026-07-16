@@ -7,10 +7,8 @@ import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
-import com.example.money.domain.util.GlobalFinanceEngine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -58,20 +56,10 @@ class BudgetViewModel(
         onResult: (BudgetActionResult) -> Unit = {},
     ) {
         viewModelScope.launch {
-            val summary = budgetRepository.observeBudgetSummary().first()
-            val finance = GlobalFinanceEngine.computeSummary(
-                totalDeposits = summary.totalDeposits,
-                totalGoalAllocated = summary.totalGoalAllocated,
-                totalExpenses = summary.totalExpenses,
-            )
-            if (!GlobalFinanceEngine.canAfford(finance, amount)) {
-                onResult(BudgetActionResult.InsufficientFunds)
-                return@launch
-            }
-            budgetRepository.addGoalTransfer(
+            val added = budgetRepository.addGoalTransferIfAffordable(
                 Transfer(amount = amount, date = date, goalId = goalId),
             )
-            onResult(BudgetActionResult.Success)
+            onResult(if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds)
         }
     }
 
@@ -87,17 +75,7 @@ class BudgetViewModel(
         onResult: (BudgetActionResult) -> Unit = {},
     ) {
         viewModelScope.launch {
-            val summary = budgetRepository.observeBudgetSummary().first()
-            val finance = GlobalFinanceEngine.computeSummary(
-                totalDeposits = summary.totalDeposits,
-                totalGoalAllocated = summary.totalGoalAllocated,
-                totalExpenses = summary.totalExpenses,
-            )
-            if (!GlobalFinanceEngine.canAfford(finance, amount)) {
-                onResult(BudgetActionResult.InsufficientFunds)
-                return@launch
-            }
-            budgetRepository.addExpense(
+            val added = budgetRepository.addExpenseIfAffordable(
                 Expense(
                     amount = amount,
                     category = category,
@@ -105,7 +83,7 @@ class BudgetViewModel(
                     note = note,
                 ),
             )
-            onResult(BudgetActionResult.Success)
+            onResult(if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds)
         }
     }
 

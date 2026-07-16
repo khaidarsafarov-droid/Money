@@ -12,6 +12,7 @@ import com.example.money.data.local.entity.TransferEntity
 import com.example.money.data.mapper.toDomain
 import com.example.money.data.mapper.toEntity
 import com.example.money.data.sync.SyncQueueRecorder
+import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Expense
@@ -37,57 +38,60 @@ class DebtorRepositoryImpl(
     override fun getActiveDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
         debtorDao.getActiveDebtorsWithPayments().map { rows -> rows.map { it.toDomain() } }
 
-    override suspend fun addDebtor(debtor: com.example.money.domain.model.Debtor): Long {
-        val syncAt = System.currentTimeMillis()
-        var newId = 0L
-        database.withTransaction {
-            newId = debtorDao.insert(debtor.toEntity())
-            if (debtor.affectsBalance) {
-                recordCreationOperation(debtor.copy(id = newId), syncAt)
+    override suspend fun addDebtor(debtor: com.example.money.domain.model.Debtor): Long =
+        SyncWriteGuard.withWriteLock {
+            val syncAt = System.currentTimeMillis()
+            var newId = 0L
+            database.withTransaction {
+                newId = debtorDao.insert(debtor.toEntity())
+                if (debtor.affectsBalance) {
+                    recordCreationOperation(debtor.copy(id = newId), syncAt)
+                }
             }
+            debtorDao.getDebtorById(newId)?.let { syncQueueRecorder.recordDebt(it, syncAt) }
+            newId
         }
-        debtorDao.getDebtorById(newId)?.let { syncQueueRecorder.recordDebt(it, syncAt) }
-        return newId
-    }
 
     override suspend fun updateDebtor(
         debtor: com.example.money.domain.model.Debtor,
         previousAffectsBalance: Boolean,
     ) {
-        val syncAt = System.currentTimeMillis()
-        database.withTransaction {
-            val existing = debtorDao.getDebtorById(debtor.id) ?: return@withTransaction
-            val resolvedStatus = MoneyMath.resolveDebtStatus(
-                debtor.targetAmountCents,
-                debtor.currentAmountCents,
-            )
-            val updated = existing.copy(
-                name = debtor.name,
-                targetAmountCents = debtor.targetAmountCents,
-                currentAmountCents = debtor.currentAmountCents,
-                currency = debtor.currency,
-                status = resolvedStatus.name,
-                debtType = debtor.debtType.name,
-                affectsBalance = debtor.affectsBalance,
-                note = debtor.note,
-                dateGiven = debtor.dateGiven,
-                dateDue = debtor.dateDue,
-                loanCategory = debtor.loanCategory.name,
-                interestRateBps = debtor.interestRateBps,
-                calendarEventId = debtor.calendarEventId,
-                calendarSyncFailed = debtor.calendarSyncFailed,
-            )
-            debtorDao.update(updated)
+        SyncWriteGuard.withWriteLock {
+            val syncAt = System.currentTimeMillis()
+            database.withTransaction {
+                val existing = debtorDao.getDebtorById(debtor.id) ?: return@withTransaction
+                val resolvedStatus = MoneyMath.resolveDebtStatus(
+                    debtor.targetAmountCents,
+                    debtor.currentAmountCents,
+                )
+                val updated = existing.copy(
+                    name = debtor.name,
+                    targetAmountCents = debtor.targetAmountCents,
+                    currentAmountCents = debtor.currentAmountCents,
+                    currency = debtor.currency,
+                    status = resolvedStatus.name,
+                    debtType = debtor.debtType.name,
+                    affectsBalance = debtor.affectsBalance,
+                    note = debtor.note,
+                    dateGiven = debtor.dateGiven,
+                    dateDue = debtor.dateDue,
+                    loanCategory = debtor.loanCategory.name,
+                    interestRateBps = debtor.interestRateBps,
+                    calendarEventId = debtor.calendarEventId,
+                    calendarSyncFailed = debtor.calendarSyncFailed,
+                )
+                debtorDao.update(updated)
 
-            if (previousAffectsBalance && !debtor.affectsBalance) {
-                removeCreationOperations(debtor.id)
-            } else if (!previousAffectsBalance && debtor.affectsBalance) {
-                recordCreationOperation(debtor.copy(status = resolvedStatus), syncAt)
-            } else if (debtor.affectsBalance) {
-                syncCreationOperation(debtor, syncAt)
+                if (previousAffectsBalance && !debtor.affectsBalance) {
+                    removeCreationOperations(debtor.id)
+                } else if (!previousAffectsBalance && debtor.affectsBalance) {
+                    recordCreationOperation(debtor.copy(status = resolvedStatus), syncAt)
+                } else if (debtor.affectsBalance) {
+                    syncCreationOperation(debtor, syncAt)
+                }
             }
+            debtorDao.getDebtorById(debtor.id)?.let { syncQueueRecorder.recordDebt(it, syncAt) }
         }
-        debtorDao.getDebtorById(debtor.id)?.let { syncQueueRecorder.recordDebt(it, syncAt) }
     }
 
     override suspend fun getDebtorById(id: Long): com.example.money.domain.model.Debtor? {
@@ -97,14 +101,25 @@ class DebtorRepositoryImpl(
     }
 
     override suspend fun markAsPaid(id: Long, affectsBalance: Boolean) {
-        val debtor = debtorDao.getDebtorById(id) ?: return
-        val remaining = MoneyMath.remainingCents(debtor.targetAmountCents, debtor.currentAmountCents)
-        if (remaining > 0L) {
-            processDebtPayment(id, remaining, affectsBalance)
+        SyncWriteGuard.withWriteLock {
+            val debtor = debtorDao.getDebtorById(id) ?: return@withWriteLock
+            val remaining = MoneyMath.remainingCents(debtor.targetAmountCents, debtor.currentAmountCents)
+            if (remaining > 0L) {
+                processDebtPaymentInternal(id, remaining, affectsBalance)
+            }
         }
     }
 
-    override suspend fun processDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Boolean {
+    override suspend fun processDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Boolean =
+        SyncWriteGuard.withWriteLock {
+            processDebtPaymentInternal(debtId, paymentCents, affectsBalance)
+        }
+
+    private suspend fun processDebtPaymentInternal(
+        debtId: Long,
+        paymentCents: Long,
+        affectsBalance: Boolean,
+    ): Boolean {
         if (paymentCents <= 0L) return false
 
         var applied = false
@@ -162,42 +177,48 @@ class DebtorRepositoryImpl(
     }
 
     override suspend fun deleteDebtor(debtor: com.example.money.domain.model.Debtor) {
-        val syncAt = System.currentTimeMillis()
-        val existing = debtorDao.getDebtorById(debtor.id) ?: return
-        database.withTransaction {
-            removeAllLinkedOperations(debtor.id)
-            debtorDao.delete(existing)
+        SyncWriteGuard.withWriteLock {
+            val syncAt = System.currentTimeMillis()
+            val existing = debtorDao.getDebtorById(debtor.id) ?: return@withWriteLock
+            database.withTransaction {
+                removeAllLinkedOperations(debtor.id)
+                debtorDao.delete(existing)
+            }
+            syncQueueRecorder.recordDebt(existing, syncAt, deleted = true)
         }
-        syncQueueRecorder.recordDebt(existing, syncAt, deleted = true)
     }
 
     override suspend fun handleTransferDeleted(transfer: Transfer) {
-        val debtId = transfer.debtId ?: return
-        if (transfer.debtPaymentId != null) {
-            reversePayment(debtId, transfer.debtPaymentId)
-        } else {
-            val debtor = debtorDao.getDebtorById(debtId) ?: return
-            if (debtor.affectsBalance) {
-                debtorDao.update(debtor.copy(affectsBalance = false))
-                syncQueueRecorder.recordDebt(debtor.copy(affectsBalance = false), System.currentTimeMillis())
+        SyncWriteGuard.withWriteLock {
+            val debtId = transfer.debtId ?: return@withWriteLock
+            if (transfer.debtPaymentId != null) {
+                reversePaymentInternal(debtId, transfer.debtPaymentId)
+            } else {
+                val debtor = debtorDao.getDebtorById(debtId) ?: return@withWriteLock
+                if (debtor.affectsBalance) {
+                    debtorDao.update(debtor.copy(affectsBalance = false))
+                    syncQueueRecorder.recordDebt(debtor.copy(affectsBalance = false), System.currentTimeMillis())
+                }
             }
         }
     }
 
     override suspend fun handleExpenseDeleted(expense: Expense) {
-        val debtId = expense.debtId ?: return
-        if (expense.debtPaymentId != null) {
-            reversePayment(debtId, expense.debtPaymentId)
-        } else {
-            val debtor = debtorDao.getDebtorById(debtId) ?: return
-            if (debtor.affectsBalance) {
-                debtorDao.update(debtor.copy(affectsBalance = false))
-                syncQueueRecorder.recordDebt(debtor.copy(affectsBalance = false), System.currentTimeMillis())
+        SyncWriteGuard.withWriteLock {
+            val debtId = expense.debtId ?: return@withWriteLock
+            if (expense.debtPaymentId != null) {
+                reversePaymentInternal(debtId, expense.debtPaymentId)
+            } else {
+                val debtor = debtorDao.getDebtorById(debtId) ?: return@withWriteLock
+                if (debtor.affectsBalance) {
+                    debtorDao.update(debtor.copy(affectsBalance = false))
+                    syncQueueRecorder.recordDebt(debtor.copy(affectsBalance = false), System.currentTimeMillis())
+                }
             }
         }
     }
 
-    private suspend fun reversePayment(debtId: Long, paymentId: Long) {
+    private suspend fun reversePaymentInternal(debtId: Long, paymentId: Long) {
         val deletedPayment = debtPaymentDao.getById(paymentId)
         database.withTransaction {
             val payment = deletedPayment ?: return@withTransaction
@@ -286,7 +307,7 @@ class DebtorRepositoryImpl(
         paidAt: Long,
     ) {
         val amount = MoneyMath.fromCents(paymentCents)
-        when (DebtType.valueOf(debtor.debtType)) {
+        when (runCatching { DebtType.valueOf(debtor.debtType) }.getOrDefault(DebtType.CREDITOR)) {
             DebtType.CREDITOR -> {
                 val id = transferDao.insert(
                     TransferEntity(

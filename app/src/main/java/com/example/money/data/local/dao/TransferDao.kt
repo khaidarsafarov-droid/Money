@@ -17,8 +17,14 @@ interface TransferDao {
     @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
     fun observeDepositTotal(): Flow<Double>
 
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
+    suspend fun getDepositTotalOnce(): Double
+
     @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
     fun observeGoalAllocatedTotal(): Flow<Double>
+
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
+    suspend fun getGoalAllocatedTotalOnce(): Double
 
     @Query(
         """

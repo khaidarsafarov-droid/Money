@@ -29,9 +29,15 @@ export async function shareDebtReminder(item: FinancialItem): Promise<void> {
   };
 
   if (typeof navigator !== "undefined" && navigator.share) {
-    await navigator.share(payload);
-    return;
+    try {
+      await navigator.share(payload);
+      return;
+    } catch {
+      // User dismissed share sheet — fall through to clipboard.
+    }
   }
 
-  await navigator.clipboard.writeText(message);
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(message);
+  }
 }

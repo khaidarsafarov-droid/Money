@@ -18,6 +18,9 @@ import org.json.JSONObject
 
 object FinanceSnapshotCodec {
 
+    private const val MAX_SNAPSHOT_BYTES = 5 * 1024 * 1024
+    private const val MAX_RECORD_COUNT = 10_000
+
     private const val KIND_DEPOSIT = "DEPOSIT"
     private const val KIND_GOAL_TRANSFER = "GOAL_TRANSFER"
     private const val KIND_EXPENSE = "EXPENSE"
@@ -34,12 +37,40 @@ object FinanceSnapshotCodec {
     }.toString()
 
     fun decode(raw: String): FinanceSnapshot {
-        val json = JSONObject(raw)
+        if (raw.length > MAX_SNAPSHOT_BYTES) {
+            throw IllegalArgumentException("Snapshot exceeds maximum size of $MAX_SNAPSHOT_BYTES bytes")
+        }
+
+        val json = try {
+            JSONObject(raw)
+        } catch (_: Exception) {
+            throw IllegalArgumentException("Invalid snapshot JSON")
+        }
+
+        if (!json.has("schemaVersion") || !json.has("deviceId")) {
+            throw IllegalArgumentException("Snapshot missing required fields")
+        }
+
+        val deviceId = json.getString("deviceId")
+        if (deviceId.isBlank()) {
+            throw IllegalArgumentException("Snapshot missing deviceId")
+        }
+
         val schemaVersion = json.getInt("schemaVersion")
         return if (schemaVersion >= 2) {
+            validateArraySizes(json)
             decodeV2(json)
         } else {
             decodeLegacyV1(json)
+        }
+    }
+
+    private fun validateArraySizes(json: JSONObject) {
+        listOf("goals", "debts", "debtPayments", "transactions").forEach { key ->
+            val array = json.optJSONArray(key) ?: throw IllegalArgumentException("Snapshot field \"$key\" must be an array")
+            if (array.length() > MAX_RECORD_COUNT) {
+                throw IllegalArgumentException("Snapshot field \"$key\" exceeds maximum record count")
+            }
         }
     }
 

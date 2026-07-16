@@ -17,6 +17,9 @@ interface ExpenseDao {
     @Query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE isConfirmed = 1")
     fun observeConfirmedTotalAmount(): Flow<Double>
 
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE isConfirmed = 1")
+    suspend fun getConfirmedTotalOnce(): Double
+
     @Query("SELECT COUNT(*) FROM expenses WHERE isConfirmed = 0")
     fun observePendingCount(): Flow<Int>
 
