@@ -20,7 +20,7 @@ class WorkflowDebtSchedulerImpl(
     private val workManager = WorkManager.getInstance(context)
 
     override fun syncSchedule(settings: BusinessBranchSettings) {
-        if (!settings.hasWorkflowDebtAutomation()) {
+        if (!settings.hasWorkflowDebtAutomation() || settings.hasAnyAutomationCenterJob()) {
             cancel()
             return
         }
