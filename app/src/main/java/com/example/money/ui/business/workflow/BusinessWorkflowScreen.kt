@@ -17,6 +17,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,6 +107,56 @@ fun BusinessWorkflowScreen(
         }
     }
 
+    LaunchedEffect(currentRoute, navBackStackEntry?.id) {
+        val args = navBackStackEntry?.arguments
+        when {
+            currentRoute == null || currentRoute == BusinessRoute.Categories.route -> {
+                viewModel.bindCategoriesScope()
+            }
+            currentRoute.startsWith("business_category_flow") -> {
+                args?.getString(BusinessRoute.CategoryFlow.ARG_CATEGORY_ID)?.toLongOrNull()
+                    ?.let { viewModel.bindCategoryScope(it) }
+            }
+            currentRoute.startsWith("business_process_bills") -> {
+                args?.getString(BusinessRoute.ProcessBills.ARG_PROCESS_ID)?.toLongOrNull()
+                    ?.let { viewModel.bindProcessScope(it) }
+            }
+            currentRoute.startsWith("business_process_create") -> {
+                args?.getString(BusinessRoute.ProcessCreate.ARG_CATEGORY_ID)?.toLongOrNull()
+                    ?.let { viewModel.openCreateProcess(it) }
+            }
+            currentRoute.startsWith("business_bill_create") -> {
+                args?.getString(BusinessRoute.BillCreate.ARG_PROCESS_ID)?.toLongOrNull()
+                    ?.let { processId ->
+                        if (billDraft?.processId != processId) {
+                            viewModel.startCreateBill(processId)
+                        } else {
+                            viewModel.bindBillWizardScope(processId)
+                        }
+                    }
+            }
+            currentRoute.startsWith("business_participants") -> {
+                args?.getString(BusinessRoute.Participants.ARG_PROCESS_ID)?.toLongOrNull()
+                    ?.let { viewModel.bindBillWizardScope(it) }
+            }
+            currentRoute.startsWith("business_debts") -> {
+                args?.getString(BusinessRoute.Debts.ARG_PROCESS_ID)?.toLongOrNull()
+                    ?.let { viewModel.bindBillWizardScope(it) }
+            }
+            currentRoute.startsWith("business_bill_detail") -> {
+                args?.getString(BusinessRoute.BillDetail.ARG_BILL_ID)?.toLongOrNull()
+                    ?.let { viewModel.bindBillScope(it) }
+            }
+            currentRoute.startsWith("business_message_composer") -> {
+                args?.getString(BusinessRoute.MessageComposer.ARG_BILL_ID)?.toLongOrNull()
+                    ?.let { viewModel.openMessageComposer(it) }
+            }
+            currentRoute == BusinessRoute.CommunicationCenter.route -> {
+                viewModel.bindCommunicationCenterScope()
+            }
+        }
+    }
+
     val title = when {
         currentRoute == BusinessRoute.Categories.route -> stringResource(R.string.workflow_ux_categories_title)
         currentRoute == BusinessRoute.CommunicationCenter.route -> stringResource(R.string.workflow_ux_comm_center_title)
@@ -158,6 +209,7 @@ fun BusinessWorkflowScreen(
                                 val categoryId = navBackStackEntry?.arguments
                                     ?.getString(BusinessRoute.CategoryFlow.ARG_CATEGORY_ID)?.toLongOrNull()
                                 categoryId?.let {
+                                    viewModel.openCreateProcess(it)
                                     navController.navigate(BusinessRoute.ProcessCreate.create(it))
                                 }
                             }

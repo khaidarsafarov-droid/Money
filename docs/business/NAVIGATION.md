@@ -44,6 +44,10 @@ BusinessWorkflowScreen
 
 State and business logic remain in `BusinessWorkflowViewModel`. Navigation is handled by `NavController`.
 
+### Data scoping (NavHost sync)
+
+`BusinessWorkflowViewModel` keeps `_scopedCategoryId`, `_scopedProcessId`, and `_scopedBillId` for Room observers. `BusinessWorkflowScreen` syncs these from the current `NavController` destination on every route change (including back navigation), so lists do not go empty after `popBackStack()`.
+
 ## Related
 
 - [FIGMA_STRUCTURE.md](./FIGMA_STRUCTURE.md)
