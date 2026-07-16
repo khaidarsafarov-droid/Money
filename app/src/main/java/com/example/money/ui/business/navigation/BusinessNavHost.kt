@@ -1,12 +1,10 @@
 package com.example.money.ui.business.navigation
 
-import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -71,13 +69,12 @@ fun BusinessNavHost(
                 selectedCategoryId = selectedCategoryId,
                 onCategoryClick = viewModel::selectCategory,
                 onContinue = {
-                    val categoryId = selectedCategoryId
-                    if (categoryId != null) {
-                        categories.find { it.id == categoryId }?.let(viewModel::openCategory)
-                        navController.navigate(BusinessRoute.CategoryFlow.create(categoryId))
-                    }
+                    val categoryId = selectedCategoryId ?: return@CategoriesScreen
+                    viewModel.bindCategoryScope(categoryId)
+                    navController.navigate(BusinessRoute.CategoryFlow.create(categoryId))
                 },
                 onOpenCommunicationCenter = {
+                    viewModel.bindCommunicationCenterScope()
                     navController.navigate(BusinessRoute.CommunicationCenter.route)
                 },
             )
@@ -87,16 +84,15 @@ fun BusinessNavHost(
             val categoryId = entry.arguments?.getString(BusinessRoute.CategoryFlow.ARG_CATEGORY_ID)?.toLongOrNull()
                 ?: return@composable
             val categoryName = categories.find { it.id == categoryId }?.name.orEmpty()
-            LaunchedEffect(categoryId) {
-                categories.find { it.id == categoryId }?.let(viewModel::openCategory)
-            }
             CategoryFlowScreen(
                 categoryName = categoryName,
                 processes = processes,
                 onProcessClick = { process ->
+                    viewModel.openProcess(process)
                     navController.navigate(BusinessRoute.ProcessBills.create(process.id))
                 },
                 onNewProcessClick = {
+                    viewModel.openCreateProcess(categoryId)
                     navController.navigate(BusinessRoute.ProcessCreate.create(categoryId))
                 },
             )
@@ -106,13 +102,11 @@ fun BusinessNavHost(
             val processId = entry.arguments?.getString(BusinessRoute.ProcessBills.ARG_PROCESS_ID)?.toLongOrNull()
                 ?: return@composable
             val processName = processes.find { it.id == processId }?.name.orEmpty()
-            LaunchedEffect(processId) {
-                processes.find { it.id == processId }?.let(viewModel::openProcess)
-            }
             ProcessBillsScreen(
-                processName = processName,
+                processName = processName.ifBlank { stringResource(R.string.workflow_ux_bills_subtitle) },
                 bills = bills,
                 onBillClick = { bill ->
+                    viewModel.openBill(bill.id)
                     navController.navigate(BusinessRoute.BillDetail.create(bill.id))
                 },
                 onCreateBillClick = {
@@ -125,12 +119,10 @@ fun BusinessNavHost(
         composable(BusinessRoute.ProcessCreate.route) { entry ->
             val categoryId = entry.arguments?.getString(BusinessRoute.ProcessCreate.ARG_CATEGORY_ID)?.toLongOrNull()
                 ?: return@composable
-            LaunchedEffect(categoryId) {
-                viewModel.openCreateProcess(categoryId)
-            }
             ProcessCreateScreen(
                 onProcessCreated = { name, description ->
                     viewModel.createProcess(categoryId, name, description) { processId ->
+                        viewModel.bindProcessScope(processId)
                         navController.navigate(BusinessRoute.ProcessBills.create(processId)) {
                             popUpTo(BusinessRoute.CategoryFlow.create(categoryId)) { inclusive = false }
                         }
@@ -142,11 +134,6 @@ fun BusinessNavHost(
         composable(BusinessRoute.BillCreate.route) { entry ->
             val processId = entry.arguments?.getString(BusinessRoute.BillCreate.ARG_PROCESS_ID)?.toLongOrNull()
                 ?: return@composable
-            LaunchedEffect(processId) {
-                if (billDraft?.processId != processId) {
-                    viewModel.startCreateBill(processId)
-                }
-            }
             BillCreateScreen(
                 draft = billDraft,
                 onDraftChange = { draft -> viewModel.updateBillDraft { draft } },
@@ -181,8 +168,9 @@ fun BusinessNavHost(
                 onReset = viewModel::resetDraftAmounts,
                 onDebtsConfirmed = {
                     viewModel.createBillFromDraft { billId ->
+                        viewModel.openBill(billId)
                         navController.navigate(BusinessRoute.BillDetail.create(billId)) {
-                            popUpTo(BusinessRoute.ProcessBills.create(processId)) { inclusive = false }
+                            popUpTo(BusinessRoute.BillCreate.create(processId)) { inclusive = true }
                         }
                     }
                 },
@@ -192,9 +180,6 @@ fun BusinessNavHost(
         composable(BusinessRoute.BillDetail.route) { entry ->
             val billId = entry.arguments?.getString(BusinessRoute.BillDetail.ARG_BILL_ID)?.toLongOrNull()
                 ?: return@composable
-            LaunchedEffect(billId) {
-                viewModel.openBill(billId)
-            }
             BillDebtsScreen(
                 bill = currentBill,
                 debts = debts,
@@ -206,6 +191,7 @@ fun BusinessNavHost(
                 onSelectAll = { viewModel.selectAllDebts(debts.map { it.debt.id }) },
                 onMarkPaid = viewModel::markDebtPaid,
                 onSendReminders = {
+                    viewModel.openMessageComposer(billId)
                     navController.navigate(BusinessRoute.MessageComposer.create(billId))
                 },
             )
@@ -214,9 +200,6 @@ fun BusinessNavHost(
         composable(BusinessRoute.MessageComposer.route) { entry ->
             val billId = entry.arguments?.getString(BusinessRoute.MessageComposer.ARG_BILL_ID)?.toLongOrNull()
                 ?: return@composable
-            LaunchedEffect(billId) {
-                viewModel.openMessageComposer(billId)
-            }
             MessageComposerScreen(
                 messageBody = messageBody,
                 selectedCount = selectedDebtIds.size,

@@ -68,40 +68,27 @@ class BusinessWorkflowViewModel(
     private val _billDraft = MutableStateFlow<CreateBillDraft?>(null)
     val billDraft: StateFlow<CreateBillDraft?> = _billDraft.asStateFlow()
 
+    private val _scopedCategoryId = MutableStateFlow<Long?>(null)
+    private val _scopedProcessId = MutableStateFlow<Long?>(null)
+    private val _scopedBillId = MutableStateFlow<Long?>(null)
+
     val categories: StateFlow<List<WorkflowCategory>> = workflowUseCases.observeCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val processes: StateFlow<List<WorkflowProcess>> = _route
-        .flatMapLatest { route ->
-            val categoryId = when (route) {
-                is WorkflowRoute.Processes -> route.categoryId
-                is WorkflowRoute.CreateProcess -> route.categoryId
-                else -> null
-            }
+    val processes: StateFlow<List<WorkflowProcess>> = _scopedCategoryId
+        .flatMapLatest { categoryId ->
             if (categoryId != null) workflowUseCases.observeProcesses(categoryId) else flowOf(emptyList())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val bills: StateFlow<List<WorkflowBill>> = _route
-        .flatMapLatest { route ->
-            val processId = when (route) {
-                is WorkflowRoute.Bills -> route.processId
-                is WorkflowRoute.CreateBillInfo -> route.processId
-                is WorkflowRoute.CreateBillParticipants -> route.processId
-                is WorkflowRoute.CreateBillDistribution -> route.processId
-                else -> null
-            }
+    val bills: StateFlow<List<WorkflowBill>> = _scopedProcessId
+        .flatMapLatest { processId ->
             if (processId != null) workflowUseCases.observeBills(processId) else flowOf(emptyList())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val debts: StateFlow<List<WorkflowDebtWithParticipant>> = _route
-        .flatMapLatest { route ->
-            val billId = when (route) {
-                is WorkflowRoute.BillDetail -> route.billId
-                is WorkflowRoute.MessageComposer -> route.billId
-                else -> null
-            }
+    val debts: StateFlow<List<WorkflowDebtWithParticipant>> = _scopedBillId
+        .flatMapLatest { billId ->
             if (billId != null) workflowUseCases.observeDebtsWithParticipants(billId) else flowOf(emptyList())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -110,13 +97,8 @@ class BusinessWorkflowViewModel(
         applyDebtFilter(list, filter)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val currentBill: StateFlow<WorkflowBill?> = _route
-        .flatMapLatest { route ->
-            val billId = when (route) {
-                is WorkflowRoute.BillDetail -> route.billId
-                is WorkflowRoute.MessageComposer -> route.billId
-                else -> null
-            }
+    val currentBill: StateFlow<WorkflowBill?> = _scopedBillId
+        .flatMapLatest { billId ->
             if (billId != null) {
                 flow { emit(workflowUseCases.getBill(billId)) }
             } else {
@@ -131,11 +113,56 @@ class BusinessWorkflowViewModel(
 
     fun navigateToCategories() {
         _route.value = WorkflowRoute.Categories
+        _scopedCategoryId.value = null
+        _scopedProcessId.value = null
+        _scopedBillId.value = null
         _selectedCategoryId.value = null
         _selectedDebtIds.value = emptySet()
         _messageBody.value = ""
         _debtFilter.value = WorkflowDebtFilter.ALL
         _billDraft.value = null
+    }
+
+    fun bindCategoriesScope() {
+        navigateToCategories()
+    }
+
+    fun bindCategoryScope(categoryId: Long) {
+        _scopedCategoryId.value = categoryId
+        _scopedProcessId.value = null
+        _scopedBillId.value = null
+        _selectedCategoryId.value = categoryId
+        val category = categories.value.find { it.id == categoryId }
+        if (category != null) {
+            _route.value = WorkflowRoute.Processes(category.id, category.name)
+        }
+    }
+
+    fun bindProcessScope(processId: Long) {
+        viewModelScope.launch {
+            val process = workflowUseCases.getProcess(processId) ?: return@launch
+            _scopedCategoryId.value = process.categoryId
+            _scopedProcessId.value = processId
+            _scopedBillId.value = null
+            _route.value = WorkflowRoute.Bills(process.id, process.name)
+        }
+    }
+
+    fun bindBillScope(billId: Long) {
+        _scopedBillId.value = billId
+        _route.value = WorkflowRoute.BillDetail(billId)
+        _selectedDebtIds.value = emptySet()
+        _messageBody.value = ""
+        _debtFilter.value = WorkflowDebtFilter.ALL
+    }
+
+    fun bindBillWizardScope(processId: Long) {
+        _scopedProcessId.value = processId
+        _scopedBillId.value = null
+    }
+
+    fun bindCommunicationCenterScope() {
+        _route.value = WorkflowRoute.CommunicationCenter
     }
 
     fun selectCategory(categoryId: Long) {
@@ -149,31 +176,33 @@ class BusinessWorkflowViewModel(
     }
 
     fun openCategory(category: WorkflowCategory) {
-        _selectedCategoryId.value = category.id
-        _route.value = WorkflowRoute.Processes(category.id, category.name)
+        bindCategoryScope(category.id)
     }
 
     fun openCreateProcess(categoryId: Long) {
+        _scopedCategoryId.value = categoryId
         _route.value = WorkflowRoute.CreateProcess(categoryId)
     }
 
     fun openProcess(process: WorkflowProcess) {
+        _scopedCategoryId.value = process.categoryId
+        _scopedProcessId.value = process.id
+        _scopedBillId.value = null
         _route.value = WorkflowRoute.Bills(process.id, process.name)
     }
 
     fun startCreateBill(processId: Long) {
         _billDraft.value = CreateBillDraft(processId = processId)
+        bindBillWizardScope(processId)
         _route.value = WorkflowRoute.CreateBillInfo(processId)
     }
 
     fun openBill(billId: Long) {
-        _route.value = WorkflowRoute.BillDetail(billId)
-        _selectedDebtIds.value = emptySet()
-        _messageBody.value = ""
-        _debtFilter.value = WorkflowDebtFilter.ALL
+        bindBillScope(billId)
     }
 
     fun openMessageComposer(billId: Long) {
+        _scopedBillId.value = billId
         _route.value = WorkflowRoute.MessageComposer(billId)
         if (_messageBody.value.isBlank()) {
             generateMessageForFirstSelected(billId)
@@ -181,7 +210,7 @@ class BusinessWorkflowViewModel(
     }
 
     fun openCommunicationCenter() {
-        _route.value = WorkflowRoute.CommunicationCenter
+        bindCommunicationCenterScope()
     }
 
     fun updateBillDraft(transform: (CreateBillDraft) -> CreateBillDraft) {
