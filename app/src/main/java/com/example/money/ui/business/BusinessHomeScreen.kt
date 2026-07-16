@@ -77,6 +77,7 @@ import com.example.money.ui.business.reports.BusinessReportTab
 import com.example.money.ui.business.reports.BusinessReportsContent
 import com.example.money.ui.business.sms.BusinessSmsScreen
 import com.example.money.ui.business.workflow.BusinessWorkflowScreen
+import com.example.money.ui.business.sms.BusinessSmsPanel
 import com.example.money.ui.business.theme.BusinessTheme
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
@@ -116,6 +117,7 @@ private fun BusinessHomeScreenContent(
         ),
     )
 
+    val pendingSmsPanel by viewModel.pendingSmsPanel.collectAsStateWithLifecycle()
     val branchSettings by viewModel.branchSettings.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val dashboard by viewModel.dashboard.collectAsStateWithLifecycle()
@@ -199,6 +201,7 @@ private fun BusinessHomeScreenContent(
             content = {
                 BusinessTabContent(
                     selectedTab = selectedTab,
+                    pendingSmsPanel = pendingSmsPanel,
                     branchSettings = branchSettings,
                     dashboard = dashboard,
                     clients = clients,
@@ -280,6 +283,7 @@ private fun BusinessHomeScreenContent(
 @Composable
 private fun BusinessTabContent(
     selectedTab: BusinessTab,
+    pendingSmsPanel: BusinessSmsPanel?,
     branchSettings: BusinessBranchSettings,
     dashboard: BusinessDashboardSummary,
     clients: List<BusinessClient>,
@@ -325,7 +329,7 @@ private fun BusinessTabContent(
             )
         }
         BusinessTab.Workflows -> BusinessWorkflowScreen(
-            onSelectBusinessTab = viewModel::selectTab,
+            onSelectBusinessTab = { tab, smsPanel -> viewModel.openBusinessTab(tab, smsPanel) },
             modifier = Modifier.fillMaxSize(),
         )
         BusinessTab.Clients -> ClientList(clients = clients)
@@ -368,6 +372,8 @@ private fun BusinessTabContent(
             modifier = Modifier.fillMaxSize(),
         )
         BusinessTab.Sms -> BusinessSmsScreen(
+            initialPanel = pendingSmsPanel,
+            onInitialPanelConsumed = viewModel::consumePendingSmsPanel,
             clients = clients,
             templates = smsTemplates,
             smsHistory = smsHistory,

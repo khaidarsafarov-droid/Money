@@ -51,6 +51,10 @@ import com.example.money.domain.model.business.workflow.WorkflowDebtWithParticip
 import com.example.money.domain.model.business.workflow.WorkflowProcess
 import com.example.money.messaging.ContactInfoResolver
 import com.example.money.ui.business.designsystem.BusinessChannelCard
+import com.example.money.ui.business.designsystem.ButtonPrimary
+import com.example.money.ui.business.designsystem.InputField
+import com.example.money.ui.business.designsystem.TextArea
+import com.example.money.ui.business.designsystem.ShortcutCard
 import com.example.money.ui.business.designsystem.BusinessScreenHeader
 import com.example.money.ui.business.theme.BusinessSpacing
 import com.example.money.ui.util.Formatters
@@ -206,26 +210,21 @@ fun WorkflowCreateProcessScreen(
             title = stringResource(R.string.workflow_ux_new_process_title),
             subtitle = stringResource(R.string.workflow_ux_new_process_subtitle),
         )
-        OutlinedTextField(
+        InputField(
             value = name,
             onValueChange = { name = it },
-            label = { Text(stringResource(R.string.workflow_process_name)) },
-            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(R.string.workflow_process_name),
         )
-        OutlinedTextField(
+        TextArea(
             value = description,
             onValueChange = { description = it },
-            label = { Text(stringResource(R.string.workflow_ux_description_optional)) },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3,
+            label = stringResource(R.string.workflow_ux_description_optional),
         )
-        Button(
+        ButtonPrimary(
+            text = stringResource(R.string.workflow_ux_create_process),
             onClick = { onCreate(name, description) },
             enabled = name.isNotBlank(),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.workflow_ux_create_process))
-        }
+        )
     }
 }
 
@@ -587,7 +586,9 @@ fun WorkflowMessageComposerScreen(
 
 @Composable
 fun WorkflowCommunicationCenterScreen(
-    onOpenSmsTab: () -> Unit,
+    onOpenSmsCompose: () -> Unit,
+    onOpenHistory: () -> Unit,
+    onOpenTemplates: () -> Unit,
     onOpenAutomation: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -607,7 +608,7 @@ fun WorkflowCommunicationCenterScreen(
                 title = stringResource(R.string.messaging_channel_whatsapp),
                 subtitle = stringResource(R.string.workflow_ux_hub_whatsapp),
                 icon = Icons.Outlined.Store,
-                onClick = onOpenSmsTab,
+                onClick = onOpenSmsCompose,
             )
         }
         item {
@@ -615,7 +616,7 @@ fun WorkflowCommunicationCenterScreen(
                 title = stringResource(R.string.messaging_channel_sms),
                 subtitle = stringResource(R.string.workflow_ux_hub_sms),
                 icon = Icons.Outlined.Sms,
-                onClick = onOpenSmsTab,
+                onClick = onOpenSmsCompose,
             )
         }
         item {
@@ -623,11 +624,11 @@ fun WorkflowCommunicationCenterScreen(
                 title = stringResource(R.string.workflow_ux_hub_push_title),
                 subtitle = stringResource(R.string.workflow_ux_hub_push),
                 icon = Icons.Outlined.Notifications,
-                onClick = onOpenSmsTab,
+                onClick = onOpenSmsCompose,
             )
         }
         item {
-            BusinessChannelCard(
+            ShortcutCard(
                 title = stringResource(R.string.business_automation_title),
                 subtitle = stringResource(R.string.workflow_ux_hub_automation),
                 icon = Icons.Outlined.Tune,
@@ -635,19 +636,19 @@ fun WorkflowCommunicationCenterScreen(
             )
         }
         item {
-            BusinessChannelCard(
+            ShortcutCard(
                 title = stringResource(R.string.business_ds_history_title),
                 subtitle = stringResource(R.string.business_ds_history_subtitle),
                 icon = Icons.Outlined.History,
-                onClick = onOpenSmsTab,
+                onClick = onOpenHistory,
             )
         }
         item {
-            BusinessChannelCard(
+            ShortcutCard(
                 title = stringResource(R.string.business_ds_templates_title),
                 subtitle = stringResource(R.string.business_ds_templates_subtitle),
                 icon = Icons.Outlined.AutoAwesome,
-                onClick = onOpenSmsTab,
+                onClick = onOpenTemplates,
             )
         }
     }

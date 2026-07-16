@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.example.money.ui.business.sms.BusinessSmsPanel
 import com.example.money.ui.business.reports.BusinessReportTab
 import com.example.money.ui.business.reports.BusinessReportShare
 import android.content.Context
@@ -160,6 +161,9 @@ class BusinessViewModel(
     private val _selectedTab = MutableStateFlow(BusinessTab.Dashboard)
     val selectedTab: StateFlow<BusinessTab> = _selectedTab.asStateFlow()
 
+    private val _pendingSmsPanel = MutableStateFlow<BusinessSmsPanel?>(null)
+    val pendingSmsPanel: StateFlow<BusinessSmsPanel?> = _pendingSmsPanel.asStateFlow()
+
     private val _pendingQuickAction = MutableStateFlow<BusinessQuickAction?>(null)
     val pendingQuickAction: StateFlow<BusinessQuickAction?> = _pendingQuickAction.asStateFlow()
 
@@ -245,6 +249,15 @@ class BusinessViewModel(
 
     fun selectTab(tab: BusinessTab) {
         _selectedTab.value = tab
+    }
+
+    fun openBusinessTab(tab: BusinessTab, smsPanel: BusinessSmsPanel? = null) {
+        _pendingSmsPanel.value = smsPanel
+        _selectedTab.value = tab
+    }
+
+    fun consumePendingSmsPanel() {
+        _pendingSmsPanel.value = null
     }
 
     fun updateFilters(transform: (BusinessDashboardFilters) -> BusinessDashboardFilters) {

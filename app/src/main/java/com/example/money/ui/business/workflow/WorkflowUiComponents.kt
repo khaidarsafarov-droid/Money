@@ -71,6 +71,10 @@ import com.example.money.ui.business.designsystem.BusinessListRow
 import com.example.money.ui.business.designsystem.BusinessScreenHeader
 import com.example.money.ui.business.designsystem.BusinessStatusChip
 import com.example.money.ui.business.designsystem.BusinessDesignTokens
+import com.example.money.ui.business.designsystem.BusinessMessageComposerPanel
+import com.example.money.ui.business.designsystem.ButtonAi
+import com.example.money.ui.business.designsystem.ButtonPrimary
+import com.example.money.ui.business.designsystem.BusinessOutlineActionButton
 import com.example.money.ui.business.theme.BusinessColors
 import com.example.money.ui.business.theme.BusinessSpacing
 import com.example.money.ui.util.Formatters
@@ -262,59 +266,29 @@ fun WorkflowDebtRow(
     onMarkPaid: () -> Unit,
 ) {
     val isPaid = item.debt.status == WorkflowDebtStatus.PAID
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            },
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 2.dp else 1.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled = !isPaid) { onToggle() }
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Checkbox(
-                checked = selected,
-                onCheckedChange = { if (!isPaid) onToggle() },
-                enabled = !isPaid,
-            )
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(item.participant.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Text(
-                    Formatters.currencyFromCents(item.debt.remainingAmountCents),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                if (item.participant.phone.isBlank() && item.participant.email.isBlank()) {
-                    Text(
-                        stringResource(R.string.debt_remind_need_phone),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                } else if (item.participant.phone.isNotBlank()) {
-                    Text(
-                        item.participant.phone,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                WorkflowDebtStatusChip(status = item.debt.status)
-            }
-            if (!isPaid) {
-                TextButton(onClick = onMarkPaid) {
-                    Text(stringResource(R.string.workflow_mark_paid))
-                }
-            }
-        }
+    val (statusLabel, statusColor) = when (item.debt.status) {
+        WorkflowDebtStatus.PAID -> stringResource(R.string.workflow_status_paid) to BusinessDesignTokens.SuccessGreen
+        WorkflowDebtStatus.PARTIAL -> stringResource(R.string.workflow_status_partial) to BusinessDesignTokens.WarningAmber
+        WorkflowDebtStatus.OPEN -> stringResource(R.string.workflow_status_open) to BusinessDesignTokens.ErrorRed
     }
+    val subtitle = when {
+        item.participant.phone.isBlank() && item.participant.email.isBlank() ->
+            stringResource(R.string.debt_remind_need_phone)
+        item.participant.phone.isNotBlank() -> item.participant.phone
+        else -> item.participant.email
+    }
+    com.example.money.ui.business.designsystem.DebtRow(
+        name = item.participant.name,
+        amount = Formatters.currencyFromCents(item.debt.remainingAmountCents),
+        statusLabel = statusLabel,
+        statusColor = statusColor,
+        selected = selected,
+        enabled = !isPaid,
+        onToggle = onToggle,
+        markPaidLabel = if (isPaid) null else stringResource(R.string.workflow_mark_paid),
+        onMarkPaid = if (isPaid) null else onMarkPaid,
+        subtitle = subtitle,
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -331,82 +305,62 @@ fun WorkflowCommunicationHub(
     modifier: Modifier = Modifier,
 ) {
     val enabled = selectedCount > 0
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+    BusinessMessageComposerPanel(
+        message = messageBody,
+        onMessageChange = onMessageChange,
+        messageLabel = stringResource(R.string.workflow_message_label),
+        modifier = modifier,
     ) {
-        Column(
-            modifier = Modifier.padding(BusinessSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(BusinessSpacing.sm),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    stringResource(R.string.workflow_ux_communication_center),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    stringResource(R.string.workflow_ux_selected_count, selectedCount),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            OutlinedTextField(
-                value = messageBody,
-                onValueChange = onMessageChange,
-                label = { Text(stringResource(R.string.workflow_message_label)) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 4,
+            Text(
+                stringResource(R.string.workflow_ux_communication_center),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
             )
-            FilledTonalButton(
-                onClick = onAiGenerate,
-                enabled = enabled,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Icon(Icons.Outlined.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.workflow_ai_generate))
-            }
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                WorkflowChannelButton(
-                    label = stringResource(R.string.workflow_send_whatsapp),
-                    icon = Icons.Outlined.Store,
-                    enabled = enabled,
-                    onClick = onSendWhatsApp,
-                )
-                WorkflowChannelButton(
-                    label = stringResource(R.string.workflow_send_sms),
-                    icon = Icons.Outlined.Sms,
-                    enabled = enabled,
-                    onClick = onSendSms,
-                )
-                WorkflowChannelButton(
-                    label = stringResource(R.string.workflow_send_push),
-                    icon = Icons.Outlined.Notifications,
-                    enabled = enabled,
-                    onClick = onSendPush,
-                )
-            }
-            Button(
-                onClick = onSendAll,
-                enabled = enabled,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            ) {
-                Icon(Icons.AutoMirrored.Outlined.Send, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.workflow_send_all))
-            }
+            Text(
+                stringResource(R.string.workflow_ux_selected_count, selectedCount),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
+        ButtonAi(
+            text = stringResource(R.string.workflow_ai_generate),
+            onClick = onAiGenerate,
+            enabled = enabled,
+        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            WorkflowChannelButton(
+                label = stringResource(R.string.workflow_send_whatsapp),
+                icon = Icons.Outlined.Store,
+                enabled = enabled,
+                onClick = onSendWhatsApp,
+            )
+            WorkflowChannelButton(
+                label = stringResource(R.string.workflow_send_sms),
+                icon = Icons.Outlined.Sms,
+                enabled = enabled,
+                onClick = onSendSms,
+            )
+            WorkflowChannelButton(
+                label = stringResource(R.string.workflow_send_push),
+                icon = Icons.Outlined.Notifications,
+                enabled = enabled,
+                onClick = onSendPush,
+            )
+        }
+        ButtonPrimary(
+            text = stringResource(R.string.workflow_send_all),
+            onClick = onSendAll,
+            enabled = enabled,
+        )
     }
 }
 

@@ -62,15 +62,18 @@ import com.example.money.domain.model.business.BusinessSmsTemplate
 import com.example.money.domain.model.business.BusinessSmsTemplateId
 import com.example.money.domain.util.ai.BusinessSmsTone
 import com.example.money.settings.BusinessBranchSettings
-import com.example.money.ui.business.designsystem.BusinessScreenHeader
+import com.example.money.ui.business.designsystem.HeaderPrimary
+import com.example.money.ui.business.designsystem.HistoryRow
+import com.example.money.ui.business.designsystem.TemplateItem
+import com.example.money.ui.business.sms.BusinessSmsPanel
 import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.launch
 
-private enum class SmsPanel {
-    COMPOSE,
-    BULK,
-    TEMPLATES,
-    HISTORY,
+private fun BusinessSmsPanel.titleRes(): Int = when (this) {
+    BusinessSmsPanel.COMPOSE -> R.string.business_sms_panel_compose
+    BusinessSmsPanel.BULK -> R.string.business_sms_panel_bulk
+    BusinessSmsPanel.TEMPLATES -> R.string.business_sms_panel_templates
+    BusinessSmsPanel.HISTORY -> R.string.business_sms_panel_history
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,13 +97,22 @@ fun BusinessSmsScreen(
     ) -> BusinessSmsSendResult,
     onRenderTemplate: suspend (BusinessSmsTemplateId, Long?) -> String,
     onAiGenerate: suspend (BusinessSmsTemplateId, Long?, BusinessSmsTone) -> String,
+    initialPanel: BusinessSmsPanel? = null,
+    onInitialPanelConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedPanel by remember { mutableStateOf(SmsPanel.COMPOSE) }
+    var selectedPanel by remember { mutableStateOf(initialPanel ?: BusinessSmsPanel.COMPOSE) }
+
+    LaunchedEffect(initialPanel) {
+        if (initialPanel != null) {
+            selectedPanel = initialPanel
+            onInitialPanelConsumed()
+        }
+    }
     var messageBody by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -169,7 +181,7 @@ fun BusinessSmsScreen(
 
     Column(modifier = modifier.fillMaxSize()) {
         ScrollableTabRow(selectedTabIndex = selectedPanel.ordinal) {
-            SmsPanel.entries.forEach { panel ->
+            BusinessSmsPanel.entries.forEach { panel ->
                 Tab(
                     selected = selectedPanel == panel,
                     onClick = { selectedPanel = panel },
@@ -179,7 +191,7 @@ fun BusinessSmsScreen(
         }
 
         when (selectedPanel) {
-            SmsPanel.COMPOSE -> SmsComposePanel(
+            BusinessSmsPanel.COMPOSE -> SmsComposePanel(
                 clients = clients,
                 phone = phone,
                 email = email,
@@ -221,7 +233,7 @@ fun BusinessSmsScreen(
                     }
                 },
             )
-            SmsPanel.BULK -> SmsBulkPanel(
+            BusinessSmsPanel.BULK -> SmsBulkPanel(
                 clients = clients.filter { it.phone.isNotBlank() },
                 selectedClientIds = selectedBulkClientIds,
                 messageBody = messageBody,
@@ -262,17 +274,17 @@ fun BusinessSmsScreen(
                     }
                 },
             )
-            SmsPanel.TEMPLATES -> SmsTemplatesPanel(
+            BusinessSmsPanel.TEMPLATES -> SmsTemplatesPanel(
                 templates = templates,
                 onTemplateSelected = { templateId ->
                     selectedTemplateId = templateId
-                    selectedPanel = SmsPanel.COMPOSE
+                    selectedPanel = BusinessSmsPanel.COMPOSE
                     scope.launch {
                         messageBody = onRenderTemplate(templateId, selectedClientId)
                     }
                 },
             )
-            SmsPanel.HISTORY -> SmsHistoryPanel(logs = smsHistory)
+            BusinessSmsPanel.HISTORY -> SmsHistoryPanel(logs = smsHistory)
         }
 
         SnackbarHost(hostState = snackbarHostState)
@@ -534,27 +546,17 @@ private fun SmsTemplatesPanel(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            BusinessScreenHeader(
+            HeaderPrimary(
                 title = stringResource(R.string.business_ds_templates_title),
                 subtitle = stringResource(R.string.business_ds_templates_subtitle),
             )
         }
         items(templates) { template ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onTemplateSelected(template.id) },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(stringResource(template.id.titleRes()), fontWeight = FontWeight.SemiBold)
-                    Text(
-                        template.bodyPattern.take(120) + if (template.bodyPattern.length > 120) "…" else "",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+            TemplateItem(
+                title = stringResource(template.id.titleRes()),
+                preview = template.bodyPattern,
+                onClick = { onTemplateSelected(template.id) },
+            )
         }
     }
 }
@@ -566,7 +568,7 @@ private fun SmsHistoryPanel(logs: List<BusinessSmsLog>) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            BusinessScreenHeader(
+            HeaderPrimary(
                 title = stringResource(R.string.business_ds_history_title),
                 subtitle = stringResource(R.string.business_ds_history_subtitle),
             )
@@ -580,33 +582,13 @@ private fun SmsHistoryPanel(logs: List<BusinessSmsLog>) {
             }
         } else {
             items(logs) { log ->
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = log.recipientName.ifBlank { log.recipientPhone },
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(log.recipientPhone, style = MaterialTheme.typography.bodySmall)
-                        Text(
-                            log.body,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(vertical = 4.dp),
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(
-                                text = stringResource(log.status.labelRes()),
-                                style = MaterialTheme.typography.labelSmall,
-                            )
-                            Text(
-                                text = Formatters.shortDate(log.createdAt),
-                                style = MaterialTheme.typography.labelSmall,
-                            )
-                        }
-                    }
-                }
+                HistoryRow(
+                    channel = log.channel.ifBlank { stringResource(R.string.messaging_channel_sms) },
+                    recipient = log.recipientName.ifBlank { log.recipientPhone },
+                    body = log.body,
+                    status = stringResource(log.status.labelRes()),
+                    dateLabel = Formatters.shortDate(log.createdAt),
+                )
             }
         }
     }
@@ -629,13 +611,6 @@ private fun formatSendResult(context: android.content.Context, result: BusinessS
         result.openedAppCount,
         result.failedCount,
     )
-
-private fun SmsPanel.titleRes(): Int = when (this) {
-    SmsPanel.COMPOSE -> R.string.business_sms_panel_compose
-    SmsPanel.BULK -> R.string.business_sms_panel_bulk
-    SmsPanel.TEMPLATES -> R.string.business_sms_panel_templates
-    SmsPanel.HISTORY -> R.string.business_sms_panel_history
-}
 
 fun BusinessSmsTemplateId.titleRes(): Int = when (this) {
     BusinessSmsTemplateId.DEBT_REMINDER -> R.string.business_sms_template_debt_reminder
