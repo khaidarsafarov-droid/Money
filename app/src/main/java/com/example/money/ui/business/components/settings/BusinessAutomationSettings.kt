@@ -30,6 +30,7 @@ import com.example.money.domain.model.business.BusinessTransactionType
 import com.example.money.domain.model.business.RecurringBusinessRule
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.BusinessBranchSettings
+import com.example.money.ui.business.designsystem.BusinessScreenHeader
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -50,10 +51,9 @@ fun BusinessAutomationSettings(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Text(
-                text = stringResource(R.string.business_automation_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+            BusinessScreenHeader(
+                title = stringResource(R.string.business_automation_title),
+                subtitle = stringResource(R.string.business_ds_automation_subtitle),
             )
         }
 
@@ -152,6 +152,64 @@ fun BusinessAutomationSettings(
                 checked = settings.emailAutomationEnabled,
                 onCheckedChange = { enabled ->
                     onAutomationChange { it.copy(emailAutomationEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            Text(
+                text = stringResource(R.string.business_workflow_automation_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_workflow_debt_automation),
+                checked = settings.workflowDebtAutomationEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(workflowDebtAutomationEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_workflow_debt_push),
+                checked = settings.workflowDebtPushEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(workflowDebtPushEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            Text(
+                text = stringResource(R.string.business_automation_insights_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_large_tx_alerts),
+                checked = settings.largeTransactionAlertsEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(largeTransactionAlertsEnabled = enabled) }
+                },
+            )
+        }
+
+        item {
+            AutomationToggleRow(
+                label = stringResource(R.string.business_weekly_ai_insights),
+                checked = settings.weeklyAiInsightsEnabled,
+                onCheckedChange = { enabled ->
+                    onAutomationChange { it.copy(weeklyAiInsightsEnabled = enabled) }
                 },
             )
         }

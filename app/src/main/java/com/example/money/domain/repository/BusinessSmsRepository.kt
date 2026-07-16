@@ -12,4 +12,10 @@ interface BusinessSmsRepository {
         templateId: String,
         withinMillis: Long,
     ): Boolean
+
+    suspend fun wasWorkflowCommunicationSentRecently(
+        debtId: Long,
+        channel: String,
+        withinMillis: Long,
+    ): Boolean
 }

@@ -30,4 +30,13 @@ class BusinessSmsRepositoryImpl(
         val sinceMillis = System.currentTimeMillis() - withinMillis
         return smsLogDao.countRecentAutomation(clientId, templateId, sinceMillis) > 0
     }
+
+    override suspend fun wasWorkflowCommunicationSentRecently(
+        debtId: Long,
+        channel: String,
+        withinMillis: Long,
+    ): Boolean {
+        val sinceMillis = System.currentTimeMillis() - withinMillis
+        return smsLogDao.countRecentWorkflowCommunication(debtId, channel, sinceMillis) > 0
+    }
 }

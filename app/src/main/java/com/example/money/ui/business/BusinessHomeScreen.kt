@@ -109,6 +109,10 @@ private fun BusinessHomeScreenContent(
             app.businessSmsUseCases,
             app.businessInvoiceReminderScheduler,
             app.businessSmsScheduler,
+            app.workflowDebtScheduler,
+            app.businessAutomationCenterScheduler,
+            app.businessCommunicationUseCases,
+            app.businessApi,
         ),
     )
 
@@ -320,7 +324,10 @@ private fun BusinessTabContent(
                 onQuickAction = viewModel::requestQuickAction,
             )
         }
-        BusinessTab.Workflows -> BusinessWorkflowScreen(modifier = Modifier.fillMaxSize())
+        BusinessTab.Workflows -> BusinessWorkflowScreen(
+            onSelectBusinessTab = viewModel::selectTab,
+            modifier = Modifier.fillMaxSize(),
+        )
         BusinessTab.Clients -> ClientList(clients = clients)
         BusinessTab.Projects -> BusinessListTab(
             items = projects.map { project ->
@@ -387,7 +394,7 @@ private fun BusinessTabContent(
             onAddRule = viewModel::addRecurringRule,
             onDeleteRule = viewModel::deleteRecurringRule,
             onToggleRule = viewModel::toggleRecurringRule,
-            onRunNow = viewModel::runRecurringRulesNow,
+            onRunNow = { viewModel.runAutomationNow(context) },
         )
     }
 }

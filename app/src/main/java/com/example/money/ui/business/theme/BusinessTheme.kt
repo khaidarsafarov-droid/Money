@@ -23,7 +23,7 @@ private val BusinessColorScheme = lightColorScheme(
     onSurfaceVariant = BusinessColors.OnSurfaceMuted,
     error = BusinessColors.LossRed,
     onError = Color.White,
-    tertiary = BusinessColors.ProfitGreen,
+    tertiary = BusinessColors.AccentViolet,
     onTertiary = Color.White,
     outline = BusinessColors.Gray300,
 )

@@ -11,6 +11,8 @@ fun BusinessSmsLogEntity.toDomain(): BusinessSmsLog = BusinessSmsLog(
     clientId = clientId,
     body = body,
     templateId = templateId,
+    channel = channel,
+    workflowDebtId = workflowDebtId,
     status = runCatching { BusinessSmsStatus.valueOf(status) }.getOrDefault(BusinessSmsStatus.PENDING),
     createdAt = createdAt,
 )
@@ -22,6 +24,8 @@ fun BusinessSmsLog.toEntity(): BusinessSmsLogEntity = BusinessSmsLogEntity(
     clientId = clientId,
     body = body,
     templateId = templateId,
+    channel = channel,
+    workflowDebtId = workflowDebtId,
     status = status.name,
     createdAt = createdAt,
 )

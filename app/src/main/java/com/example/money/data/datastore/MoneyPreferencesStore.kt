@@ -146,6 +146,13 @@ object MoneyPreferenceKeys {
     val BUSINESS_WHATSAPP_AUTOMATION_ENABLED = booleanPreferencesKey("business_whatsapp_automation_enabled")
     val BUSINESS_TELEGRAM_AUTOMATION_ENABLED = booleanPreferencesKey("business_telegram_automation_enabled")
     val BUSINESS_EMAIL_AUTOMATION_ENABLED = booleanPreferencesKey("business_email_automation_enabled")
+    val BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED = booleanPreferencesKey("business_workflow_debt_automation_enabled")
+    val BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED = booleanPreferencesKey("business_workflow_debt_push_enabled")
+    val BUSINESS_LARGE_TX_ALERTS_ENABLED = booleanPreferencesKey("business_large_tx_alerts_enabled")
+    val BUSINESS_WEEKLY_AI_INSIGHTS_ENABLED = booleanPreferencesKey("business_weekly_ai_insights_enabled")
+    val BUSINESS_LARGE_TX_THRESHOLD_CENTS = longPreferencesKey("business_large_tx_threshold_cents")
+    val BUSINESS_LAST_WEEKLY_AI_INSIGHT_MILLIS = longPreferencesKey("business_last_weekly_ai_insight_millis")
+    val BUSINESS_ALERTED_LARGE_TX_IDS_JSON = stringPreferencesKey("business_alerted_large_tx_ids_json")
     val PERSONAL_DEBT_NOTIFICATIONS_ENABLED = booleanPreferencesKey("personal_debt_notifications_enabled")
     val PERSONAL_DEBT_ADVANCE_1D = booleanPreferencesKey("personal_debt_advance_1d")
     val PERSONAL_DEBT_ADVANCE_3D = booleanPreferencesKey("personal_debt_advance_3d")
@@ -390,6 +397,28 @@ class MoneyPreferencesStore(
 
     val businessBranchSettings: Flow<BusinessBranchSettings> =
         context.moneyPreferencesDataStore.data.map { prefs -> prefs.toBusinessBranchSettings() }
+
+    val lastWeeklyAiInsightMillis: Flow<Long> =
+        context.moneyPreferencesDataStore.data.map {
+            it[MoneyPreferenceKeys.BUSINESS_LAST_WEEKLY_AI_INSIGHT_MILLIS] ?: 0L
+        }
+
+    val alertedLargeTransactionIds: Flow<Set<Long>> =
+        context.moneyPreferencesDataStore.data.map { prefs ->
+            decodeLongIdSet(prefs[MoneyPreferenceKeys.BUSINESS_ALERTED_LARGE_TX_IDS_JSON])
+        }
+
+    suspend fun setLastWeeklyAiInsightMillis(millis: Long) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs[MoneyPreferenceKeys.BUSINESS_LAST_WEEKLY_AI_INSIGHT_MILLIS] = millis
+        }
+    }
+
+    suspend fun setAlertedLargeTransactionIds(ids: Set<Long>) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs[MoneyPreferenceKeys.BUSINESS_ALERTED_LARGE_TX_IDS_JSON] = encodeLongIdSet(ids)
+        }
+    }
 
     suspend fun updateBusinessBranchSettings(transform: (BusinessBranchSettings) -> BusinessBranchSettings) {
         context.moneyPreferencesDataStore.edit { prefs ->
@@ -696,6 +725,11 @@ private fun Preferences.toBusinessBranchSettings(): BusinessBranchSettings =
         whatsappAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] ?: true,
         telegramAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] ?: false,
         emailAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] ?: true,
+        workflowDebtAutomationEnabled = this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED] ?: false,
+        workflowDebtPushEnabled = this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED] ?: true,
+        largeTransactionAlertsEnabled = this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_ALERTS_ENABLED] ?: false,
+        weeklyAiInsightsEnabled = this[MoneyPreferenceKeys.BUSINESS_WEEKLY_AI_INSIGHTS_ENABLED] ?: false,
+        largeTransactionThresholdCents = this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_THRESHOLD_CENTS] ?: 500_000L,
     )
 
 private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
@@ -729,6 +763,11 @@ private fun MutablePreferences.writeBusinessBranchSettings(settings: BusinessBra
     this[MoneyPreferenceKeys.BUSINESS_WHATSAPP_AUTOMATION_ENABLED] = settings.whatsappAutomationEnabled
     this[MoneyPreferenceKeys.BUSINESS_TELEGRAM_AUTOMATION_ENABLED] = settings.telegramAutomationEnabled
     this[MoneyPreferenceKeys.BUSINESS_EMAIL_AUTOMATION_ENABLED] = settings.emailAutomationEnabled
+    this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_AUTOMATION_ENABLED] = settings.workflowDebtAutomationEnabled
+    this[MoneyPreferenceKeys.BUSINESS_WORKFLOW_DEBT_PUSH_ENABLED] = settings.workflowDebtPushEnabled
+    this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_ALERTS_ENABLED] = settings.largeTransactionAlertsEnabled
+    this[MoneyPreferenceKeys.BUSINESS_WEEKLY_AI_INSIGHTS_ENABLED] = settings.weeklyAiInsightsEnabled
+    this[MoneyPreferenceKeys.BUSINESS_LARGE_TX_THRESHOLD_CENTS] = settings.largeTransactionThresholdCents
 }
 
 private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBranchSettings) {
@@ -758,3 +797,19 @@ private fun encodeLongMap(map: Map<String, Long>): String {
     map.forEach { (key, value) -> objectJson.put(key, value) }
     return objectJson.toString()
 }
+
+private fun encodeLongIdSet(ids: Set<Long>): String {
+    val array = JSONArray()
+    ids.forEach { array.put(it) }
+    return array.toString()
+}
+
+private fun decodeLongIdSet(json: String?): Set<Long> = runCatching {
+    if (json.isNullOrBlank()) return emptySet()
+    val array = JSONArray(json)
+    buildSet {
+        for (index in 0 until array.length()) {
+            add(array.getLong(index))
+        }
+    }
+}.getOrDefault(emptySet())

@@ -34,8 +34,17 @@ data class BusinessSmsLog(
     val clientId: Long? = null,
     val body: String,
     val templateId: String? = null,
+    val channel: String = "SMS",
+    val workflowDebtId: Long? = null,
     val status: BusinessSmsStatus = BusinessSmsStatus.PENDING,
     val createdAt: Long = System.currentTimeMillis(),
+)
+
+data class BusinessCommunicationSendResult(
+    val sentCount: Int,
+    val skippedCount: Int,
+    val failedCount: Int,
+    val openedAppCount: Int = 0,
 )
 
 data class BusinessSmsTemplate(

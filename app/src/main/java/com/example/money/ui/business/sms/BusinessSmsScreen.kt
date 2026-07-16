@@ -62,6 +62,7 @@ import com.example.money.domain.model.business.BusinessSmsTemplate
 import com.example.money.domain.model.business.BusinessSmsTemplateId
 import com.example.money.domain.util.ai.BusinessSmsTone
 import com.example.money.settings.BusinessBranchSettings
+import com.example.money.ui.business.designsystem.BusinessScreenHeader
 import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.launch
 
@@ -533,10 +534,9 @@ private fun SmsTemplatesPanel(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            Text(
-                text = stringResource(R.string.business_sms_templates_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+            BusinessScreenHeader(
+                title = stringResource(R.string.business_ds_templates_title),
+                subtitle = stringResource(R.string.business_ds_templates_subtitle),
             )
         }
         items(templates) { template ->
@@ -561,42 +561,50 @@ private fun SmsTemplatesPanel(
 
 @Composable
 private fun SmsHistoryPanel(logs: List<BusinessSmsLog>) {
-    if (logs.isEmpty()) {
-        Text(
-            text = stringResource(R.string.business_sms_history_empty),
-            modifier = Modifier.padding(24.dp),
-        )
-        return
-    }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(logs) { log ->
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = log.recipientName.ifBlank { log.recipientPhone },
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(log.recipientPhone, style = MaterialTheme.typography.bodySmall)
-                    Text(
-                        log.body,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(vertical = 4.dp),
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
+        item {
+            BusinessScreenHeader(
+                title = stringResource(R.string.business_ds_history_title),
+                subtitle = stringResource(R.string.business_ds_history_subtitle),
+            )
+        }
+        if (logs.isEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.business_sms_history_empty),
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
+            }
+        } else {
+            items(logs) { log ->
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = stringResource(log.status.labelRes()),
-                            style = MaterialTheme.typography.labelSmall,
+                            text = log.recipientName.ifBlank { log.recipientPhone },
+                            fontWeight = FontWeight.SemiBold,
                         )
+                        Text(log.recipientPhone, style = MaterialTheme.typography.bodySmall)
                         Text(
-                            text = Formatters.shortDate(log.createdAt),
-                            style = MaterialTheme.typography.labelSmall,
+                            log.body,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(vertical = 4.dp),
                         )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = stringResource(log.status.labelRes()),
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                            Text(
+                                text = Formatters.shortDate(log.createdAt),
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
                     }
                 }
             }

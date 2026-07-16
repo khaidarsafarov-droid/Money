@@ -26,6 +26,21 @@ interface BusinessSmsLogDao {
     )
     suspend fun countRecentAutomation(clientId: Long, templateId: String, sinceMillis: Long): Int
 
+    @Query(
+        """
+        SELECT COUNT(*) FROM business_sms_log
+        WHERE workflow_debt_id = :debtId
+        AND channel = :channel
+        AND created_at >= :sinceMillis
+        AND status IN ('SENT', 'OPENED_APP')
+        """,
+    )
+    suspend fun countRecentWorkflowCommunication(
+        debtId: Long,
+        channel: String,
+        sinceMillis: Long,
+    ): Int
+
     @Insert
     suspend fun insert(log: BusinessSmsLogEntity): Long
 
