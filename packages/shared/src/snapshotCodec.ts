@@ -8,16 +8,59 @@ import type {
   SnapshotVoiceSettings,
 } from "./sync";
 
+const MAX_SNAPSHOT_BYTES = 5 * 1024 * 1024;
+
 export function encodeFinanceSnapshot(snapshot: FinanceSnapshot): string {
   return JSON.stringify(snapshot);
 }
 
 export function decodeFinanceSnapshot(raw: string): FinanceSnapshot {
-  const json = JSON.parse(raw) as FinanceSnapshot;
-  if (json.schemaVersion >= 2) {
-    return json;
+  if (raw.length > MAX_SNAPSHOT_BYTES) {
+    throw new Error(`Snapshot exceeds maximum size of ${MAX_SNAPSHOT_BYTES} bytes`);
+  }
+
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    throw new Error("Invalid snapshot JSON");
+  }
+
+  if (!json || typeof json !== "object") {
+    throw new Error("Snapshot must be a JSON object");
+  }
+
+  const candidate = json as FinanceSnapshot;
+  if (typeof candidate.schemaVersion !== "number") {
+    throw new Error("Snapshot missing schemaVersion");
+  }
+  if (typeof candidate.deviceId !== "string" || candidate.deviceId.length === 0) {
+    throw new Error("Snapshot missing deviceId");
+  }
+
+  if (candidate.schemaVersion >= 2) {
+    validateSnapshotArrays(candidate);
+    return candidate;
   }
   return migrateLegacySnapshot(json as LegacyFinanceSnapshot);
+}
+
+function validateSnapshotArrays(snapshot: FinanceSnapshot): void {
+  const arrays: Array<keyof FinanceSnapshot> = [
+    "goals",
+    "debts",
+    "debtPayments",
+    "transactions",
+  ];
+  for (const key of arrays) {
+    const value = snapshot[key];
+    if (!Array.isArray(value)) {
+      throw new Error(`Snapshot field "${key}" must be an array`);
+    }
+    if (value.length > 10_000) {
+      throw new Error(`Snapshot field "${key}" exceeds maximum record count`);
+    }
+  }
 }
 
 interface LegacyFinanceSnapshot {

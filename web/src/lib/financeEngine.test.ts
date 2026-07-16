@@ -7,6 +7,7 @@ import {
   isDebtOverdue,
   processPayment,
   remainingAmount,
+  removeItem,
   resolveStatus,
   sortItems,
 } from "@/lib/financeEngine";
@@ -122,5 +123,22 @@ describe("filterByType and sortItems", () => {
     const sorted = sortItems(fresh.items);
     expect(sorted[0]?.name).toBe("Late");
     expect(isDebtOverdue(sorted[0]!)).toBe(true);
+  });
+});
+
+describe("removeItem", () => {
+  it("soft-deletes item with tombstone instead of removing from array", () => {
+    const withDebt = addDebt(emptyState, {
+      name: "Alex",
+      target: 5_000,
+      dateGiven: "2026-01-01",
+      dateDue: "2026-06-01",
+    });
+    const debtId = withDebt.items[0]!.id;
+    const next = removeItem(withDebt, debtId);
+
+    expect(next.items).toHaveLength(1);
+    expect(next.items[0]?.deleted).toBe(true);
+    expect(filterItems(next.items, "all")).toHaveLength(0);
   });
 });

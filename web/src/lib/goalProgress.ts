@@ -3,16 +3,24 @@ import { remainingAmount } from "@/lib/financeEngine";
 
 const DAY_MS = 86_400_000;
 
+function parseDateOnlyUtc(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
 function startOfDayMs(date: Date): number {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
 
 function endOfDayMs(date: Date): number {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d.getTime();
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999);
+}
+
+function toUtcDate(input: string | number | Date): Date {
+  if (typeof input === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return parseDateOnlyUtc(input);
+  }
+  return new Date(input);
 }
 
 export function progressPercentRaw(item: FinancialItem): number {
@@ -34,15 +42,16 @@ export function goalSurplusCents(item: FinancialItem): number {
 }
 
 export function daysUntilDeadline(dateDeadline: string, now = Date.now()): number | null {
-  const end = endOfDayMs(new Date(dateDeadline));
-  const diff = end - startOfDayMs(new Date(now));
-  if (diff < 0) return null;
-  return Math.max(1, Math.ceil(diff / DAY_MS));
+  const endDay = startOfDayMs(toUtcDate(dateDeadline));
+  const nowDay = startOfDayMs(toUtcDate(now));
+  const diffDays = Math.round((endDay - nowDay) / DAY_MS);
+  if (diffDays < 0) return null;
+  return Math.max(1, diffDays);
 }
 
 export function isGoalDeadlinePassed(dateDeadline?: string, now = Date.now()): boolean {
   if (!dateDeadline) return false;
-  return endOfDayMs(new Date(dateDeadline)) < now;
+  return endOfDayMs(toUtcDate(dateDeadline)) < now;
 }
 
 export function dailyGoalCents(item: FinancialItem, now = Date.now()): number | null {

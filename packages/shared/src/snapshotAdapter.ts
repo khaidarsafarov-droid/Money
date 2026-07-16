@@ -32,6 +32,7 @@ export function financeStateToSnapshot(
       currency: state.currency,
       dateDeadline: goal.dateDeadline,
       syncUpdatedAt: goal.updatedAt ? Date.parse(goal.updatedAt) : updatedAt,
+      deleted: goal.deleted,
     }));
 
   const debts: SnapshotDebt[] = state.items
@@ -46,6 +47,7 @@ export function financeStateToSnapshot(
       dateGiven: debt.dateGiven ?? new Date().toISOString().slice(0, 10),
       dateDue: debt.dateDue,
       syncUpdatedAt: debt.updatedAt ? Date.parse(debt.updatedAt) : updatedAt,
+      deleted: debt.deleted,
     }));
 
   const debtPayments: SnapshotDebtPayment[] = state.items

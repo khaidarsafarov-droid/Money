@@ -55,4 +55,29 @@ describe("snapshotAdapter", () => {
     expect(restored.items.find((item) => item.id === "goal-a")?.name).toBe("Резерв");
     expect(restored.items.find((item) => item.id === "debt-b")?.history).toHaveLength(1);
   });
+
+  it("includes tombstoned items in snapshot for sync", () => {
+    const state: FinanceState = {
+      currency: "USD",
+      items: [
+        {
+          id: "goal-deleted",
+          type: "GOAL",
+          name: "Old goal",
+          status: "ACTIVE",
+          amount: 0,
+          target: 1_000,
+          history: [],
+          deleted: true,
+          updatedAt: "2026-06-03T10:00:00.000Z",
+        },
+      ],
+      transactions: [],
+    };
+
+    const snapshot = financeStateToSnapshot(state, "web-device");
+    expect(snapshot.goals).toHaveLength(1);
+    expect(snapshot.goals[0]?.deleted).toBe(true);
+    expect(snapshotToFinanceState(snapshot).items).toHaveLength(0);
+  });
 });

@@ -24,20 +24,25 @@ export function mergeRecords<T extends LwwRecord & { id: string }>(
   remote: T[],
 ): T[] {
   const merged = new Map<string, T>();
+  const localById = new Map(local.map((record) => [record.id, record]));
+  const remoteById = new Map(remote.map((record) => [record.id, record]));
+  const allIds = new Set([...localById.keys(), ...remoteById.keys()]);
 
-  for (const record of local) {
-    if (!record.deleted) {
-      merged.set(record.id, record);
+  for (const id of allIds) {
+    const localRecord = localById.get(id);
+    const remoteRecord = remoteById.get(id);
+
+    if (localRecord && remoteRecord) {
+      const winner = pickLww(localRecord, remoteRecord);
+      if (!winner.deleted) {
+        merged.set(id, winner);
+      }
+      continue;
     }
-  }
 
-  for (const remoteRecord of remote) {
-    const existing = merged.get(remoteRecord.id);
-    const winner = existing ? pickLww(existing, remoteRecord) : remoteRecord;
-    if (winner.deleted) {
-      merged.delete(remoteRecord.id);
-    } else {
-      merged.set(remoteRecord.id, winner);
+    const sole = localRecord ?? remoteRecord;
+    if (sole && !sole.deleted) {
+      merged.set(id, sole);
     }
   }
 
