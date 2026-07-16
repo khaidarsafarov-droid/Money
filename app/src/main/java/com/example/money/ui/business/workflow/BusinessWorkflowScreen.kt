@@ -27,12 +27,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.business.sms.BusinessSmsPermissions
-import com.example.money.domain.model.business.workflow.WorkflowProcess
 import com.example.money.messaging.MessagingChannel
 import com.example.money.ui.business.BusinessTab
+import com.example.money.ui.business.navigation.BusinessNavHost
+import com.example.money.ui.business.navigation.BusinessRoute
 import com.example.money.ui.business.sms.BusinessSmsPanel
 import com.example.money.ui.theme.GoldPrimary
 import kotlinx.coroutines.flow.first
@@ -46,6 +49,10 @@ fun BusinessWorkflowScreen(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as MoneyApplication
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     val viewModel: BusinessWorkflowViewModel = viewModel(
         factory = BusinessWorkflowViewModel.Factory(
             app.businessWorkflowUseCases,
@@ -53,7 +60,6 @@ fun BusinessWorkflowScreen(
             app.preferencesStore,
         ),
     )
-    val route by viewModel.route.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsStateWithLifecycle()
     val processes by viewModel.processes.collectAsStateWithLifecycle()
@@ -65,7 +71,6 @@ fun BusinessWorkflowScreen(
     val debtFilter by viewModel.debtFilter.collectAsStateWithLifecycle()
     val billDraft by viewModel.billDraft.collectAsStateWithLifecycle()
     val currentBill by viewModel.currentBill.collectAsStateWithLifecycle()
-    val breadcrumb by viewModel.breadcrumb.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -101,38 +106,43 @@ fun BusinessWorkflowScreen(
         }
     }
 
-    val title = when (val r = route) {
-        WorkflowRoute.Categories -> stringResource(R.string.workflow_ux_categories_title)
-        WorkflowRoute.CommunicationCenter -> stringResource(R.string.workflow_ux_comm_center_title)
-        is WorkflowRoute.Processes -> stringResource(R.string.workflow_ux_branch_title, r.categoryName)
-        is WorkflowRoute.Bills -> r.processName
-        is WorkflowRoute.BillDetail -> stringResource(R.string.workflow_ux_debt_list_title)
-        is WorkflowRoute.MessageComposer -> stringResource(R.string.workflow_ux_message_title)
-        is WorkflowRoute.CreateProcess -> stringResource(R.string.workflow_ux_new_process_title)
-        is WorkflowRoute.CreateBillInfo -> stringResource(R.string.workflow_ux_bill_title)
-        is WorkflowRoute.CreateBillParticipants -> stringResource(R.string.workflow_ux_participants_title)
-        is WorkflowRoute.CreateBillDistribution -> stringResource(R.string.workflow_ux_distribution_title)
+    val title = when {
+        currentRoute == BusinessRoute.Categories.route -> stringResource(R.string.workflow_ux_categories_title)
+        currentRoute == BusinessRoute.CommunicationCenter.route -> stringResource(R.string.workflow_ux_comm_center_title)
+        currentRoute?.startsWith("business_category_flow") == true -> {
+            val categoryId = navBackStackEntry?.arguments?.getString(BusinessRoute.CategoryFlow.ARG_CATEGORY_ID)?.toLongOrNull()
+            val name = categories.find { it.id == categoryId }?.name.orEmpty()
+            stringResource(R.string.workflow_ux_branch_title, name)
+        }
+        currentRoute?.startsWith("business_process_bills") == true -> {
+            val processId = navBackStackEntry?.arguments?.getString(BusinessRoute.ProcessBills.ARG_PROCESS_ID)?.toLongOrNull()
+            processes.find { it.id == processId }?.name.orEmpty()
+        }
+        currentRoute?.startsWith("business_bill_detail") == true -> stringResource(R.string.workflow_ux_debt_list_title)
+        currentRoute?.startsWith("business_message_composer") == true -> stringResource(R.string.workflow_ux_message_title)
+        currentRoute?.startsWith("business_process_create") == true -> stringResource(R.string.workflow_ux_new_process_title)
+        currentRoute?.startsWith("business_bill_create") == true -> stringResource(R.string.workflow_ux_bill_title)
+        currentRoute?.startsWith("business_participants") == true -> stringResource(R.string.workflow_ux_participants_title)
+        currentRoute?.startsWith("business_debts/") == true -> stringResource(R.string.workflow_ux_distribution_title)
+        currentRoute == BusinessRoute.Automation.route -> stringResource(R.string.business_automation_title)
+        currentRoute == BusinessRoute.History.route -> stringResource(R.string.business_ds_history_title)
+        currentRoute == BusinessRoute.Templates.route -> stringResource(R.string.business_ds_templates_title)
+        else -> stringResource(R.string.workflow_ux_categories_title)
     }
 
-    val showBack = route !is WorkflowRoute.Categories
-    val showFab = route is WorkflowRoute.Processes || route is WorkflowRoute.Bills
+    val showBack = currentRoute != BusinessRoute.Categories.route
+    val showFab = currentRoute?.startsWith("business_category_flow") == true ||
+        currentRoute?.startsWith("business_process_bills") == true
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = {
-                    androidx.compose.foundation.layout.Column {
-                        Text(title)
-                        if (breadcrumb.steps.isNotEmpty()) {
-                            WorkflowBreadcrumbBar(breadcrumb = breadcrumb)
-                        }
-                    }
-                },
+                title = { Text(title) },
                 navigationIcon = {
                     if (showBack) {
-                        IconButton(onClick = viewModel::navigateBack) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                         }
                     }
@@ -143,10 +153,22 @@ fun BusinessWorkflowScreen(
             if (showFab) {
                 FloatingActionButton(
                     onClick = {
-                        when (val r = route) {
-                            is WorkflowRoute.Processes -> viewModel.openCreateProcess(r.categoryId)
-                            is WorkflowRoute.Bills -> viewModel.startCreateBill(r.processId)
-                            else -> Unit
+                        when {
+                            currentRoute?.startsWith("business_category_flow") == true -> {
+                                val categoryId = navBackStackEntry?.arguments
+                                    ?.getString(BusinessRoute.CategoryFlow.ARG_CATEGORY_ID)?.toLongOrNull()
+                                categoryId?.let {
+                                    navController.navigate(BusinessRoute.ProcessCreate.create(it))
+                                }
+                            }
+                            currentRoute?.startsWith("business_process_bills") == true -> {
+                                val processId = navBackStackEntry?.arguments
+                                    ?.getString(BusinessRoute.ProcessBills.ARG_PROCESS_ID)?.toLongOrNull()
+                                processId?.let {
+                                    viewModel.startCreateBill(it)
+                                    navController.navigate(BusinessRoute.BillCreate.create(it))
+                                }
+                            }
                         }
                     },
                     containerColor = GoldPrimary,
@@ -156,115 +178,46 @@ fun BusinessWorkflowScreen(
             }
         },
     ) { padding ->
-        when (val r = route) {
-            WorkflowRoute.Categories -> WorkflowCategoriesScreen(
-                categories = categories,
-                selectedCategoryId = selectedCategoryId,
-                onSelectCategory = viewModel::selectCategory,
-                onContinue = viewModel::continueFromCategorySelection,
-                onOpenCommunicationCenter = viewModel::openCommunicationCenter,
-                modifier = Modifier.padding(padding),
-            )
-            WorkflowRoute.CommunicationCenter -> WorkflowCommunicationCenterScreen(
-                onOpenSmsCompose = { onSelectBusinessTab(BusinessTab.Sms, BusinessSmsPanel.COMPOSE) },
-                onOpenHistory = { onSelectBusinessTab(BusinessTab.Sms, BusinessSmsPanel.HISTORY) },
-                onOpenTemplates = { onSelectBusinessTab(BusinessTab.Sms, BusinessSmsPanel.TEMPLATES) },
-                onOpenAutomation = { onSelectBusinessTab(BusinessTab.Settings, null) },
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.Processes -> WorkflowProcessesScreen(
-                categoryName = r.categoryName,
-                processes = processes,
-                onProcessClick = viewModel::openProcess,
-                onCreateProcess = { viewModel.openCreateProcess(r.categoryId) },
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.Bills -> WorkflowBillsScreen(
-                processName = r.processName,
-                bills = bills,
-                onBillClick = { viewModel.openBill(it.id) },
-                onCreateBill = { viewModel.startCreateBill(r.processId) },
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.BillDetail -> WorkflowDebtListScreen(
-                bill = currentBill,
-                debts = debts,
-                stats = workflowDebtStatsFrom(allDebts),
-                selectedDebtIds = selectedDebtIds,
-                debtFilter = debtFilter,
-                onFilterChange = viewModel::setDebtFilter,
-                onToggleDebt = viewModel::toggleDebtSelection,
-                onSelectAll = { viewModel.selectAllDebts(debts.map { it.debt.id }) },
-                onMarkPaid = viewModel::markDebtPaid,
-                onSendReminders = { viewModel.openMessageComposer(r.billId) },
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.MessageComposer -> WorkflowMessageComposerScreen(
-                messageBody = messageBody,
-                selectedCount = selectedDebtIds.size,
-                onMessageChange = viewModel::updateMessageBody,
-                onAiImprove = { viewModel.aiImproveMessage(r.billId) },
-                onAiShorten = viewModel::aiShortenMessage,
-                onAiFormal = { viewModel.aiFormalMessage(r.billId) },
-                onSendWhatsApp = {
-                    scope.launch {
-                        showSendResult(viewModel.sendReminders(context, r.billId, MessagingChannel.WHATSAPP))
+        BusinessNavHost(
+            navController = navController,
+            viewModel = viewModel,
+            categories = categories,
+            selectedCategoryId = selectedCategoryId,
+            processes = processes,
+            bills = bills,
+            debts = debts,
+            allDebts = allDebts,
+            selectedDebtIds = selectedDebtIds,
+            messageBody = messageBody,
+            debtFilter = debtFilter,
+            billDraft = billDraft,
+            currentBill = currentBill,
+            onSelectBusinessTab = onSelectBusinessTab,
+            onSendWhatsApp = { billId ->
+                scope.launch {
+                    showSendResult(viewModel.sendReminders(context, billId, MessagingChannel.WHATSAPP))
+                }
+            },
+            onSendSms = { billId ->
+                scope.launch {
+                    val settings = app.preferencesStore.businessBranchSettings.first()
+                    sendWithSmsPermission(settings.smsDirectSendEnabled) {
+                        viewModel.sendReminders(context, billId, MessagingChannel.SMS, settings.smsDirectSendEnabled)
                     }
-                },
-                onSendSms = {
-                    scope.launch {
-                        val settings = app.preferencesStore.businessBranchSettings.first()
-                        sendWithSmsPermission(settings.smsDirectSendEnabled) {
-                            viewModel.sendReminders(context, r.billId, MessagingChannel.SMS, settings.smsDirectSendEnabled)
-                        }
+                }
+            },
+            onSendPush = { billId ->
+                scope.launch { showSendResult(viewModel.sendPushReminders(context, billId)) }
+            },
+            onSendAll = { billId ->
+                scope.launch {
+                    val settings = app.preferencesStore.businessBranchSettings.first()
+                    sendWithSmsPermission(settings.smsDirectSendEnabled) {
+                        viewModel.sendAllChannels(context, billId, settings.smsDirectSendEnabled, includePush = true)
                     }
-                },
-                onSendPush = {
-                    scope.launch { showSendResult(viewModel.sendPushReminders(context, r.billId)) }
-                },
-                onSendAll = {
-                    scope.launch {
-                        val settings = app.preferencesStore.businessBranchSettings.first()
-                        sendWithSmsPermission(settings.smsDirectSendEnabled) {
-                            viewModel.sendAllChannels(context, r.billId, settings.smsDirectSendEnabled, includePush = true)
-                        }
-                    }
-                },
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.CreateProcess -> WorkflowCreateProcessScreen(
-                onCreate = { name, description ->
-                    viewModel.createProcess(r.categoryId, name, description) { processId ->
-                        viewModel.openProcess(
-                            WorkflowProcess(id = processId, categoryId = r.categoryId, name = name),
-                        )
-                    }
-                },
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.CreateBillInfo -> WorkflowCreateBillInfoScreen(
-                draft = billDraft,
-                onDraftChange = { draft -> viewModel.updateBillDraft { draft } },
-                onContinue = viewModel::continueToParticipants,
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.CreateBillParticipants -> WorkflowCreateBillParticipantsScreen(
-                draft = billDraft,
-                onDraftChange = { draft -> viewModel.updateBillDraft { draft } },
-                onContinue = viewModel::continueToDistribution,
-                modifier = Modifier.padding(padding),
-            )
-            is WorkflowRoute.CreateBillDistribution -> WorkflowCreateBillDistributionScreen(
-                draft = billDraft,
-                onDraftChange = { draft -> viewModel.updateBillDraft { draft } },
-                onSplitEqually = viewModel::splitDraftEqually,
-                onAiDistribute = viewModel::aiDistributeDraft,
-                onReset = viewModel::resetDraftAmounts,
-                onCreateDebts = {
-                    viewModel.createBillFromDraft { billId -> viewModel.openBill(billId) }
-                },
-                modifier = Modifier.padding(padding),
-            )
-        }
+                }
+            },
+            modifier = Modifier.padding(padding),
+        )
     }
 }
