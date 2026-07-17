@@ -120,7 +120,8 @@ import com.example.money.ui.debtors.IncomeIdeasDialog
 import com.example.money.settings.UserProfile
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtorFilterRow
-import com.example.money.ui.debtors.DebtorsViewModel
+import com.example.money.ui.debtors.DebtSearchField
+import com.example.money.ui.debtors.DebtContactActions
 import com.example.money.ui.goal.GoalFormDialog
 import com.example.money.ui.goal.GoalViewModel
 import androidx.compose.runtime.rememberCoroutineScope
@@ -182,6 +183,7 @@ fun HomeScreen(
     val debtTab by debtorsViewModel.debtTab.collectAsStateWithLifecycle()
     val canAddDebtor = debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe
     val debtorFilter by debtorsViewModel.filter.collectAsStateWithLifecycle()
+    val debtSearchQuery by debtorsViewModel.searchQuery.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
     val freedomProjection by debtorsViewModel.freedomProjection.collectAsStateWithLifecycle()
     val extraMonthlyCents by debtorsViewModel.extraMonthlyCents.collectAsStateWithLifecycle()
@@ -769,6 +771,8 @@ fun HomeScreen(
                 onDebtTabChange = debtorsViewModel::setDebtTab,
                 debtorFilter = debtorFilter,
                 onDebtorFilterChange = debtorsViewModel::setFilter,
+                debtSearchQuery = debtSearchQuery,
+                onDebtSearchQueryChange = debtorsViewModel::setSearchQuery,
                 transfers = transfers,
                 expenses = expenses,
                 budgetSummary = budgetSummary,
@@ -839,6 +843,8 @@ fun HomeScreen(
                 onDebtTabChange = debtorsViewModel::setDebtTab,
                 debtorFilter = debtorFilter,
                 onDebtorFilterChange = debtorsViewModel::setFilter,
+                debtSearchQuery = debtSearchQuery,
+                onDebtSearchQueryChange = debtorsViewModel::setSearchQuery,
                 transfers = transfers,
                 expenses = expenses,
                 budgetSummary = budgetSummary,
@@ -955,6 +961,8 @@ private fun PhoneHomeLayout(
     onDebtTabChange: (DebtTab) -> Unit,
     debtorFilter: DebtorFilter,
     onDebtorFilterChange: (DebtorFilter) -> Unit,
+    debtSearchQuery: String,
+    onDebtSearchQueryChange: (String) -> Unit,
     transfers: List<Transfer>,
     expenses: List<Expense>,
     budgetSummary: com.example.money.domain.model.BudgetSummary,
@@ -1009,6 +1017,7 @@ private fun PhoneHomeLayout(
     var showDebtsSection by rememberSaveable { mutableStateOf(false) }
     val activeDebtCount = allDebtors.count { !it.isPaid }
     val transactionCount = transfers.size + expenses.size
+    val contactContext = LocalContext.current
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -1445,6 +1454,13 @@ private fun PhoneHomeLayout(
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 )
                             }
+                            item {
+                                DebtSearchField(
+                                    query = debtSearchQuery,
+                                    onQueryChange = onDebtSearchQueryChange,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                )
+                            }
                             if (debtors.isEmpty()) {
                                 item {
                                     EmptyStateMessage(
@@ -1494,6 +1510,18 @@ private fun PhoneHomeLayout(
                                         },
                                         calendarSynced = !debtor.calendarEventId.isNullOrBlank(),
                                         hideAmounts = privacySettings.hideAmounts,
+                                        onCall = debtor.phone.takeIf { it.isNotBlank() }?.let {
+                                            { DebtContactActions.dialPhone(contactContext, debtor.phone) }
+                                        },
+                                        onWhatsApp = debtor.phone.takeIf { it.isNotBlank() }?.let {
+                                            {
+                                                DebtContactActions.openWhatsApp(
+                                                    contactContext,
+                                                    debtor.phone,
+                                                    debtor.name,
+                                                )
+                                            }
+                                        },
                                     )
                                 }
                             }

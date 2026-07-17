@@ -50,6 +50,7 @@ import com.example.money.ui.debtors.DebtFreedomTab
 import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
+import com.example.money.ui.debtors.DebtSearchField
 import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.util.Formatters
@@ -71,6 +72,8 @@ fun TabletHomeLayout(
     onDebtTabChange: (DebtTab) -> Unit,
     debtorFilter: DebtorFilter,
     onDebtorFilterChange: (DebtorFilter) -> Unit,
+    debtSearchQuery: String,
+    onDebtSearchQueryChange: (String) -> Unit,
     transfers: List<Transfer>,
     expenses: List<Expense>,
     budgetSummary: BudgetSummary,
@@ -258,6 +261,13 @@ fun TabletHomeLayout(
                                     selectedFilter = debtorFilter,
                                     onFilterSelected = onDebtorFilterChange,
                                     modifier = Modifier.padding(vertical = 8.dp),
+                                )
+                            }
+                            item {
+                                DebtSearchField(
+                                    query = debtSearchQuery,
+                                    onQueryChange = onDebtSearchQueryChange,
+                                    modifier = Modifier.padding(vertical = 4.dp),
                                 )
                             }
                             if (debtors.isEmpty()) {

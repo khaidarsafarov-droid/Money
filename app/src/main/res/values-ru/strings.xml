@@ -88,7 +88,7 @@
     <string name="empty_debtors_overdue_hint">Просроченные долги отображаются здесь автоматически</string>
     <string name="debt_tab_owes_me">Мне должны</string>
     <string name="debt_tab_i_owe">Я должен</string>
-    <string name="debt_tab_freedom">Свобода</string>
+    <string name="debt_tab_freedom">Прогноз</string>
     <string name="debt_filter_all">Все</string>
     <string name="debt_filter_active">Активные</string>
     <string name="debt_filter_overdue">Просроченные</string>
@@ -162,7 +162,7 @@
     <string name="msg_expense_added">Расход сохранён и учтён в балансе.</string>
     <string name="msg_insufficient_funds">Недостаточно средств на общем остатке.</string>
     <string name="msg_goal_transfer_added">Перевод в цель выполнен.</string>
-    <string name="global_balance_available">Остаток: %1$s</string>
+    <string name="global_balance_available">Доступно: %1$s</string>
     <string name="global_balance_label">Доступный остаток</string>
     <string name="dashboard_see_more">Подробнее</string>
     <string name="dashboard_see_less">Свернуть</string>
@@ -177,7 +177,15 @@
     <string name="empty_budget_action">Добавить операцию</string>
     <string name="action_more">Ещё</string>
     <string name="dashboard_debts_section">Долги и операции</string>
-    <string name="dashboard_debts_summary">%1$d долгов · %2$d операций</string>
+    <string name="dashboard_debts_summary">%1$d активных долгов · %2$d операций в бюджете</string>
+    <string name="global_balance_widget_formula_hint">Пополнения %1$s − в цели %2$s − расходы %3$s</string>
+    <string name="global_balance_available_hint">Пополнения − в цели (%1$s) − расходы</string>
+    <string name="global_balance_goal_allocated_label">В цели</string>
+    <string name="debt_search_hint">Поиск по имени должника</string>
+    <string name="debt_search_clear">Очистить поиск</string>
+    <string name="debt_action_call">Позвонить</string>
+    <string name="debt_action_whatsapp">WhatsApp</string>
+    <string name="debt_whatsapp_default_body">Здравствуйте, %1$s! Напоминаю о долге.</string>
     <string name="global_balance_income_minus_expenses">Доходы − расходы</string>
     <string name="global_balance_accumulated_label">Накоплено</string>
     <string name="global_balance_remaining_label">До целей</string>

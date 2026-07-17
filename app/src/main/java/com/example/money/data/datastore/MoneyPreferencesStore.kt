@@ -53,7 +53,9 @@ object MoneyPreferenceKeys {
     val CURRENCY_REGION = stringPreferencesKey("currency_region")
     val ACTIVE_ITEMS_JSON = stringPreferencesKey("widget_active_items_json")
     val GLOBAL_BALANCE = doublePreferencesKey("widget_global_balance")
+    val AVAILABLE_BALANCE = doublePreferencesKey("widget_available_balance")
     val TOTAL_DEPOSITS = doublePreferencesKey("widget_total_deposits")
+    val TOTAL_GOAL_ALLOCATED = doublePreferencesKey("widget_total_goal_allocated")
     val TOTAL_EXPENSES = doublePreferencesKey("widget_total_expenses")
     val TOTAL_ACCUMULATED = doublePreferencesKey("widget_total_accumulated")
     val TOTAL_REMAINING_TO_GOAL = doublePreferencesKey("widget_total_remaining_to_goal")
@@ -159,7 +161,17 @@ class MoneyPreferencesStore(
                 ),
                 activeItems = decodeActiveItems(prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON]),
                 globalBalance = prefs[MoneyPreferenceKeys.GLOBAL_BALANCE] ?: 0.0,
+                availableBalance = prefs[MoneyPreferenceKeys.AVAILABLE_BALANCE]
+                    ?: run {
+                        val deposits = prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] ?: 0.0
+                        val goalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED]
+                            ?: prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0
+                        val expenses = prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] ?: 0.0
+                        deposits - goalAllocated - expenses
+                    },
                 totalDeposits = prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] ?: 0.0,
+                totalGoalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED]
+                    ?: prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0,
                 totalExpenses = prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] ?: 0.0,
                 totalAccumulated = prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0,
                 totalRemainingToGoal = prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] ?: 0.0,
@@ -194,7 +206,9 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.CURRENCY_REGION] = snapshot.currencyRegion.name
             prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON] = encodeActiveItems(snapshot.activeItems)
             prefs[MoneyPreferenceKeys.GLOBAL_BALANCE] = snapshot.globalBalance
+            prefs[MoneyPreferenceKeys.AVAILABLE_BALANCE] = snapshot.availableBalance
             prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] = snapshot.totalDeposits
+            prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED] = snapshot.totalGoalAllocated
             prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] = snapshot.totalExpenses
             prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] = snapshot.totalAccumulated
             prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] = snapshot.totalRemainingToGoal

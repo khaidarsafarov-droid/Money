@@ -45,6 +45,7 @@ import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.theme.moneyDisplayStyle
+import com.example.money.ui.theme.moneyHeadingStyle
 import com.example.money.ui.theme.moneySubheadingStyle
 import com.example.money.ui.util.Formatters
 
@@ -76,12 +77,12 @@ fun GlobalBalanceHeader(
             )
             Text(
                 text = Formatters.currencyCompact(summary.availableBalance),
-                style = moneyDisplayStyle(),
+                style = moneyHeadingStyle(),
             )
             Text(
                 text = stringResource(
                     R.string.global_balance_available_hint,
-                    Formatters.currencyCompact(summary.globalBalance),
+                    Formatters.currencyCompact(summary.totalGoalAllocated),
                 ),
                 style = moneyCaptionStyle(),
             )
@@ -94,6 +95,12 @@ fun GlobalBalanceHeader(
                     label = stringResource(R.string.global_balance_deposits_label),
                     value = Formatters.currencyCompact(summary.totalDeposits),
                     valueColor = FinancePositive,
+                    modifier = Modifier.weight(1f),
+                )
+                SummaryPill(
+                    label = stringResource(R.string.global_balance_goal_allocated_label),
+                    value = Formatters.currencyCompact(summary.totalGoalAllocated),
+                    valueColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                 )
                 SummaryPill(

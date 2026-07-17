@@ -30,7 +30,10 @@ data class WidgetGoalSnapshot(
     val currencyRegion: CurrencyRegion,
     val activeItems: List<WidgetFinanceItem> = emptyList(),
     val globalBalance: Double = 0.0,
+    /** Deposits − goal transfers − expenses; matches in-app «Доступный остаток». */
+    val availableBalance: Double = 0.0,
     val totalDeposits: Double = 0.0,
+    val totalGoalAllocated: Double = 0.0,
     val totalExpenses: Double = 0.0,
     val totalAccumulated: Double = 0.0,
     val totalRemainingToGoal: Double = 0.0,

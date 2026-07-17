@@ -114,7 +114,7 @@ private fun GoalWidgetContent(
             Text(
                 text = context.getString(
                     R.string.global_balance_available,
-                    maskCompact(snapshot.globalBalance, region, hide),
+                    maskCompact(snapshot.availableBalance, region, hide),
                 ),
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
@@ -124,7 +124,12 @@ private fun GoalWidgetContent(
             )
 
             Text(
-                text = context.getString(R.string.global_balance_income_minus_expenses),
+                text = context.getString(
+                    R.string.global_balance_widget_formula_hint,
+                    maskCompact(snapshot.totalDeposits, region, hide),
+                    maskCompact(snapshot.totalGoalAllocated, region, hide),
+                    maskCompact(snapshot.totalExpenses, region, hide),
+                ),
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurfaceVariant,
                     fontSize = 11.sp,

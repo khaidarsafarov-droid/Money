@@ -91,7 +91,7 @@
     <string name="empty_debtors_overdue_hint">Overdue debts appear here automatically</string>
     <string name="debt_tab_owes_me">Owed to me</string>
     <string name="debt_tab_i_owe">I owe</string>
-    <string name="debt_tab_freedom">Freedom</string>
+    <string name="debt_tab_freedom">Forecast</string>
     <string name="debt_freedom_title">Freedom date</string>
     <string name="debt_freedom_empty">No active \"I owe\" debts — great work!</string>
     <string name="debt_freedom_date">Debt-free by: %1$s</string>
@@ -193,7 +193,15 @@
     <string name="calendar_permission_denied">Calendar access denied — calendar reminders unavailable</string>
     <string name="action_more">More</string>
     <string name="dashboard_debts_section">Debts &amp; transactions</string>
-    <string name="dashboard_debts_summary">%1$d debts · %2$d transactions</string>
+    <string name="dashboard_debts_summary">%1$d active debts · %2$d budget transactions</string>
+    <string name="global_balance_widget_formula_hint">Deposits %1$s − to goals %2$s − expenses %3$s</string>
+    <string name="global_balance_available_hint">Deposits − to goals (%1$s) − expenses</string>
+    <string name="global_balance_goal_allocated_label">To goals</string>
+    <string name="debt_search_hint">Search by debtor name</string>
+    <string name="debt_search_clear">Clear search</string>
+    <string name="debt_action_call">Call</string>
+    <string name="debt_action_whatsapp">WhatsApp</string>
+    <string name="debt_whatsapp_default_body">Hi %1$s, this is a reminder about the debt.</string>
     <string name="global_balance_income_minus_expenses">Income − expenses</string>
     <string name="global_balance_accumulated_label">Saved</string>
     <string name="global_balance_remaining_label">To goals</string>

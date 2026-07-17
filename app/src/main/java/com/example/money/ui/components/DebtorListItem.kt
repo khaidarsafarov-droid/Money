@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.History
@@ -50,7 +51,7 @@ import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.OverdueRed
 import com.example.money.ui.theme.moneyCaptionStyle
-import com.example.money.ui.theme.moneyDisplayStyle
+import com.example.money.ui.theme.moneyHeadingStyle
 import com.example.money.ui.theme.moneySubheadingStyle
 import com.example.money.ui.util.Formatters
 
@@ -64,6 +65,8 @@ fun DebtorListItem(
     onAccelerate: (() -> Unit)? = null,
     onCalendar: (() -> Unit)? = null,
     onViewContactHistory: (() -> Unit)? = null,
+    onCall: (() -> Unit)? = null,
+    onWhatsApp: (() -> Unit)? = null,
     calendarSynced: Boolean = false,
     hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
@@ -90,34 +93,31 @@ fun DebtorListItem(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(MoneySpacing.cardPadding),
-            verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
+                .padding(MoneySpacing.md),
+            verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(MoneySpacing.md),
             ) {
                 DebtorAvatar(name = debtor.name)
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = debtor.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        DebtStatusBadge(
-                            label = when (dueStatus) {
-                                DebtDueStatus.PAID -> stringResource(R.string.debtor_paid)
-                                DebtDueStatus.OVERDUE -> stringResource(R.string.debtor_overdue)
-                                else -> stringResource(R.string.debt_status_active)
-                            },
-                            status = dueStatus.toVisual(),
-                        )
-                    }
+                    Text(
+                        text = debtor.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                    )
+                    DebtStatusBadge(
+                        label = when (dueStatus) {
+                            DebtDueStatus.PAID -> stringResource(R.string.debtor_paid)
+                            DebtDueStatus.OVERDUE -> stringResource(R.string.debtor_overdue)
+                            else -> stringResource(R.string.debt_status_active)
+                        },
+                        status = dueStatus.toVisual(),
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
 
                     Text(
                         text = Formatters.currencyFromCents(
@@ -125,7 +125,8 @@ fun DebtorListItem(
                             debtor.currency,
                             hide = hideAmounts,
                         ),
-                        style = moneyDisplayStyle(),
+                        style = moneyHeadingStyle(),
+                        modifier = Modifier.padding(top = 4.dp),
                     )
 
                     DebtDueStatusLabel(status = dueStatus, dateDue = debtor.dateDue)
@@ -146,6 +147,26 @@ fun DebtorListItem(
                         onDismissRequest = { showMenu = false },
                     ) {
                         if (!debtor.isPaid) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        stringResource(
+                                            if (debtor.debtType == DebtType.CREDITOR) {
+                                                R.string.action_add_payment
+                                            } else {
+                                                R.string.action_make_payment
+                                            },
+                                        ),
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onAddPayment()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Payments, contentDescription = null)
+                                },
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.action_edit)) },
                                 onClick = {
@@ -252,20 +273,28 @@ fun DebtorListItem(
                     ),
                     style = moneyCaptionStyle(),
                 )
+            }
 
-                MoneyButton(
-                    text = stringResource(
-                        if (debtor.debtType == DebtType.CREDITOR) {
-                            R.string.action_add_payment
-                        } else {
-                            R.string.action_make_payment
-                        },
-                    ),
-                    onClick = onAddPayment,
-                    priority = MoneyButtonPriority.Primary,
-                    icon = Icons.Default.Payments,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+            if (debtor.phone.isNotBlank() && (onCall != null || onWhatsApp != null)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm)) {
+                    if (onCall != null) {
+                        MoneyButton(
+                            text = stringResource(R.string.debt_action_call),
+                            onClick = onCall,
+                            priority = MoneyButtonPriority.Secondary,
+                            icon = Icons.Outlined.Call,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (onWhatsApp != null) {
+                        MoneyButton(
+                            text = stringResource(R.string.debt_action_whatsapp),
+                            onClick = onWhatsApp,
+                            priority = MoneyButtonPriority.Secondary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
             }
         }
     }

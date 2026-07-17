@@ -134,6 +134,18 @@ fun DebtorFormDialog(
     var amountError by remember { mutableStateOf<String?>(null) }
     var dateError by remember { mutableStateOf<String?>(null) }
 
+    val canSubmit = remember(name, amountText, dateGiven, dateDue, isEdit, existingDebtor) {
+        InputValidators.validateName(name) == null &&
+            InputValidators.validateAmount(amountText) == null &&
+            InputValidators.validateDueDate(dateGiven, dateDue) == null &&
+            if (isEdit) {
+                val amount = InputValidators.parseAmount(amountText)
+                amount == null || MoneyMath.toCents(amount) >= (existingDebtor?.currentAmountCents ?: 0L)
+            } else {
+                true
+            }
+    }
+
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
     ) { uri ->
@@ -356,6 +368,7 @@ fun DebtorFormDialog(
         },
         confirmButton = {
             TextButton(
+                enabled = canSubmit,
                 onClick = {
                     nameError = InputValidators.validateName(name)
                     amountError = InputValidators.validateAmount(amountText)

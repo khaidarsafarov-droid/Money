@@ -51,6 +51,9 @@ class DebtorsViewModel(
     private val _filter = MutableStateFlow(DebtorFilter.ALL)
     val filter: StateFlow<DebtorFilter> = _filter.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
     private val _advisorMessages = MutableStateFlow<List<AdvisorChatMessage>>(emptyList())
     val advisorMessages: StateFlow<List<AdvisorChatMessage>> = _advisorMessages.asStateFlow()
 
@@ -189,7 +192,8 @@ class DebtorsViewModel(
         allDebtors,
         _debtTab,
         _filter,
-    ) { debtors, tab, filter ->
+        _searchQuery,
+    ) { debtors, tab, filter, searchQuery ->
         if (tab == DebtTab.Freedom || tab == DebtTab.Calendar) {
             return@combine emptyList()
         }
@@ -206,7 +210,17 @@ class DebtorsViewModel(
             DebtorFilter.OVERDUE -> byType.filter { !it.isPaid && it.dateDue < now }
             DebtorFilter.PAID -> byType.filter { it.isPaid }
         }
-        DebtorSort.sort(filtered, now)
+        val query = searchQuery.trim()
+        val searched = if (query.isBlank()) {
+            filtered
+        } else {
+            filtered.filter { debtor ->
+                debtor.name.contains(query, ignoreCase = true) ||
+                    debtor.note.contains(query, ignoreCase = true) ||
+                    debtor.phone.contains(query, ignoreCase = true)
+            }
+        }
+        DebtorSort.sort(searched, now)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -263,6 +277,10 @@ class DebtorsViewModel(
 
     fun setFilter(filter: DebtorFilter) {
         _filter.value = filter
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
     }
 
     fun askAdvisor(promptId: String) {

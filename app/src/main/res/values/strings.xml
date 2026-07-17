@@ -93,7 +93,7 @@
     <string name="empty_debtors_overdue_hint">Просроченные долги отображаются здесь автоматически</string>
     <string name="debt_tab_owes_me">Мне должны</string>
     <string name="debt_tab_i_owe">Я должен</string>
-    <string name="debt_tab_freedom">Свобода</string>
+    <string name="debt_tab_freedom">Прогноз</string>
     <string name="debt_freedom_title">Дата свободы</string>
     <string name="debt_freedom_empty">Нет активных долгов «Я должен» — отличная работа!</string>
     <string name="debt_freedom_date">Выход из долгов: %1$s</string>
@@ -185,6 +185,7 @@
     <string name="msg_goal_transfer_added">Перевод в цель выполнен.</string>
     <string name="global_balance_available">Доступно: %1$s</string>
     <string name="global_balance_label">Доступный остаток</string>
+    <string name="global_balance_widget_formula_hint">Пополнения %1$s − в цели %2$s − расходы %3$s</string>
     <string name="dashboard_see_more">Подробнее</string>
     <string name="dashboard_see_less">Свернуть</string>
     <string name="drawer_group_goals">Цели</string>
@@ -197,8 +198,9 @@
     <string name="empty_debtors_action">Добавить долг</string>
     <string name="empty_budget_action">Добавить операцию</string>
     <string name="dashboard_debts_section">Долги и операции</string>
-    <string name="dashboard_debts_summary">%1$d долгов · %2$d операций</string>
-    <string name="global_balance_available_hint">Доходы − расходы: %1$s (без учёта переводов в цели)</string>
+    <string name="dashboard_debts_summary">%1$d активных долгов · %2$d операций в бюджете</string>
+    <string name="global_balance_available_hint">Пополнения − в цели (%1$s) − расходы</string>
+    <string name="global_balance_goal_allocated_label">В цели</string>
     <string name="global_balance_income_minus_expenses">Доходы − расходы</string>
     <string name="global_balance_accumulated_label">В целях</string>
     <string name="global_balance_remaining_label">До целей</string>
@@ -511,6 +513,11 @@
     <string name="goal_hub_challenges_title_personal">%1$s, ваши челленджи</string>
 
     <!-- Calendar integration -->
+    <string name="debt_search_hint">Поиск по имени должника</string>
+    <string name="debt_search_clear">Очистить поиск</string>
+    <string name="debt_action_call">Позвонить</string>
+    <string name="debt_action_whatsapp">WhatsApp</string>
+    <string name="debt_whatsapp_default_body">Здравствуйте, %1$s! Напоминаю о долге.</string>
     <string name="debt_tab_calendar">Календарь</string>
     <string name="calendar_settings_title">Напоминания и календарь</string>
     <string name="calendar_auto_sync">Добавлять долги в календарь</string>
