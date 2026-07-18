@@ -37,6 +37,7 @@ import com.example.money.data.local.migration.MIGRATION_16_17
 import com.example.money.data.local.migration.MIGRATION_17_18
 import com.example.money.data.local.migration.MIGRATION_18_19
 import com.example.money.data.local.migration.MIGRATION_19_20
+import com.example.money.data.local.migration.MIGRATION_20_21
 
 @Database(
     entities = [
@@ -48,7 +49,7 @@ import com.example.money.data.local.migration.MIGRATION_19_20
         SyncQueueEntity::class,
         LuckDiaryEntryEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -83,6 +84,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_17_18,
                     MIGRATION_18_19,
                     MIGRATION_19_20,
+                    MIGRATION_20_21,
                 ).build().also { instance = it }
             }
         }

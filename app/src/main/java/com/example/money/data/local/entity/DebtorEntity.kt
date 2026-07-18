@@ -11,6 +11,9 @@ import com.example.money.data.sync.SyncIds
     indices = [
         Index(value = ["sync_id"], unique = true),
         Index(value = ["contact_lookup_key"]),
+        Index(value = ["status"]),
+        Index(value = ["date_due"]),
+        Index(value = ["debt_type"]),
     ],
 )
 data class DebtorEntity(

@@ -7,6 +7,7 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.BudgetRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.GoalRepository
+import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.MoneyMath
@@ -55,7 +56,7 @@ class GoalWidgetSnapshotWriter(
             val fraction = MoneyMath.progressFraction(totalTargetCents, totalCurrentCents)
             val goalMetrics = GlobalFinanceEngine.activeGoalMetrics(goals)
             val debtMetrics = DebtMetricsEngine.computeMetrics(debts)
-            val overdueDebtCount = debts.count { !it.isPaid && it.dateDue < now }
+            val overdueDebtCount = debts.count { !it.isPaid && DebtDueDateUtils.isOverdue(it.dateDue, now) }
 
             WidgetGoalSnapshot(
                 currentAmount = currentAmount,
@@ -123,7 +124,7 @@ class GoalWidgetSnapshotWriter(
         val debtItems = debts
             .filter { !it.isPaid && it.remainingAmountCents > 0L }
             .sortedWith(
-                compareByDescending<Debtor> { it.dateDue < now }
+                compareByDescending<Debtor> { DebtDueDateUtils.isOverdue(it.dateDue, now) }
                     .thenBy { it.dateDue },
             )
             .map { debt ->
@@ -134,7 +135,7 @@ class GoalWidgetSnapshotWriter(
                     name = debt.name,
                     remainingLabel = Formatters.currencyFromCents(debt.remainingAmountCents, hide = hide),
                     progressFraction = debt.progressFraction,
-                    isOverdue = debt.dateDue < now,
+                    isOverdue = DebtDueDateUtils.isOverdue(debt.dateDue, now),
                 )
             }
 

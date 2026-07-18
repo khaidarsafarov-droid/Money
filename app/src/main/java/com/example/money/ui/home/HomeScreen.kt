@@ -281,7 +281,7 @@ fun HomeScreen(
             ?: launchConfig.highlightDebtorId
         if (targetDebtorId != null) {
             debtorsViewModel.setFilter(DebtorFilter.ALL)
-            val debtor = app.debtorRepository.getDebtorById(targetDebtorId)
+            val debtor = debtorsViewModel.getDebtorById(targetDebtorId)
             if (debtor != null) {
                 debtorsViewModel.setDebtTab(DebtTab.forDebtType(debtor.debtType))
                 highlightedDebtorId = targetDebtorId
@@ -482,7 +482,7 @@ fun HomeScreen(
                     showDebtPaymentDialog = null
                     debtPaymentPrefillCents = 0L
                     if (ok) {
-                        val updated = app.debtorRepository.getDebtorById(debtor.id)
+                        val updated = debtorsViewModel.getDebtorById(debtor.id)
                         val remaining = updated?.remainingAmountCents ?: 0L
                         showMessage(
                             context.getString(

@@ -7,6 +7,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.messaging.MessagingChannel
 import com.example.money.messaging.UniversalMessageSender
 import com.example.money.ui.debtors.DebtReminderShare
@@ -156,7 +157,7 @@ object DebtNotificationHelper {
     fun formatBody(context: Context, debtor: Debtor): String {
         val amount = Formatters.currency(debtor.amount)
         val now = System.currentTimeMillis()
-        val isOverdue = !debtor.isPaid && debtor.dateDue < now
+        val isOverdue = !debtor.isPaid && DebtDueDateUtils.isOverdue(debtor.dateDue, now)
         val daysOverdue = if (isOverdue) {
             TimeUnit.MILLISECONDS.toDays(now - debtor.dateDue).coerceAtLeast(1)
         } else {

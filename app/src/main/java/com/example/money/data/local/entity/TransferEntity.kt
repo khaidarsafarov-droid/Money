@@ -8,7 +8,12 @@ import com.example.money.data.sync.SyncIds
 
 @Entity(
     tableName = "transfers",
-    indices = [Index(value = ["sync_id"], unique = true)],
+    indices = [
+        Index(value = ["sync_id"], unique = true),
+        Index(value = ["isConfirmed"]),
+        Index(value = ["goalId"]),
+        Index(value = ["debt_id"]),
+    ],
 )
 data class TransferEntity(
     @PrimaryKey(autoGenerate = true)

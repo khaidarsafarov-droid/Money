@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -115,13 +116,34 @@ class GoalHubViewModel(
 
     init {
         viewModelScope.launch {
-            debtors.collect { list ->
-                    val badges = GoalChallengeEngines.computeGoalBadges(list)
-                    val current = profile.value.goalBadges
+            debtors
+                .map { GoalChallengeEngines.computeGoalBadges(it) }
+                .distinctUntilChanged()
+                .collect { badges ->
+                    val current = preferencesStore.goalPsychologyProfile.first().goalBadges
                     if (badges != current) {
                         preferencesStore.updateGoalPsychologyProfile { it.copy(goalBadges = badges) }
                     }
-                    syncChallengeProgressFromPayments(list)
+                }
+        }
+        viewModelScope.launch {
+            debtors
+                .map { list ->
+                    val current = GoalChallengeEngines.parseChallenges(
+                        preferencesStore.goalPsychologyProfile.first().activeChallengesJson,
+                    )
+                    GoalChallengeEngines.syncPaymentChallengeProgress(current, list)
+                }
+                .distinctUntilChanged()
+                .collect { synced ->
+                    val current = GoalChallengeEngines.parseChallenges(
+                        preferencesStore.goalPsychologyProfile.first().activeChallengesJson,
+                    )
+                    if (synced != current) {
+                        preferencesStore.updateGoalPsychologyProfile {
+                            it.copy(activeChallengesJson = GoalChallengeEngines.encodeChallenges(synced))
+                        }
+                    }
                 }
         }
     }

@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.money.MoneyApplication
 import com.example.money.domain.model.DebtType
+import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.messaging.MessagePayload
 import com.example.money.messaging.MessagingChannel
 import com.example.money.messaging.UniversalMessageSender
@@ -25,7 +26,7 @@ class PersonalDebtMessageWorker(
         val debtors = app.debtorRepository.getActiveDebtors().first()
         val now = System.currentTimeMillis()
         debtors
-            .filter { !it.isPaid && it.dateDue < now && it.debtType == DebtType.CREDITOR }
+            .filter { !it.isPaid && DebtDueDateUtils.isOverdue(it.dateDue, now) && it.debtType == DebtType.CREDITOR }
             .forEach { debtor ->
                 val contact = DebtReminderShare.resolveContact(applicationContext, debtor)
                 val payload = MessagePayload(

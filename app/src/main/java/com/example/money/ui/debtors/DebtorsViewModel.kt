@@ -16,6 +16,7 @@ import com.example.money.domain.util.DebtGamificationEngine
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.calendar.DebtCalendarSyncService
+import com.example.money.notification.DebtReminderCoordinator
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.settings.AutopilotSettings
@@ -167,18 +168,24 @@ class DebtorsViewModel(
 
     init {
         viewModelScope.launch {
+            var reminderSignatures = emptyMap<Long, DebtReminderCoordinator.ReminderSignature>()
             combine(
                 preferencesStore.personalBranchSettings,
                 allDebtors,
             ) { settings, debtors ->
                 settings to debtors
             }.collect { (settings, debtors) ->
-                debtors.filter { !it.isPaid }.forEach { debtor ->
-                    debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
-                }
+                reminderSignatures = DebtReminderCoordinator.syncAdvanceReminders(
+                    scheduler = debtReminderScheduler,
+                    settings = settings,
+                    previous = reminderSignatures,
+                    debtors = debtors,
+                )
             }
         }
     }
+
+    suspend fun getDebtorById(id: Long): Debtor? = debtorRepository.getDebtorById(id)
 
     fun updatePersonalBranchSettings(transform: (PersonalBranchSettings) -> PersonalBranchSettings) {
         viewModelScope.launch {
@@ -194,34 +201,12 @@ class DebtorsViewModel(
         _filter,
         _searchQuery,
     ) { debtors, tab, filter, searchQuery ->
-        if (tab == DebtTab.Freedom || tab == DebtTab.Calendar) {
-            return@combine emptyList()
-        }
-        val type = when (tab) {
-            DebtTab.OwesMe -> DebtType.CREDITOR
-            DebtTab.IOwe -> DebtType.DEBTOR
-            DebtTab.Freedom, DebtTab.Calendar -> DebtType.DEBTOR
-        }
-        val now = System.currentTimeMillis()
-        val byType = debtors.filter { it.debtType == type }
-        val filtered = when (filter) {
-            DebtorFilter.ALL -> byType
-            DebtorFilter.ACTIVE -> byType.filter { !it.isPaid && it.dateDue >= now }
-            DebtorFilter.OVERDUE -> byType.filter { !it.isPaid && it.dateDue < now }
-            DebtorFilter.PAID -> byType.filter { it.isPaid }
-        }
-        val query = searchQuery.trim()
-        val searched = if (query.isBlank()) {
-            filtered
-        } else {
-            filtered.filter { debtor ->
-                debtor.name.contains(query, ignoreCase = true) ||
-                    debtor.note.contains(query, ignoreCase = true) ||
-                    debtor.phone.contains(query, ignoreCase = true) ||
-                    debtor.email.contains(query, ignoreCase = true)
-            }
-        }
-        DebtorSort.sort(searched, now)
+        DebtorListFilter.apply(
+            debtors = debtors,
+            tab = tab,
+            filter = filter,
+            searchQuery = searchQuery,
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
