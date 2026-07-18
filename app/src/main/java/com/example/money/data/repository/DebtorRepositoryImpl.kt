@@ -61,28 +61,16 @@ class DebtorRepositoryImpl(
                 debtor.targetAmountCents,
                 debtor.currentAmountCents,
             )
-            val updated = existing.copy(
-                name = debtor.name,
-                targetAmountCents = debtor.targetAmountCents,
-                currentAmountCents = debtor.currentAmountCents,
-                currency = debtor.currency,
+            val updated = debtor.toEntity().copy(
+                syncId = existing.syncId,
                 status = resolvedStatus.name,
-                debtType = debtor.debtType.name,
-                affectsBalance = debtor.affectsBalance,
-                note = debtor.note,
-                dateGiven = debtor.dateGiven,
-                dateDue = debtor.dateDue,
-                loanCategory = debtor.loanCategory.name,
-                interestRateBps = debtor.interestRateBps,
-                calendarEventId = debtor.calendarEventId,
-                calendarSyncFailed = debtor.calendarSyncFailed,
             )
             debtorDao.update(updated)
 
             if (previousAffectsBalance && !debtor.affectsBalance) {
-                removeCreationOperations(debtor.id)
+                removeAllLinkedOperations(debtor.id)
             } else if (!previousAffectsBalance && debtor.affectsBalance) {
-                recordCreationOperation(debtor.copy(status = resolvedStatus), syncAt)
+                recordCreationOperation(debtor.copy(id = debtor.id, status = resolvedStatus), syncAt)
             } else if (debtor.affectsBalance) {
                 syncCreationOperation(debtor, syncAt)
             }
@@ -217,7 +205,13 @@ class DebtorRepositoryImpl(
     }
 
     private suspend fun recordCreationOperation(debtor: com.example.money.domain.model.Debtor, at: Long) {
-        val amount = MoneyMath.fromCents(debtor.targetAmountCents)
+        val bookedCents = if (debtor.currentAmountCents > 0L) {
+            debtor.remainingAmountCents
+        } else {
+            debtor.targetAmountCents
+        }
+        if (bookedCents <= 0L) return
+        val amount = MoneyMath.fromCents(bookedCents)
         when (debtor.debtType) {
             DebtType.CREDITOR -> {
                 val id = expenseDao.insert(

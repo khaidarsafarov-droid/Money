@@ -162,16 +162,15 @@ class MoneyPreferencesStore(
                 activeItems = decodeActiveItems(prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON]),
                 globalBalance = prefs[MoneyPreferenceKeys.GLOBAL_BALANCE] ?: 0.0,
                 availableBalance = prefs[MoneyPreferenceKeys.AVAILABLE_BALANCE]
+                    ?: prefs[MoneyPreferenceKeys.GLOBAL_BALANCE]
                     ?: run {
                         val deposits = prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] ?: 0.0
-                        val goalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED]
-                            ?: prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0
+                        val goalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED] ?: 0.0
                         val expenses = prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] ?: 0.0
                         deposits - goalAllocated - expenses
                     },
                 totalDeposits = prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] ?: 0.0,
-                totalGoalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED]
-                    ?: prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0,
+                totalGoalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED] ?: 0.0,
                 totalExpenses = prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] ?: 0.0,
                 totalAccumulated = prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0,
                 totalRemainingToGoal = prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] ?: 0.0,

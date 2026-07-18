@@ -217,7 +217,8 @@ class DebtorsViewModel(
             filtered.filter { debtor ->
                 debtor.name.contains(query, ignoreCase = true) ||
                     debtor.note.contains(query, ignoreCase = true) ||
-                    debtor.phone.contains(query, ignoreCase = true)
+                    debtor.phone.contains(query, ignoreCase = true) ||
+                    debtor.email.contains(query, ignoreCase = true)
             }
         }
         DebtorSort.sort(searched, now)

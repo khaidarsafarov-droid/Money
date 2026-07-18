@@ -25,7 +25,7 @@ import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalProgress
-import com.example.money.ui.components.DebtorListItem
+import com.example.money.ui.debtors.DebtContactActions
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
@@ -121,6 +121,18 @@ fun HomeDetailPane(
                     onEdit = { onEditDebtor(selection.debtor) },
                     onDelete = { onDeleteDebtor(selection.debtor) },
                     hideAmounts = hideAmounts,
+                    onCall = selection.debtor.phone.takeIf { it.isNotBlank() }?.let {
+                        { DebtContactActions.dialPhone(context, selection.debtor.phone) }
+                    },
+                    onWhatsApp = selection.debtor.phone.takeIf { it.isNotBlank() }?.let {
+                        {
+                            DebtContactActions.openWhatsApp(
+                                context,
+                                selection.debtor.phone,
+                                selection.debtor.name,
+                            )
+                        }
+                    },
                 )
             }
             is HomeListSelection.TransferItem -> {
