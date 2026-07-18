@@ -7,13 +7,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.money.MoneyApplication
 import com.example.money.settings.UserProfile
 import com.example.money.ui.goal.GoalScreen
@@ -39,6 +39,7 @@ fun MoneyNavHost(
     val context = LocalContext.current
     val app = context.applicationContext as MoneyApplication
     val scope = rememberCoroutineScope()
+    val navController = rememberNavController()
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(
         initialValue = UserProfile(),
     )
@@ -85,56 +86,64 @@ fun MoneyNavHost(
         }
     }
 
-    var showVoiceSettings by remember { mutableStateOf(false) }
-    var showAppLanguage by remember { mutableStateOf(false) }
-    var showPrivacySettings by remember { mutableStateOf(false) }
-    var showAutopilotSettings by remember { mutableStateOf(false) }
-    var showCalendarSettings by remember { mutableStateOf(false) }
-    var showDebtNotificationSettings by remember { mutableStateOf(false) }
-    var showGoalHub by remember { mutableStateOf(false) }
+    if (!userProfile.onboardingCompleted) {
+        OnboardingScreen(onComplete = { }, modifier = modifier)
+        return
+    }
 
-    when {
-        !userProfile.onboardingCompleted -> OnboardingScreen(
-            onComplete = { },
-            modifier = modifier,
-        )
-        showGoalHub -> GoalScreen(onBack = { showGoalHub = false }, modifier = modifier)
-        showAppLanguage -> AppLanguageScreen(onBack = { showAppLanguage = false }, modifier = modifier)
-        showPrivacySettings -> PrivacySettingsScreen(onBack = { showPrivacySettings = false }, modifier = modifier)
-        showAutopilotSettings -> AutopilotSettingsScreen(onBack = { showAutopilotSettings = false }, modifier = modifier)
-        showCalendarSettings -> CalendarSettingsScreen(
-            onBack = { showCalendarSettings = false },
-            onRequestPermission = {
-                calendarPermissionLauncher.launch(
-                    arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR),
-                )
-            },
-            modifier = modifier,
-        )
-        showDebtNotificationSettings -> DebtNotificationSettingsScreen(
-            onBack = { showDebtNotificationSettings = false },
-            modifier = modifier,
-        )
-        showVoiceSettings -> VoiceSettingsScreen(onBack = { showVoiceSettings = false }, modifier = modifier)
-        else -> HomeScreen(
-            launchConfig = launchConfig,
-            notificationsEnabled = notificationsEnabled,
-            onRequestNotificationPermission = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    onRequestNotificationPermission()
-                }
-            },
-            onLaunchConfigConsumed = onLaunchConfigConsumed,
-            onOpenVoiceSettings = { showVoiceSettings = true },
-            onOpenAppLanguage = { showAppLanguage = true },
-            onOpenPrivacySettings = { showPrivacySettings = true },
-            onOpenAutopilotSettings = { showAutopilotSettings = true },
-            onOpenCalendarSettings = { showCalendarSettings = true },
-            onOpenDebtNotificationSettings = { showDebtNotificationSettings = true },
-            onOpenGoalHub = { showGoalHub = true },
-            modifier = modifier,
-        )
+    NavHost(
+        navController = navController,
+        startDestination = AppRoutes.HOME,
+        modifier = modifier,
+    ) {
+        composable(AppRoutes.HOME) {
+            HomeScreen(
+                launchConfig = launchConfig,
+                notificationsEnabled = notificationsEnabled,
+                onRequestNotificationPermission = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        onRequestNotificationPermission()
+                    }
+                },
+                onLaunchConfigConsumed = onLaunchConfigConsumed,
+                onOpenVoiceSettings = { navController.navigate(AppRoutes.VOICE_SETTINGS) },
+                onOpenAppLanguage = { navController.navigate(AppRoutes.APP_LANGUAGE) },
+                onOpenPrivacySettings = { navController.navigate(AppRoutes.PRIVACY_SETTINGS) },
+                onOpenAutopilotSettings = { navController.navigate(AppRoutes.AUTOPILOT_SETTINGS) },
+                onOpenCalendarSettings = { navController.navigate(AppRoutes.CALENDAR_SETTINGS) },
+                onOpenDebtNotificationSettings = { navController.navigate(AppRoutes.DEBT_NOTIFICATION_SETTINGS) },
+                onOpenGoalHub = { navController.navigate(AppRoutes.GOAL_HUB) },
+            )
+        }
+        composable(AppRoutes.GOAL_HUB) {
+            GoalScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.APP_LANGUAGE) {
+            AppLanguageScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.PRIVACY_SETTINGS) {
+            PrivacySettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.AUTOPILOT_SETTINGS) {
+            AutopilotSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.CALENDAR_SETTINGS) {
+            CalendarSettingsScreen(
+                onBack = { navController.popBackStack() },
+                onRequestPermission = {
+                    calendarPermissionLauncher.launch(
+                        arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR),
+                    )
+                },
+            )
+        }
+        composable(AppRoutes.DEBT_NOTIFICATION_SETTINGS) {
+            DebtNotificationSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.VOICE_SETTINGS) {
+            VoiceSettingsScreen(onBack = { navController.popBackStack() })
+        }
     }
 }

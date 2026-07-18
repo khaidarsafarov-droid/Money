@@ -19,6 +19,9 @@ import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtOperationLabels
 import com.example.money.domain.util.MoneyMath
+import com.example.money.ui.debtors.DebtTab
+import com.example.money.ui.debtors.DebtorFilter
+import com.example.money.ui.debtors.DebtorSort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -36,6 +39,33 @@ class DebtorRepositoryImpl(
 
     override fun getActiveDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
         debtorDao.getActiveDebtorsWithPayments().map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeFilteredDebtors(
+        tab: DebtTab,
+        filter: DebtorFilter,
+        searchQuery: String,
+        now: Long,
+    ): Flow<List<com.example.money.domain.model.Debtor>> {
+        if (tab == DebtTab.Freedom || tab == DebtTab.Calendar) {
+            return kotlinx.coroutines.flow.flowOf(emptyList())
+        }
+        val debtType = when (tab) {
+            DebtTab.OwesMe -> DebtType.CREDITOR
+            DebtTab.IOwe -> DebtType.DEBTOR
+            DebtTab.Freedom, DebtTab.Calendar -> DebtType.DEBTOR
+        }
+        val searchPattern = searchQuery.trim().let { query ->
+            if (query.isBlank()) "%" else "%$query%"
+        }
+        return debtorDao.observeFilteredWithPayments(
+            debtType = debtType.name,
+            filter = filter.name,
+            searchPattern = searchPattern,
+            overdueBefore = now,
+        ).map { rows ->
+            DebtorSort.sort(rows.map { it.toDomain() }, now)
+        }
+    }
 
     override suspend fun addDebtor(debtor: com.example.money.domain.model.Debtor): Long {
         val syncAt = System.currentTimeMillis()

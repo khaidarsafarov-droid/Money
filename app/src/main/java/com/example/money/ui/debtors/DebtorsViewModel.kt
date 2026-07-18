@@ -11,7 +11,6 @@ import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtAutopilotEngine
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.DebtGamificationEngine
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.MoneyMath
@@ -45,15 +44,6 @@ class DebtorsViewModel(
     private val debtCalendarSyncService: DebtCalendarSyncService,
     private val personalDebtMessageScheduler: PersonalDebtMessageScheduler? = null,
 ) : ViewModel() {
-
-    private val _debtTab = MutableStateFlow(DebtTab.OwesMe)
-    val debtTab: StateFlow<DebtTab> = _debtTab.asStateFlow()
-
-    private val _filter = MutableStateFlow(DebtorFilter.ALL)
-    val filter: StateFlow<DebtorFilter> = _filter.asStateFlow()
-
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     private val _advisorMessages = MutableStateFlow<List<AdvisorChatMessage>>(emptyList())
     val advisorMessages: StateFlow<List<AdvisorChatMessage>> = _advisorMessages.asStateFlow()
@@ -195,24 +185,6 @@ class DebtorsViewModel(
         }
     }
 
-    val debtors: StateFlow<List<Debtor>> = combine(
-        allDebtors,
-        _debtTab,
-        _filter,
-        _searchQuery,
-    ) { debtors, tab, filter, searchQuery ->
-        DebtorListFilter.apply(
-            debtors = debtors,
-            tab = tab,
-            filter = filter,
-            searchQuery = searchQuery,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = emptyList(),
-    )
-
     val debtMetrics: StateFlow<DashboardDebtMetrics> = allDebtors
         .mapMetrics()
         .stateIn(
@@ -221,52 +193,11 @@ class DebtorsViewModel(
             initialValue = DashboardDebtMetrics(0, 0, 0, 0),
         )
 
-    private val _extraMonthlyCents = MutableStateFlow(0L)
-    val extraMonthlyCents: StateFlow<Long> = _extraMonthlyCents.asStateFlow()
-
-    val freedomProjection: StateFlow<DebtFreedomEngine.FreedomProjection> = combine(
-        allDebtors,
-        _extraMonthlyCents,
-    ) { debtors, extra ->
-        DebtFreedomEngine.calculateFreedomProjection(
-            debts = debtors,
-            debtType = DebtType.DEBTOR,
-            extraMonthlyCents = extra,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = DebtFreedomEngine.FreedomProjection(
-            freedomDateMillis = null,
-            monthsRemaining = null,
-            totalRemainingCents = 0L,
-            monthlyPaymentCents = 0L,
-            monthsSavedWithExtra = null,
-            hasActiveDebts = false,
-        ),
-    )
-
     init {
         viewModelScope.launch {
             val json = preferencesStore.advisorHistoryJson.first()
             _advisorMessages.value = decodeAdvisorMessages(json)
         }
-    }
-
-    fun setExtraMonthlyCents(cents: Long) {
-        _extraMonthlyCents.value = cents.coerceAtLeast(0L)
-    }
-
-    fun setDebtTab(tab: DebtTab) {
-        _debtTab.value = tab
-    }
-
-    fun setFilter(filter: DebtorFilter) {
-        _filter.value = filter
-    }
-
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
     }
 
     fun askAdvisor(promptId: String) {

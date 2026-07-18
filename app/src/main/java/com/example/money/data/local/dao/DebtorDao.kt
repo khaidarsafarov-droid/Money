@@ -36,6 +36,34 @@ interface DebtorDao {
     @Query("SELECT * FROM debtor WHERE sync_id = :syncId LIMIT 1")
     suspend fun getBySyncId(syncId: String): DebtorEntity?
 
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM debtor
+        WHERE debt_type = :debtType
+        AND (
+            :filter = 'ALL'
+            OR (:filter = 'ACTIVE' AND status != 'COMPLETED')
+            OR (:filter = 'PAID' AND status = 'COMPLETED')
+            OR (:filter = 'OVERDUE' AND status != 'COMPLETED' AND date_due < :overdueBefore)
+        )
+        AND (
+            :searchPattern = '%'
+            OR LOWER(name) LIKE LOWER(:searchPattern)
+            OR LOWER(note) LIKE LOWER(:searchPattern)
+            OR phone LIKE :searchPattern
+            OR LOWER(email) LIKE LOWER(:searchPattern)
+        )
+        ORDER BY date_due ASC
+        """,
+    )
+    fun observeFilteredWithPayments(
+        debtType: String,
+        filter: String,
+        searchPattern: String,
+        overdueBefore: Long,
+    ): Flow<List<DebtorWithPayments>>
+
     @Insert
     suspend fun insert(debtor: DebtorEntity): Long
 

@@ -54,7 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
-import com.example.money.data.local.entity.LuckDiaryEntryEntity
+import com.example.money.domain.model.LuckDiaryEntry
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalChallengeEngines
 import com.example.money.domain.util.GoalPsychologyEngines
@@ -79,7 +79,7 @@ fun GoalScreen(
         factory = GoalHubViewModel.Factory(
             app.debtorRepository,
             app.preferencesStore,
-            app.database.luckDiaryDao(),
+            app.luckDiaryRepository,
         ),
     )
 
@@ -737,7 +737,7 @@ private fun DebtPickDialog(
 }
 
 @Composable
-private fun LuckEntryRow(entry: LuckDiaryEntryEntity, onDelete: () -> Unit) {
+private fun LuckEntryRow(entry: LuckDiaryEntry, onDelete: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

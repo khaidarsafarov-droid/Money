@@ -3,16 +3,12 @@ package com.example.money
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import com.example.money.di.AppContainer
 import com.example.money.data.locale.AppLanguageManager
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
-import com.example.money.data.repository.BudgetRepositoryImpl
-import com.example.money.data.repository.DebtorRepositoryImpl
-import com.example.money.data.repository.GoalRepositoryImpl
 import com.example.money.data.sync.DeviceIdProvider
-import com.example.money.data.sync.FinanceSnapshotApplier
-import com.example.money.data.sync.FinanceSnapshotRepositoryImpl
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncService
 import com.example.money.domain.repository.BudgetRepository
@@ -21,9 +17,7 @@ import com.example.money.domain.repository.FinanceSnapshotRepository
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
-import com.example.money.notification.DebtReminderSchedulerImpl
 import com.example.money.notification.PersonalDebtMessageScheduler
-import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.NotificationChannels
 import com.example.money.voice.VoiceReportScheduler
 import com.example.money.autopilot.MicroPaymentScheduler
@@ -54,76 +48,23 @@ class MoneyApplication : Application() {
         SupervisorJob() + Dispatchers.IO + coroutineExceptionHandler,
     )
 
-    val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
+    val container: AppContainer by lazy { AppContainer(this, applicationScope) }
 
-    val deviceIdProvider: DeviceIdProvider by lazy { DeviceIdProvider(this) }
-
-    val syncQueueRecorder: SyncQueueRecorder by lazy {
-        SyncQueueRecorder(
-            syncQueueDao = database.syncQueueDao(),
-            debtorDao = database.debtorDao(),
-            debtPaymentDao = database.debtPaymentDao(),
-        )
-    }
-
-    val preferencesStore: MoneyPreferencesStore by lazy {
-        MoneyPreferencesStore(this, syncQueueRecorder)
-    }
-
-    val financeSnapshotRepository: FinanceSnapshotRepository by lazy {
-        FinanceSnapshotRepositoryImpl(database, preferencesStore, deviceIdProvider)
-    }
-
-    val syncService: SyncService by lazy {
-        SyncService(
-            context = this,
-            deviceIdProvider = deviceIdProvider,
-            financeSnapshotRepository = financeSnapshotRepository,
-            financeSnapshotApplier = FinanceSnapshotApplier(database, preferencesStore),
-            syncQueueDao = database.syncQueueDao(),
-            scope = applicationScope,
-        )
-    }
-
-    val debtorRepository: DebtorRepository by lazy {
-        DebtorRepositoryImpl(
-            database = database,
-            debtorDao = database.debtorDao(),
-            debtPaymentDao = database.debtPaymentDao(),
-            transferDao = database.transferDao(),
-            expenseDao = database.expenseDao(),
-            syncQueueRecorder = syncQueueRecorder,
-        )
-    }
-
-    val budgetRepository: BudgetRepository by lazy {
-        BudgetRepositoryImpl(
-            transferDao = database.transferDao(),
-            expenseDao = database.expenseDao(),
-            savingsGoalDao = database.savingsGoalDao(),
-            syncQueueRecorder = syncQueueRecorder,
-        )
-    }
-
-    val goalRepository: GoalRepository by lazy {
-        GoalRepositoryImpl(
-            savingsGoalDao = database.savingsGoalDao(),
-            transferDao = database.transferDao(),
-            syncQueueRecorder = syncQueueRecorder,
-        )
-    }
-
-    val debtReminderScheduler: DebtReminderScheduler by lazy {
-        DebtReminderSchedulerImpl(this)
-    }
-
-    val debtCalendarSyncService: DebtCalendarSyncService by lazy {
-        DebtCalendarSyncService(this)
-    }
-
-    val personalDebtMessageScheduler: PersonalDebtMessageScheduler by lazy {
-        PersonalDebtMessageSchedulerImpl(this)
-    }
+    val database: AppDatabase get() = container.database
+    val deviceIdProvider: DeviceIdProvider get() = container.deviceIdProvider
+    val syncQueueRecorder: SyncQueueRecorder get() = container.syncQueueRecorder
+    val preferencesStore: MoneyPreferencesStore get() = container.preferencesStore
+    val financeSnapshotRepository: FinanceSnapshotRepository get() = container.financeSnapshotRepository
+    val syncService: SyncService get() = container.syncService
+    val debtorRepository: DebtorRepository get() = container.debtorRepository
+    val budgetRepository: BudgetRepository get() = container.budgetRepository
+    val goalRepository: GoalRepository get() = container.goalRepository
+    val luckDiaryRepository: com.example.money.domain.repository.LuckDiaryRepository
+        get() = container.luckDiaryRepository
+    val debtReminderScheduler: DebtReminderScheduler get() = container.debtReminderScheduler
+    val debtCalendarSyncService: DebtCalendarSyncService get() = container.debtCalendarSyncService
+    val personalDebtMessageScheduler: PersonalDebtMessageScheduler
+        get() = container.personalDebtMessageScheduler
 
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
         WidgetGoalRepository(this)

@@ -8,7 +8,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -93,7 +92,6 @@ import com.example.money.ui.budget.BudgetViewModel
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.ConfirmDeleteDialog
-import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.SyncStatusIndicator
@@ -101,29 +99,20 @@ import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.debtors.DebtMessageChannelSheet
-import com.example.money.ui.debtors.DebtTab
-import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.ContactDebtHistorySheet
+import com.example.money.ui.debtors.DebtAdvisorBottomSheet
+import com.example.money.ui.debtors.DebtCelebrationDialog
+import com.example.money.ui.debtors.DebtListViewModel
+import com.example.money.ui.debtors.DebtMessageChannelSheet
+import com.example.money.ui.debtors.DebtPaymentDialog
+import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
-import com.example.money.ui.debtors.DebtAdvisorBottomSheet
-import com.example.money.ui.debtors.DebtFreedomTab
-import com.example.money.ui.debtors.DebtCalendarTab
-import com.example.money.ui.debtors.DebtCelebrationDialog
-import com.example.money.ui.debtors.DebtCheckInSheet
-import com.example.money.ui.debtors.DebtOverviewCard
-import com.example.money.ui.debtors.GamificationBanner
+import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.debtors.IncomeIdeasDialog
-import com.example.money.settings.UserProfile
-import com.example.money.ui.debtors.DebtPaymentDialog
-import com.example.money.ui.debtors.DebtorFilterRow
-import com.example.money.ui.debtors.DebtSearchField
-import com.example.money.ui.debtors.DebtContactActions
 import com.example.money.ui.goal.GoalFormDialog
 import com.example.money.ui.goal.GoalViewModel
+import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.StatusActiveBg
@@ -167,6 +156,9 @@ fun HomeScreen(
     val budgetViewModel: BudgetViewModel = viewModel(
         factory = BudgetViewModel.Factory(app.budgetRepository),
     )
+    val debtListViewModel: DebtListViewModel = viewModel(
+        factory = DebtListViewModel.Factory(app.debtorRepository),
+    )
     val debtorsViewModel: DebtorsViewModel = viewModel(
         factory = DebtorsViewModel.Factory(
             app.debtorRepository,
@@ -179,14 +171,14 @@ fun HomeScreen(
 
     val goals by goalViewModel.goals.collectAsStateWithLifecycle()
     val allDebtors by debtorsViewModel.allDebtorsList.collectAsStateWithLifecycle()
-    val debtors by debtorsViewModel.debtors.collectAsStateWithLifecycle()
-    val debtTab by debtorsViewModel.debtTab.collectAsStateWithLifecycle()
+    val debtors by debtListViewModel.debtors.collectAsStateWithLifecycle()
+    val debtTab by debtListViewModel.debtTab.collectAsStateWithLifecycle()
     val canAddDebtor = debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe
-    val debtorFilter by debtorsViewModel.filter.collectAsStateWithLifecycle()
-    val debtSearchQuery by debtorsViewModel.searchQuery.collectAsStateWithLifecycle()
+    val debtorFilter by debtListViewModel.filter.collectAsStateWithLifecycle()
+    val debtSearchQuery by debtListViewModel.searchQuery.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
-    val freedomProjection by debtorsViewModel.freedomProjection.collectAsStateWithLifecycle()
-    val extraMonthlyCents by debtorsViewModel.extraMonthlyCents.collectAsStateWithLifecycle()
+    val freedomProjection by debtListViewModel.freedomProjection.collectAsStateWithLifecycle()
+    val extraMonthlyCents by debtListViewModel.extraMonthlyCents.collectAsStateWithLifecycle()
     val privacySettings by debtorsViewModel.privacySettings.collectAsStateWithLifecycle()
     val gamificationState by debtorsViewModel.gamificationState.collectAsStateWithLifecycle()
     val autopilotSettings by debtorsViewModel.autopilotSettings.collectAsStateWithLifecycle()
@@ -268,7 +260,7 @@ fun HomeScreen(
             HomeTab.Debts -> HomeSection.Debts
             HomeTab.BrotherFinances -> HomeSection.Operations
         }
-        debtorsViewModel.setDebtTab(launchConfig.initialDebtTab)
+        debtListViewModel.setDebtTab(launchConfig.initialDebtTab)
 
         if (launchConfig.openExpenseDialog) {
             showExpenseDialog = true
@@ -280,10 +272,10 @@ fun HomeScreen(
         val targetDebtorId = launchConfig.openDebtPaymentForDebtorId
             ?: launchConfig.highlightDebtorId
         if (targetDebtorId != null) {
-            debtorsViewModel.setFilter(DebtorFilter.ALL)
+            debtListViewModel.setFilter(DebtorFilter.ALL)
             val debtor = debtorsViewModel.getDebtorById(targetDebtorId)
             if (debtor != null) {
-                debtorsViewModel.setDebtTab(DebtTab.forDebtType(debtor.debtType))
+                debtListViewModel.setDebtTab(DebtTab.forDebtType(debtor.debtType))
                 highlightedDebtorId = targetDebtorId
                 tabletSection = HomeSection.Debts
                 tabletSelection = HomeListSelection.DebtorItem(debtor)
@@ -296,7 +288,7 @@ fun HomeScreen(
         }
 
         if (launchConfig.openWeeklyCheckIn) {
-            debtorsViewModel.setDebtTab(DebtTab.IOwe)
+            debtListViewModel.setDebtTab(DebtTab.IOwe)
             debtorsViewModel.openCheckIn()
         }
 
@@ -688,7 +680,7 @@ fun HomeScreen(
                                 if (canAddDebtor) {
                                     showAddDebtorDialog = true
                                 } else {
-                                    debtorsViewModel.setDebtTab(DebtTab.OwesMe)
+                                    debtListViewModel.setDebtTab(DebtTab.OwesMe)
                                     showAddDebtorDialog = true
                                 }
                             },
@@ -734,7 +726,7 @@ fun HomeScreen(
                                 if (canAddDebtor) {
                                     showAddDebtorDialog = true
                                 } else {
-                                    debtorsViewModel.setDebtTab(DebtTab.OwesMe)
+                                    debtListViewModel.setDebtTab(DebtTab.OwesMe)
                                     showAddDebtorDialog = true
                                 }
                             }
@@ -768,11 +760,11 @@ fun HomeScreen(
                 debtors = debtors,
                 allDebtors = allDebtors,
                 debtTab = debtTab,
-                onDebtTabChange = debtorsViewModel::setDebtTab,
+                onDebtTabChange = debtListViewModel::setDebtTab,
                 debtorFilter = debtorFilter,
-                onDebtorFilterChange = debtorsViewModel::setFilter,
+                onDebtorFilterChange = debtListViewModel::setFilter,
                 debtSearchQuery = debtSearchQuery,
-                onDebtSearchQueryChange = debtorsViewModel::setSearchQuery,
+                onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 transfers = transfers,
                 expenses = expenses,
                 budgetSummary = budgetSummary,
@@ -794,7 +786,7 @@ fun HomeScreen(
                 },
                 freedomProjection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = debtorsViewModel::setExtraMonthlyCents,
+                onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
                 gamificationState = gamificationState,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
@@ -840,11 +832,11 @@ fun HomeScreen(
                 debtors = debtors,
                 allDebtors = allDebtors,
                 debtTab = debtTab,
-                onDebtTabChange = debtorsViewModel::setDebtTab,
+                onDebtTabChange = debtListViewModel::setDebtTab,
                 debtorFilter = debtorFilter,
-                onDebtorFilterChange = debtorsViewModel::setFilter,
+                onDebtorFilterChange = debtListViewModel::setFilter,
                 debtSearchQuery = debtSearchQuery,
-                onDebtSearchQueryChange = debtorsViewModel::setSearchQuery,
+                onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 transfers = transfers,
                 expenses = expenses,
                 budgetSummary = budgetSummary,
@@ -869,7 +861,7 @@ fun HomeScreen(
                 },
                 freedomProjection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = debtorsViewModel::setExtraMonthlyCents,
+                onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onViewContactHistory = { debtor ->
@@ -895,7 +887,7 @@ fun HomeScreen(
                     if (canAddDebtor) {
                         showAddDebtorDialog = true
                     } else {
-                        debtorsViewModel.setDebtTab(DebtTab.OwesMe)
+                        debtListViewModel.setDebtTab(DebtTab.OwesMe)
                         showAddDebtorDialog = true
                     }
                 },
@@ -1359,261 +1351,49 @@ private fun PhoneHomeLayout(
                 }
 
                 when (HomeTab.entries[selectedTab]) {
-                    HomeTab.Debts -> {
-                        item {
-                            DebtTabRow(
-                                selectedTab = debtTab,
-                                onTabSelected = onDebtTabChange,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            )
-                        }
-                        if (debtTab != DebtTab.Freedom && debtTab != DebtTab.Calendar) {
-                            if (debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe) {
-                                item {
-                                    DebtOverviewCard(
-                                        debtors = allDebtors,
-                                        debtType = when (debtTab) {
-                                            DebtTab.OwesMe -> DebtType.CREDITOR
-                                            DebtTab.IOwe -> DebtType.DEBTOR
-                                            else -> DebtType.DEBTOR
-                                        },
-                                        hideAmounts = privacySettings.hideAmounts,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                    )
-                                }
-                            }
-                            if (showCheckIn) {
-                                item {
-                                    DebtCheckInSheet(
-                                        debtors = allDebtors,
-                                        hideAmounts = privacySettings.hideAmounts,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                    )
-                                }
-                                item {
-                                    TextButton(
-                                        onClick = onDismissCheckIn,
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                    ) {
-                                        Text(stringResource(R.string.action_close))
-                                    }
-                                }
-                            }
-                            item {
-                                GamificationBanner(
-                                    state = gamificationState,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                )
-                            }
-                            item {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    androidx.compose.material3.OutlinedButton(
-                                        onClick = onOpenAdvisor,
-                                        modifier = Modifier.weight(1f),
-                                    ) {
-                                        Text(stringResource(R.string.advisor_open))
-                                    }
-                                    if (autopilotSettings.enabled) {
-                                        androidx.compose.material3.Button(
-                                            onClick = onApplyAutopilot,
-                                            modifier = Modifier.weight(1f),
-                                        ) {
-                                            Text(stringResource(R.string.autopilot_apply_now))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (debtTab == DebtTab.Calendar) {
-                            item {
-                                DebtCalendarTab(
-                                    debtors = allDebtors,
-                                    hideAmounts = privacySettings.hideAmounts,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                )
-                            }
-                        } else if (debtTab == DebtTab.Freedom) {
-                            item {
-                                DebtFreedomTab(
-                                    projection = freedomProjection,
-                                    extraMonthlyCents = extraMonthlyCents,
-                                    onExtraMonthlyChange = onExtraMonthlyChange,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                )
-                            }
-                        } else {
-                            item {
-                                DebtorFilterRow(
-                                    selectedFilter = debtorFilter,
-                                    onFilterSelected = onDebtorFilterChange,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                )
-                            }
-                            item {
-                                DebtSearchField(
-                                    query = debtSearchQuery,
-                                    onQueryChange = onDebtSearchQueryChange,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                )
-                            }
-                            if (debtors.isEmpty()) {
-                                item {
-                                    EmptyStateMessage(
-                                        title = emptyDebtorsTitle(debtorFilter),
-                                        hint = emptyDebtorsHint(debtorFilter),
-                                        actionLabel = stringResource(R.string.empty_debtors_action),
-                                        onAction = onAddDebt,
-                                        modifier = Modifier.padding(
-                                            horizontal = MoneySpacing.lg,
-                                            vertical = MoneySpacing.sm,
-                                        ),
-                                    )
-                                }
-                            } else {
-                                items(debtors, key = { "debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
-                                    val isHighlighted = debtor.id == highlightedDebtorId
-                                    val accelerateCents = DebtFreedomEngine.suggestAcceleratePaymentCents(
-                                        remainingCents = debtor.remainingAmountCents,
-                                        targetCents = debtor.targetAmountCents,
-                                        currentCents = debtor.currentAmountCents,
-                                    )
-                                    DebtorListItem(
-                                        debtor = debtor,
-                                        modifier = Modifier
-                                            .padding(horizontal = 16.dp, vertical = 6.dp)
-                                            .then(
-                                                if (isHighlighted) {
-                                                    Modifier.border(2.dp, GoldPrimary, MaterialTheme.shapes.large)
-                                                } else {
-                                                    Modifier
-                                                },
-                                            ),
-                                        onRemind = { onRemindDebtor(debtor) },
-                                        onAddPayment = { onAddDebtPayment(debtor) },
-                                        onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
-                                        onEdit = { onEditDebtor(debtor) },
-                                        onDelete = { onDeleteDebtor(debtor) },
-                                        onViewContactHistory = debtor.contactLookupKey?.let { key ->
-                                            { onViewContactHistory(debtor) }
-                                        },
-                                        onCalendar = {
-                                            if (debtor.calendarEventId.isNullOrBlank()) {
-                                                onSyncCalendar(debtor)
-                                            } else {
-                                                onRemoveCalendar(debtor)
-                                            }
-                                        },
-                                        calendarSynced = !debtor.calendarEventId.isNullOrBlank(),
-                                        hideAmounts = privacySettings.hideAmounts,
-                                        onCall = debtor.phone.takeIf { it.isNotBlank() }?.let {
-                                            { DebtContactActions.dialPhone(contactContext, debtor.phone) }
-                                        },
-                                        onWhatsApp = debtor.phone.takeIf { it.isNotBlank() }?.let {
-                                            {
-                                                DebtContactActions.openWhatsApp(
-                                                    contactContext,
-                                                    debtor.phone,
-                                                    debtor.name,
-                                                )
-                                            }
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    HomeTab.BrotherFinances -> {
-                        if (transfers.isEmpty() && expenses.isEmpty()) {
-                            item {
-                                EmptyStateMessage(
-                                    title = stringResource(R.string.empty_budget),
-                                    hint = stringResource(R.string.empty_budget_hint),
-                                    actionLabel = stringResource(R.string.empty_budget_action),
-                                    onAction = onQuickAdd,
-                                    modifier = Modifier.padding(
-                                        horizontal = MoneySpacing.lg,
-                                        vertical = MoneySpacing.sm,
-                                    ),
-                                )
-                            }
-                        } else {
-                            item {
-                                Text(
-                                    text = stringResource(R.string.operations_section_title),
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                            if (transfers.isNotEmpty()) {
-                                items(transfers, key = { "t-${it.syncId.ifBlank { "id-${it.id}" }}" }) { transfer ->
-                                    val goalName = transfer.goalId?.let { goalId ->
-                                        goals.find { it.id == goalId }?.name
-                                    }
-                                    val operationLabel = if (goalName != null) {
-                                        stringResource(R.string.operation_goal_transfer, goalName)
-                                    } else {
-                                        stringResource(R.string.operation_deposit)
-                                    }
-                                    SwipeToDeleteContainer(
-                                        onDelete = { onDeleteTransfer(transfer) },
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                    ) {
-                                        FinanceListItem(
-                                            title = "+${Formatters.currencyCompact(transfer.amount)}",
-                                            subtitle = buildString {
-                                                append(operationLabel)
-                                                append(" · ")
-                                                append(Formatters.shortDate(transfer.date))
-                                                if (!transfer.isConfirmed) append(" · Ожидает")
-                                            },
-                                            amountColor = FinancePositive,
-                                            isPending = !transfer.isConfirmed,
-                                            onConfirm = if (!transfer.isConfirmed) {
-                                                { onConfirmTransfer(transfer.id) }
-                                            } else {
-                                                null
-                                            },
-                                            onDelete = { onDeleteTransfer(transfer) },
-                                        )
-                                    }
-                                }
-                            }
-                            if (expenses.isNotEmpty()) {
-                                items(expenses, key = { "e-${it.syncId.ifBlank { "id-${it.id}" }}" }) { expense ->
-                                    SwipeToDeleteContainer(
-                                        onDelete = { onDeleteExpense(expense) },
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                                    ) {
-                                        FinanceListItem(
-                                            title = "−${Formatters.currencyCompact(expense.amount)}",
-                                            subtitle = buildString {
-                                                append(stringResource(R.string.operation_expense))
-                                                append(" · ")
-                                                append(expense.category)
-                                                append(" · ")
-                                                append(Formatters.shortDate(expense.date))
-                                                if (!expense.isConfirmed) append(" · Ожидает")
-                                            },
-                                            amountColor = FinanceNegative,
-                                            isPending = !expense.isConfirmed,
-                                            onConfirm = if (!expense.isConfirmed) {
-                                                { onConfirmExpense(expense.id) }
-                                            } else {
-                                                null
-                                            },
-                                            onDelete = { onDeleteExpense(expense) },
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    HomeTab.Debts -> homeDebtsSection(
+                        debtTab = debtTab,
+                        onDebtTabChange = onDebtTabChange,
+                        allDebtors = allDebtors,
+                        debtors = debtors,
+                        debtorFilter = debtorFilter,
+                        onDebtorFilterChange = onDebtorFilterChange,
+                        debtSearchQuery = debtSearchQuery,
+                        onDebtSearchQueryChange = onDebtSearchQueryChange,
+                        freedomProjection = freedomProjection,
+                        extraMonthlyCents = extraMonthlyCents,
+                        onExtraMonthlyChange = onExtraMonthlyChange,
+                        showCheckIn = showCheckIn,
+                        onDismissCheckIn = onDismissCheckIn,
+                        gamificationState = gamificationState,
+                        privacySettings = privacySettings,
+                        autopilotSettings = autopilotSettings,
+                        onOpenAdvisor = onOpenAdvisor,
+                        onApplyAutopilot = onApplyAutopilot,
+                        highlightedDebtorId = highlightedDebtorId,
+                        contactContext = contactContext,
+                        onRemindDebtor = onRemindDebtor,
+                        onAddDebtPayment = onAddDebtPayment,
+                        onAccelerateDebtPayment = onAccelerateDebtPayment,
+                        onEditDebtor = onEditDebtor,
+                        onDeleteDebtor = onDeleteDebtor,
+                        onViewContactHistory = onViewContactHistory,
+                        onSyncCalendar = onSyncCalendar,
+                        onRemoveCalendar = onRemoveCalendar,
+                        onAddDebt = onAddDebt,
+                        emptyDebtorsTitle = emptyDebtorsTitle,
+                        emptyDebtorsHint = emptyDebtorsHint,
+                    )
+                    HomeTab.BrotherFinances -> homeOperationsSection(
+                        transfers = transfers,
+                        expenses = expenses,
+                        goals = goals,
+                        onQuickAdd = onQuickAdd,
+                        onConfirmTransfer = onConfirmTransfer,
+                        onDeleteTransfer = onDeleteTransfer,
+                        onConfirmExpense = onConfirmExpense,
+                        onDeleteExpense = onDeleteExpense,
+                    )
                 }
                 }
             }

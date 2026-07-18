@@ -4,15 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.money.data.datastore.MoneyPreferencesStore
-import com.example.money.data.local.dao.LuckDiaryDao
-import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.model.LuckDiaryEntry
 import com.example.money.domain.repository.DebtorRepository
+import com.example.money.domain.repository.LuckDiaryRepository
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalChallengeEngines
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.AutopilotStrategy
-import com.example.money.settings.FinancialPsychotype
 import com.example.money.settings.GoalPsychologyProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,7 +37,7 @@ data class WeeklyChecklistUiState(
 class GoalHubViewModel(
     private val debtorRepository: DebtorRepository,
     private val preferencesStore: MoneyPreferencesStore,
-    private val luckDiaryDao: LuckDiaryDao,
+    private val luckDiaryRepository: LuckDiaryRepository,
 ) : ViewModel() {
 
     private val _extraMonthlyCents = MutableStateFlow(0L)
@@ -66,7 +65,7 @@ class GoalHubViewModel(
         initialValue = emptyList(),
     )
 
-    val luckEntries: StateFlow<List<LuckDiaryEntryEntity>> = luckDiaryDao.observeAll().stateIn(
+    val luckEntries: StateFlow<List<LuckDiaryEntry>> = luckDiaryRepository.observeEntries().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),
@@ -241,16 +240,16 @@ class GoalHubViewModel(
         }
     }
 
-    fun deleteLuckEntry(entry: LuckDiaryEntryEntity) {
+    fun deleteLuckEntry(entry: LuckDiaryEntry) {
         viewModelScope.launch {
-            luckDiaryDao.delete(entry)
+            luckDiaryRepository.deleteEntry(entry)
         }
     }
 
     fun addLuckEntry(note: String, amountCents: Long?, category: String) {
         viewModelScope.launch {
-            luckDiaryDao.insert(
-                LuckDiaryEntryEntity(
+            luckDiaryRepository.addEntry(
+                LuckDiaryEntry(
                     entryDate = System.currentTimeMillis(),
                     note = note,
                     amountCents = amountCents,
@@ -323,12 +322,12 @@ class GoalHubViewModel(
     class Factory(
         private val debtorRepository: DebtorRepository,
         private val preferencesStore: MoneyPreferencesStore,
-        private val luckDiaryDao: LuckDiaryDao,
+        private val luckDiaryRepository: LuckDiaryRepository,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(GoalHubViewModel::class.java)) {
-                return GoalHubViewModel(debtorRepository, preferencesStore, luckDiaryDao) as T
+                return GoalHubViewModel(debtorRepository, preferencesStore, luckDiaryRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

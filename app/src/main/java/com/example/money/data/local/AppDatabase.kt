@@ -50,7 +50,7 @@ import com.example.money.data.local.migration.MIGRATION_20_21
         LuckDiaryEntryEntity::class,
     ],
     version = 21,
-    exportSchema = false,
+    exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
 
