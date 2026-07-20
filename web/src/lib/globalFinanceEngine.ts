@@ -17,7 +17,7 @@ export function goalAllocatedCents(transactions: Transaction[], goalId: string):
 
 export function computeActiveGoalMetrics(items: FinancialItem[]): ActiveGoalMetrics {
   const activeGoals = items.filter(
-    (item) => item.type === "GOAL" && item.status !== "COMPLETED",
+    (item) => item.type === "GOAL" && !item.deleted && item.status !== "COMPLETED",
   );
 
   return activeGoals.reduce(
@@ -74,7 +74,9 @@ export function enrichGoalItem(item: FinancialItem, transactions: Transaction[])
 export function enrichFinanceState(state: FinanceState): FinanceState {
   return {
     ...state,
-    items: state.items.map((item) => enrichGoalItem(item, state.transactions)),
+    items: state.items.map((item) =>
+      item.deleted ? item : enrichGoalItem(item, state.transactions),
+    ),
   };
 }
 

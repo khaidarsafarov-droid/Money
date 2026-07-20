@@ -96,6 +96,7 @@ class SyncQueueRecorder(
         payloadJson: String,
     ) {
         if (SyncWriteGuard.isRecordingSuppressed) return
+        syncQueueDao.deleteByEntity(entityId, entityType.name)
         syncQueueDao.insert(
             SyncQueueEntity(
                 id = UUID.randomUUID().toString(),

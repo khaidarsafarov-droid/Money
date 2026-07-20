@@ -38,7 +38,7 @@ export function DashboardPage() {
   const psychology = useAppPsychology();
   const { profile: userProfile } = useUserProfile();
   const { showToast } = useToast();
-  const webSync = useWebSync(finance.replaceState);
+  const webSync = useWebSync(finance.replaceState, () => finance.state);
   const [paymentItem, setPaymentItem] = useState<FinancialItem | null>(null);
   const [paymentPrefillCents, setPaymentPrefillCents] = useState(0);
   const [transferGoal, setTransferGoal] = useState<FinancialItem | null>(null);
@@ -154,7 +154,7 @@ export function DashboardPage() {
           lastError={webSync.lastError}
           lastSyncedAt={webSync.lastSyncedAt}
           onSync={() => {
-            void webSync.syncNow(finance.state).then((ok) => {
+            void webSync.syncNow().then((ok) => {
               if (ok) showToast("Данные синхронизированы с телефоном");
             });
           }}

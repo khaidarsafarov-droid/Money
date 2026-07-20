@@ -73,6 +73,25 @@ describe("mergeFinanceSnapshots", () => {
 
     expect(merged.goals[0]?.name).toBe("Active");
   });
+
+  it("applies local tombstone when newer than remote active record", () => {
+    const local = snapshot(deviceA, [goal("1", "Deleted", 300, true)]);
+    const remote = snapshot(deviceB, [goal("1", "Active", 100)]);
+
+    const merged = mergeFinanceSnapshots(local, remote);
+
+    expect(merged.goals).toHaveLength(0);
+  });
+
+  it("keeps record only on remote when local has no tombstone", () => {
+    const local = snapshot(deviceA, []);
+    const remote = snapshot(deviceB, [goal("1", "Remote only", 100)]);
+
+    const merged = mergeFinanceSnapshots(local, remote);
+
+    expect(merged.goals).toHaveLength(1);
+    expect(merged.goals[0]?.name).toBe("Remote only");
+  });
 });
 
 describe("mergeFinanceSnapshotsSymmetric", () => {

@@ -87,6 +87,40 @@ class SyncEngineTest {
     }
 
     @Test
+    fun merge_appliesLocalTombstoneWhenNewerThanRemoteActiveRecord() {
+        val local = snapshot(
+            goals = listOf(
+                goal(id = "goal-1", name = "Deleted", syncUpdatedAt = 300L, deleted = true),
+            ),
+        )
+        val remote = snapshot(
+            deviceId = deviceB,
+            goals = listOf(
+                goal(id = "goal-1", name = "Active", syncUpdatedAt = 100L),
+            ),
+        )
+
+        val merged = SyncEngine.merge(local, remote)
+
+        assertTrue(merged.goals.isEmpty())
+    }
+
+    @Test
+    fun merge_keepsRemoteOnlyRecordWhenLocalHasNoTombstone() {
+        val local = snapshot()
+        val remote = snapshot(
+            deviceId = deviceB,
+            goals = listOf(
+                goal(id = "goal-1", name = "Remote only", syncUpdatedAt = 100L),
+            ),
+        )
+
+        val merged = SyncEngine.merge(local, remote)
+
+        assertEquals("Remote only", merged.goals.single().name)
+    }
+
+    @Test
     fun merge_unionsDistinctTransactionRecords() {
         val local = snapshot(
             transactions = listOf(

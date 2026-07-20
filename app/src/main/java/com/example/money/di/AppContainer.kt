@@ -80,6 +80,7 @@ class AppContainer(
 
     val budgetRepository: BudgetRepository by lazy {
         BudgetRepositoryImpl(
+            database = database,
             transferDao = database.transferDao(),
             expenseDao = database.expenseDao(),
             savingsGoalDao = database.savingsGoalDao(),

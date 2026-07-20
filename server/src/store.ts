@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FinancialState } from "./types.js";
@@ -30,15 +30,70 @@ function ensureDbFile(): void {
 export function readState(): FinancialState {
   ensureDbFile();
   const raw = readFileSync(DB_PATH, "utf8");
-  return JSON.parse(raw) as FinancialState;
+  try {
+    const parsed = JSON.parse(raw) as FinancialState;
+    return validateState(parsed);
+  } catch (error) {
+    if (error instanceof StateValidationError) throw error;
+    throw new StateValidationError("Corrupt database file: invalid JSON");
+  }
 }
 
 export function writeState(state: FinancialState): FinancialState {
+  const validated = validateState(state);
   ensureDbFile();
-  writeFileSync(DB_PATH, JSON.stringify(state, null, 2), "utf8");
-  return state;
+  const tempPath = `${DB_PATH}.tmp`;
+  writeFileSync(tempPath, JSON.stringify(validated, null, 2), "utf8");
+  renameSync(tempPath, DB_PATH);
+  return validated;
 }
 
 export function createId(): string {
   return crypto.randomUUID();
+}
+
+export class StateValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "StateValidationError";
+  }
+}
+
+const ALLOWED_CURRENCIES = new Set(["USD", "EUR", "RUB", "GBP"]);
+
+function validateState(state: unknown): FinancialState {
+  if (!state || typeof state !== "object") {
+    throw new StateValidationError("State must be an object");
+  }
+
+  const candidate = state as FinancialState;
+
+  if (!ALLOWED_CURRENCIES.has(candidate.baseCurrency)) {
+    throw new StateValidationError("Invalid baseCurrency");
+  }
+
+  if (!candidate.exchangeRates || typeof candidate.exchangeRates !== "object") {
+    throw new StateValidationError("exchangeRates must be an object");
+  }
+
+  if (!Array.isArray(candidate.debtors)) {
+    throw new StateValidationError("debtors must be an array");
+  }
+  if (!Array.isArray(candidate.transfers)) {
+    throw new StateValidationError("transfers must be an array");
+  }
+  if (!Array.isArray(candidate.expenses)) {
+    throw new StateValidationError("expenses must be an array");
+  }
+
+  for (const debtor of candidate.debtors) {
+    if (!debtor.id || typeof debtor.name !== "string" || debtor.name.length === 0) {
+      throw new StateValidationError("Invalid debtor record");
+    }
+    if (!debtor.amount || typeof debtor.amount.amount !== "number" || debtor.amount.amount < 0) {
+      throw new StateValidationError("Invalid debtor amount");
+    }
+  }
+
+  return candidate;
 }

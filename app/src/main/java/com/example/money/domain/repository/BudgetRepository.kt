@@ -23,6 +23,10 @@ interface BudgetRepository {
 
     suspend fun addExpense(expense: Expense): Long
 
+    suspend fun addGoalTransferIfAffordable(transfer: Transfer): Boolean
+
+    suspend fun addExpenseIfAffordable(expense: Expense): Boolean
+
     suspend fun confirmTransfer(id: Long)
 
     suspend fun confirmExpense(id: Long)

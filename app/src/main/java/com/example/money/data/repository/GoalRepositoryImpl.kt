@@ -4,8 +4,8 @@ import com.example.money.data.local.dao.SavingsGoalDao
 import com.example.money.data.local.dao.TransferDao
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.mapper.toDomain
-import com.example.money.data.mapper.toEntity
 import com.example.money.data.sync.SyncQueueRecorder
+import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.domain.util.MoneyMath
@@ -39,7 +39,7 @@ class GoalRepositoryImpl(
         targetAmountCents: Long,
         currentAmountCents: Long,
         deadlineMillis: Long?,
-    ): Long {
+    ): Long = SyncWriteGuard.withWriteLock {
         val now = System.currentTimeMillis()
         val id = savingsGoalDao.insert(
             SavingsGoalEntity(
@@ -51,28 +51,32 @@ class GoalRepositoryImpl(
             ),
         )
         savingsGoalDao.getGoalById(id)?.let { syncQueueRecorder.recordGoal(it) }
-        return id
+        id
     }
 
     override suspend fun updateGoal(goal: SavingsGoal) {
-        val now = System.currentTimeMillis()
-        val existing = savingsGoalDao.getGoalById(goal.id) ?: return
-        val entity = existing.copy(
-            name = goal.name.trim(),
-            targetAmountCents = goal.targetAmountCents,
-            currentAmountCents = 0L,
-            currency = goal.currency,
-            deadlineMillis = goal.deadlineMillis,
-            updatedAt = now,
-        )
-        savingsGoalDao.update(entity)
-        syncQueueRecorder.recordGoal(entity)
+        SyncWriteGuard.withWriteLock {
+            val now = System.currentTimeMillis()
+            val existing = savingsGoalDao.getGoalById(goal.id) ?: return@withWriteLock
+            val entity = existing.copy(
+                name = goal.name.trim(),
+                targetAmountCents = goal.targetAmountCents,
+                currentAmountCents = 0L,
+                currency = goal.currency,
+                deadlineMillis = goal.deadlineMillis,
+                updatedAt = now,
+            )
+            savingsGoalDao.update(entity)
+            syncQueueRecorder.recordGoal(entity)
+        }
     }
 
     override suspend fun deleteGoal(goal: SavingsGoal) {
-        val existing = savingsGoalDao.getGoalById(goal.id) ?: return
-        val marked = existing.copy(updatedAt = System.currentTimeMillis())
-        savingsGoalDao.delete(existing)
-        syncQueueRecorder.recordGoal(marked, deleted = true)
+        SyncWriteGuard.withWriteLock {
+            val existing = savingsGoalDao.getGoalById(goal.id) ?: return@withWriteLock
+            val marked = existing.copy(updatedAt = System.currentTimeMillis())
+            savingsGoalDao.delete(existing)
+            syncQueueRecorder.recordGoal(marked, deleted = true)
+        }
     }
 }

@@ -17,17 +17,22 @@ export function progressFraction(item: FinancialItem): number {
   return Math.min(item.amount / item.target, 1);
 }
 
+export function activeItems(items: FinancialItem[]): FinancialItem[] {
+  return items.filter((item) => !item.deleted);
+}
+
 export function filterItems(
   items: FinancialItem[],
   filter: StatusFilter,
 ): FinancialItem[] {
+  const visible = activeItems(items);
   switch (filter) {
     case "active":
-      return items.filter((item) => item.status !== "COMPLETED");
+      return visible.filter((item) => item.status !== "COMPLETED");
     case "completed":
-      return items.filter((item) => item.status === "COMPLETED");
+      return visible.filter((item) => item.status === "COMPLETED");
     default:
-      return items;
+      return visible;
   }
 }
 
@@ -35,13 +40,14 @@ export function filterByType(
   items: FinancialItem[],
   filter: TypeFilter,
 ): FinancialItem[] {
+  const visible = activeItems(items);
   switch (filter) {
     case "goal":
-      return items.filter((item) => item.type === "GOAL");
+      return visible.filter((item) => item.type === "GOAL");
     case "debt":
-      return items.filter((item) => item.type === "DEBT");
+      return visible.filter((item) => item.type === "DEBT");
     default:
-      return items;
+      return visible;
   }
 }
 
@@ -73,10 +79,11 @@ export function sortItems(items: FinancialItem[]): FinancialItem[] {
 
 export function computeDashboardTotals(state: FinanceState): DashboardTotals {
   const enriched = enrichFinanceState(state);
-  const activeItems = enriched.items.filter((item) => item.status !== "COMPLETED");
-  const completedItems = enriched.items.filter((item) => item.status === "COMPLETED");
+  const visibleItems = enriched.items.filter((item) => !item.deleted);
+  const activeItems = visibleItems.filter((item) => item.status !== "COMPLETED");
+  const completedItems = visibleItems.filter((item) => item.status === "COMPLETED");
 
-  const debts = enriched.items.filter((item) => item.type === "DEBT");
+  const debts = visibleItems.filter((item) => item.type === "DEBT");
   const finance = computeGlobalFinanceSummary(enriched);
 
   const totalSavedUsd = finance.totalAccumulatedCents / 100;
@@ -177,5 +184,11 @@ export function addDebt(
 }
 
 export function removeItem(state: FinanceState, id: string): FinanceState {
-  return { ...state, items: state.items.filter((item) => item.id !== id) };
+  const now = new Date().toISOString();
+  return {
+    ...state,
+    items: state.items.map((item) =>
+      item.id === id ? { ...item, deleted: true, updatedAt: now } : item,
+    ),
+  };
 }

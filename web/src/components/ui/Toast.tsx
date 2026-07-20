@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Info, X } from "lucide-react";
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppIcon } from "@/components/ui/SurfaceCard";
 
 type ToastTone = "success" | "info";
@@ -16,16 +16,39 @@ interface ToastContextValue {
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
+const TOAST_DURATION_MS = 3200;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const timersRef = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      for (const timerId of timers.values()) {
+        window.clearTimeout(timerId);
+      }
+      timers.clear();
+    };
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    const timerId = timersRef.current.get(id);
+    if (timerId != null) {
+      window.clearTimeout(timerId);
+      timersRef.current.delete(id);
+    }
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
 
   const showToast = useCallback((text: string, tone: ToastTone = "success") => {
     const id = crypto.randomUUID();
     setToasts((current) => [...current, { id, text, tone }]);
-    window.setTimeout(() => {
+    const timerId = window.setTimeout(() => {
+      timersRef.current.delete(id);
       setToasts((current) => current.filter((toast) => toast.id !== id));
-    }, 3200);
+    }, TOAST_DURATION_MS);
+    timersRef.current.set(id, timerId);
   }, []);
 
   const value = useMemo(() => ({ showToast }), [showToast]);
@@ -56,7 +79,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 className="rounded p-0.5 text-milk-muted hover:text-milk-text"
-                onClick={() => setToasts((current) => current.filter((entry) => entry.id !== toast.id))}
+                onClick={() => dismissToast(toast.id)}
                 aria-label="Закрыть"
               >
                 <AppIcon icon={X} size={12} />

@@ -20,6 +20,7 @@ import io.ktor.server.websocket.WebSockets as ServerWebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,8 +30,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 class SyncService(
     private val context: Context,
@@ -40,7 +39,6 @@ class SyncService(
     private val syncQueueDao: SyncQueueDao,
     private val scope: CoroutineScope,
 ) {
-    private val syncMutex = Mutex()
     private val httpClient = HttpClient(ClientCIO) {
         install(ClientWebSockets)
     }
@@ -51,7 +49,7 @@ class SyncService(
 
     private var localDeviceId: String = ""
     private var localServiceName: String = ""
-    private val discoveredPeers = linkedMapOf<String, NsdPeerDiscovery.PeerEndpoint>()
+    private val discoveredPeers = ConcurrentHashMap<String, NsdPeerDiscovery.PeerEndpoint>()
 
     private val _connectionState = MutableStateFlow(SyncConnectionState())
     val connectionState: StateFlow<SyncConnectionState> = _connectionState.asStateFlow()
@@ -154,7 +152,7 @@ class SyncService(
     }
 
     private suspend fun runInitiatorSession(host: String, port: Int) {
-        syncMutex.withLock {
+        SyncWriteGuard.withWriteLock {
             updateStatus(SyncStatus.Syncing)
             try {
                 httpClient.webSocket(host = host, port = port, path = "/sync") {
@@ -171,7 +169,9 @@ class SyncService(
                             }
                         },
                     )
-                    financeSnapshotApplier.apply(merged)
+                    SyncWriteGuard.runWithoutRecording {
+                        financeSnapshotApplier.apply(merged)
+                    }
                     syncQueueDao.clearAll()
                     markSynced()
                 }
@@ -186,7 +186,7 @@ class SyncService(
         sendText: suspend (String) -> Unit,
         receiveText: suspend () -> String,
     ) {
-        syncMutex.withLock {
+        SyncWriteGuard.withWriteLock {
             updateStatus(SyncStatus.Syncing)
             try {
                 val local = financeSnapshotRepository.buildSnapshot()
@@ -197,7 +197,9 @@ class SyncService(
                     sendText = sendText,
                     receiveText = receiveText,
                 )
-                financeSnapshotApplier.apply(merged)
+                SyncWriteGuard.runWithoutRecording {
+                    financeSnapshotApplier.apply(merged)
+                }
                 syncQueueDao.clearAll()
                 sendText(SyncPeerSession.ACK)
                 markSynced()

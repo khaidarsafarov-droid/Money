@@ -46,6 +46,8 @@ export interface FinancialItem {
   /** ISO date (YYYY-MM-DD) — goal deadline for daily savings hint */
   dateDeadline?: string;
   updatedAt?: string;
+  /** Tombstone for LWW sync — hidden from UI when true */
+  deleted?: boolean;
 }
 
 export interface FinanceState {

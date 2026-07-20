@@ -21,6 +21,18 @@ object AppIntents {
     fun parseLaunchConfig(intent: Intent?): HomeLaunchConfig {
         if (intent == null) return HomeLaunchConfig()
 
+        intent.data?.let { uri ->
+            if (uri.scheme == "money" && uri.host == "debt") {
+                val debtorId = uri.lastPathSegment?.toLongOrNull()
+                if (debtorId != null && debtorId > 0L) {
+                    return HomeLaunchConfig(
+                        initialTab = HomeTab.Debts,
+                        highlightDebtorId = debtorId,
+                    )
+                }
+            }
+        }
+
         return when (intent.getStringExtra(EXTRA_ACTION)) {
             ACTION_ADD_EXPENSE -> HomeLaunchConfig(openExpenseDialog = true)
             ACTION_QUICK_ADD -> HomeLaunchConfig(openQuickAddDialog = true)

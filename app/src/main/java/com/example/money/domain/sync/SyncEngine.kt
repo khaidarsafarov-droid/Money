@@ -48,23 +48,27 @@ object SyncEngine {
         idSelector: (T) -> String,
     ): List<T> where T : LwwRecord {
         val merged = linkedMapOf<String, T>()
-        local.forEach { record ->
-            if (!record.deleted) {
-                merged[idSelector(record)] = record
-            }
-        }
+        val localById = local.associateBy(idSelector)
+        val remoteById = remote.associateBy(idSelector)
+        val allIds = localById.keys + remoteById.keys
 
-        remote.forEach { remoteRecord ->
-            val id = idSelector(remoteRecord)
-            val existing = merged[id]
-            val winner = when {
-                existing == null -> remoteRecord
-                else -> pickLww(existing, remoteRecord)
-            }
-            if (winner.deleted) {
-                merged.remove(id)
-            } else {
-                merged[id] = winner
+        for (id in allIds) {
+            val localRecord = localById[id]
+            val remoteRecord = remoteById[id]
+
+            when {
+                localRecord != null && remoteRecord != null -> {
+                    val winner = pickLww(localRecord, remoteRecord)
+                    if (!winner.deleted) {
+                        merged[id] = winner
+                    }
+                }
+                else -> {
+                    val sole = localRecord ?: remoteRecord
+                    if (sole != null && !sole.deleted) {
+                        merged[id] = sole
+                    }
+                }
             }
         }
 

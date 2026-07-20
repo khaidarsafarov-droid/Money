@@ -4,6 +4,9 @@ import { decodeFinanceSnapshot, encodeFinanceSnapshot } from "./snapshotCodec";
 
 export const SYNC_ACK = "ACK";
 
+const WS_CONNECT_TIMEOUT_MS = 15_000;
+const WS_READ_TIMEOUT_MS = 30_000;
+
 export async function runSyncAsInitiator(
   local: FinanceSnapshot,
   webSocketUrl: string,
@@ -29,7 +32,7 @@ export async function runSyncAsAcceptor(
     const remote = decodeFinanceSnapshot(remoteRaw);
     socket.send(encodeFinanceSnapshot(local));
     const merged = mergeFinanceSnapshotsSymmetric(local, remote);
-    await waitForAck(socket);
+    socket.send(SYNC_ACK);
     return merged;
   } finally {
     socket.close();
@@ -39,18 +42,42 @@ export async function runSyncAsAcceptor(
 function openWebSocket(url: string): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
     const socket = new WebSocket(url);
-    socket.addEventListener("open", () => resolve(socket), { once: true });
-    socket.addEventListener("error", () => reject(new Error("WebSocket connection failed")), {
-      once: true,
-    });
+    const timer = window.setTimeout(() => {
+      socket.close();
+      reject(new Error("WebSocket connection timed out"));
+    }, WS_CONNECT_TIMEOUT_MS);
+
+    socket.addEventListener(
+      "open",
+      () => {
+        window.clearTimeout(timer);
+        resolve(socket);
+      },
+      { once: true },
+    );
+    socket.addEventListener(
+      "error",
+      () => {
+        window.clearTimeout(timer);
+        reject(new Error("WebSocket connection failed"));
+      },
+      { once: true },
+    );
   });
 }
 
 function readTextFrame(socket: WebSocket): Promise<string> {
   return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error("WebSocket read timed out"));
+    }, WS_READ_TIMEOUT_MS);
+
+    const cleanup = () => window.clearTimeout(timer);
+
     socket.addEventListener(
       "message",
       (event) => {
+        cleanup();
         if (typeof event.data === "string") {
           resolve(event.data);
           return;
@@ -59,27 +86,13 @@ function readTextFrame(socket: WebSocket): Promise<string> {
       },
       { once: true },
     );
-    socket.addEventListener("error", () => reject(new Error("WebSocket read failed")), {
-      once: true,
-    });
-  });
-}
-
-function waitForAck(socket: WebSocket): Promise<void> {
-  return new Promise((resolve, reject) => {
     socket.addEventListener(
-      "message",
-      (event) => {
-        if (event.data === SYNC_ACK) {
-          resolve();
-          return;
-        }
-        reject(new Error("Unexpected message while waiting for ACK"));
+      "error",
+      () => {
+        cleanup();
+        reject(new Error("WebSocket read failed"));
       },
       { once: true },
     );
-    socket.addEventListener("error", () => reject(new Error("WebSocket ACK failed")), {
-      once: true,
-    });
   });
 }
