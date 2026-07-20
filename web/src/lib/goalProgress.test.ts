@@ -28,7 +28,7 @@ describe("goalProgress", () => {
   it("calculates daily goal from deadline", () => {
     const withDeadline: FinancialItem = {
       ...goal,
-      dateDeadline: "2026-06-10",
+      dateDeadline: "2026-06-11",
     };
     const daily = dailyGoalCents(withDeadline, new Date("2026-06-01T12:00:00Z").getTime());
     expect(daily).toBe(5000);
