@@ -336,6 +336,7 @@ fun TabletHomeLayout(
                                     projection = freedomProjection,
                                     extraMonthlyCents = extraMonthlyCents,
                                     onExtraMonthlyChange = onExtraMonthlyChange,
+                                    onOpenGoalHub = onOpenGoalHub,
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }

@@ -349,6 +349,10 @@ class DebtorsViewModel(
 
     private suspend fun scheduleDebtReminders(debtor: Debtor) {
         val settings = preferencesStore.personalBranchSettings.first()
+        if (!settings.debtNotificationsEnabled) {
+            debtReminderScheduler.cancel(debtor.id)
+            return
+        }
         debtReminderScheduler.schedule(debtor)
         debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
     }

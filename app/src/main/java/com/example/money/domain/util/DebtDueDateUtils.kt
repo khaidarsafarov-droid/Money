@@ -7,6 +7,17 @@ import java.util.Calendar
  */
 object DebtDueDateUtils {
 
+    fun startOfDayMillis(epochMillis: Long): Long {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = epochMillis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.timeInMillis
+    }
+
     fun endOfDayMillis(epochMillis: Long): Long {
         val calendar = Calendar.getInstance().apply {
             timeInMillis = epochMillis
@@ -17,6 +28,13 @@ object DebtDueDateUtils {
         }
         return calendar.timeInMillis
     }
+
+    /**
+     * Room overdue filter cutoff: debts with `date_due < overdueBefore` are overdue.
+     * Using start-of-today keeps the due day itself active until end-of-day
+     * (matches [isOverdue] when due timestamps fall on the due calendar day).
+     */
+    fun overdueBeforeMillis(now: Long = System.currentTimeMillis()): Long = startOfDayMillis(now)
 
     fun isOverdue(dateDue: Long, now: Long = System.currentTimeMillis()): Boolean =
         now > endOfDayMillis(dateDue)

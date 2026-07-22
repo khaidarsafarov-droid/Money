@@ -29,6 +29,7 @@ class DebtReminderCoordinatorTest {
         )
 
         assertEquals(1, scheduler.scheduleCount)
+        assertEquals(1, scheduler.dueScheduleCount)
         assertEquals(signature, second[1L])
     }
 
@@ -54,6 +55,29 @@ class DebtReminderCoordinatorTest {
         assertEquals(listOf(2L), scheduler.cancelledIds)
     }
 
+    @Test
+    fun sync_disablingNotificationsCancelsDueAndAdvance() {
+        val scheduler = RecordingScheduler()
+        val enabled = PersonalBranchSettings(debtNotificationsEnabled = true)
+        val disabled = PersonalBranchSettings(debtNotificationsEnabled = false)
+        val debtor = sampleDebtor(id = 3L)
+        val previous = DebtReminderCoordinator.syncAdvanceReminders(
+            scheduler = scheduler,
+            settings = enabled,
+            previous = emptyMap(),
+            debtors = listOf(debtor),
+        )
+
+        DebtReminderCoordinator.syncAdvanceReminders(
+            scheduler = scheduler,
+            settings = disabled,
+            previous = previous,
+            debtors = listOf(debtor),
+        )
+
+        assertEquals(listOf(3L), scheduler.cancelledIds)
+    }
+
     private fun sampleDebtor(id: Long): Debtor = Debtor(
         id = id,
         name = "Test",
@@ -66,18 +90,24 @@ class DebtReminderCoordinatorTest {
 
     private class RecordingScheduler : DebtReminderScheduler {
         var scheduleCount = 0
+        var dueScheduleCount = 0
         val cancelledIds = mutableListOf<Long>()
 
-        override fun schedule(debtor: Debtor) = Unit
+        override fun schedule(debtor: Debtor) {
+            dueScheduleCount += 1
+        }
+
         override fun showNow(debtor: Debtor) = false
         override fun snooze(debtor: Debtor, delayMillis: Long) = Unit
-        override fun cancel(debtorId: Long) = Unit
+        override fun cancel(debtorId: Long) {
+            cancelledIds += debtorId
+        }
+
         override fun scheduleDailyFollowUp(debtor: Debtor) = Unit
         override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
             scheduleCount += 1
         }
-        override fun cancelAdvanceReminders(debtorId: Long) {
-            cancelledIds += debtorId
-        }
+
+        override fun cancelAdvanceReminders(debtorId: Long) = Unit
     }
 }

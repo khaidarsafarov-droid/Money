@@ -18,6 +18,7 @@ import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.DebtorRepository
+import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.domain.util.DebtOperationLabels
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.debtors.DebtTab
@@ -62,7 +63,7 @@ class DebtorRepositoryImpl(
             debtType = debtType.name,
             filter = filter.name,
             searchPattern = searchPattern,
-            overdueBefore = now,
+            overdueBefore = DebtDueDateUtils.overdueBeforeMillis(now),
         ).map { rows ->
             DebtorSort.sort(rows.map { it.toDomain() }, now)
         }

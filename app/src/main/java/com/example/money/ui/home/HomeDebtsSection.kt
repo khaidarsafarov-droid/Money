@@ -54,6 +54,7 @@ fun LazyListScope.homeDebtsSection(
     autopilotSettings: AutopilotSettings,
     onOpenAdvisor: () -> Unit,
     onApplyAutopilot: () -> Unit,
+    onOpenGoalHub: () -> Unit = {},
     highlightedDebtorId: Long?,
     contactContext: Context,
     onRemindDebtor: (Debtor) -> Unit,
@@ -145,6 +146,7 @@ fun LazyListScope.homeDebtsSection(
                 projection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = onExtraMonthlyChange,
+                onOpenGoalHub = onOpenGoalHub,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }

@@ -62,6 +62,7 @@ class DebtCalendarSyncService(
                 put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
                 put(CalendarContract.Events.ALL_DAY, 0)
                 put(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CONFIRMED)
+                put(CalendarContract.Events.CUSTOM_APP_PACKAGE, context.packageName)
                 put(CalendarContract.Events.CUSTOM_APP_URI, deepLink)
             }
 

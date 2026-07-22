@@ -181,7 +181,7 @@
     <string name="global_balance_widget_formula_hint">Пополнения %1$s − в цели %2$s − расходы %3$s</string>
     <string name="global_balance_available_hint">Пополнения − в цели (%1$s) − расходы</string>
     <string name="global_balance_goal_allocated_label">В цели</string>
-    <string name="debt_search_hint">Поиск по имени должника</string>
+    <string name="debt_search_hint">Поиск по имени, заметке, телефону или email</string>
     <string name="debt_search_clear">Очистить поиск</string>
     <string name="debt_action_call">Позвонить</string>
     <string name="debt_action_whatsapp">WhatsApp</string>

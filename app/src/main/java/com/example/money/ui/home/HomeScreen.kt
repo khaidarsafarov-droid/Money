@@ -1426,6 +1426,7 @@ private fun PhoneHomeLayout(
                         autopilotSettings = autopilotSettings,
                         onOpenAdvisor = onOpenAdvisor,
                         onApplyAutopilot = onApplyAutopilot,
+                        onOpenGoalHub = onOpenGoalHub,
                         highlightedDebtorId = highlightedDebtorId,
                         contactContext = contactContext,
                         onRemindDebtor = onRemindDebtor,

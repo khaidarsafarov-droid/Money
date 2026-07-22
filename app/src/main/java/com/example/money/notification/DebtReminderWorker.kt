@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.money.MoneyApplication
 import com.example.money.data.mapper.toDomain
+import kotlinx.coroutines.flow.first
 
 class DebtReminderWorker(
     context: Context,
@@ -20,6 +21,12 @@ class DebtReminderWorker(
             ?: return Result.success()
 
         if (debtorEntity.status == "COMPLETED") return Result.success()
+
+        val settings = app.preferencesStore.personalBranchSettings.first()
+        if (!settings.debtNotificationsEnabled) {
+            app.debtReminderScheduler.cancel(debtorId)
+            return Result.success()
+        }
 
         val debtor = debtorEntity.toDomain()
         val now = System.currentTimeMillis()

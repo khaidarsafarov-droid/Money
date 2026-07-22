@@ -51,6 +51,22 @@ class DebtorListFilterTest {
         assertTrue(DebtDueDateUtils.isOverdue(due, DebtDueDateUtils.endOfDayMillis(due) + 1L))
     }
 
+    @Test
+    fun overdueBefore_keepsDueDayOutOfOverdueFilter() {
+        val dueTodayNoon = DebtDueDateUtils.startOfDayMillis(now) + 12L * 60L * 60L * 1000L
+        val overdueBefore = DebtDueDateUtils.overdueBeforeMillis(now)
+        assertTrue(dueTodayNoon >= overdueBefore)
+        assertFalse(DebtDueDateUtils.isOverdue(dueTodayNoon, now))
+    }
+
+    @Test
+    fun overdueBefore_marksPreviousDayAsOverdue() {
+        val dueYesterday = DebtDueDateUtils.startOfDayMillis(now) - 12L * 60L * 60L * 1000L
+        val overdueBefore = DebtDueDateUtils.overdueBeforeMillis(now)
+        assertTrue(dueYesterday < overdueBefore)
+        assertTrue(DebtDueDateUtils.isOverdue(dueYesterday, now))
+    }
+
     private fun debtor(id: Long, due: Long): Debtor = Debtor(
         id = id,
         name = "Person $id",

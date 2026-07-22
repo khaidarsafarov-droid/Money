@@ -117,6 +117,7 @@
     <string name="debt_freedom_extra_amount">+ %1$s к ежемесячному темпу</string>
     <string name="debt_freedom_months_saved">Станете свободны на %1$d мес. раньше</string>
     <string name="debt_freedom_hint">Прогноз по вашим платежам — только на устройстве.</string>
+    <string name="debt_freedom_open_goal_hub">План погашения и советы</string>
     <string name="debt_journey_progress">Вы прошли %1$d%% пути к закрытию</string>
     <string name="debt_next_milestone">До вехи %1$d%%: %2$s</string>
     <string name="debt_small_win_hint">Можно закрыть примерно за %1$d платеж(а)</string>
@@ -547,7 +548,7 @@
     <string name="goal_hub_challenges_title_personal">%1$s, ваши челленджи</string>
 
     <!-- Calendar integration -->
-    <string name="debt_search_hint">Поиск по имени должника</string>
+    <string name="debt_search_hint">Поиск по имени, заметке, телефону или email</string>
     <string name="debt_search_clear">Очистить поиск</string>
     <string name="debt_action_call">Позвонить</string>
     <string name="debt_action_whatsapp">WhatsApp</string>

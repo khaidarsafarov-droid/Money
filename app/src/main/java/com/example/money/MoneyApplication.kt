@@ -140,8 +140,12 @@ class MoneyApplication : Application() {
         applicationScope.launch {
             val settings = preferencesStore.personalBranchSettings.first()
             debtorRepository.getActiveDebtors().first().forEach { debtor ->
-                debtReminderScheduler.schedule(debtor)
-                debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
+                if (!settings.debtNotificationsEnabled) {
+                    debtReminderScheduler.cancel(debtor.id)
+                } else {
+                    debtReminderScheduler.schedule(debtor)
+                    debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
+                }
             }
         }
     }
