@@ -734,7 +734,14 @@ fun HomeScreen(
                         }
                     } else {
                         when (HomeTab.entries[selectedTab]) {
-                            HomeTab.Debts -> showAddDebtorDialog = true
+                            HomeTab.Debts -> {
+                                if (canAddDebtor) {
+                                    showAddDebtorDialog = true
+                                } else {
+                                    debtListViewModel.setDebtTab(DebtTab.OwesMe)
+                                    showAddDebtorDialog = true
+                                }
+                            }
                             HomeTab.BrotherFinances -> showQuickAddDialog = true
                         }
                     }
@@ -812,6 +819,13 @@ fun HomeScreen(
                 },
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
+                onViewContactHistory = { debtor ->
+                    debtor.contactLookupKey?.let { key ->
+                        openContactHistory(key, debtor.name)
+                    }
+                },
+                onSyncCalendar = debtorsViewModel::syncDebtToCalendarManually,
+                onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
                 onDeleteTransfer = { pendingDelete = PendingDelete.TransferItem(it) },
                 onConfirmExpense = budgetViewModel::confirmExpense,

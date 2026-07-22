@@ -350,6 +350,7 @@
     <string name="global_balance_debts_hint">Суммы «Мне должны» и «Я должен» не входят в доступный остаток</string>
     <string name="debt_overview_subtitle">Это ваша отправная точка. Мы всё исправим.</string>
     <string name="debt_overview_count">Активных долгов: %1$d</string>
+    <string name="debt_overview_count_short">%1$d акт.</string>
 
     <!-- Celebration -->
     <string name="celebration_title">Долг закрыт!</string>
@@ -533,6 +534,7 @@
     <string name="calendar_sync_failed">Не удалось добавить событие в календарь. Проверьте настройки.</string>
     <string name="calendar_removed">Событие удалено из календаря</string>
     <string name="calendar_action_add">Добавить в календарь</string>
+    <string name="calendar_action_remove">Удалить из календаря</string>
     <string name="calendar_action_update">Удалить из календаря</string>
     <string name="calendar_close_title">Долг закрыт</string>
     <string name="calendar_close_body">Удалить событие из календаря?</string>

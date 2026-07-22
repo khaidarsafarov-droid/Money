@@ -1,8 +1,10 @@
 package com.example.money.ui.debtors
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -23,12 +25,12 @@ fun DebtTabRow(
     onTabSelected: (DebtTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FlowRow(
+    LazyRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
-        verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        contentPadding = PaddingValues(horizontal = 0.dp),
     ) {
-        DebtTab.entries.forEach { tab ->
+        items(DebtTab.entries) { tab ->
             val selected = selectedTab == tab
             FilterChip(
                 selected = selected,
@@ -63,12 +65,12 @@ fun DebtorFilterRow(
     onFilterSelected: (DebtorFilter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FlowRow(
+    LazyRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
-        verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        contentPadding = PaddingValues(horizontal = 0.dp),
     ) {
-        DebtorFilter.entries.forEach { option ->
+        items(DebtorFilter.entries) { option ->
             val selected = selectedFilter == option
             FilterChip(
                 selected = selected,
@@ -82,6 +84,14 @@ fun DebtorFilterRow(
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = StatusActiveBg,
                     selectedLabelColor = GoldPrimary,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = selected,
+                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    selectedBorderColor = GoldPrimary,
                 ),
                 shape = RoundedCornerShape(20.dp),
             )
