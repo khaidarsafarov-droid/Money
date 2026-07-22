@@ -13,7 +13,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
@@ -25,6 +27,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -95,6 +103,14 @@ fun TabletHomeLayout(
     autopilotSettings: AutopilotSettings = AutopilotSettings(),
     onOpenAdvisor: () -> Unit = {},
     onApplyAutopilot: () -> Unit = {},
+    onOpenGoalHub: () -> Unit = {},
+    onOpenAppLanguage: () -> Unit = {},
+    onOpenPrivacySettings: () -> Unit = {},
+    onOpenAutopilotSettings: () -> Unit = {},
+    onOpenCalendarSettings: () -> Unit = {},
+    onOpenDebtNotificationSettings: () -> Unit = {},
+    onOpenVoiceSettings: () -> Unit = {},
+    onOpenIncomeIdeas: () -> Unit = {},
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onViewContactHistory: (Debtor) -> Unit = {},
@@ -121,6 +137,7 @@ fun TabletHomeLayout(
                 .padding(innerPadding),
         ) {
             NavigationRail(containerColor = CreamBackground) {
+                var showSettingsMenu by remember { mutableStateOf(false) }
                 SyncStatusIndicator(
                     state = syncState,
                     modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
@@ -139,10 +156,86 @@ fun TabletHomeLayout(
                                     HomeSection.Debts -> Icons.Outlined.People
                                     HomeSection.Operations -> Icons.AutoMirrored.Outlined.ListAlt
                                 },
-                                contentDescription = null,
+                                contentDescription = stringResource(item.titleRes),
                             )
                         },
                         label = { Text(stringResource(item.titleRes)) },
+                    )
+                }
+                NavigationRailItem(
+                    selected = false,
+                    onClick = onOpenGoalHub,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Flag,
+                            contentDescription = stringResource(R.string.goal_hub_open),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.goal_hub_open)) },
+                )
+                NavigationRailItem(
+                    selected = false,
+                    onClick = { showSettingsMenu = true },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = stringResource(R.string.settings_open),
+                        )
+                    },
+                    label = { Text(stringResource(R.string.settings_open)) },
+                )
+                DropdownMenu(
+                    expanded = showSettingsMenu,
+                    onDismissRequest = { showSettingsMenu = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.app_language_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenAppLanguage()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.privacy_settings_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenPrivacySettings()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.autopilot_settings_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenAutopilotSettings()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.debt_notification_settings_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenDebtNotificationSettings()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.calendar_settings_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenCalendarSettings()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.voice_settings_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenVoiceSettings()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.income_ideas_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenIncomeIdeas()
+                        },
                     )
                 }
             }
@@ -212,6 +305,23 @@ fun TabletHomeLayout(
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                TextButton(onClick = onOpenAdvisor) {
+                                    Text(stringResource(R.string.advisor_open))
+                                }
+                                if (autopilotSettings.enabled) {
+                                    TextButton(onClick = onApplyAutopilot) {
+                                        Text(stringResource(R.string.autopilot_apply_now))
+                                    }
+                                }
+                            }
+                        }
                         if (debtTab == DebtTab.Calendar) {
                             item {
                                 DebtCalendarTab(
@@ -235,29 +345,6 @@ fun TabletHomeLayout(
                                     state = gamificationState,
                                     modifier = Modifier.padding(vertical = 4.dp),
                                 )
-                            }
-                            item {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    androidx.compose.material3.OutlinedButton(
-                                        onClick = onOpenAdvisor,
-                                        modifier = Modifier.weight(1f),
-                                    ) {
-                                        Text(stringResource(R.string.advisor_open))
-                                    }
-                                    if (autopilotSettings.enabled) {
-                                        androidx.compose.material3.Button(
-                                            onClick = onApplyAutopilot,
-                                            modifier = Modifier.weight(1f),
-                                        ) {
-                                            Text(stringResource(R.string.autopilot_apply_now))
-                                        }
-                                    }
-                                }
                             }
                             item {
                                 DebtorFilterRow(

@@ -63,7 +63,7 @@ fun AppLanguageScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_cancel),
+                            contentDescription = stringResource(R.string.cd_navigate_up),
                         )
                     }
                 },

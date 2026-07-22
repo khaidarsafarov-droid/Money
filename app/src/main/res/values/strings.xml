@@ -43,6 +43,19 @@
     <string name="widget_goal_title">Бюджет цели</string>
     <string name="widget_goal_description">Остаток, цели, долги и быстрое добавление</string>
     <string name="widget_progress_percent">%1$d%% выполнено</string>
+    <string name="gauge_percent_complete">%1$d%% выполнено</string>
+    <string name="operation_pending_suffix"> · Ожидает</string>
+    <string name="calendar_prev_month">Предыдущий месяц</string>
+    <string name="calendar_next_month">Следующий месяц</string>
+    <string name="calendar_weekday_mon">ПН</string>
+    <string name="calendar_weekday_tue">ВТ</string>
+    <string name="calendar_weekday_wed">СР</string>
+    <string name="calendar_weekday_thu">ЧТ</string>
+    <string name="calendar_weekday_fri">ПТ</string>
+    <string name="calendar_weekday_sat">СБ</string>
+    <string name="calendar_weekday_sun">ВС</string>
+    <string name="calendar_day_with_debts">День %1$d, есть долги</string>
+    <string name="calendar_day_empty_cd">День %1$d</string>
     <string name="widget_remaining">Осталось: %1$s из %2$s</string>
     <string name="widget_remaining_empty">Задайте цель в приложении</string>
     <string name="widget_quick_add">Быстрое добавление</string>
@@ -310,12 +323,26 @@
     <string name="msg_payment_neutral">Операция сохранена</string>
 
     <!-- Advisor (Phase 3) -->
-    <string name="advisor_title">Советник по долгам</string>
-    <string name="advisor_hint">Подсказки на основе ваших данных — без интернета и без осуждения.</string>
+    <string name="advisor_title">Финансовый советник</string>
+    <string name="advisor_hint">Локальный консультант по вашим данным — без интернета и без API-ключей.</string>
     <string name="advisor_open">Советник</string>
     <string name="advisor_prompt_first">С чего начать?</string>
     <string name="advisor_prompt_extra">Что если +$50?</string>
     <string name="advisor_prompt_motivation">Мотивация</string>
+    <string name="advisor_prompt_overview">Сводка</string>
+    <string name="advisor_prompt_overdue">Просрочки</string>
+    <string name="advisor_prompt_goals">Цели</string>
+    <string name="advisor_prompt_budget">Бюджет</string>
+    <string name="advisor_prompt_freedom">Свобода</string>
+    <string name="advisor_input_hint">Спросите советника…</string>
+    <string name="advisor_send">Отправить</string>
+    <string name="advisor_clear_history">Очистить историю</string>
+    <string name="cd_open_drawer">Открыть меню</string>
+    <string name="cd_more_options">Ещё</string>
+    <string name="cd_expand_debts">Развернуть долги и операции</string>
+    <string name="cd_collapse_debts">Свернуть долги и операции</string>
+    <string name="cd_navigate_up">Назад</string>
+    <string name="settings_open">Настройки</string>
 
     <!-- Gamification (Phase 4) -->
     <string name="gamification_streak">Серия платежей: %1$d</string>

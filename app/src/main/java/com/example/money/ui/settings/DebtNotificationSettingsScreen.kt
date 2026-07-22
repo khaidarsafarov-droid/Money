@@ -62,7 +62,7 @@ fun DebtNotificationSettingsScreen(
                 title = { Text(stringResource(R.string.debt_notification_settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_navigate_up))
                     }
                 },
             )

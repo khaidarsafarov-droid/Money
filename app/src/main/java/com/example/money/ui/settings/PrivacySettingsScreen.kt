@@ -55,7 +55,7 @@ fun PrivacySettingsScreen(
                 title = { Text(stringResource(R.string.privacy_settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_navigate_up))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),

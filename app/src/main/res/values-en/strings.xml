@@ -44,6 +44,19 @@
     <string name="widget_goal_title">Goal budget</string>
     <string name="widget_goal_description">Balance, goals, debts, and quick add</string>
     <string name="widget_progress_percent">%1$d%% complete</string>
+    <string name="gauge_percent_complete">%1$d%% complete</string>
+    <string name="operation_pending_suffix"> · Pending</string>
+    <string name="calendar_prev_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="calendar_weekday_mon">Mon</string>
+    <string name="calendar_weekday_tue">Tue</string>
+    <string name="calendar_weekday_wed">Wed</string>
+    <string name="calendar_weekday_thu">Thu</string>
+    <string name="calendar_weekday_fri">Fri</string>
+    <string name="calendar_weekday_sat">Sat</string>
+    <string name="calendar_weekday_sun">Sun</string>
+    <string name="calendar_day_with_debts">Day %1$d, has debts</string>
+    <string name="calendar_day_empty_cd">Day %1$d</string>
     <string name="widget_remaining">Remaining: %1$s of %2$s</string>
     <string name="widget_remaining_empty">Set a goal in the app</string>
     <string name="widget_quick_add">Quick add</string>
@@ -309,8 +322,8 @@
     <string name="privacy_hide_widget_hint">Widget shows progress without specific figures</string>
     <string name="msg_payment_neutral">Transaction saved</string>
 
-    <string name="advisor_title">Debt advisor</string>
-    <string name="advisor_hint">Tips based on your data — offline and judgment-free.</string>
+    <string name="advisor_title">Financial advisor</string>
+    <string name="advisor_hint">On-device tips from your data — no internet and no API keys.</string>
     <string name="advisor_open">Advisor</string>
     <string name="debt_overview_count_short">%1$d active</string>
     <string name="calendar_action_add">Add to calendar</string>
@@ -318,6 +331,20 @@
     <string name="advisor_prompt_first">Where to start?</string>
     <string name="advisor_prompt_extra">What if +$50?</string>
     <string name="advisor_prompt_motivation">Motivation</string>
+    <string name="advisor_prompt_overview">Overview</string>
+    <string name="advisor_prompt_overdue">Overdue</string>
+    <string name="advisor_prompt_goals">Goals</string>
+    <string name="advisor_prompt_budget">Budget</string>
+    <string name="advisor_prompt_freedom">Freedom</string>
+    <string name="advisor_input_hint">Ask the advisor…</string>
+    <string name="advisor_send">Send</string>
+    <string name="advisor_clear_history">Clear history</string>
+    <string name="cd_open_drawer">Open menu</string>
+    <string name="cd_more_options">More</string>
+    <string name="cd_expand_debts">Expand debts and operations</string>
+    <string name="cd_collapse_debts">Collapse debts and operations</string>
+    <string name="cd_navigate_up">Back</string>
+    <string name="settings_open">Settings</string>
 
     <string name="gamification_streak">Payment streak: %1$d</string>
 

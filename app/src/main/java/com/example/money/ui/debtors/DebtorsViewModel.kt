@@ -200,12 +200,52 @@ class DebtorsViewModel(
         }
     }
 
-    fun askAdvisor(promptId: String) {
+    fun askAdvisor(
+        promptId: String,
+        rawText: String = "",
+        totalAccumulatedCents: Long = 0L,
+        remainingToGoalCents: Long = 0L,
+        totalDepositsCents: Long = 0L,
+        totalExpensesCents: Long = 0L,
+    ) {
         viewModelScope.launch {
             val debts = allDebtorsList.value
-            val updated = buildAdvisorMessages(promptId, debts, _advisorMessages.value)
+            val updated = buildAdvisorMessages(
+                promptId = promptId,
+                debts = debts,
+                previous = _advisorMessages.value,
+                rawText = rawText,
+                totalAccumulatedCents = totalAccumulatedCents,
+                remainingToGoalCents = remainingToGoalCents,
+                totalDepositsCents = totalDepositsCents,
+                totalExpensesCents = totalExpensesCents,
+            )
             _advisorMessages.value = updated
             preferencesStore.writeAdvisorHistoryJson(encodeAdvisorMessages(updated))
+        }
+    }
+
+    fun askAdvisorFreeText(
+        text: String,
+        totalAccumulatedCents: Long = 0L,
+        remainingToGoalCents: Long = 0L,
+        totalDepositsCents: Long = 0L,
+        totalExpensesCents: Long = 0L,
+    ) {
+        askAdvisor(
+            promptId = "",
+            rawText = text,
+            totalAccumulatedCents = totalAccumulatedCents,
+            remainingToGoalCents = remainingToGoalCents,
+            totalDepositsCents = totalDepositsCents,
+            totalExpensesCents = totalExpensesCents,
+        )
+    }
+
+    fun clearAdvisorHistory() {
+        viewModelScope.launch {
+            _advisorMessages.value = emptyList()
+            preferencesStore.writeAdvisorHistoryJson("[]")
         }
     }
 

@@ -14,9 +14,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.money.R
 import com.example.money.ui.theme.GaugeTrack
 import com.example.money.ui.theme.GoldPrimary
 
@@ -93,7 +95,7 @@ fun GaugeCenterLabel(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "$percent% Выполнено",
+                text = stringResource(R.string.gauge_percent_complete, percent),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

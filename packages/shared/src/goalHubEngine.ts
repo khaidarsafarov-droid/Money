@@ -2,7 +2,6 @@ import { calculateFreedomProjection, type DebtFreedomDebtInput } from "./debtFre
 import { pickTargetDebt, type AutopilotDebtInput, type AutopilotStrategy } from "./debtAutopilot";
 
 const MS_PER_DAY = 86_400_000;
-const MS_PER_MONTH = 30 * MS_PER_DAY;
 
 export interface DebtPayoffItemInput {
   id: string;

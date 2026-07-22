@@ -72,7 +72,7 @@ fun LazyListScope.homeOperationsSection(
                             append(operationLabel)
                             append(" · ")
                             append(Formatters.shortDate(transfer.date))
-                            if (!transfer.isConfirmed) append(" · Ожидает")
+                            if (!transfer.isConfirmed) append(stringResource(R.string.operation_pending_suffix))
                         },
                         amountColor = FinancePositive,
                         isPending = !transfer.isConfirmed,
@@ -100,7 +100,7 @@ fun LazyListScope.homeOperationsSection(
                             append(expense.category)
                             append(" · ")
                             append(Formatters.shortDate(expense.date))
-                            if (!expense.isConfirmed) append(" · Ожидает")
+                            if (!expense.isConfirmed) append(stringResource(R.string.operation_pending_suffix))
                         },
                         amountColor = FinanceNegative,
                         isPending = !expense.isConfirmed,

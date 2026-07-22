@@ -112,10 +112,10 @@ export function DashboardPage() {
       ? Math.min(
           100,
           Math.floor(
-            (activeDebts.reduce((sum, d) => sum + d.currentCents, 0) /
+            (activeDebts.reduce((sum, d) => sum + d.amount, 0) /
               Math.max(
                 1,
-                activeDebts.reduce((sum, d) => sum + d.targetCents, 0),
+                activeDebts.reduce((sum, d) => sum + d.target, 0),
               )) *
               100,
           ),
