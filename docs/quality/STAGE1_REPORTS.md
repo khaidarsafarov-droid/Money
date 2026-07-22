@@ -526,4 +526,533 @@
 6. Calendar `CUSTOM_APP_PACKAGE` + bulk sync on auto-sync enable  
 
 ### Следующие 50 (этап 1 продолжение)
-51–100: глубже Calendar tab E2E, Autopilot, Advisor free-text, tablet/phone parity, markAsPaid list action, restore closed debt.
+51–100: Calendar tab, Autopilot, Advisor, tablet/phone parity, privacy, markAsPaid — см. ниже.
+
+---
+
+# Этап 1 — отчёты 51–100
+
+## Задача №51
+
+Функция: Вкладка «Календарь» — сетка месяца  
+Проблема: Отображение сроков долгов.  
+Тест: `DebtCalendarTab` month nav + day select.  
+Результат: Работает; hideAmounts соблюдается.  
+Решение: OK.  
+Код: `DebtCalendarTab.kt`  
+Статус: ✅ выполнено
+
+## Задача №52
+
+Функция: Календарь — клик по долгу дня  
+Проблема: Строки дня не открывают карточку/оплату.  
+Тест: Static review.  
+Результат: Только текст, без onClick.  
+Решение: Отложено (UX polish).  
+Код: `DebtCalendarTab.kt`  
+Статус: ❌ отложено
+
+## Задача №53
+
+Функция: Calendar Settings — refresh permissions  
+Проблема: После выдачи permission UI оставался «denied» до перезахода.  
+Тест: `hasCalendarPermissions` читался один раз.  
+Результат: Баг.  
+Решение: `ON_RESUME` observer обновляет state.  
+Код: `CalendarSettingsScreen.kt`  
+Статус: ✅ выполнено
+
+## Задача №54
+
+Функция: Autopilot — enable/apply  
+Проблема: Включение и «Применить сейчас».  
+Тест: Settings + Debts CTA gated by `enabled`.  
+Результат: OK.  
+Решение: OK.  
+Код: `AutopilotSettingsViewModel`, `HomeDebtsSection`  
+Статус: ✅ выполнено
+
+## Задача №55
+
+Функция: Autopilot — расписание после reboot  
+Проблема: BootReceiver не синкал MicroPayment / WeeklyCheckIn.  
+Тест: `BootReceiver`.  
+Результат: После reboot напоминания автопилота терялись.  
+Решение: Добавлен sync MicroPayment + WeeklyCheckIn; cold start тоже синкает weekly.  
+Код: `BootReceiver.kt`, `MoneyApplication.kt`  
+Статус: ✅ выполнено
+
+## Задача №56
+
+Функция: Autopilot — UI часа напоминания  
+Проблема: `reminderHour`/`Minute` без UI.  
+Тест: Autopilot settings screen.  
+Результат: Gap.  
+Решение: Отложено.  
+Код: `AutopilotSettings.kt`  
+Статус: ❌ отложено
+
+## Задача №57
+
+Функция: Advisor — free text / prompts / clear  
+Проблема: Локальный советник без API.  
+Тест: `DebtAdvisorBottomSheet` + `LocalFinancialAdvisor`.  
+Результат: OK на всех вкладках долгов.  
+Решение: OK.  
+Код: `DebtAdvisorBottomSheet.kt`  
+Статус: ✅ выполнено
+
+## Задача №58
+
+Функция: markAsPaid из списка  
+Проблема: Только из notification action; VM API с wrong affectsBalance.  
+Тест: Grep UI calls.  
+Результат: Dead/unsafe API.  
+Решение: Menu «Погашено»; `affectsBalance = CREDITOR`; celebration + calendar close.  
+Код: `DebtorListItem.kt`, `DebtorsViewModel.markAsPaid`, Home/Tablet wiring  
+Статус: ✅ выполнено
+
+## Задача №59
+
+Функция: Reopen закрытого долга через edit  
+Проблема: Поднятие target у COMPLETED → ACTIVE, но reminders/calendar не планировались (`updated.isPaid` stale).  
+Тест: `updateDebtor` flow.  
+Результат: Баг.  
+Решение: После update reload `latest` и schedule/cancel по актуальному статусу.  
+Код: `DebtorsViewModel.updateDebtor`  
+Статус: ✅ выполнено
+
+## Задача №60
+
+Функция: Явное «Восстановить долг»  
+Проблема: Нет dedicated reopen UI.  
+Тест: Search restore/reopen.  
+Результат: Gap (edit raise target — workaround).  
+Решение: Отложено.  
+Код: —  
+Статус: ❌ отложено
+
+## Задача №61
+
+Функция: Tablet — weekly check-in  
+Проблема: `DebtCheckInSheet` только на phone.  
+Тест: TabletHomeLayout.  
+Результат: Missing.  
+Решение: showCheckIn/onDismissCheckIn на tablet.  
+Код: `TabletHomeLayout.kt`, `HomeScreen.kt`  
+Статус: ✅ выполнено
+
+## Задача №62
+
+Функция: Tablet — empty debts CTA  
+Проблема: EmptyState без action.  
+Тест: Tablet debts empty.  
+Результат: Нет кнопки добавить.  
+Решение: actionLabel + onAddDebt.  
+Код: `TabletHomeLayout.kt`  
+Статус: ✅ выполнено
+
+## Задача №63
+
+Функция: Privacy — Freedom tab amounts  
+Проблема: `hideAmounts` игнорировался.  
+Тест: `DebtFreedomTab` Formatters.  
+Результат: Leak.  
+Решение: `hideAmounts` param + wiring.  
+Код: `DebtFreedomTab.kt`  
+Статус: ✅ выполнено
+
+## Задача №64
+
+Функция: Privacy — GlobalBalanceHeader  
+Проблема: Dashboard metrics не маскировались.  
+Тест: BrotherFinances / phone home.  
+Результат: Leak.  
+Решение: hideAmounts на header.  
+Код: `BrotherFinancesTab.kt`  
+Статус: ✅ выполнено
+
+## Задача №65
+
+Функция: Privacy — GoalListItem  
+Проблема: Суммы целей всегда видны.  
+Тест: Goal list.  
+Результат: Leak.  
+Решение: hideAmounts param.  
+Код: `GoalListItem.kt`  
+Статус: ✅ выполнено
+
+## Задача №66
+
+Функция: Privacy — DebtPaymentDialog  
+Проблема: Remaining/balance не маскировались.  
+Тест: Payment dialog.  
+Результат: Leak.  
+Решение: hideAmounts.  
+Код: `DebtPaymentDialog.kt`  
+Статус: ✅ выполнено
+
+## Задача №67
+
+Функция: Payment — insufficient funds  
+Проблема: DEBTOR + affectsBalance не блокировал оплату > availableBalance.  
+Тест: Dialog confirm.  
+Результат: Баг.  
+Решение: `msg_insufficient_funds` guard.  
+Код: `DebtPaymentDialog.kt`  
+Статус: ✅ выполнено
+
+## Задача №68
+
+Функция: FAB на Freedom/Calendar  
+Проблема: FAB тихо переключал на OwesMe.  
+Тест: HomeScreen FAB.  
+Результат: Surprising UX.  
+Решение: FAB скрыт на Freedom/Calendar; add только на OwesMe/IOwe.  
+Код: `HomeScreen.kt`  
+Статус: ✅ выполнено
+
+## Задача №69
+
+Функция: Deep link money://debt/{id}  
+Проблема: Highlight + tab routing.  
+Тест: `AppIntents` + HomeScreen.  
+Результат: OK (payment URI отдельный intent).  
+Решение: OK.  
+Код: `AppIntents.kt`  
+Статус: ✅ выполнено
+
+## Задача №70
+
+Функция: Weekly check-in schedule  
+Проблема: Не синкался на cold start/boot.  
+Тест: Schedulers.  
+Результат: Только при toggle.  
+Решение: Sync on boot + Application.onCreate.  
+Код: `BootReceiver`, `MoneyApplication`  
+Статус: ✅ выполнено
+
+## Задача №71
+
+Функция: Debt list swipe-to-delete  
+Проблема: Нет swipe на долгах (только menu).  
+Тест: HomeDebtsSection.  
+Результат: By design / gap.  
+Решение: Отложено (меню + confirm достаточно).  
+Код: —  
+Статус: ❌ отложено
+
+## Задача №72
+
+Функция: Contact actions Call/WhatsApp  
+Проблема: Из menu при наличии phone.  
+Тест: DebtorListItem.  
+Результат: OK.  
+Решение: OK.  
+Код: `DebtorListItem.kt`  
+Статус: ✅ выполнено
+
+## Задача №73
+
+Функция: Remind from list (CREDITOR)  
+Проблема: Show notification now.  
+Тест: scheduleReminder/showNow.  
+Результат: OK.  
+Решение: OK.  
+Код: `DebtorsViewModel.scheduleReminder`  
+Статус: ✅ выполнено
+
+## Задача №74
+
+Функция: Calendar add/remove from debt card  
+Проблема: Manual sync.  
+Тест: Menu calendar actions.  
+Результат: OK.  
+Решение: OK.  
+Код: `DebtorsViewModel.syncDebtToCalendarManually`  
+Статус: ✅ выполнено
+
+## Задача №75
+
+Функция: App language RU/EN  
+Проблема: Locale switch.  
+Тест: AppLanguage settings + recreate.  
+Результат: Resource strings OK; часть engine copy ещё RU-hardcoded.  
+Решение: Switch OK; hardcode i18n — частично отложено.  
+Код: `AppLanguageManager`  
+Статус: ✅ выполнено
+
+## Задача №76
+
+Функция: Hardcoded RU gamification/calendar titles  
+Проблема: EN locale ignores badge/calendar event strings.  
+Тест: `DebtPsychologyEngines`, `DebtCalendarText`.  
+Результат: Gap.  
+Решение: Отложено (большой string extract).  
+Код: —  
+Статус: ❌ отложено
+
+## Задача №77
+
+Функция: Gamification banner  
+Проблема: После платежа.  
+Тест: OwesMe/IOwe.  
+Результат: OK; скрыт на Freedom/Calendar.  
+Решение: OK.  
+Код: `GamificationBanner`  
+Статус: ✅ выполнено
+
+## Задача №78
+
+Функция: Income Ideas dialog  
+Проблема: Открытие + hideAmounts calculator.  
+Тест: Settings menu.  
+Результат: OK; titles RU-hardcoded.  
+Решение: Core OK.  
+Код: `IncomeIdeasDialog.kt`  
+Статус: ✅ выполнено
+
+## Задача №79
+
+Функция: Payment dialog max remaining  
+Проблема: Кнопка max.  
+Тест: DebtPaymentDialog.  
+Результат: OK.  
+Решение: OK.  
+Код: `DebtPaymentDialog.kt`  
+Статус: ✅ выполнено
+
+## Задача №80
+
+Функция: Accelerate payment prefill  
+Проблема: Menu accelerate → dialog prefill.  
+Тест: DebtFreedomEngine.suggestAcceleratePaymentCents.  
+Результат: OK.  
+Решение: OK.  
+Код: HomeDebtsSection / HomeDetailPane  
+Статус: ✅ выполнено
+
+## Задача №81
+
+Функция: Tablet detail pane debt actions  
+Проблема: Parity remind/pay/calendar/call.  
+Тест: HomeDetailPane DebtorItem.  
+Результат: OK + mark paid.  
+Решение: OK.  
+Код: `HomeDetailPane.kt`  
+Статус: ✅ выполнено
+
+## Задача №82
+
+Функция: Advisor на Freedom/Calendar  
+Проблема: Должен быть доступен.  
+Тест: homeDebtsSection advisor button always shown.  
+Результат: OK.  
+Решение: OK.  
+Код: `HomeDebtsSection.kt`  
+Статус: ✅ выполнено
+
+## Задача №83
+
+Функция: Autopilot apply на Freedom  
+Проблема: CTA когда enabled.  
+Тест: Row with advisor.  
+Результат: OK.  
+Решение: OK.  
+Код: `HomeDebtsSection.kt`  
+Статус: ✅ выполнено
+
+## Задача №84
+
+Функция: Debt filters row  
+Проблема: ALL/ACTIVE/OVERDUE/PAID.  
+Тест: DebtorFilterRow + Room.  
+Результат: OK (с фиксом overdue из №15).  
+Решение: OK.  
+Код: `DebtorFilter.kt`  
+Статус: ✅ выполнено
+
+## Задача №85
+
+Функция: Search field clear  
+Проблема: Clear icon.  
+Тест: DebtSearchField.  
+Результат: OK.  
+Решение: OK.  
+Код: `DebtSearchField.kt`  
+Статус: ✅ выполнено
+
+## Задача №86
+
+Функция: Pending calendar close dialog  
+Проблема: Keep vs remove event.  
+Тест: HomeScreen AlertDialog.  
+Результат: OK.  
+Решение: OK.  
+Код: `HomeScreen.kt`  
+Статус: ✅ выполнено
+
+## Задача №87
+
+Функция: Notification FLAG_IMMUTABLE (regression)  
+Проблема: API 31+.  
+Тест: Helpers.  
+Результат: OK.  
+Решение: OK.  
+Код: DebtNotificationHelper  
+Статус: ✅ выполнено
+
+## Задача №88
+
+Функция: POST_NOTIFICATIONS (regression)  
+Проблема: Android 13+.  
+Тест: Launchers.  
+Результат: OK.  
+Решение: OK.  
+Код: MainActivity / MoneyNavHost  
+Статус: ✅ выполнено
+
+## Задача №89
+
+Функция: Goal Hub из Freedom CTA (regression)  
+Проблема: Cross-link.  
+Тест: DebtFreedomTab button.  
+Результат: OK phone+tablet.  
+Решение: OK.  
+Код: DebtFreedomTab  
+Статус: ✅ выполнено
+
+## Задача №90
+
+Функция: Overview card OwesMe/IOwe  
+Проблема: Phone overview; tablet list без overview card.  
+Тест: HomeDebtsSection vs Tablet.  
+Результат: Tablet gap (low).  
+Решение: Отложено (metrics в GlobalBalanceHeader).  
+Код: —  
+Статус: ❌ отложено
+
+## Задача №91
+
+Функция: Contact debt history sheet  
+Проблема: History by lookup key.  
+Тест: ContactDebtHistorySheet.  
+Результат: OK + hideAmounts.  
+Решение: OK.  
+Код: `ContactDebtHistorySheet.kt`  
+Статус: ✅ выполнено
+
+## Задача №92
+
+Функция: Celebration after full pay  
+Проблема: Celebration state.  
+Тест: processPaymentSync / markAsPaid.  
+Результат: OK.  
+Решение: Wired also in markAsPaid.  
+Код: DebtorsViewModel  
+Статус: ✅ выполнено
+
+## Задача №93
+
+Функция: Privacy settings toggle  
+Проблема: Persist hideAmounts.  
+Тест: PrivacySettingsScreen.  
+Результат: OK.  
+Решение: OK.  
+Код: PrivacySettingsScreen  
+Статус: ✅ выполнено
+
+## Задача №94
+
+Функция: Debt notification settings toggles  
+Проблема: Enable/1d/3d.  
+Тест: Settings screen + coordinator.  
+Результат: OK (с фиксом cancel из №44).  
+Решение: OK.  
+Код: DebtNotificationSettingsScreen  
+Статус: ✅ выполнено
+
+## Задача №95
+
+Функция: Widget hide amounts  
+Проблема: Widget respects privacy.  
+Тест: GoalWidgetSnapshotWriter.  
+Результат: OK.  
+Решение: OK.  
+Код: GoalWidgetSnapshotWriter  
+Статус: ✅ выполнено
+
+## Задача №96
+
+Функция: Tablet Goal Hub / Settings rail  
+Проблема: Entries visible.  
+Тест: NavigationRail.  
+Результат: OK.  
+Решение: OK.  
+Код: TabletHomeLayout  
+Статус: ✅ выполнено
+
+## Задача №97
+
+Функция: Phone drawer Goal Hub  
+Проблема: Drawer item.  
+Тест: PhoneHomeLayout drawer.  
+Результат: OK.  
+Решение: OK.  
+Код: HomeScreen  
+Статус: ✅ выполнено
+
+## Задача №98
+
+Функция: Sync status / websocket copy URL  
+Проблема: Menu sync URL.  
+Тест: Top menu.  
+Результат: OK.  
+Решение: OK.  
+Код: HomeScreen  
+Статус: ✅ выполнено
+
+## Задача №99
+
+Функция: Add debtor validation  
+Проблема: Name/amount/dates.  
+Тест: AddDebtorDialog.  
+Результат: OK; edit allows raise target ≥ current.  
+Решение: OK (+ reopen fix №59).  
+Код: AddDebtorDialog  
+Статус: ✅ выполнено
+
+## Задача №100
+
+Функция: Unit regression suite  
+Проблема: После фиксов 51–100 тесты должны быть зелёными.  
+Тест: `./gradlew :app:testDebugUnitTest`.  
+Результат: BUILD SUCCESSFUL.  
+Решение: OK.  
+Код: —  
+Статус: ✅ выполнено
+
+---
+
+## Сводка задач 51–100
+
+| Статус | Кол-во |
+|--------|--------|
+| ✅ выполнено | 44 |
+| ❌ отложено | 6 (calendar day click, autopilot hour UI, explicit reopen, swipe-delete debts, RU-hardcode i18n, tablet overview card) |
+
+### Исправления в этой сессии (51–100)
+1. Privacy hideAmounts: Freedom / dashboard / goals / payment dialog  
+2. Payment insufficient-funds guard  
+3. Reopen-via-edit reschedules reminders/calendar  
+4. markAsPaid in debt menu (correct affectsBalance)  
+5. Tablet check-in + empty-state add CTA  
+6. Calendar settings permission refresh on resume  
+7. Boot/cold-start sync Autopilot + WeeklyCheckIn  
+8. FAB hidden on Freedom/Calendar  
+
+### Кумулятивно этап 1 (1–100)
+**88 ✅** · **11 ❌ отложено**
+
+### Далее
+101–150: Goal Hub CRUD depth, luck diary edit/delete, challenges failure reset, strategy Avalanche/Snowball settings, export/import design, dark theme decision.
