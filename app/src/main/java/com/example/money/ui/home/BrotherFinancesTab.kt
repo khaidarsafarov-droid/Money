@@ -40,7 +40,7 @@ import com.example.money.ui.util.Formatters
 
 @Composable
 fun GlobalBalanceHeader(
-    summary: BudgetSummary,
+    @Suppress("UNUSED_PARAMETER") summary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
     onOwesMeClick: () -> Unit = {},
@@ -55,16 +55,16 @@ fun GlobalBalanceHeader(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
-            SignMetric(
+            LabeledMetric(
                 sign = stringResource(R.string.metric_sign_saved),
-                accessibilityLabel = stringResource(R.string.global_balance_accumulated_label),
+                label = stringResource(R.string.global_balance_accumulated_label),
                 value = Formatters.currencyCompact(goalMetrics.totalAccumulated),
                 valueColor = FinancePositive,
                 modifier = Modifier.weight(1f),
             )
-            SignMetric(
+            LabeledMetric(
                 sign = stringResource(R.string.metric_sign_to_goal),
-                accessibilityLabel = stringResource(R.string.global_balance_remaining_label),
+                label = stringResource(R.string.global_balance_remaining_label),
                 value = Formatters.currencyCompact(goalMetrics.totalRemainingToGoal),
                 valueColor = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
@@ -74,9 +74,9 @@ fun GlobalBalanceHeader(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
-            SignMetric(
+            LabeledMetric(
                 sign = stringResource(R.string.metric_sign_owes_me),
-                accessibilityLabel = stringResource(R.string.debt_dashboard_owes_me),
+                label = stringResource(R.string.debt_dashboard_owes_me),
                 value = Formatters.currencyFromCents(debtMetrics.owedToMeCents),
                 valueColor = if (debtMetrics.owedToMeCents > 0L) {
                     FinancePositive
@@ -86,9 +86,9 @@ fun GlobalBalanceHeader(
                 onClick = onOwesMeClick.takeIf { debtMetrics.owedToMeCents > 0L },
                 modifier = Modifier.weight(1f),
             )
-            SignMetric(
+            LabeledMetric(
                 sign = stringResource(R.string.metric_sign_i_owe),
-                accessibilityLabel = stringResource(R.string.debt_dashboard_i_owe),
+                label = stringResource(R.string.debt_dashboard_i_owe),
                 value = Formatters.currencyFromCents(debtMetrics.iOweCents),
                 valueColor = if (debtMetrics.iOweCents > 0L) {
                     FinanceNegative
@@ -99,66 +99,31 @@ fun GlobalBalanceHeader(
                 modifier = Modifier.weight(1f),
             )
         }
-        if (summary.totalDeposits > 0.0 || summary.totalExpenses > 0.0) {
-            FlowSignSummary(summary = summary)
-        }
     }
 }
 
 @Composable
-private fun FlowSignSummary(summary: BudgetSummary) {
-    val depositsLabel = stringResource(R.string.global_balance_deposits_label)
-    val expensesLabel = stringResource(R.string.global_balance_expenses_label)
-    val deposits = Formatters.currencyCompact(summary.totalDeposits)
-    val expenses = Formatters.currencyCompact(summary.totalExpenses)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = MoneySpacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.lg),
-    ) {
-        Text(
-            text = "${stringResource(R.string.metric_sign_deposit)} $deposits",
-            style = moneyCaptionStyle(),
-            color = FinancePositive,
-            modifier = Modifier.semantics {
-                contentDescription = "$depositsLabel $deposits"
-            },
-        )
-        Text(
-            text = "${stringResource(R.string.metric_sign_expense)} $expenses",
-            style = moneyCaptionStyle(),
-            color = FinanceNegative,
-            modifier = Modifier.semantics {
-                contentDescription = "$expensesLabel $expenses"
-            },
-        )
-    }
-}
-
-@Composable
-private fun SignMetric(
+private fun LabeledMetric(
     sign: String,
-    accessibilityLabel: String,
+    label: String,
     value: String,
     valueColor: Color,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
-    val description = "$accessibilityLabel $value"
-    Row(
+    val description = "$label $value"
+    Column(
         modifier = modifier
             .semantics { contentDescription = description }
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = MoneySpacing.xs, horizontal = MoneySpacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            text = sign,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
+            text = "$sign $label",
+            style = moneyCaptionStyle(),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
         )
         Text(
             text = value,

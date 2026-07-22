@@ -113,14 +113,14 @@ private fun GoalWidgetContent(
         ) {
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 WidgetMetricTile(
-                    label = context.getString(R.string.metric_sign_saved),
+                    label = "${context.getString(R.string.metric_sign_saved)} ${context.getString(R.string.global_balance_accumulated_label)}",
                     value = maskCompact(snapshot.totalAccumulated, region, hide),
                     valueColor = GlanceTheme.colors.tertiary,
                     modifier = GlanceModifier.defaultWeight(),
                 )
                 Spacer(modifier = GlanceModifier.width(8.dp))
                 WidgetMetricTile(
-                    label = context.getString(R.string.metric_sign_to_goal),
+                    label = "${context.getString(R.string.metric_sign_to_goal)} ${context.getString(R.string.global_balance_remaining_label)}",
                     value = maskCompact(snapshot.totalRemainingToGoal, region, hide),
                     valueColor = GlanceTheme.colors.onSurface,
                     modifier = GlanceModifier.defaultWeight(),
@@ -131,7 +131,7 @@ private fun GoalWidgetContent(
 
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 WidgetDebtTile(
-                    label = context.getString(R.string.metric_sign_owes_me),
+                    label = "${context.getString(R.string.metric_sign_owes_me)} ${context.getString(R.string.debt_dashboard_owes_me)}",
                     amountCents = snapshot.owedToMeCents,
                     positive = true,
                     region = region,
@@ -140,36 +140,13 @@ private fun GoalWidgetContent(
                 )
                 Spacer(modifier = GlanceModifier.width(8.dp))
                 WidgetDebtTile(
-                    label = context.getString(R.string.metric_sign_i_owe),
+                    label = "${context.getString(R.string.metric_sign_i_owe)} ${context.getString(R.string.debt_dashboard_i_owe)}",
                     amountCents = snapshot.iOweCents,
                     positive = false,
                     region = region,
                     hide = hide,
                     modifier = GlanceModifier.defaultWeight(),
                 )
-            }
-
-            if (snapshot.totalDeposits > 0.0 || snapshot.totalExpenses > 0.0) {
-                Spacer(modifier = GlanceModifier.height(6.dp))
-                Row(modifier = GlanceModifier.fillMaxWidth()) {
-                    Text(
-                        text = "${context.getString(R.string.metric_sign_deposit)} ${maskCompact(snapshot.totalDeposits, region, hide)}",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.tertiary,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
-                        ),
-                    )
-                    Spacer(modifier = GlanceModifier.defaultWeight())
-                    Text(
-                        text = "${context.getString(R.string.metric_sign_expense)} ${maskCompact(snapshot.totalExpenses, region, hide)}",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.error,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
-                        ),
-                    )
-                }
             }
         }
 
