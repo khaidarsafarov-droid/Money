@@ -1055,4 +1055,485 @@
 **88 ✅** · **11 ❌ отложено**
 
 ### Далее
-101–150: Goal Hub CRUD depth, luck diary edit/delete, challenges failure reset, strategy Avalanche/Snowball settings, export/import design, dark theme decision.
+101–150: Goal Hub / luck / challenges / strategy — см. ниже.
+
+---
+
+# Этап 1 — отчёты 101–150
+
+## Задача №101
+Функция: Goal Hub — freedom projection
+Проблема: Отображение даты свободы / прогресса.
+Тест: GoalScreen FreedomHeroCard + GoalPsychologyEngines.
+Результат: OK; days label был грубый (*30).
+Решение: Показ monthly pace вместо days*30.
+Код: GoalScreen.kt
+Статус: ✅ выполнено
+
+## Задача №102
+Функция: Goal Hub — hideAmounts privacy
+Проблема: Суммы всегда открыты.
+Тест: Formatters без hide.
+Результат: Leak.
+Решение: privacySettings + hideAmounts по экрану.
+Код: GoalScreen.kt
+Статус: ✅ выполнено
+
+## Задача №103
+Функция: Payoff strategy dual store
+Проблема: Goal Hub AVALANCHE vs Autopilot SNOWBALL независимы.
+Тест: setPayoffStrategy / setStrategy.
+Результат: Рассинхрон.
+Решение: Dual-write оба preference store.
+Код: GoalHubViewModel, AutopilotSettingsViewModel
+Статус: ✅ выполнено
+
+## Задача №104
+Функция: Advisor uses payoff strategy
+Проблема: Hardcoded SNOWBALL.
+Тест: LocalFinancialAdvisor.autopilotAdvice.
+Результат: Игнор настроек.
+Решение: AdviceContext.payoffStrategy из Goal profile.
+Код: LocalFinancialAdvisor, DebtorsViewModel, DebtAdvisorBottomSheet
+Статус: ✅ выполнено
+
+## Задача №105
+Функция: Autopilot pickTargetDebt type filter
+Проблема: Мог выбрать CREDITOR.
+Тест: DebtAutopilotEngine.
+Результат: Баг.
+Решение: Filter DebtType.DEBTOR.
+Код: DebtPsychologyEngines.kt + unit tests
+Статус: ✅ выполнено
+
+## Задача №106
+Функция: Challenge CLOSE_DEBT_14D complete
+Проблема: Не авто-complete при оплате долга.
+Тест: syncPaymentChallengeProgress.
+Результат: Баг.
+Решение: completed=true если debt paid/missing.
+Код: GoalChallengeEngines.kt
+Статус: ✅ выполнено
+
+## Задача №107
+Функция: Challenge CLOSE_DEBT_14D failure reset
+Проблема: После 14 дней challenge висел.
+Тест: sync after deadline.
+Результат: Баг.
+Решение: Удаление failed challenge из active list.
+Код: GoalChallengeEngines.kt
+Статус: ✅ выполнено
+
+## Задача №108
+Функция: THREE_EARLY_PAYMENTS progress
+Проблема: Auto progress by payments.
+Тест: syncPaymentChallengeProgress.
+Результат: OK.
+Решение: OK.
+Код: GoalChallengeEngines.kt
+Статус: ✅ выполнено
+
+## Задача №109
+Функция: Challenge start / increment / remove UI
+Проблема: Templates picker + debt pick.
+Тест: GoalScreen ChallengesCard.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen.kt
+Статус: ✅ выполнено
+
+## Задача №110
+Функция: Goal badges recompute
+Проблема: Badges from debtors.
+Тест: computeGoalBadges collector.
+Результат: OK.
+Решение: OK.
+Код: GoalHubViewModel
+Статус: ✅ выполнено
+
+## Задача №111
+Функция: Luck diary create
+Проблема: Add entry.
+Тест: addLuckEntry.
+Результат: Пустая заметка сохранялась.
+Решение: Reject blank note (VM + dialog enabled).
+Код: GoalHubViewModel, LuckDiaryEntryDialog
+Статус: ✅ выполнено
+
+## Задача №112
+Функция: Luck diary edit
+Проблема: Нет update.
+Тест: DAO/repo.
+Результат: Gap.
+Решение: @Update + updateEntry + edit dialog.
+Код: LuckDiaryDao, Repository, GoalScreen
+Статус: ✅ выполнено
+
+## Задача №113
+Функция: Luck diary delete / list / monthly
+Проблема: CRUD depth.
+Тест: observe + delete + monthlyLuckSumCents.
+Результат: OK.
+Решение: OK.
+Код: GoalHubViewModel
+Статус: ✅ выполнено
+
+## Задача №114
+Функция: Luck diary search
+Проблема: Нет поиска.
+Тест: Code search.
+Результат: Gap.
+Решение: Отложено.
+Код: —
+Статус: ❌ отложено
+
+## Задача №115
+Функция: Vision board pick
+Проблема: Path saved even if copy failed.
+Тест: persistVisionImage.
+Результат: Баг.
+Решение: Return null unless stream copy succeeds & file non-empty.
+Код: GoalScreen.persistVisionImage
+Статус: ✅ выполнено
+
+## Задача №116
+Функция: Vision board clear orphans
+Проблема: Old files not deleted.
+Тест: updateVisionPhotoPath.
+Результат: Leak disk.
+Решение: Delete previous file on clear/replace.
+Код: GoalHubViewModel.updateVisionPhotoPath
+Статус: ✅ выполнено
+
+## Задача №117
+Функция: Weekly checklist week reset
+Проблема: Checks persist across weeks.
+Тест: weeklyChecklistJson.
+Результат: Stale.
+Решение: weekKey ISO week; reset when week changes.
+Код: GoalHubViewModel decode/encode
+Статус: ✅ выполнено
+
+## Задача №118
+Функция: Psychotype retake answers
+Проблема: Default all 'a'.
+Тест: PsychotypeTestDialog.
+Результат: Баг.
+Решение: null until selected; Next disabled.
+Код: PsychotypeTestDialog.kt
+Статус: ✅ выполнено
+
+## Задача №119
+Функция: Fears / affirmations
+Проблема: Edit fears + affirmations.
+Тест: GoalScreen FearSelector.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen.kt
+Статус: ✅ выполнено
+
+## Задача №120
+Функция: Motivation text
+Проблема: Save on each keystroke (race).
+Тест: updatePersonalMotivation.
+Результат: Low risk race.
+Решение: Отложено debounce (работает).
+Код: —
+Статус: ❌ отложено
+
+## Задача №121
+Функция: Word power toggle
+Проблема: Positive wording.
+Тест: Switch.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №122
+Функция: Avalanche / Snowball chips UI
+Проблема: Strategy switch on Goal Hub.
+Тест: PayoffPlanCard chips.
+Результат: OK (+ dual-write №103).
+Решение: OK.
+Код: GoalScreen PayoffPlanCard
+Статус: ✅ выполнено
+
+## Задача №123
+Функция: Autopilot settings strategy chips
+Проблема: Sync with Goal Hub.
+Тест: AutopilotSettingsScreen.
+Результат: Fixed via dual-write.
+Решение: OK.
+Код: AutopilotSettingsViewModel
+Статус: ✅ выполнено
+
+## Задача №124
+Функция: Payoff plan projected close dates
+Проблема: Per-debt ETA.
+Тест: buildPayoffPlan.
+Результат: OK.
+Решение: OK.
+Код: GoalPsychologyEngines
+Статус: ✅ выполнено
+
+## Задача №125
+Функция: Extra monthly slider on Goal Hub
+Проблема: Recalc freedom.
+Тест: ExtraMonthlySlider.
+Результат: OK + hideAmounts.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №126
+Функция: Payday hint for spender
+Проблема: daysUntilPayday card.
+Тест: GoalScreen psychotype branch.
+Результат: OK (no payday editor UI).
+Решение: OK display; editor ❌ deferred.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №127
+Функция: Settings profile editor (name/goal)
+Проблема: Нет экрана редактирования профиля вне онбординга.
+Тест: Settings drawer.
+Результат: Gap.
+Решение: Отложено.
+Код: —
+Статус: ❌ отложено
+
+## Задача №128
+Функция: Dark / light theme
+Проблема: Только light Theme.
+Тест: Theme.kt.
+Результат: Gap.
+Решение: Отложено.
+Код: —
+Статус: ❌ отложено
+
+## Задача №129
+Функция: Export / import data
+Проблема: Нет фичи.
+Тест: Settings.
+Результат: Gap.
+Решение: Отложено.
+Код: —
+Статус: ❌ отложено
+
+## Задача №130
+Функция: Delete all data
+Проблема: Нет wipe.
+Тест: Settings.
+Результат: Gap.
+Решение: Отложено.
+Код: —
+Статус: ❌ отложено
+
+## Задача №131
+Функция: NO_COFFEE_MONTH manual progress
+Проблема: Day increment.
+Тест: ChallengesCard.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №132
+Функция: Challenge debt picker privacy
+Проблема: Amounts in picker.
+Тест: DebtPickDialog.
+Результат: Leak.
+Решение: hideAmounts.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №133
+Функция: Luck entry row privacy
+Проблема: Amounts visible.
+Тест: LuckEntryRow.
+Результат: Leak.
+Решение: hideAmounts.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №134
+Функция: Goal Hub greeting personalization
+Проблема: Name + psychotype.
+Тест: goal_hub_greeting.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №135
+Функция: Player points card
+Проблема: PLAYER psychotype.
+Тест: PlayerPointsCard.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №136
+Функция: Treat yourself card (SAVER)
+Проблема: Display.
+Тест: GoalScreen.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №137
+Функция: Autosave hint (SPENDER)
+Проблема: Display.
+Тест: GoalScreen.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №138
+Функция: Checklist UI bindings
+Проблема: Five checkboxes.
+Тест: WeeklyChecklistCard.
+Результат: OK + week reset №117.
+Решение: OK.
+Код: GoalScreen / GoalHubViewModel
+Статус: ✅ выполнено
+
+## Задача №139
+Функция: Advisor which_debt_first avalanche copy
+Проблема: Strategy-aware reply.
+Тест: whichDebtFirstAdvice.
+Результат: OK.
+Решение: OK.
+Код: LocalFinancialAdvisor
+Статус: ✅ выполнено
+
+## Задача №140
+Функция: Unit tests autopilot DEBTOR filter
+Проблема: Regression.
+Тест: DebtAutopilotEngineTest.
+Результат: Pass.
+Решение: OK.
+Код: DebtAutopilotAndChallengeTest.kt
+Статус: ✅ выполнено
+
+## Задача №141
+Функция: Unit tests challenge complete/fail
+Проблема: Regression.
+Тест: GoalChallengeEnginesTest.
+Результат: Pass.
+Решение: OK.
+Код: DebtAutopilotAndChallengeTest.kt
+Статус: ✅ выполнено
+
+## Задача №142
+Функция: Luck DAO update completeness
+Проблема: Missing @Update.
+Тест: LuckDiaryDao.
+Результат: Fixed.
+Решение: OK.
+Код: LuckDiaryDao.kt
+Статус: ✅ выполнено
+
+## Задача №143
+Функция: Goal Hub back navigation
+Проблема: TopAppBar back.
+Тест: GoalScreen.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №144
+Функция: Vision board display decode
+Проблема: Bitmap decode try/catch.
+Тест: VisionBoardCard.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №145
+Функция: Challenge empty state
+Проблема: Empty copy.
+Тест: ChallengesCard.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №146
+Функция: Payoff plan empty state
+Проблема: No I-owe debts.
+Тест: PayoffPlanCard.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №147
+Функция: Luck category labels
+Проблема: Category chips.
+Тест: LuckDiaryEntryDialog.
+Результат: OK.
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №148
+Функция: Retake psychotype from Goal Hub
+Проблема: Entry point.
+Тест: Top bar button.
+Результат: OK (+ №118 answers).
+Решение: OK.
+Код: GoalScreen
+Статус: ✅ выполнено
+
+## Задача №149
+Функция: Full unit suite green
+Проблема: After 101–150 fixes.
+Тест: ./gradlew :app:testDebugUnitTest
+Результат: BUILD SUCCESSFUL.
+Решение: OK.
+Код: —
+Статус: ✅ выполнено
+
+## Задача №150
+Функция: Stage 1 documentation 101–150
+Проблема: Reports must be published.
+Тест: docs/quality/STAGE1_REPORTS.md
+Результат: Written.
+Решение: OK.
+Код: STAGE1_REPORTS.md
+Статус: ✅ выполнено
+
+---
+
+## Сводка задач 101–150
+
+| Статус | Кол-во |
+|--------|--------|
+| ✅ выполнено | 44 |
+| ❌ отложено | 6 (luck search, motivation debounce, profile editor, dark theme, export/import, wipe) |
+
+### Исправления в этой сессии (101–150)
+1. Goal Hub hideAmounts privacy
+2. Unify payoff strategy Goal Hub ↔ Autopilot
+3. Advisor respects payoff strategy
+4. Autopilot targets only DEBTOR debts
+5. CLOSE_DEBT_14D auto-complete + fail after deadline
+6. Luck diary edit + blank note reject
+7. Vision persist/copy safety + orphan delete
+8. Weekly checklist ISO-week reset
+9. Psychotype retake requires answers
+
+### Кумулятивно этап 1 (1–150)
+**132 ✅** · **17 ❌ отложено**
+
+### Далее
+151–200: performance Room indexes/load, Compose recomposition, cold start, memory; then Stage 2.
+

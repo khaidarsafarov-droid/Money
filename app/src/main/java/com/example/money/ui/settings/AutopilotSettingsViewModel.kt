@@ -34,7 +34,11 @@ class AutopilotSettingsViewModel(
     }
 
     fun setStrategy(strategy: AutopilotStrategy) {
-        update { it.copy(strategy = strategy) }
+        viewModelScope.launch {
+            preferencesStore.updateAutopilotSettings { it.copy(strategy = strategy) }
+            preferencesStore.updateGoalPsychologyProfile { it.copy(payoffStrategy = strategy.name) }
+            MicroPaymentScheduler.syncSchedule(app)
+        }
     }
 
     val weeklyCheckInSettings: StateFlow<WeeklyCheckInSettings> =

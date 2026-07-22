@@ -3,6 +3,7 @@ package com.example.money.domain.util
 import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
+import com.example.money.settings.AutopilotStrategy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -44,7 +45,11 @@ class LocalFinancialAdvisorTest {
         )
         val reply = LocalFinancialAdvisor.buildReply(
             LocalFinancialAdvisor.AdviceRequest(promptId = "which_debt_first"),
-            LocalFinancialAdvisor.AdviceContext(debts = debts, now = now),
+            LocalFinancialAdvisor.AdviceContext(
+                debts = debts,
+                now = now,
+                payoffStrategy = AutopilotStrategy.SNOWBALL,
+            ),
         )
         assertTrue(reply.contains("Small"))
     }

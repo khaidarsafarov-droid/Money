@@ -1,6 +1,7 @@
 package com.example.money.domain.util
 
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.model.DebtType
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.GamificationBadges
@@ -87,7 +88,9 @@ object DebtAutopilotEngine {
     )
 
     fun pickTargetDebt(debts: List<Debtor>, strategy: AutopilotStrategy): Debtor? {
-        val active = debts.filter { !it.isPaid && it.remainingAmountCents > 0L }
+        val active = debts.filter {
+            it.debtType == DebtType.DEBTOR && !it.isPaid && it.remainingAmountCents > 0L
+        }
         if (active.isEmpty()) return null
         return when (strategy) {
             AutopilotStrategy.SNOWBALL -> active.minByOrNull { it.remainingAmountCents }

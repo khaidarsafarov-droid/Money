@@ -145,18 +145,40 @@ object GoalChallengeEngines {
                 .filter { it.templateId == ChallengeTemplateId.THREE_EARLY_PAYMENTS && !it.completed }
                 .minOfOrNull { it.startedAtMs } ?: now,
         )
-        return challenges.map { challenge ->
-            if (challenge.templateId != ChallengeTemplateId.THREE_EARLY_PAYMENTS || challenge.completed) {
-                challenge
-            } else {
-                val progress = paymentsSince.coerceAtMost(3)
-                challenge.copy(
-                    progressDays = progress,
-                    completed = progress >= 3,
-                )
+        return challenges.mapNotNull { challenge ->
+            when {
+                challenge.completed -> challenge
+                challenge.templateId == ChallengeTemplateId.THREE_EARLY_PAYMENTS -> {
+                    val progress = paymentsSince.coerceAtMost(3)
+                    challenge.copy(
+                        progressDays = progress,
+                        completed = progress >= 3,
+                    )
+                }
+                challenge.templateId == ChallengeTemplateId.CLOSE_DEBT_14D -> {
+                    val targetDays = challenge.targetDays ?: 14
+                    val deadlineMs = challenge.startedAtMs + targetDays * DAY_MS
+                    val debt = challenge.debtId?.let { id -> debtors.find { it.id == id } }
+                    when {
+                        debt == null || debt.isPaid -> challenge.copy(
+                            progressDays = targetDays,
+                            completed = true,
+                        )
+                        now > deadlineMs -> null // failed — drop from active list
+                        else -> {
+                            val elapsedDays = ((now - challenge.startedAtMs) / DAY_MS)
+                                .toInt()
+                                .coerceIn(0, targetDays)
+                            challenge.copy(progressDays = elapsedDays)
+                        }
+                    }
+                }
+                else -> challenge
             }
         }
     }
+
+    private const val DAY_MS = 24L * 60L * 60L * 1000L
 
     fun computeGoalBadges(debtors: List<Debtor>): Set<String> {
         val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR }

@@ -32,6 +32,7 @@ data class WeeklyChecklistUiState(
     val savedEmergency: Boolean = false,
     val pleasureOrRestraint: Boolean = false,
     val luckDiaryEntry: Boolean = false,
+    val weekKey: String = "",
 )
 
 class GoalHubViewModel(
@@ -187,12 +188,17 @@ class GoalHubViewModel(
     fun setPayoffStrategy(strategy: AutopilotStrategy) {
         viewModelScope.launch {
             preferencesStore.updateGoalPsychologyProfile { it.copy(payoffStrategy = strategy.name) }
+            preferencesStore.updateAutopilotSettings { it.copy(strategy = strategy) }
         }
     }
 
     fun updateVisionPhotoPath(path: String?) {
         viewModelScope.launch {
+            val previous = preferencesStore.goalPsychologyProfile.first().visionPhotoPath
             preferencesStore.updateGoalPsychologyProfile { it.copy(visionPhotoPath = path) }
+            if (!previous.isNullOrBlank() && previous != path) {
+                runCatching { java.io.File(previous).delete() }
+            }
         }
     }
 
@@ -247,16 +253,26 @@ class GoalHubViewModel(
     }
 
     fun addLuckEntry(note: String, amountCents: Long?, category: String) {
+        val trimmed = note.trim()
+        if (trimmed.isEmpty()) return
         viewModelScope.launch {
             luckDiaryRepository.addEntry(
                 LuckDiaryEntry(
                     entryDate = System.currentTimeMillis(),
-                    note = note,
+                    note = trimmed,
                     amountCents = amountCents,
                     category = category,
                 ),
             )
             updateChecklist { it.copy(luckDiaryEntry = true) }
+        }
+    }
+
+    fun updateLuckEntry(entry: LuckDiaryEntry) {
+        val trimmed = entry.note.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            luckDiaryRepository.updateEntry(entry.copy(note = trimmed))
         }
     }
 
@@ -284,19 +300,31 @@ class GoalHubViewModel(
 
     fun progressPercent(): Int = GoalPsychologyEngines.totalDebtProgressPercent(debtors.value)
 
-    private fun decodeChecklist(json: String): WeeklyChecklistUiState {
-        if (json.isBlank() || json == "{}") return WeeklyChecklistUiState()
+    private fun decodeChecklist(
+        json: String,
+        now: Long = System.currentTimeMillis(),
+    ): WeeklyChecklistUiState {
+        val currentWeek = currentIsoWeekKey(now)
+        if (json.isBlank() || json == "{}") {
+            return WeeklyChecklistUiState(weekKey = currentWeek)
+        }
         return try {
             val obj = JSONObject(json)
-            WeeklyChecklistUiState(
-                checkedDebts = obj.optBoolean("checkedDebts"),
-                madePayment = obj.optBoolean("madePayment"),
-                savedEmergency = obj.optBoolean("savedEmergency"),
-                pleasureOrRestraint = obj.optBoolean("pleasureOrRestraint"),
-                luckDiaryEntry = obj.optBoolean("luckDiaryEntry"),
-            )
+            val weekKey = obj.optString("weekKey", "")
+            if (weekKey != currentWeek) {
+                WeeklyChecklistUiState(weekKey = currentWeek)
+            } else {
+                WeeklyChecklistUiState(
+                    checkedDebts = obj.optBoolean("checkedDebts"),
+                    madePayment = obj.optBoolean("madePayment"),
+                    savedEmergency = obj.optBoolean("savedEmergency"),
+                    pleasureOrRestraint = obj.optBoolean("pleasureOrRestraint"),
+                    luckDiaryEntry = obj.optBoolean("luckDiaryEntry"),
+                    weekKey = weekKey,
+                )
+            }
         } catch (_: Exception) {
-            WeeklyChecklistUiState()
+            WeeklyChecklistUiState(weekKey = currentWeek)
         }
     }
 
@@ -307,7 +335,45 @@ class GoalHubViewModel(
             .put("savedEmergency", state.savedEmergency)
             .put("pleasureOrRestraint", state.pleasureOrRestraint)
             .put("luckDiaryEntry", state.luckDiaryEntry)
+            .put("weekKey", state.weekKey.ifBlank { currentIsoWeekKey() })
             .toString()
+
+    companion object {
+        fun currentIsoWeekKey(now: Long = System.currentTimeMillis()): String {
+            val calendar = java.util.Calendar.getInstance().apply { timeInMillis = now }
+            val year = calendar.get(java.util.Calendar.YEAR)
+            val week = calendar.get(java.util.Calendar.WEEK_OF_YEAR)
+            return "$year-W$week"
+        }
+
+        fun decodeChecklistForUi(
+            json: String,
+            now: Long = System.currentTimeMillis(),
+        ): WeeklyChecklistUiState {
+            val currentWeek = currentIsoWeekKey(now)
+            if (json.isBlank() || json == "{}") {
+                return WeeklyChecklistUiState(weekKey = currentWeek)
+            }
+            return try {
+                val obj = JSONObject(json)
+                val weekKey = obj.optString("weekKey", "")
+                if (weekKey != currentWeek) {
+                    WeeklyChecklistUiState(weekKey = currentWeek)
+                } else {
+                    WeeklyChecklistUiState(
+                        checkedDebts = obj.optBoolean("checkedDebts"),
+                        madePayment = obj.optBoolean("madePayment"),
+                        savedEmergency = obj.optBoolean("savedEmergency"),
+                        pleasureOrRestraint = obj.optBoolean("pleasureOrRestraint"),
+                        luckDiaryEntry = obj.optBoolean("luckDiaryEntry"),
+                        weekKey = weekKey,
+                    )
+                }
+            } catch (_: Exception) {
+                WeeklyChecklistUiState(weekKey = currentWeek)
+            }
+        }
+    }
 
     private suspend fun syncChallengeProgressFromPayments(debtors: List<Debtor>) {
         val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)

@@ -20,6 +20,7 @@ import com.example.money.notification.DebtReminderCoordinator
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.settings.AutopilotSettings
+import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.CalendarSettings
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PersonalBranchSettings
@@ -211,6 +212,9 @@ class DebtorsViewModel(
     ) {
         viewModelScope.launch {
             val debts = allDebtorsList.value
+            val strategy = AutopilotStrategy.fromStored(
+                preferencesStore.goalPsychologyProfile.first().payoffStrategy,
+            )
             val updated = buildAdvisorMessages(
                 promptId = promptId,
                 debts = debts,
@@ -220,6 +224,7 @@ class DebtorsViewModel(
                 remainingToGoalCents = remainingToGoalCents,
                 totalDepositsCents = totalDepositsCents,
                 totalExpensesCents = totalExpensesCents,
+                payoffStrategy = strategy,
             )
             _advisorMessages.value = updated
             preferencesStore.writeAdvisorHistoryJson(encodeAdvisorMessages(updated))

@@ -3,7 +3,6 @@ package com.example.money.ui.goal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -54,8 +53,9 @@ fun PsychotypeTestDialog(
     onComplete: (List<Char>) -> Unit,
 ) {
     var step by remember { mutableIntStateOf(0) }
-    val answers = remember { mutableStateOf(List(PSYCHOTYPE_QUESTIONS.size) { 'a' }) }
+    var answers by remember { mutableStateOf(List<Char?>(PSYCHOTYPE_QUESTIONS.size) { null }) }
     val question = PSYCHOTYPE_QUESTIONS[step]
+    val currentAnswer = answers[step]
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -65,11 +65,11 @@ fun PsychotypeTestDialog(
                 Text(stringResource(question.textRes), style = MaterialTheme.typography.bodyMedium)
                 question.options.forEach { (key, labelRes) ->
                     FilterChip(
-                        selected = answers.value[step] == key,
+                        selected = currentAnswer == key,
                         onClick = {
-                            val updated = answers.value.toMutableList()
+                            val updated = answers.toMutableList()
                             updated[step] = key
-                            answers.value = updated
+                            answers = updated
                         },
                         label = { Text(stringResource(labelRes)) },
                         modifier = Modifier.fillMaxWidth(),
@@ -79,12 +79,16 @@ fun PsychotypeTestDialog(
         },
         confirmButton = {
             TextButton(
+                enabled = currentAnswer != null,
                 onClick = {
                     if (step < PSYCHOTYPE_QUESTIONS.lastIndex) {
                         step += 1
                     } else {
-                        onComplete(answers.value)
-                        onDismiss()
+                        val resolved = answers.mapNotNull { it }
+                        if (resolved.size == PSYCHOTYPE_QUESTIONS.size) {
+                            onComplete(resolved)
+                            onDismiss()
+                        }
                     }
                 },
             ) {

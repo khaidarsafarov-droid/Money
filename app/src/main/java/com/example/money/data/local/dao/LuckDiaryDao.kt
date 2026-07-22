@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -15,6 +16,9 @@ interface LuckDiaryDao {
 
     @Insert
     suspend fun insert(entry: LuckDiaryEntryEntity): Long
+
+    @Update
+    suspend fun update(entry: LuckDiaryEntryEntity)
 
     @Delete
     suspend fun delete(entry: LuckDiaryEntryEntity)

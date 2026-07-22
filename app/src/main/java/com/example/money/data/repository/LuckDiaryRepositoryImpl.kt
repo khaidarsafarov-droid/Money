@@ -18,6 +18,10 @@ class LuckDiaryRepositoryImpl(
     override suspend fun addEntry(entry: LuckDiaryEntry): Long =
         luckDiaryDao.insert(entry.toEntity())
 
+    override suspend fun updateEntry(entry: LuckDiaryEntry) {
+        luckDiaryDao.update(entry.toEntity())
+    }
+
     override suspend fun deleteEntry(entry: LuckDiaryEntry) {
         luckDiaryDao.delete(entry.toEntity())
     }
