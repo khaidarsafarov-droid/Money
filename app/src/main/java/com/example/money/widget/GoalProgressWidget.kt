@@ -111,43 +111,16 @@ private fun GoalWidgetContent(
                 .clickable(actionStartActivity(openAppIntent))
                 .padding(12.dp),
         ) {
-            Text(
-                text = context.getString(
-                    R.string.global_balance_available,
-                    maskCompact(snapshot.availableBalance, region, hide),
-                ),
-                style = TextStyle(
-                    color = GlanceTheme.colors.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                ),
-            )
-
-            Text(
-                text = context.getString(
-                    R.string.global_balance_widget_formula_hint,
-                    maskCompact(snapshot.totalDeposits, region, hide),
-                    maskCompact(snapshot.totalGoalAllocated, region, hide),
-                    maskCompact(snapshot.totalExpenses, region, hide),
-                ),
-                style = TextStyle(
-                    color = GlanceTheme.colors.onSurfaceVariant,
-                    fontSize = 11.sp,
-                ),
-            )
-
-            Spacer(modifier = GlanceModifier.height(8.dp))
-
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 WidgetMetricTile(
-                    label = context.getString(R.string.global_balance_accumulated_label),
+                    label = context.getString(R.string.metric_sign_saved),
                     value = maskCompact(snapshot.totalAccumulated, region, hide),
                     valueColor = GlanceTheme.colors.tertiary,
                     modifier = GlanceModifier.defaultWeight(),
                 )
                 Spacer(modifier = GlanceModifier.width(8.dp))
                 WidgetMetricTile(
-                    label = context.getString(R.string.global_balance_remaining_label),
+                    label = context.getString(R.string.metric_sign_to_goal),
                     value = maskCompact(snapshot.totalRemainingToGoal, region, hide),
                     valueColor = GlanceTheme.colors.onSurface,
                     modifier = GlanceModifier.defaultWeight(),
@@ -158,10 +131,8 @@ private fun GoalWidgetContent(
 
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 WidgetDebtTile(
-                    context = context,
-                    label = context.getString(R.string.debt_dashboard_owes_me),
+                    label = context.getString(R.string.metric_sign_owes_me),
                     amountCents = snapshot.owedToMeCents,
-                    activeCount = snapshot.owedToMeCount,
                     positive = true,
                     region = region,
                     hide = hide,
@@ -169,10 +140,8 @@ private fun GoalWidgetContent(
                 )
                 Spacer(modifier = GlanceModifier.width(8.dp))
                 WidgetDebtTile(
-                    context = context,
-                    label = context.getString(R.string.debt_dashboard_i_owe),
+                    label = context.getString(R.string.metric_sign_i_owe),
                     amountCents = snapshot.iOweCents,
-                    activeCount = snapshot.iOweCount,
                     positive = false,
                     region = region,
                     hide = hide,
@@ -184,15 +153,7 @@ private fun GoalWidgetContent(
                 Spacer(modifier = GlanceModifier.height(6.dp))
                 Row(modifier = GlanceModifier.fillMaxWidth()) {
                     Text(
-                        text = context.getString(R.string.global_balance_deposits_label),
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 11.sp,
-                        ),
-                    )
-                    Text(
-                        text = maskCompact(snapshot.totalDeposits, region, hide),
-                        modifier = GlanceModifier.padding(start = 4.dp),
+                        text = "${context.getString(R.string.metric_sign_deposit)} ${maskCompact(snapshot.totalDeposits, region, hide)}",
                         style = TextStyle(
                             color = GlanceTheme.colors.tertiary,
                             fontWeight = FontWeight.Medium,
@@ -201,15 +162,7 @@ private fun GoalWidgetContent(
                     )
                     Spacer(modifier = GlanceModifier.defaultWeight())
                     Text(
-                        text = context.getString(R.string.global_balance_expenses_label),
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 11.sp,
-                        ),
-                    )
-                    Text(
-                        text = maskCompact(snapshot.totalExpenses, region, hide),
-                        modifier = GlanceModifier.padding(start = 4.dp),
+                        text = "${context.getString(R.string.metric_sign_expense)} ${maskCompact(snapshot.totalExpenses, region, hide)}",
                         style = TextStyle(
                             color = GlanceTheme.colors.error,
                             fontWeight = FontWeight.Medium,
@@ -327,17 +280,14 @@ private fun WidgetMetricTile(
 
 @Composable
 private fun WidgetDebtTile(
-    context: Context,
     label: String,
     amountCents: Long,
-    activeCount: Int,
     positive: Boolean,
     region: com.example.money.settings.CurrencyRegion,
     hide: Boolean = false,
     modifier: GlanceModifier = GlanceModifier,
 ) {
     val isEmpty = amountCents <= 0L
-    val prefix = if (positive) "+" else "−"
     val amount = maskFromCents(amountCents, region, hide)
     val valueColor = when {
         isEmpty -> GlanceTheme.colors.onSurfaceVariant
@@ -361,22 +311,16 @@ private fun WidgetDebtTile(
             text = label,
             style = TextStyle(
                 color = GlanceTheme.colors.onSurfaceVariant,
-                fontSize = 10.sp,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
             ),
         )
         Text(
-            text = if (isEmpty) maskFromCents(0, region, hide) else "$prefix$amount",
+            text = amount,
             style = TextStyle(
                 color = valueColor,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
-            ),
-        )
-        Text(
-            text = context.getString(R.string.debt_dashboard_active_count, activeCount),
-            style = TextStyle(
-                color = GlanceTheme.colors.onSurfaceVariant,
-                fontSize = 10.sp,
             ),
         )
     }

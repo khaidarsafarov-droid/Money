@@ -207,6 +207,12 @@
     <string name="global_balance_remaining_hint">До 100%% по активным целям осталось %1$s</string>
     <string name="global_balance_deposits_label">Пополнения</string>
     <string name="global_balance_expenses_label">Расходы</string>
+    <string name="metric_sign_saved">★</string>
+    <string name="metric_sign_to_goal">→</string>
+    <string name="metric_sign_owes_me">+</string>
+    <string name="metric_sign_i_owe">−</string>
+    <string name="metric_sign_deposit">+</string>
+    <string name="metric_sign_expense">−</string>
     <string name="operations_section_title">Операции</string>
     <string name="operation_deposit">Пополнение</string>
     <string name="operation_expense">Расход</string>

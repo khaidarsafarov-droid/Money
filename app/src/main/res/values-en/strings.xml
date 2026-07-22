@@ -208,6 +208,12 @@
     <string name="global_balance_remaining_hint">%1$s left to reach 100%% on active goals</string>
     <string name="global_balance_deposits_label">Deposits</string>
     <string name="global_balance_expenses_label">Expenses</string>
+    <string name="metric_sign_saved">★</string>
+    <string name="metric_sign_to_goal">→</string>
+    <string name="metric_sign_owes_me">+</string>
+    <string name="metric_sign_i_owe">−</string>
+    <string name="metric_sign_deposit">+</string>
+    <string name="metric_sign_expense">−</string>
     <string name="operations_section_title">Operations</string>
     <string name="operation_deposit">Deposit</string>
     <string name="operation_expense">Expense</string>
