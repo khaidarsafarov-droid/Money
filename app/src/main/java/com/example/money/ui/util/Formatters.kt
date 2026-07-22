@@ -44,6 +44,14 @@ object Formatters {
         return AndroidDateFormat.format("d MMM", calendar).toString()
     }
 
+    /** Compact due date: `d MMM`, with year only when not the current year. */
+    fun dueDateCompact(millis: Long): String {
+        val due = Calendar.getInstance(locale).apply { timeInMillis = millis }
+        val now = Calendar.getInstance(locale)
+        val pattern = if (due.get(Calendar.YEAR) == now.get(Calendar.YEAR)) "d MMM" else "d MMM yyyy"
+        return AndroidDateFormat.format(pattern, due).toString()
+    }
+
     fun monthYear(millis: Long = System.currentTimeMillis()): String {
         val calendar = Calendar.getInstance(locale).apply { timeInMillis = millis }
         return AndroidDateFormat.format("MMMM yyyy", calendar).toString()

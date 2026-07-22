@@ -1,6 +1,5 @@
 package com.example.money.ui.home
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -23,10 +21,15 @@ import com.example.money.R
 import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
+import com.example.money.domain.model.Debtor
+import com.example.money.domain.model.Expense
+import com.example.money.domain.model.SavingsGoal
+import com.example.money.domain.model.Transfer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalProgress
-import com.example.money.ui.debtors.DebtContactActions
+import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.GoalListItem
+import com.example.money.ui.debtors.DebtContactActions
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.util.Formatters
@@ -37,20 +40,23 @@ fun HomeDetailPane(
     summary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics = DashboardDebtMetrics(0, 0, 0, 0),
-    onEditGoal: (com.example.money.domain.model.SavingsGoal) -> Unit,
-    onDeleteGoal: (com.example.money.domain.model.SavingsGoal) -> Unit,
-    onGoalTransfer: (com.example.money.domain.model.SavingsGoal) -> Unit,
+    onEditGoal: (SavingsGoal) -> Unit,
+    onDeleteGoal: (SavingsGoal) -> Unit,
+    onGoalTransfer: (SavingsGoal) -> Unit,
     onExpense: () -> Unit,
-    onRemindDebtor: (com.example.money.domain.model.Debtor) -> Unit,
-    onAddDebtPayment: (com.example.money.domain.model.Debtor) -> Unit,
-    onAccelerateDebtPayment: (com.example.money.domain.model.Debtor, Long) -> Unit = { _, _ -> },
+    onRemindDebtor: (Debtor) -> Unit,
+    onAddDebtPayment: (Debtor) -> Unit,
+    onAccelerateDebtPayment: (Debtor, Long) -> Unit = { _, _ -> },
     hideAmounts: Boolean = false,
-    onEditDebtor: (com.example.money.domain.model.Debtor) -> Unit,
-    onDeleteDebtor: (com.example.money.domain.model.Debtor) -> Unit,
+    onEditDebtor: (Debtor) -> Unit,
+    onDeleteDebtor: (Debtor) -> Unit,
+    onViewContactHistory: (Debtor) -> Unit = {},
+    onSyncCalendar: (Debtor) -> Unit = {},
+    onRemoveCalendar: (Debtor) -> Unit = {},
     onConfirmTransfer: (Long) -> Unit,
-    onDeleteTransfer: (com.example.money.domain.model.Transfer) -> Unit,
+    onDeleteTransfer: (Transfer) -> Unit,
     onConfirmExpense: (Long) -> Unit,
-    onDeleteExpense: (com.example.money.domain.model.Expense) -> Unit,
+    onDeleteExpense: (Expense) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -121,6 +127,17 @@ fun HomeDetailPane(
                     onEdit = { onEditDebtor(selection.debtor) },
                     onDelete = { onDeleteDebtor(selection.debtor) },
                     hideAmounts = hideAmounts,
+                    onViewContactHistory = selection.debtor.contactLookupKey?.let { _ ->
+                        { onViewContactHistory(selection.debtor) }
+                    },
+                    onCalendar = {
+                        if (selection.debtor.calendarEventId.isNullOrBlank()) {
+                            onSyncCalendar(selection.debtor)
+                        } else {
+                            onRemoveCalendar(selection.debtor)
+                        }
+                    },
+                    calendarSynced = !selection.debtor.calendarEventId.isNullOrBlank(),
                     onCall = selection.debtor.phone.takeIf { it.isNotBlank() }?.let {
                         { DebtContactActions.dialPhone(context, selection.debtor.phone) }
                     },

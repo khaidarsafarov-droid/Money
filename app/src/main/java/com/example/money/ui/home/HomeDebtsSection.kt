@@ -1,14 +1,12 @@
 package com.example.money.ui.home
 
 import android.content.Context
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,7 +33,6 @@ import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.debtors.GamificationBanner
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 
 fun LazyListScope.homeDebtsSection(
@@ -75,7 +72,7 @@ fun LazyListScope.homeDebtsSection(
         DebtTabRow(
             selectedTab = debtTab,
             onTabSelected = onDebtTabChange,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
     }
     if (debtTab != DebtTab.Freedom && debtTab != DebtTab.Calendar) {
@@ -89,7 +86,7 @@ fun LazyListScope.homeDebtsSection(
                         else -> DebtType.DEBTOR
                     },
                     hideAmounts = privacySettings.hideAmounts,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
                 )
             }
         }
@@ -113,27 +110,21 @@ fun LazyListScope.homeDebtsSection(
         item {
             GamificationBanner(
                 state = gamificationState,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
             )
         }
         item {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                androidx.compose.material3.OutlinedButton(
-                    onClick = onOpenAdvisor,
-                    modifier = Modifier.weight(1f),
-                ) {
+                TextButton(onClick = onOpenAdvisor) {
                     Text(stringResource(R.string.advisor_open))
                 }
                 if (autopilotSettings.enabled) {
-                    androidx.compose.material3.Button(
-                        onClick = onApplyAutopilot,
-                        modifier = Modifier.weight(1f),
-                    ) {
+                    TextButton(onClick = onApplyAutopilot) {
                         Text(stringResource(R.string.autopilot_apply_now))
                     }
                 }
@@ -162,14 +153,14 @@ fun LazyListScope.homeDebtsSection(
             DebtorFilterRow(
                 selectedFilter = debtorFilter,
                 onFilterSelected = onDebtorFilterChange,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }
         item {
             DebtSearchField(
                 query = debtSearchQuery,
                 onQueryChange = onDebtSearchQueryChange,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
             )
         }
         if (debtors.isEmpty()) {
@@ -195,15 +186,8 @@ fun LazyListScope.homeDebtsSection(
                 )
                 DebtorListItem(
                     debtor = debtor,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                        .then(
-                            if (isHighlighted) {
-                                Modifier.border(2.dp, GoldPrimary, MaterialTheme.shapes.large)
-                            } else {
-                                Modifier
-                            },
-                        ),
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    highlighted = isHighlighted,
                     onRemind = { onRemindDebtor(debtor) },
                     onAddPayment = { onAddDebtPayment(debtor) },
                     onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
