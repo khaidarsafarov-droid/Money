@@ -168,7 +168,7 @@ fun HomeDetailPane(
                         )
                         append(" · ")
                         append(Formatters.shortDate(selection.transfer.date))
-                        if (!selection.transfer.isConfirmed) append(" · Ожидает")
+                        if (!selection.transfer.isConfirmed) append(stringResource(R.string.operation_pending_suffix))
                     },
                     amountColor = FinancePositive,
                     isPending = !selection.transfer.isConfirmed,
@@ -194,7 +194,7 @@ fun HomeDetailPane(
                         append(selection.expense.category)
                         append(" · ")
                         append(Formatters.shortDate(selection.expense.date))
-                        if (!selection.expense.isConfirmed) append(" · Ожидает")
+                        if (!selection.expense.isConfirmed) append(stringResource(R.string.operation_pending_suffix))
                     },
                     amountColor = FinanceNegative,
                     isPending = !selection.expense.isConfirmed,

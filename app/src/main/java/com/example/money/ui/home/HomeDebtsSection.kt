@@ -75,6 +75,23 @@ fun LazyListScope.homeDebtsSection(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
     }
+    item {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            TextButton(onClick = onOpenAdvisor) {
+                Text(stringResource(R.string.advisor_open))
+            }
+            if (autopilotSettings.enabled) {
+                TextButton(onClick = onApplyAutopilot) {
+                    Text(stringResource(R.string.autopilot_apply_now))
+                }
+            }
+        }
+    }
     if (debtTab != DebtTab.Freedom && debtTab != DebtTab.Calendar) {
         if (debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe) {
             item {
@@ -112,23 +129,6 @@ fun LazyListScope.homeDebtsSection(
                 state = gamificationState,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
             )
-        }
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                TextButton(onClick = onOpenAdvisor) {
-                    Text(stringResource(R.string.advisor_open))
-                }
-                if (autopilotSettings.enabled) {
-                    TextButton(onClick = onApplyAutopilot) {
-                        Text(stringResource(R.string.autopilot_apply_now))
-                    }
-                }
-            }
         }
     }
     if (debtTab == DebtTab.Calendar) {

@@ -179,7 +179,7 @@ fun GoalScreen(
                 title = { Text(stringResource(R.string.goal_hub_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_navigate_up))
                     }
                 },
                 actions = {

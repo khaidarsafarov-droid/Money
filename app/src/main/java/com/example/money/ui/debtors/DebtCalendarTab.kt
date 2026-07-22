@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
@@ -55,24 +57,40 @@ fun DebtCalendarTab(
         colors = CardDefaults.cardColors(containerColor = CreamSurface),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val prevMonthCd = stringResource(R.string.calendar_prev_month)
+            val nextMonthCd = stringResource(R.string.calendar_next_month)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("◀", modifier = Modifier.clickable {
-                    monthAnchor = shiftMonth(monthAnchor, -1)
-                })
+                Text(
+                    "◀",
+                    modifier = Modifier
+                        .semantics { contentDescription = prevMonthCd }
+                        .clickable { monthAnchor = shiftMonth(monthAnchor, -1) },
+                )
                 Text(monthLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("▶", modifier = Modifier.clickable {
-                    monthAnchor = shiftMonth(monthAnchor, 1)
-                })
+                Text(
+                    "▶",
+                    modifier = Modifier
+                        .semantics { contentDescription = nextMonthCd }
+                        .clickable { monthAnchor = shiftMonth(monthAnchor, 1) },
+                )
             }
 
             Row(modifier = Modifier.fillMaxWidth()) {
-                listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС").forEach { label ->
+                listOf(
+                    R.string.calendar_weekday_mon,
+                    R.string.calendar_weekday_tue,
+                    R.string.calendar_weekday_wed,
+                    R.string.calendar_weekday_thu,
+                    R.string.calendar_weekday_fri,
+                    R.string.calendar_weekday_sat,
+                    R.string.calendar_weekday_sun,
+                ).forEach { labelRes ->
                     Text(
-                        label,
+                        stringResource(labelRes),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -87,6 +105,10 @@ fun DebtCalendarTab(
                         val hasDebts = dayHasDebts(activeDebts, dayMillis)
                         val dayNumber = Calendar.getInstance().apply { timeInMillis = dayMillis }
                             .get(Calendar.DAY_OF_MONTH)
+                        val dayCd = stringResource(
+                            if (hasDebts) R.string.calendar_day_with_debts else R.string.calendar_day_empty_cd,
+                            dayNumber,
+                        )
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -100,6 +122,7 @@ fun DebtCalendarTab(
                                         else -> MaterialTheme.colorScheme.surface
                                     },
                                 )
+                                .semantics { contentDescription = dayCd }
                                 .clickable(enabled = inMonth) {
                                     if (inMonth) selectedDay = dayMillis
                                 },

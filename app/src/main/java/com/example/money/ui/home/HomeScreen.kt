@@ -99,6 +99,7 @@ import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
+import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.debtors.ContactDebtHistorySheet
 import com.example.money.ui.debtors.DebtAdvisorBottomSheet
 import com.example.money.ui.debtors.DebtCelebrationDialog
@@ -648,7 +649,7 @@ fun HomeScreen(
                 navigationIcon = {
                     if (!isTablet) {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = null)
+                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.cd_open_drawer))
                         }
                     }
                 },
@@ -660,7 +661,7 @@ fun HomeScreen(
                         )
                     }
                     IconButton(onClick = { showTopMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_more_options))
                     }
                     DropdownMenu(
                         expanded = showTopMenu,
@@ -817,6 +818,14 @@ fun HomeScreen(
                         }
                     }
                 },
+                onOpenGoalHub = onOpenGoalHub,
+                onOpenAppLanguage = onOpenAppLanguage,
+                onOpenPrivacySettings = onOpenPrivacySettings,
+                onOpenAutopilotSettings = onOpenAutopilotSettings,
+                onOpenCalendarSettings = onOpenCalendarSettings,
+                onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
+                onOpenVoiceSettings = onOpenVoiceSettings,
+                onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onViewContactHistory = { debtor ->
@@ -941,11 +950,37 @@ fun HomeScreen(
     }
 
     if (showAdvisorSheet) {
+        val accumulatedCents = MoneyMath.toCents(goalMetrics.totalAccumulated)
+        val remainingCents = MoneyMath.toCents(goalMetrics.totalRemainingToGoal)
+        val depositsCents = MoneyMath.toCents(budgetSummary.totalDeposits)
+        val expensesCents = MoneyMath.toCents(budgetSummary.totalExpenses)
         DebtAdvisorBottomSheet(
             debts = allDebtors,
             messages = advisorMessages,
-            onPromptSelected = debtorsViewModel::askAdvisor,
+            onPromptSelected = { promptId ->
+                debtorsViewModel.askAdvisor(
+                    promptId = promptId,
+                    totalAccumulatedCents = accumulatedCents,
+                    remainingToGoalCents = remainingCents,
+                    totalDepositsCents = depositsCents,
+                    totalExpensesCents = expensesCents,
+                )
+            },
+            onFreeText = { text ->
+                debtorsViewModel.askAdvisorFreeText(
+                    text = text,
+                    totalAccumulatedCents = accumulatedCents,
+                    remainingToGoalCents = remainingCents,
+                    totalDepositsCents = depositsCents,
+                    totalExpensesCents = expensesCents,
+                )
+            },
+            onClearHistory = debtorsViewModel::clearAdvisorHistory,
             onDismiss = { showAdvisorSheet = false },
+            totalAccumulatedCents = accumulatedCents,
+            remainingToGoalCents = remainingCents,
+            totalDepositsCents = depositsCents,
+            totalExpensesCents = expensesCents,
         )
     }
 }
@@ -1020,7 +1055,12 @@ private fun PhoneHomeLayout(
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
 ) {
-    var showDebtsSection by rememberSaveable { mutableStateOf(false) }
+    var showDebtsSection by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(highlightedDebtorId, showCheckIn) {
+        if (highlightedDebtorId != null || showCheckIn) {
+            showDebtsSection = true
+        }
+    }
     val activeDebtCount = allDebtors.count { !it.isPaid }
     val transactionCount = transfers.size + expenses.size
     val contactContext = LocalContext.current
@@ -1313,7 +1353,9 @@ private fun PhoneHomeLayout(
                         }
                         Icon(
                             imageVector = if (showDebtsSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = null,
+                            contentDescription = stringResource(
+                                if (showDebtsSection) R.string.cd_collapse_debts else R.string.cd_expand_debts,
+                            ),
                             tint = GoldPrimary,
                         )
                     }

@@ -206,7 +206,7 @@ export function psychotypeUiFlags(type: Psychotype): PsychotypeUiFlags {
       };
     default: {
       const _exhaustive: never = type;
-      return psychotypeUiFlags("BALANCED");
+      throw new Error(`Unhandled psychotype: ${String(_exhaustive)}`);
     }
   }
 }

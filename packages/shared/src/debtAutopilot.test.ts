@@ -31,6 +31,7 @@ describe("debtAutopilot", () => {
       strategy: "snowball",
       reminderHour: 20,
       reminderMinute: 0,
+      roundPaymentsToTen: false,
     });
     expect(plan?.debtId).toBe("a");
     expect(plan?.amountCents).toBe(300);
