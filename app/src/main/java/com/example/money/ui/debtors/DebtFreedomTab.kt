@@ -31,6 +31,7 @@ fun DebtFreedomTab(
     onExtraMonthlyChange: (Long) -> Unit,
     modifier: Modifier = Modifier,
     onOpenGoalHub: (() -> Unit)? = null,
+    hideAmounts: Boolean = false,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -76,7 +77,7 @@ fun DebtFreedomTab(
             Text(
                 text = stringResource(
                     R.string.debt_freedom_remaining_total,
-                    Formatters.currencyFromCents(projection.totalRemainingCents),
+                    Formatters.currencyFromCents(projection.totalRemainingCents, hide = hideAmounts),
                 ),
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -84,7 +85,7 @@ fun DebtFreedomTab(
             Text(
                 text = stringResource(
                     R.string.debt_freedom_monthly_pace,
-                    Formatters.currencyFromCents(projection.monthlyPaymentCents),
+                    Formatters.currencyFromCents(projection.monthlyPaymentCents, hide = hideAmounts),
                     projection.monthsRemaining ?: 0,
                 ),
                 style = MaterialTheme.typography.bodySmall,
@@ -112,7 +113,7 @@ fun DebtFreedomTab(
             Text(
                 text = stringResource(
                     R.string.debt_freedom_extra_amount,
-                    Formatters.currencyFromCents(extraMonthlyCents),
+                    Formatters.currencyFromCents(extraMonthlyCents, hide = hideAmounts),
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

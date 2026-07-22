@@ -49,6 +49,7 @@ fun GoalListItem(
     onDelete: () -> Unit,
     onTransfer: (() -> Unit)? = null,
     onExpense: (() -> Unit)? = null,
+    hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val isDeadlinePassed = goal.deadlineMillis != null &&
@@ -111,11 +112,7 @@ fun GoalListItem(
                     }
 
                     Text(
-                        text = if (goal.isOverAchieved) {
-                            Formatters.currencyFromCents(goal.currentAmountCents)
-                        } else {
-                            Formatters.currencyFromCents(goal.currentAmountCents)
-                        },
+                        text = Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
                         style = moneyDisplayStyle(),
                     )
 
@@ -123,13 +120,13 @@ fun GoalListItem(
                         text = if (goal.isOverAchieved) {
                             stringResource(
                                 R.string.goal_over_achieved,
-                                Formatters.currencyFromCents(goal.surplusAmountCents),
+                                Formatters.currencyFromCents(goal.surplusAmountCents, hide = hideAmounts),
                             )
                         } else {
                             stringResource(
                                 R.string.goal_remaining,
-                                Formatters.currencyFromCents(goal.remainingAmountCents),
-                                Formatters.currencyFromCents(goal.targetAmountCents),
+                                Formatters.currencyFromCents(goal.remainingAmountCents, hide = hideAmounts),
+                                Formatters.currencyFromCents(goal.targetAmountCents, hide = hideAmounts),
                             )
                         },
                         style = moneyCaptionStyle(),

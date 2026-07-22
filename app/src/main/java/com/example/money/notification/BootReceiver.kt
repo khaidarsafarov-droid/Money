@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.example.money.MoneyApplication
+import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.voice.VoiceReportScheduler
 import kotlinx.coroutines.launch
 
@@ -17,6 +18,8 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 app.rescheduleDebtReminders()
                 app.syncPersonalDebtMessageSchedule()
+                MicroPaymentScheduler.syncSchedule(context)
+                WeeklyCheckInScheduler.syncSchedule(context)
                 VoiceReportScheduler.syncSchedule(context)
             } finally {
                 pendingResult.finish()

@@ -45,6 +45,7 @@ fun GlobalBalanceHeader(
     debtMetrics: DashboardDebtMetrics,
     onOwesMeClick: () -> Unit = {},
     onIOweClick: () -> Unit = {},
+    hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -58,14 +59,14 @@ fun GlobalBalanceHeader(
             LabeledMetric(
                 sign = stringResource(R.string.metric_sign_saved),
                 label = stringResource(R.string.global_balance_accumulated_label),
-                value = Formatters.currencyCompact(goalMetrics.totalAccumulated),
+                value = Formatters.currencyCompact(goalMetrics.totalAccumulated, hide = hideAmounts),
                 valueColor = FinancePositive,
                 modifier = Modifier.weight(1f),
             )
             LabeledMetric(
                 sign = stringResource(R.string.metric_sign_to_goal),
                 label = stringResource(R.string.global_balance_remaining_label),
-                value = Formatters.currencyCompact(goalMetrics.totalRemainingToGoal),
+                value = Formatters.currencyCompact(goalMetrics.totalRemainingToGoal, hide = hideAmounts),
                 valueColor = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
@@ -77,7 +78,7 @@ fun GlobalBalanceHeader(
             LabeledMetric(
                 sign = stringResource(R.string.metric_sign_owes_me),
                 label = stringResource(R.string.debt_dashboard_owes_me),
-                value = Formatters.currencyFromCents(debtMetrics.owedToMeCents),
+                value = Formatters.currencyFromCents(debtMetrics.owedToMeCents, hide = hideAmounts),
                 valueColor = if (debtMetrics.owedToMeCents > 0L) {
                     FinancePositive
                 } else {
@@ -89,7 +90,7 @@ fun GlobalBalanceHeader(
             LabeledMetric(
                 sign = stringResource(R.string.metric_sign_i_owe),
                 label = stringResource(R.string.debt_dashboard_i_owe),
-                value = Formatters.currencyFromCents(debtMetrics.iOweCents),
+                value = Formatters.currencyFromCents(debtMetrics.iOweCents, hide = hideAmounts),
                 valueColor = if (debtMetrics.iOweCents > 0L) {
                     FinanceNegative
                 } else {

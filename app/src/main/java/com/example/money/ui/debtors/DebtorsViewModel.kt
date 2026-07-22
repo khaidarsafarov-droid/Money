@@ -9,6 +9,7 @@ import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DashboardDebtMetrics
+import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtAutopilotEngine
 import com.example.money.domain.util.DebtGamificationEngine
@@ -339,10 +340,13 @@ class DebtorsViewModel(
                 email = email.trim(),
             )
             debtorRepository.updateDebtor(updated, previousAffectsBalance)
-            if (!updated.isPaid) {
-                debtReminderScheduler.cancel(debtor.id)
-                scheduleDebtReminders(updated)
-                syncDebtToCalendar(updated)
+            val latest = debtorRepository.getDebtorById(debtor.id) ?: return@launch
+            if (latest.isPaid) {
+                debtReminderScheduler.cancel(latest.id)
+            } else {
+                debtReminderScheduler.cancel(latest.id)
+                scheduleDebtReminders(latest)
+                syncDebtToCalendar(latest)
             }
         }
     }
@@ -406,10 +410,16 @@ class DebtorsViewModel(
 
     fun markAsPaid(id: Long) {
         viewModelScope.launch {
-            val debtor = debtorRepository.getDebtorById(id)
-            debtorRepository.markAsPaid(id)
+            val debtor = debtorRepository.getDebtorById(id) ?: return@launch
+            val affectsBalance = debtor.debtType == DebtType.CREDITOR
+            debtorRepository.markAsPaid(id, affectsBalance)
             debtReminderScheduler.cancel(id)
-            debtor?.let { syncDebtToCalendar(it, markClosed = true, force = true) }
+            val closed = debtorRepository.getDebtorById(id) ?: debtor.copy(status = DebtStatus.COMPLETED)
+            syncDebtToCalendar(closed, markClosed = true, force = true)
+            if (!closed.calendarEventId.isNullOrBlank()) {
+                _pendingCalendarClose.value = closed
+            }
+            _celebrationDebtor.value = closed
         }
     }
 

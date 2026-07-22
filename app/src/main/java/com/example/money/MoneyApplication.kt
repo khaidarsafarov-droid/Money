@@ -19,6 +19,7 @@ import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.notification.NotificationChannels
+import com.example.money.notification.WeeklyCheckInScheduler
 import com.example.money.voice.VoiceReportScheduler
 import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.widget.GoalWidgetSnapshotWriter
@@ -93,6 +94,7 @@ class MoneyApplication : Application() {
         syncPersonalDebtMessageSchedule()
         startWidgetPipeline()
         syncAutopilotSchedule()
+        syncWeeklyCheckInSchedule()
         syncVoiceReportSchedule()
         startPeerSync()
     }
@@ -110,6 +112,12 @@ class MoneyApplication : Application() {
     private fun syncAutopilotSchedule() {
         applicationScope.launch {
             MicroPaymentScheduler.syncSchedule(this@MoneyApplication)
+        }
+    }
+
+    private fun syncWeeklyCheckInSchedule() {
+        applicationScope.launch {
+            WeeklyCheckInScheduler.syncSchedule(this@MoneyApplication)
         }
     }
 

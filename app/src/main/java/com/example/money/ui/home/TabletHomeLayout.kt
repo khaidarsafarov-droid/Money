@@ -54,6 +54,7 @@ import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.debtors.DebtCalendarTab
+import com.example.money.ui.debtors.DebtCheckInSheet
 import com.example.money.ui.debtors.DebtFreedomTab
 import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtTabRow
@@ -95,6 +96,7 @@ fun TabletHomeLayout(
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
+    onMarkDebtPaid: (Debtor) -> Unit = {},
     freedomProjection: DebtFreedomEngine.FreedomProjection,
     extraMonthlyCents: Long,
     onExtraMonthlyChange: (Long) -> Unit,
@@ -103,6 +105,8 @@ fun TabletHomeLayout(
     autopilotSettings: AutopilotSettings = AutopilotSettings(),
     onOpenAdvisor: () -> Unit = {},
     onApplyAutopilot: () -> Unit = {},
+    showCheckIn: Boolean = false,
+    onDismissCheckIn: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
     onOpenAppLanguage: () -> Unit = {},
     onOpenPrivacySettings: () -> Unit = {},
@@ -113,6 +117,7 @@ fun TabletHomeLayout(
     onOpenIncomeIdeas: () -> Unit = {},
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
+    onAddDebt: () -> Unit = {},
     onViewContactHistory: (Debtor) -> Unit = {},
     onSyncCalendar: (Debtor) -> Unit = {},
     onRemoveCalendar: (Debtor) -> Unit = {},
@@ -251,6 +256,7 @@ fun TabletHomeLayout(
                         summary = budgetSummary,
                         goalMetrics = goalMetrics,
                         debtMetrics = debtMetrics,
+                        hideAmounts = privacySettings.hideAmounts,
                         onOwesMeClick = {
                             onSectionChange(HomeSection.Debts)
                             onDebtTabChange(DebtTab.OwesMe)
@@ -337,10 +343,25 @@ fun TabletHomeLayout(
                                     extraMonthlyCents = extraMonthlyCents,
                                     onExtraMonthlyChange = onExtraMonthlyChange,
                                     onOpenGoalHub = onOpenGoalHub,
+                                    hideAmounts = privacySettings.hideAmounts,
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }
                         } else {
+                            if (showCheckIn) {
+                                item {
+                                    DebtCheckInSheet(
+                                        debtors = allDebtors,
+                                        hideAmounts = privacySettings.hideAmounts,
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                    )
+                                }
+                                item {
+                                    TextButton(onClick = onDismissCheckIn) {
+                                        Text(stringResource(R.string.action_close))
+                                    }
+                                }
+                            }
                             item {
                                 GamificationBanner(
                                     state = gamificationState,
@@ -366,6 +387,8 @@ fun TabletHomeLayout(
                                     EmptyStateMessage(
                                         title = emptyDebtorsTitle(debtorFilter),
                                         hint = emptyDebtorsHint(debtorFilter),
+                                        actionLabel = stringResource(R.string.empty_debtors_action),
+                                        onAction = onAddDebt,
                                     )
                                 }
                             } else {
@@ -449,6 +472,7 @@ fun TabletHomeLayout(
                 onRemindDebtor = onRemindDebtor,
                 onAddDebtPayment = onAddDebtPayment,
                 onAccelerateDebtPayment = onAccelerateDebtPayment,
+                onMarkDebtPaid = onMarkDebtPaid,
                 hideAmounts = privacySettings.hideAmounts,
                 onEditDebtor = onEditDebtor,
                 onDeleteDebtor = onDeleteDebtor,

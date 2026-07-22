@@ -32,6 +32,7 @@ fun DebtPaymentDialog(
     debtor: Debtor,
     availableBalance: Double,
     initialAmountCents: Long = 0L,
+    hideAmounts: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (amount: Double, affectsBalance: Boolean) -> Unit,
 ) {
@@ -73,7 +74,7 @@ fun DebtPaymentDialog(
                 Text(
                     text = stringResource(
                         R.string.debt_payment_remaining,
-                        Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency),
+                        Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency, hide = hideAmounts),
                     ),
                 )
                 MoneyTextField(
@@ -116,7 +117,7 @@ fun DebtPaymentDialog(
                         Text(
                             text = stringResource(
                                 R.string.debt_balance_available,
-                                Formatters.currencyCompact(availableBalance),
+                                Formatters.currencyCompact(availableBalance, hide = hideAmounts),
                             ),
                             style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                         )
@@ -133,6 +134,14 @@ fun DebtPaymentDialog(
                     val paymentCents = MoneyMath.toCents(amount)
                     if (paymentCents > debtor.remainingAmountCents) {
                         amountError = context.getString(R.string.error_payment_exceeds_remaining)
+                        return@TextButton
+                    }
+                    if (
+                        affectsBalance &&
+                        debtor.debtType == DebtType.DEBTOR &&
+                        amount > availableBalance + 0.000_001
+                    ) {
+                        amountError = context.getString(R.string.msg_insufficient_funds)
                         return@TextButton
                     }
                     onConfirm(amount, affectsBalance)

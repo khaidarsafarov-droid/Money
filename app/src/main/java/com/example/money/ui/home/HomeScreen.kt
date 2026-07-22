@@ -465,6 +465,7 @@ fun HomeScreen(
             debtor = debtor,
             availableBalance = availableBalanceUsd,
             initialAmountCents = debtPaymentPrefillCents,
+            hideAmounts = privacySettings.hideAmounts,
             onDismiss = {
                 showDebtPaymentDialog = null
                 debtPaymentPrefillCents = 0L
@@ -718,39 +719,38 @@ fun HomeScreen(
         }
 
         val fab: @Composable () -> Unit = {
-            FloatingActionButton(
-                onClick = {
-                    if (isTablet) {
-                        when (tabletSection) {
-                            HomeSection.Goals -> showAddGoalDialog = true
-                            HomeSection.Debts -> {
-                                if (canAddDebtor) {
-                                    showAddDebtorDialog = true
-                                } else {
-                                    debtListViewModel.setDebtTab(DebtTab.OwesMe)
-                                    showAddDebtorDialog = true
-                                }
+            val showFab = if (isTablet) {
+                when (tabletSection) {
+                    HomeSection.Goals, HomeSection.Operations -> true
+                    HomeSection.Debts -> canAddDebtor
+                }
+            } else {
+                when (HomeTab.entries[selectedTab]) {
+                    HomeTab.BrotherFinances -> true
+                    HomeTab.Debts -> canAddDebtor
+                }
+            }
+            if (showFab) {
+                FloatingActionButton(
+                    onClick = {
+                        if (isTablet) {
+                            when (tabletSection) {
+                                HomeSection.Goals -> showAddGoalDialog = true
+                                HomeSection.Debts -> showAddDebtorDialog = true
+                                HomeSection.Operations -> showQuickAddDialog = true
                             }
-                            HomeSection.Operations -> showQuickAddDialog = true
-                        }
-                    } else {
-                        when (HomeTab.entries[selectedTab]) {
-                            HomeTab.Debts -> {
-                                if (canAddDebtor) {
-                                    showAddDebtorDialog = true
-                                } else {
-                                    debtListViewModel.setDebtTab(DebtTab.OwesMe)
-                                    showAddDebtorDialog = true
-                                }
+                        } else {
+                            when (HomeTab.entries[selectedTab]) {
+                                HomeTab.Debts -> showAddDebtorDialog = true
+                                HomeTab.BrotherFinances -> showQuickAddDialog = true
                             }
-                            HomeTab.BrotherFinances -> showQuickAddDialog = true
                         }
-                    }
-                },
-                containerColor = GoldPrimary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.widget_quick_add))
+                    },
+                    containerColor = GoldPrimary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.widget_quick_add))
+                }
             }
         }
 
@@ -792,12 +792,15 @@ fun HomeScreen(
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
+                onMarkDebtPaid = { debtor -> debtorsViewModel.markAsPaid(debtor.id) },
                 freedomProjection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
                 gamificationState = gamificationState,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
+                showCheckIn = showCheckIn,
+                onDismissCheckIn = debtorsViewModel::dismissCheckIn,
                 onOpenAdvisor = { showAdvisorSheet = true },
                 onApplyAutopilot = {
                     scope.launch {
@@ -835,6 +838,14 @@ fun HomeScreen(
                 },
                 onSyncCalendar = debtorsViewModel::syncDebtToCalendarManually,
                 onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
+                onAddDebt = {
+                    if (canAddDebtor) {
+                        showAddDebtorDialog = true
+                    } else {
+                        debtListViewModel.setDebtTab(DebtTab.OwesMe)
+                        showAddDebtorDialog = true
+                    }
+                },
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
                 onDeleteTransfer = { pendingDelete = PendingDelete.TransferItem(it) },
                 onConfirmExpense = budgetViewModel::confirmExpense,
@@ -882,6 +893,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
+                onMarkDebtPaid = { debtor -> debtorsViewModel.markAsPaid(debtor.id) },
                 freedomProjection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
@@ -907,12 +919,7 @@ fun HomeScreen(
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onOpenGoalHub = onOpenGoalHub,
                 onAddDebt = {
-                    if (canAddDebtor) {
-                        showAddDebtorDialog = true
-                    } else {
-                        debtListViewModel.setDebtTab(DebtTab.OwesMe)
-                        showAddDebtorDialog = true
-                    }
+                    showAddDebtorDialog = true
                 },
                 onQuickAdd = { showQuickAddDialog = true },
                 notificationsEnabled = notificationsEnabled,
@@ -1020,6 +1027,7 @@ private fun PhoneHomeLayout(
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
+    onMarkDebtPaid: (Debtor) -> Unit,
     freedomProjection: DebtFreedomEngine.FreedomProjection,
     extraMonthlyCents: Long,
     onExtraMonthlyChange: (Long) -> Unit,
@@ -1244,6 +1252,7 @@ private fun PhoneHomeLayout(
                         summary = budgetSummary,
                         goalMetrics = goalMetrics,
                         debtMetrics = debtMetrics,
+                        hideAmounts = privacySettings.hideAmounts,
                         onOwesMeClick = {
                             showDebtsSection = true
                             onTabSelected(HomeTab.Debts.ordinal)
@@ -1317,6 +1326,7 @@ private fun PhoneHomeLayout(
                                     null
                                 },
                                 onExpense = onExpense,
+                                hideAmounts = privacySettings.hideAmounts,
                             )
                         }
                     }
@@ -1432,6 +1442,7 @@ private fun PhoneHomeLayout(
                         onRemindDebtor = onRemindDebtor,
                         onAddDebtPayment = onAddDebtPayment,
                         onAccelerateDebtPayment = onAccelerateDebtPayment,
+                        onMarkDebtPaid = onMarkDebtPaid,
                         onEditDebtor = onEditDebtor,
                         onDeleteDebtor = onDeleteDebtor,
                         onViewContactHistory = onViewContactHistory,
