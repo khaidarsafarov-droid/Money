@@ -9,6 +9,7 @@ import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DashboardDebtMetrics
+import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtAutopilotEngine
 import com.example.money.domain.util.DebtGamificationEngine
@@ -19,6 +20,7 @@ import com.example.money.notification.DebtReminderCoordinator
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.settings.AutopilotSettings
+import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.CalendarSettings
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PersonalBranchSettings
@@ -210,6 +212,9 @@ class DebtorsViewModel(
     ) {
         viewModelScope.launch {
             val debts = allDebtorsList.value
+            val strategy = AutopilotStrategy.fromStored(
+                preferencesStore.goalPsychologyProfile.first().payoffStrategy,
+            )
             val updated = buildAdvisorMessages(
                 promptId = promptId,
                 debts = debts,
@@ -219,6 +224,7 @@ class DebtorsViewModel(
                 remainingToGoalCents = remainingToGoalCents,
                 totalDepositsCents = totalDepositsCents,
                 totalExpensesCents = totalExpensesCents,
+                payoffStrategy = strategy,
             )
             _advisorMessages.value = updated
             preferencesStore.writeAdvisorHistoryJson(encodeAdvisorMessages(updated))
@@ -339,16 +345,23 @@ class DebtorsViewModel(
                 email = email.trim(),
             )
             debtorRepository.updateDebtor(updated, previousAffectsBalance)
-            if (!updated.isPaid) {
-                debtReminderScheduler.cancel(debtor.id)
-                scheduleDebtReminders(updated)
-                syncDebtToCalendar(updated)
+            val latest = debtorRepository.getDebtorById(debtor.id) ?: return@launch
+            if (latest.isPaid) {
+                debtReminderScheduler.cancel(latest.id)
+            } else {
+                debtReminderScheduler.cancel(latest.id)
+                scheduleDebtReminders(latest)
+                syncDebtToCalendar(latest)
             }
         }
     }
 
     private suspend fun scheduleDebtReminders(debtor: Debtor) {
         val settings = preferencesStore.personalBranchSettings.first()
+        if (!settings.debtNotificationsEnabled) {
+            debtReminderScheduler.cancel(debtor.id)
+            return
+        }
         debtReminderScheduler.schedule(debtor)
         debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
     }
@@ -402,10 +415,16 @@ class DebtorsViewModel(
 
     fun markAsPaid(id: Long) {
         viewModelScope.launch {
-            val debtor = debtorRepository.getDebtorById(id)
-            debtorRepository.markAsPaid(id)
+            val debtor = debtorRepository.getDebtorById(id) ?: return@launch
+            val affectsBalance = debtor.debtType == DebtType.CREDITOR
+            debtorRepository.markAsPaid(id, affectsBalance)
             debtReminderScheduler.cancel(id)
-            debtor?.let { syncDebtToCalendar(it, markClosed = true, force = true) }
+            val closed = debtorRepository.getDebtorById(id) ?: debtor.copy(status = DebtStatus.COMPLETED)
+            syncDebtToCalendar(closed, markClosed = true, force = true)
+            if (!closed.calendarEventId.isNullOrBlank()) {
+                _pendingCalendarClose.value = closed
+            }
+            _celebrationDebtor.value = closed
         }
     }
 

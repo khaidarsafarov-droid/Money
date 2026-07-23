@@ -47,6 +47,7 @@ fun HomeDetailPane(
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
     onAccelerateDebtPayment: (Debtor, Long) -> Unit = { _, _ -> },
+    onMarkDebtPaid: (Debtor) -> Unit = {},
     hideAmounts: Boolean = false,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
@@ -72,6 +73,7 @@ fun HomeDetailPane(
                     summary = summary,
                     goalMetrics = goalMetrics,
                     debtMetrics = debtMetrics,
+                    hideAmounts = hideAmounts,
                 )
                 Text(
                     text = stringResource(R.string.tablet_detail_overview_hint),
@@ -95,6 +97,7 @@ fun HomeDetailPane(
                         null
                     },
                     onExpense = onExpense,
+                    hideAmounts = hideAmounts,
                 )
                 selection.goal.deadlineMillis?.let { deadline ->
                     val daysLeft = GoalProgress.daysUntilDeadline(deadline)
@@ -124,6 +127,11 @@ fun HomeDetailPane(
                     onRemind = { onRemindDebtor(selection.debtor) },
                     onAddPayment = { onAddDebtPayment(selection.debtor) },
                     onAccelerate = { onAccelerateDebtPayment(selection.debtor, accelerateCents) },
+                    onMarkPaid = if (!selection.debtor.isPaid) {
+                        { onMarkDebtPaid(selection.debtor) }
+                    } else {
+                        null
+                    },
                     onEdit = { onEditDebtor(selection.debtor) },
                     onDelete = { onDeleteDebtor(selection.debtor) },
                     hideAmounts = hideAmounts,

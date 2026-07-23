@@ -54,11 +54,13 @@ fun LazyListScope.homeDebtsSection(
     autopilotSettings: AutopilotSettings,
     onOpenAdvisor: () -> Unit,
     onApplyAutopilot: () -> Unit,
+    onOpenGoalHub: () -> Unit = {},
     highlightedDebtorId: Long?,
     contactContext: Context,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
+    onMarkDebtPaid: (Debtor) -> Unit = {},
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onViewContactHistory: (Debtor) -> Unit,
@@ -145,6 +147,8 @@ fun LazyListScope.homeDebtsSection(
                 projection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = onExtraMonthlyChange,
+                onOpenGoalHub = onOpenGoalHub,
+                hideAmounts = privacySettings.hideAmounts,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
@@ -191,6 +195,7 @@ fun LazyListScope.homeDebtsSection(
                     onRemind = { onRemindDebtor(debtor) },
                     onAddPayment = { onAddDebtPayment(debtor) },
                     onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
+                    onMarkPaid = { onMarkDebtPaid(debtor) },
                     onEdit = { onEditDebtor(debtor) },
                     onDelete = { onDeleteDebtor(debtor) },
                     onViewContactHistory = debtor.contactLookupKey?.let { _ ->

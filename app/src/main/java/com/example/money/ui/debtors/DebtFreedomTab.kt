@@ -1,9 +1,11 @@
 package com.example.money.ui.debtors
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -15,14 +17,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.domain.model.DebtType
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.ui.theme.CardBorder
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
-import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun DebtFreedomTab(
@@ -30,6 +30,8 @@ fun DebtFreedomTab(
     extraMonthlyCents: Long,
     onExtraMonthlyChange: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenGoalHub: (() -> Unit)? = null,
+    hideAmounts: Boolean = false,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -53,6 +55,11 @@ fun DebtFreedomTab(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (onOpenGoalHub != null) {
+                    Button(onClick = onOpenGoalHub, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.goal_hub_open))
+                    }
+                }
                 return@Column
             }
 
@@ -70,7 +77,7 @@ fun DebtFreedomTab(
             Text(
                 text = stringResource(
                     R.string.debt_freedom_remaining_total,
-                    Formatters.currencyFromCents(projection.totalRemainingCents),
+                    Formatters.currencyFromCents(projection.totalRemainingCents, hide = hideAmounts),
                 ),
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -78,7 +85,7 @@ fun DebtFreedomTab(
             Text(
                 text = stringResource(
                     R.string.debt_freedom_monthly_pace,
-                    Formatters.currencyFromCents(projection.monthlyPaymentCents),
+                    Formatters.currencyFromCents(projection.monthlyPaymentCents, hide = hideAmounts),
                     projection.monthsRemaining ?: 0,
                 ),
                 style = MaterialTheme.typography.bodySmall,
@@ -106,7 +113,7 @@ fun DebtFreedomTab(
             Text(
                 text = stringResource(
                     R.string.debt_freedom_extra_amount,
-                    Formatters.currencyFromCents(extraMonthlyCents),
+                    Formatters.currencyFromCents(extraMonthlyCents, hide = hideAmounts),
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -126,6 +133,12 @@ fun DebtFreedomTab(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            if (onOpenGoalHub != null) {
+                Button(onClick = onOpenGoalHub, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.debt_freedom_open_goal_hub))
+                }
+            }
         }
     }
 }

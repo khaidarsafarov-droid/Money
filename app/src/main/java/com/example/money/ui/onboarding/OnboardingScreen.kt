@@ -268,7 +268,11 @@ private fun PsychotypeStep(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Button(onClick = viewModel::nextPsychotypeQuestion, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = viewModel::nextPsychotypeQuestion,
+                enabled = draft.psychotypeAnswers[index] != null,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text(
                     if (index < questions.lastIndex) {
                         stringResource(R.string.action_next)

@@ -36,13 +36,18 @@ object DebtReminderCoordinator {
 
         previous.keys
             .filter { it !in activeIds }
-            .forEach(scheduler::cancelAdvanceReminders)
+            .forEach(scheduler::cancel)
 
         val next = LinkedHashMap<Long, ReminderSignature>(active.size)
         active.forEach { debtor ->
             val signature = ReminderSignature.from(debtor, settings)
             if (previous[debtor.id] != signature) {
-                scheduler.scheduleAdvanceReminders(debtor, settings)
+                if (!settings.debtNotificationsEnabled) {
+                    scheduler.cancel(debtor.id)
+                } else {
+                    scheduler.schedule(debtor)
+                    scheduler.scheduleAdvanceReminders(debtor, settings)
+                }
             }
             next[debtor.id] = signature
         }

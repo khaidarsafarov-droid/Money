@@ -64,6 +64,7 @@ fun DebtorListItem(
     onViewContactHistory: (() -> Unit)? = null,
     onCall: (() -> Unit)? = null,
     onWhatsApp: (() -> Unit)? = null,
+    onMarkPaid: (() -> Unit)? = null,
     calendarSynced: Boolean = false,
     hideAmounts: Boolean = false,
     highlighted: Boolean = false,
@@ -238,6 +239,18 @@ fun DebtorListItem(
                                 },
                                 leadingIcon = {
                                     Icon(Icons.AutoMirrored.Outlined.TrendingUp, contentDescription = null)
+                                },
+                            )
+                        }
+                        if (onMarkPaid != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_mark_paid)) },
+                                onClick = {
+                                    showMenu = false
+                                    onMarkPaid()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Payments, contentDescription = null)
                                 },
                             )
                         }

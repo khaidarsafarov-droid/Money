@@ -88,6 +88,10 @@ fun GoalScreen(
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(
         initialValue = com.example.money.settings.UserProfile(),
     )
+    val privacySettings by app.preferencesStore.privacySettings.collectAsStateWithLifecycle(
+        initialValue = com.example.money.settings.PrivacySettings(),
+    )
+    val hideAmounts = privacySettings.hideAmounts
     val freedom by viewModel.freedomProjection.collectAsStateWithLifecycle()
     val payoffPlan by viewModel.payoffPlan.collectAsStateWithLifecycle()
     val luckEntries by viewModel.luckEntries.collectAsStateWithLifecycle()
@@ -105,6 +109,7 @@ fun GoalScreen(
         }
     }
     var showLuckForm by remember { mutableStateOf(false) }
+    var editingLuck by remember { mutableStateOf<LuckDiaryEntry?>(null) }
     var showFears by remember { mutableStateOf(false) }
     var showChallengePicker by remember { mutableStateOf(false) }
     var pendingChallengeTemplate by remember {
@@ -140,6 +145,19 @@ fun GoalScreen(
         )
     }
 
+    editingLuck?.let { entry ->
+        LuckDiaryEntryDialog(
+            initial = entry,
+            onDismiss = { editingLuck = null },
+            onSave = { note, amount, category ->
+                viewModel.updateLuckEntry(
+                    entry.copy(note = note, amountCents = amount, category = category),
+                )
+                editingLuck = null
+            },
+        )
+    }
+
     if (showChallengePicker) {
         ChallengePickerDialog(
             templates = GoalChallengeEngines.templates,
@@ -168,6 +186,7 @@ fun GoalScreen(
                 viewModel.startChallenge(templateId, debtor.id, debtor.name)
                 pendingChallengeTemplate = null
             },
+            hideAmounts = hideAmounts,
         )
     }
 
@@ -204,7 +223,12 @@ fun GoalScreen(
                 Text(GoalPsychologyEngines.psychotypeTagline(psychotype), color = GoldPrimary)
             }
 
-            FreedomHeroCard(freedom = freedom, progress = progress, wordPower = profile.wordPowerEnabled)
+            FreedomHeroCard(
+                freedom = freedom,
+                progress = progress,
+                wordPower = profile.wordPowerEnabled,
+                hideAmounts = hideAmounts,
+            )
 
             if (profile.goalBadges.isNotEmpty()) {
                 BadgesCard(badgeIds = profile.goalBadges)
@@ -240,6 +264,7 @@ fun GoalScreen(
                 extraMonthly = extraMonthly,
                 freedom = freedom,
                 onChange = viewModel::setExtraMonthlyCents,
+                hideAmounts = hideAmounts,
             )
 
             PayoffPlanCard(
@@ -247,6 +272,7 @@ fun GoalScreen(
                 strategy = AutopilotStrategy.fromStored(profile.payoffStrategy),
                 wordPower = profile.wordPowerEnabled,
                 onStrategyChange = viewModel::setPayoffStrategy,
+                hideAmounts = hideAmounts,
             )
 
             HubCard {
@@ -291,13 +317,18 @@ fun GoalScreen(
                 Text(
                     stringResource(
                         R.string.goal_hub_luck_monthly,
-                        Formatters.currencyFromCents(monthlyLuck),
+                        Formatters.currencyFromCents(monthlyLuck, hide = hideAmounts),
                         luckEntries.size,
                     ),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 luckEntries.take(5).forEach { entry ->
-                    LuckEntryRow(entry = entry, onDelete = { viewModel.deleteLuckEntry(entry) })
+                    LuckEntryRow(
+                        entry = entry,
+                        hideAmounts = hideAmounts,
+                        onEdit = { editingLuck = entry },
+                        onDelete = { viewModel.deleteLuckEntry(entry) },
+                    )
                 }
             }
 
@@ -337,6 +368,7 @@ private fun FreedomHeroCard(
     freedom: DebtFreedomEngine.FreedomProjection,
     progress: Int,
     wordPower: Boolean,
+    hideAmounts: Boolean = false,
 ) {
     HubCard {
         Text(
@@ -347,8 +379,8 @@ private fun FreedomHeroCard(
         val dateLabel = freedom.freedomDateMillis?.let { Formatters.shortDate(it) }
             ?: stringResource(R.string.debt_freedom_unknown)
         Text(dateLabel, style = MaterialTheme.typography.headlineSmall, color = GoldPrimary, fontWeight = FontWeight.Bold)
-        freedom.monthsRemaining?.let {
-            Text(stringResource(R.string.goal_hub_days_left, it * 30))
+        freedom.monthsRemaining?.let { months ->
+            Text(stringResource(R.string.debt_freedom_monthly_pace, Formatters.currencyFromCents(freedom.monthlyPaymentCents, hide = hideAmounts), months))
         }
         LinearProgressIndicator(
             progress = { progress / 100f },
@@ -359,7 +391,7 @@ private fun FreedomHeroCard(
         Text(
             stringResource(
                 if (wordPower) R.string.goal_hub_remaining_positive else R.string.debt_freedom_remaining_total,
-                Formatters.currencyFromCents(freedom.totalRemainingCents),
+                Formatters.currencyFromCents(freedom.totalRemainingCents, hide = hideAmounts),
             ),
         )
     }
@@ -370,6 +402,7 @@ private fun ExtraMonthlySlider(
     extraMonthly: Long,
     freedom: DebtFreedomEngine.FreedomProjection,
     onChange: (Long) -> Unit,
+    hideAmounts: Boolean = false,
 ) {
     HubCard {
         Text(stringResource(R.string.debt_freedom_extra_slider_label), fontWeight = FontWeight.SemiBold)
@@ -379,7 +412,7 @@ private fun ExtraMonthlySlider(
             valueRange = 0f..50_000f,
             steps = 20,
         )
-        Text(stringResource(R.string.debt_freedom_extra_amount, Formatters.currencyFromCents(extraMonthly)))
+        Text(stringResource(R.string.debt_freedom_extra_amount, Formatters.currencyFromCents(extraMonthly, hide = hideAmounts)))
         freedom.freedomDateMillis?.let { date ->
             Text(
                 stringResource(R.string.goal_hub_new_date, Formatters.shortDate(date)),
@@ -395,6 +428,7 @@ private fun PayoffPlanCard(
     strategy: AutopilotStrategy,
     wordPower: Boolean,
     onStrategyChange: (AutopilotStrategy) -> Unit,
+    hideAmounts: Boolean = false,
 ) {
     HubCard {
         Text(stringResource(R.string.goal_hub_plan_title), fontWeight = FontWeight.SemiBold)
@@ -420,10 +454,10 @@ private fun PayoffPlanCard(
                         if (wordPower) {
                             stringResource(
                                 R.string.goal_hub_remaining_positive,
-                                Formatters.currencyFromCents(item.remainingCents),
+                                Formatters.currencyFromCents(item.remainingCents, hide = hideAmounts),
                             )
                         } else {
-                            Formatters.currencyFromCents(item.remainingCents)
+                            Formatters.currencyFromCents(item.remainingCents, hide = hideAmounts)
                         },
                     )
                     val closeLabel = when {
@@ -488,18 +522,7 @@ private fun MotivationCard(motivation: String, onMotivationChange: (String) -> U
 @Composable
 private fun WeeklyChecklistCard(viewModel: GoalHubViewModel, profile: com.example.money.settings.GoalPsychologyProfile) {
     val checklist = remember(profile.weeklyChecklistJson) {
-        try {
-            val obj = org.json.JSONObject(profile.weeklyChecklistJson)
-            WeeklyChecklistUiState(
-                checkedDebts = obj.optBoolean("checkedDebts"),
-                madePayment = obj.optBoolean("madePayment"),
-                savedEmergency = obj.optBoolean("savedEmergency"),
-                pleasureOrRestraint = obj.optBoolean("pleasureOrRestraint"),
-                luckDiaryEntry = obj.optBoolean("luckDiaryEntry"),
-            )
-        } catch (_: Exception) {
-            WeeklyChecklistUiState()
-        }
+        GoalHubViewModel.decodeChecklistForUi(profile.weeklyChecklistJson)
     }
 
     HubCard {
@@ -707,6 +730,7 @@ private fun DebtPickDialog(
     debtors: List<com.example.money.domain.model.Debtor>,
     onDismiss: () -> Unit,
     onPick: (com.example.money.domain.model.Debtor) -> Unit,
+    hideAmounts: Boolean = false,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -721,7 +745,7 @@ private fun DebtPickDialog(
                             onClick = { onPick(debtor) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text("${debtor.name} · ${Formatters.currencyFromCents(debtor.remainingAmountCents)}")
+                            Text("${debtor.name} · ${Formatters.currencyFromCents(debtor.remainingAmountCents, hide = hideAmounts)}")
                         }
                     }
                 }
@@ -737,7 +761,12 @@ private fun DebtPickDialog(
 }
 
 @Composable
-private fun LuckEntryRow(entry: LuckDiaryEntry, onDelete: () -> Unit) {
+private fun LuckEntryRow(
+    entry: LuckDiaryEntry,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit = {},
+    hideAmounts: Boolean = false,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -753,20 +782,30 @@ private fun LuckEntryRow(entry: LuckDiaryEntry, onDelete: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             entry.amountCents?.let {
-                Text(Formatters.currencyFromCents(it), color = FinancePositive, style = MaterialTheme.typography.bodySmall)
+                Text(Formatters.currencyFromCents(it, hide = hideAmounts), color = FinancePositive, style = MaterialTheme.typography.bodySmall)
             }
         }
-        TextButton(onClick = onDelete) {
-            Text(stringResource(R.string.action_delete))
+        Row {
+            TextButton(onClick = onEdit) {
+                Text(stringResource(R.string.action_edit))
+            }
+            TextButton(onClick = onDelete) {
+                Text(stringResource(R.string.action_delete))
+            }
         }
     }
 }
 
 private fun persistVisionImage(context: android.content.Context, uri: Uri): String? {
     return try {
+        val input = context.contentResolver.openInputStream(uri) ?: return null
         val file = File(context.filesDir, "goal_vision_${System.currentTimeMillis()}.jpg")
-        context.contentResolver.openInputStream(uri)?.use { input ->
-            file.outputStream().use { output -> input.copyTo(output) }
+        input.use { stream ->
+            file.outputStream().use { output -> stream.copyTo(output) }
+        }
+        if (!file.exists() || file.length() == 0L) {
+            file.delete()
+            return null
         }
         file.absolutePath
     } catch (_: Exception) {
@@ -778,10 +817,17 @@ private fun persistVisionImage(context: android.content.Context, uri: Uri): Stri
 private fun LuckDiaryEntryDialog(
     onDismiss: () -> Unit,
     onSave: (note: String, amountCents: Long?, category: String) -> Unit,
+    initial: LuckDiaryEntry? = null,
 ) {
-    var note by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("OTHER") }
+    var note by remember(initial?.id) { mutableStateOf(initial?.note.orEmpty()) }
+    var amountText by remember(initial?.id) {
+        mutableStateOf(
+            initial?.amountCents?.let { (it / 100.0).let { amount ->
+                if (amount % 1.0 == 0.0) amount.toLong().toString() else amount.toString()
+            } }.orEmpty(),
+        )
+    }
+    var category by remember(initial?.id) { mutableStateOf(initial?.category ?: "OTHER") }
 
     val categories = listOf(
         "UNEXPECTED_INCOME" to R.string.luck_cat_income,
@@ -822,11 +868,14 @@ private fun LuckDiaryEntryDialog(
         confirmButton = {
             TextButton(
                 onClick = {
+                    val trimmed = note.trim()
+                    if (trimmed.isEmpty()) return@TextButton
                     val amount = amountText.toDoubleOrNull()?.let {
                         com.example.money.domain.util.MoneyMath.toCents(it)
                     }
-                    onSave(note.trim(), amount, category)
+                    onSave(trimmed, amount, category)
                 },
+                enabled = note.trim().isNotEmpty(),
             ) {
                 Text(stringResource(R.string.action_save))
             }

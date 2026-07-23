@@ -115,6 +115,7 @@
     <string name="debt_freedom_extra_amount">+ %1$s to monthly pace</string>
     <string name="debt_freedom_months_saved">Become debt-free %1$d mo. sooner</string>
     <string name="debt_freedom_hint">Forecast from your payments — on-device only.</string>
+    <string name="debt_freedom_open_goal_hub">Payoff plan and tips</string>
     <string name="debt_journey_progress">You\'re %1$d%% of the way there</string>
     <string name="debt_next_milestone">To %1$d%% milestone: %2$s</string>
     <string name="debt_small_win_hint">Close in about %1$d payment(s)</string>
@@ -210,7 +211,7 @@
     <string name="global_balance_widget_formula_hint">Deposits %1$s − to goals %2$s − expenses %3$s</string>
     <string name="global_balance_available_hint">Deposits − to goals (%1$s) − expenses</string>
     <string name="global_balance_goal_allocated_label">To goals</string>
-    <string name="debt_search_hint">Search by debtor name</string>
+    <string name="debt_search_hint">Search by name, note, phone, or email</string>
     <string name="debt_search_clear">Clear search</string>
     <string name="debt_action_call">Call</string>
     <string name="debt_action_whatsapp">WhatsApp</string>

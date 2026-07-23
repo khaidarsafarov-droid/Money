@@ -6,5 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface LuckDiaryRepository {
     fun observeEntries(): Flow<List<LuckDiaryEntry>>
     suspend fun addEntry(entry: LuckDiaryEntry): Long
+    suspend fun updateEntry(entry: LuckDiaryEntry)
     suspend fun deleteEntry(entry: LuckDiaryEntry)
 }

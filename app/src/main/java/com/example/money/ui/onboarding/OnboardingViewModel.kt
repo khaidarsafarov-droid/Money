@@ -29,7 +29,7 @@ data class OnboardingDraft(
     val goalText: String = "",
     val emotion: UserEmotion? = null,
     val priority: String = "",
-    val psychotypeAnswers: List<Char> = List(5) { 'a' },
+    val psychotypeAnswers: List<Char?> = List(5) { null },
     val psychotypeResult: FinancialPsychotype? = null,
     val psychotypeQuestionIndex: Int = 0,
     val showPsychotypeResult: Boolean = false,
@@ -104,13 +104,20 @@ class OnboardingViewModel(
 
     fun nextPsychotypeQuestion() {
         val current = _draft.value
+        val answer = current.psychotypeAnswers.getOrNull(current.psychotypeQuestionIndex)
+        if (answer == null) return
         if (current.psychotypeQuestionIndex < PSYCHOTYPE_QUESTION_COUNT - 1) {
             _draft.value = current.copy(psychotypeQuestionIndex = current.psychotypeQuestionIndex + 1)
         } else {
-            val type = GoalPsychologyEngines.determinePsychotype(current.psychotypeAnswers)
+            val resolved = current.psychotypeAnswers.mapNotNull { it }
+            if (resolved.size < PSYCHOTYPE_QUESTION_COUNT) return
+            val type = GoalPsychologyEngines.determinePsychotype(resolved)
             _draft.value = current.copy(psychotypeResult = type, showPsychotypeResult = true)
         }
     }
+
+    fun hasPsychotypeAnswerForCurrentQuestion(): Boolean =
+        _draft.value.psychotypeAnswers.getOrNull(_draft.value.psychotypeQuestionIndex) != null
 
     fun isValidName(): Boolean {
         val trimmed = _draft.value.displayName.trim()
@@ -137,7 +144,7 @@ class OnboardingViewModel(
                 }
             }
             val psychotype = draft.psychotypeResult ?: FinancialPsychotype.BALANCED
-            val answersJson = JSONArray(draft.psychotypeAnswers.map { it.toString() }).toString()
+            val answersJson = JSONArray(draft.psychotypeAnswers.mapNotNull { it?.toString() }).toString()
 
             preferencesStore.updateUserProfile {
                 UserProfile(

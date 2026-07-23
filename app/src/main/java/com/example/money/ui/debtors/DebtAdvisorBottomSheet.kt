@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.LocalFinancialAdvisor
+import com.example.money.settings.AutopilotStrategy
 import com.example.money.ui.theme.CreamSurface
 import java.util.Locale
 
@@ -176,6 +177,7 @@ fun buildAdvisorMessages(
     remainingToGoalCents: Long = 0L,
     totalDepositsCents: Long = 0L,
     totalExpensesCents: Long = 0L,
+    payoffStrategy: AutopilotStrategy = AutopilotStrategy.AVALANCHE,
     locale: Locale = Locale.getDefault(),
 ): List<AdvisorChatMessage> {
     val en = locale.language.startsWith("en", ignoreCase = true)
@@ -185,6 +187,7 @@ fun buildAdvisorMessages(
         remainingToGoalCents = remainingToGoalCents,
         totalDepositsCents = totalDepositsCents,
         totalExpensesCents = totalExpensesCents,
+        payoffStrategy = payoffStrategy,
         locale = locale,
     )
     val request = LocalFinancialAdvisor.AdviceRequest(rawText = rawText, promptId = promptId)

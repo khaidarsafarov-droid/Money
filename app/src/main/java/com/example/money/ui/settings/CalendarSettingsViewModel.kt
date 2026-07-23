@@ -30,28 +30,47 @@ class CalendarSettingsViewModel(
             val before = settings.value
             preferencesStore.updateCalendarSettings(transform)
             val after = preferencesStore.calendarSettings.first()
-            if (reminderSettingsChanged(before, after)) {
+            if (!before.autoSyncEnabled && after.autoSyncEnabled) {
+                syncMissingDebtEvents(after)
+            } else if (reminderSettingsChanged(before, after)) {
                 app.debtorRepository.getAllDebtors().first()
                     .filter { !it.isPaid && !it.calendarEventId.isNullOrBlank() }
                     .forEach { debtor ->
-                        val profile = preferencesStore.userProfile.first()
-                        val result = debtCalendarSyncService.upsertDebtEvent(
-                            debtor = debtor,
-                            settings = after,
-                            displayName = profile.resolvedDisplayName(),
-                            force = true,
-                        )
-                        val latest = app.debtorRepository.getDebtorById(debtor.id) ?: return@forEach
-                        app.debtorRepository.updateDebtor(
-                            latest.copy(
-                                calendarEventId = result.eventId,
-                                calendarSyncFailed = result.failed,
-                            ),
-                            latest.affectsBalance,
-                        )
+                        upsertAndPersist(debtor, after, force = true)
                     }
             }
         }
+    }
+
+    private suspend fun syncMissingDebtEvents(settings: CalendarSettings) {
+        if (!debtCalendarSyncService.hasPermissions()) return
+        app.debtorRepository.getAllDebtors().first()
+            .filter { !it.isPaid && (it.calendarEventId.isNullOrBlank() || it.calendarSyncFailed) }
+            .forEach { debtor ->
+                upsertAndPersist(debtor, settings, force = false)
+            }
+    }
+
+    private suspend fun upsertAndPersist(
+        debtor: com.example.money.domain.model.Debtor,
+        settings: CalendarSettings,
+        force: Boolean,
+    ) {
+        val profile = preferencesStore.userProfile.first()
+        val result = debtCalendarSyncService.upsertDebtEvent(
+            debtor = debtor,
+            settings = settings,
+            displayName = profile.resolvedDisplayName(),
+            force = force,
+        )
+        val latest = app.debtorRepository.getDebtorById(debtor.id) ?: return
+        app.debtorRepository.updateDebtor(
+            latest.copy(
+                calendarEventId = result.eventId,
+                calendarSyncFailed = result.failed,
+            ),
+            latest.affectsBalance,
+        )
     }
 
     private fun reminderSettingsChanged(before: CalendarSettings, after: CalendarSettings): Boolean =

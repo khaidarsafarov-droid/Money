@@ -24,6 +24,7 @@ object LocalFinancialAdvisor {
         val totalDepositsCents: Long = 0L,
         val totalExpensesCents: Long = 0L,
         val extraMonthlyCents: Long = 5_000L,
+        val payoffStrategy: AutopilotStrategy = AutopilotStrategy.AVALANCHE,
         val now: Long = System.currentTimeMillis(),
         val locale: Locale = Locale.getDefault(),
     )
@@ -76,12 +77,7 @@ object LocalFinancialAdvisor {
         }
 
         return when (promptId) {
-            "which_debt_first" -> DebtAdvisorTemplates.buildReply(
-                promptId = "which_debt_first",
-                debts = context.debts,
-                extraMonthlyCents = context.extraMonthlyCents,
-                now = context.now,
-            )
+            "which_debt_first" -> whichDebtFirstAdvice(active, context.payoffStrategy, en)
             "what_if_extra" -> DebtAdvisorTemplates.buildReply(
                 promptId = "what_if_extra",
                 debts = context.debts,
@@ -98,7 +94,7 @@ object LocalFinancialAdvisor {
             "goals" -> goalsAdvice(context, en)
             "budget" -> budgetAdvice(context, en)
             "income" -> incomeAdvice(active, context, en)
-            "autopilot" -> autopilotAdvice(active, en)
+            "autopilot" -> autopilotAdvice(active, context.payoffStrategy, en)
             "owes_me" -> owesMeAdvice(context.debts, en)
             "i_owe" -> iOweAdvice(context.debts, en)
             "freedom" -> freedomAdvice(active, context, en)
@@ -156,15 +152,41 @@ object LocalFinancialAdvisor {
         }
     }
 
-    private fun autopilotAdvice(active: List<Debtor>, en: Boolean): String {
-        val target = DebtAutopilotEngine.pickTargetDebt(active, AutopilotStrategy.SNOWBALL)
+    private fun whichDebtFirstAdvice(
+        active: List<Debtor>,
+        strategy: AutopilotStrategy,
+        en: Boolean,
+    ): String {
+        val target = DebtAutopilotEngine.pickTargetDebt(active, strategy)
+            ?: return if (en) "Add an \"I owe\" debt first." else "Сначала добавьте долг «Я должен»."
+        return when (strategy) {
+            AutopilotStrategy.AVALANCHE -> {
+                val rate = target.interestRateBps / 100.0
+                if (en) {
+                    "Avalanche: start with «${target.name}» (highest rate ${"%.1f".format(rate)}%)."
+                } else {
+                    "Стратегия «Лавина»: начните с «${target.name}» — ставка ${"%.1f".format(rate)}%."
+                }
+            }
+            AutopilotStrategy.SNOWBALL -> {
+                if (en) {
+                    "Snowball: start with «${target.name}» — smallest remaining balance for a quick win."
+                } else {
+                    "Стратегия «Снежный ком»: начните с «${target.name}» — самый маленький остаток."
+                }
+            }
+        }
+    }
+
+    private fun autopilotAdvice(active: List<Debtor>, strategy: AutopilotStrategy, en: Boolean): String {
+        val target = DebtAutopilotEngine.pickTargetDebt(active, strategy)
         return if (target == null) {
             if (en) "Enable Autopilot in settings to get daily micro-payment reminders."
             else "Включите Автопилот в настройках — будут ежедневные микро-напоминания."
         } else if (en) {
-            "Autopilot would nudge «${target.name}» first (smallest balance). Turn it on in Settings → Autopilot."
+            "Autopilot would nudge «${target.name}» first (${strategy.name.lowercase()}). Turn it on in Settings → Autopilot."
         } else {
-            "Автопилот начнёт с «${target.name}» (самый маленький остаток). Включите в Настройки → Автопилот."
+            "Автопилот начнёт с «${target.name}» (${if (strategy == AutopilotStrategy.AVALANCHE) "лавина" else "снежный ком"}). Включите в Настройки → Автопилот."
         }
     }
 
