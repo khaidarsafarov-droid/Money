@@ -35,4 +35,7 @@ interface SavingsGoalDao {
 
     @Query("SELECT * FROM savings_goal ORDER BY updated_at DESC")
     suspend fun getAllGoalsOnce(): List<SavingsGoalEntity>
+
+    @Query("DELETE FROM savings_goal")
+    suspend fun clearAll()
 }

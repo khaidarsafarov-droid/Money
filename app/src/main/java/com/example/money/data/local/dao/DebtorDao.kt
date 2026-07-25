@@ -75,6 +75,9 @@ interface DebtorDao {
 
     @Delete
     suspend fun delete(debtor: DebtorEntity)
+
+    @Query("DELETE FROM debtor")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -100,4 +103,7 @@ interface DebtPaymentDao {
 
     @Query("SELECT * FROM debt_payment WHERE debtor_id = :debtorId ORDER BY paid_at DESC")
     suspend fun getPaymentsForDebtor(debtorId: Long): List<DebtPaymentEntity>
+
+    @Query("DELETE FROM debt_payment")
+    suspend fun clearAll()
 }
