@@ -11,7 +11,12 @@ import com.example.money.data.backup.BackupRepositoryImpl
 import com.example.money.data.backup.BackupRoomApplier
 import com.example.money.data.backup.DebtReminderRestoreReconciler
 import com.example.money.data.backup.DefaultPostRestoreReconciler
+import com.example.money.data.backup.GoogleDriveAuthorizationManager
+import com.example.money.data.backup.GoogleDriveBackupStorageProvider
+import com.example.money.data.backup.GoogleDriveRestClient
+import com.example.money.data.backup.LocalBackupDocumentGateway
 import com.example.money.data.backup.PostRestoreReconciler
+import com.example.money.data.backup.UrlConnectionGoogleDriveHttpTransport
 import com.example.money.data.backup.VisionImageStore
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
@@ -36,6 +41,7 @@ import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.WeeklyCheckInScheduler
 import com.example.money.voice.VoiceReportScheduler
+import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 
@@ -189,6 +195,23 @@ class AppContainer(
             ),
         )
     }
+
+    val localBackupDocumentGateway: LocalBackupDocumentGateway by lazy {
+        LocalBackupDocumentGateway(application.contentResolver)
+    }
+
+    val googleDriveAuthorizationManager: GoogleDriveAuthorizationManager by lazy {
+        GoogleDriveAuthorizationManager(Identity.getAuthorizationClient(application))
+    }
+
+    private val googleDriveRestClient: GoogleDriveRestClient by lazy {
+        GoogleDriveRestClient(UrlConnectionGoogleDriveHttpTransport())
+    }
+
+    fun googleDriveBackupStorageProvider(
+        accessToken: String,
+    ): GoogleDriveBackupStorageProvider =
+        GoogleDriveBackupStorageProvider(accessToken, googleDriveRestClient)
 }
 
 fun Application.appContainer(): AppContainer =

@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import com.example.money.di.AppContainer
+import com.example.money.data.backup.GoogleDriveAuthorizationManager
+import com.example.money.data.backup.LocalBackupDocumentGateway
 import com.example.money.data.locale.AppLanguageManager
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.datastore.MoneyPreferencesStore
@@ -16,6 +18,7 @@ import com.example.money.domain.repository.BackupRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.FinanceSnapshotRepository
 import com.example.money.domain.repository.GoalRepository
+import com.example.money.domain.backup.BackupStorageProvider
 import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.PersonalDebtMessageScheduler
@@ -62,12 +65,19 @@ class MoneyApplication : Application() {
     val budgetRepository: BudgetRepository get() = container.budgetRepository
     val goalRepository: GoalRepository get() = container.goalRepository
     val backupRepository: BackupRepository get() = container.backupRepository
+    val localBackupDocumentGateway: LocalBackupDocumentGateway
+        get() = container.localBackupDocumentGateway
+    val googleDriveAuthorizationManager: GoogleDriveAuthorizationManager
+        get() = container.googleDriveAuthorizationManager
     val luckDiaryRepository: com.example.money.domain.repository.LuckDiaryRepository
         get() = container.luckDiaryRepository
     val debtReminderScheduler: DebtReminderScheduler get() = container.debtReminderScheduler
     val debtCalendarSyncService: DebtCalendarSyncService get() = container.debtCalendarSyncService
     val personalDebtMessageScheduler: PersonalDebtMessageScheduler
         get() = container.personalDebtMessageScheduler
+
+    fun googleDriveBackupStorageProvider(accessToken: String): BackupStorageProvider =
+        container.googleDriveBackupStorageProvider(accessToken)
 
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
         WidgetGoalRepository(this)
