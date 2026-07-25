@@ -12,6 +12,7 @@ import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.data.locale.AppLanguageStorage
+import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupAuthenticationException
 import com.example.money.domain.backup.BackupAutopilotPreferences
 import com.example.money.domain.backup.BackupBundle
@@ -26,6 +27,7 @@ import com.example.money.domain.backup.BackupUserPreferences
 import com.example.money.domain.backup.BackupVisionImage
 import com.example.money.domain.backup.BackupVoicePreferences
 import com.example.money.domain.backup.BackupWeeklyCheckInPreferences
+import com.example.money.domain.backup.ImportWarning
 import com.example.money.messaging.MessagingChannel
 import com.example.money.settings.AppLanguage
 import com.example.money.ui.home.WelcomePreferences
@@ -33,6 +35,7 @@ import java.io.IOException
 import kotlin.io.encoding.Base64
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -234,7 +237,86 @@ class BackupRepositoryIntegrationTest {
         assertPayloadEquals(before, repository.exportBundle())
     }
 
-    private fun createRepository(imageStorage: VisionImageStorage): BackupRepositoryImpl {
+    @Test
+    fun successfulImport_invokesPostRestoreReconcilerOnce() = runBlocking {
+        seedCompleteRoomState()
+        val incoming = repository.exportBundle()
+        val reconciler = RecordingPostRestoreReconciler()
+        val importingRepository = createRepository(
+            imageStorage = visionImageStore,
+            postRestoreReconciler = reconciler,
+        )
+
+        val result = importingRepository.importBundle(incoming)
+
+        assertEquals(1, reconciler.callCount)
+        assertTrue(result.warnings.isEmpty())
+    }
+
+    @Test
+    fun successfulImport_runsReconciliationAfterSyncWriteLockIsReleased() = runBlocking {
+        seedCompleteRoomState()
+        val incoming = repository.exportBundle()
+        val lockAcquiringReconciler = PostRestoreReconciler {
+            withTimeout(1_000) {
+                SyncWriteGuard.withWriteLock { Unit }
+            }
+            emptyList()
+        }
+
+        val result = createRepository(
+            imageStorage = visionImageStore,
+            postRestoreReconciler = lockAcquiringReconciler,
+        ).importBundle(incoming)
+
+        assertTrue(result.warnings.isEmpty())
+    }
+
+    @Test
+    fun failedImport_neverInvokesPostRestoreReconciler() = runBlocking {
+        seedCompleteRoomState()
+        val incoming = repository.exportBundle()
+        val reconciler = RecordingPostRestoreReconciler()
+        val failingRepository = createRepository(
+            imageStorage = FailingOnceVisionImageStorage(visionImageStore),
+            postRestoreReconciler = reconciler,
+        )
+
+        assertFails<IOException> {
+            failingRepository.importBundle(incoming)
+        }
+
+        assertEquals(0, reconciler.callCount)
+    }
+
+    @Test
+    fun reconciliationFailure_returnsWarningWithoutUndoingRestoredData() = runBlocking {
+        seedCompleteRoomState()
+        val incoming = codec.canonicalize(
+            repository.exportBundle().copy(
+                goals = repository.exportBundle().goals.map { it.copy(name = "restored") },
+            ),
+        )
+        val reconciler = RecordingPostRestoreReconciler(
+            failure = IOException("widget refresh failed"),
+        )
+        val importingRepository = createRepository(
+            imageStorage = visionImageStore,
+            postRestoreReconciler = reconciler,
+        )
+
+        val result = importingRepository.importBundle(incoming)
+
+        assertEquals(1, reconciler.callCount)
+        assertEquals("restored", database.savingsGoalDao().getAllGoalsOnce().single().name)
+        assertEquals(1, result.warnings.size)
+        assertEquals("post_restore", result.warnings.single().subsystem)
+    }
+
+    private fun createRepository(
+        imageStorage: VisionImageStorage,
+        postRestoreReconciler: PostRestoreReconciler = PostRestoreReconciler.NO_OP,
+    ): BackupRepositoryImpl {
         val exporter = BackupExporter(
             database = database,
             preferencesStore = preferencesStore,
@@ -250,6 +332,7 @@ class BackupRepositoryIntegrationTest {
             visionImageStorage = imageStorage,
             codec = codec,
             crypto = crypto,
+            postRestoreReconciler = postRestoreReconciler,
         )
         return BackupRepositoryImpl(exporter, importer)
     }
@@ -409,6 +492,18 @@ class BackupRepositoryIntegrationTest {
                 throw IOException("injected image failure")
             }
             delegate.replaceCurrent(image)
+        }
+    }
+
+    private class RecordingPostRestoreReconciler(
+        private val failure: Exception? = null,
+    ) : PostRestoreReconciler {
+        var callCount = 0
+
+        override suspend fun reconcile(): List<ImportWarning> {
+            callCount += 1
+            failure?.let { throw it }
+            return emptyList()
         }
     }
 

@@ -6,6 +6,9 @@ import com.example.money.domain.backup.BackupBundle
 import com.example.money.domain.backup.BackupPreferences
 import com.example.money.domain.backup.BackupPreview
 import com.example.money.domain.backup.BackupVisionImage
+import com.example.money.domain.backup.ImportResult
+import com.example.money.domain.backup.ImportWarning
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
@@ -15,21 +18,21 @@ class BackupImporter(
     private val visionImageStorage: VisionImageStorage,
     private val codec: BackupBundleCodec = BackupBundleCodec(),
     private val crypto: PasswordBackupCrypto = PasswordBackupCrypto(),
+    private val postRestoreReconciler: PostRestoreReconciler = PostRestoreReconciler.NO_OP,
 ) {
 
     fun previewEncrypted(encrypted: ByteArray, password: CharArray): BackupPreview =
         codec.preview(crypto.decrypt(encrypted, password))
 
-    suspend fun importEncrypted(encrypted: ByteArray, password: CharArray) {
+    suspend fun importEncrypted(encrypted: ByteArray, password: CharArray): ImportResult {
         val validated = codec.decode(crypto.decrypt(encrypted, password))
-        importValidatedBundle(validated)
+        return importValidatedBundle(validated)
     }
 
-    suspend fun importBundle(bundle: BackupBundle) {
+    suspend fun importBundle(bundle: BackupBundle): ImportResult =
         importValidatedBundle(codec.canonicalize(bundle))
-    }
 
-    private suspend fun importValidatedBundle(bundle: BackupBundle) {
+    private suspend fun importValidatedBundle(bundle: BackupBundle): ImportResult {
         SyncWriteGuard.withWriteLock {
             val rollback = RollbackState(
                 room = roomApplier.captureRollbackLocked(),
@@ -46,7 +49,24 @@ class BackupImporter(
                 throw error
             }
         }
+        return reconcileAfterRestore()
     }
+
+    private suspend fun reconcileAfterRestore(): ImportResult =
+        try {
+            ImportResult(warnings = postRestoreReconciler.reconcile())
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            ImportResult(
+                warnings = listOf(
+                    ImportWarning(
+                        subsystem = "post_restore",
+                        message = error.message ?: error::class.java.simpleName,
+                    ),
+                ),
+            )
+        }
 
     private suspend fun restoreRollback(rollback: RollbackState): Exception? =
         withContext(NonCancellable) {

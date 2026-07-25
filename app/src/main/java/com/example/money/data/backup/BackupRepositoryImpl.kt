@@ -2,6 +2,7 @@ package com.example.money.data.backup
 
 import com.example.money.domain.backup.BackupBundle
 import com.example.money.domain.backup.BackupPreview
+import com.example.money.domain.backup.ImportResult
 import com.example.money.domain.repository.BackupRepository
 
 class BackupRepositoryImpl(
@@ -15,13 +16,11 @@ class BackupRepositoryImpl(
     override fun preview(encrypted: ByteArray, password: CharArray): BackupPreview =
         importer.previewEncrypted(encrypted, password)
 
-    override suspend fun importEncrypted(encrypted: ByteArray, password: CharArray) {
+    override suspend fun importEncrypted(encrypted: ByteArray, password: CharArray): ImportResult =
         importer.importEncrypted(encrypted, password)
-    }
 
     override suspend fun exportBundle(): BackupBundle = exporter.exportBundle()
 
-    override suspend fun importBundle(bundle: BackupBundle) {
+    override suspend fun importBundle(bundle: BackupBundle): ImportResult =
         importer.importBundle(bundle)
-    }
 }

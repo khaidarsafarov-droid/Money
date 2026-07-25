@@ -12,6 +12,7 @@ import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncService
 import com.example.money.domain.repository.BudgetRepository
+import com.example.money.domain.repository.BackupRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.FinanceSnapshotRepository
 import com.example.money.domain.repository.GoalRepository
@@ -60,6 +61,7 @@ class MoneyApplication : Application() {
     val debtorRepository: DebtorRepository get() = container.debtorRepository
     val budgetRepository: BudgetRepository get() = container.budgetRepository
     val goalRepository: GoalRepository get() = container.goalRepository
+    val backupRepository: BackupRepository get() = container.backupRepository
     val luckDiaryRepository: com.example.money.domain.repository.LuckDiaryRepository
         get() = container.luckDiaryRepository
     val debtReminderScheduler: DebtReminderScheduler get() = container.debtReminderScheduler
@@ -138,6 +140,12 @@ class MoneyApplication : Application() {
             }
         }
         goalWidgetUpdater.start(applicationScope)
+    }
+
+    suspend fun refreshWidgetSnapshot() {
+        val snapshot = goalWidgetSnapshotWriter.observeSnapshotChanges().first()
+        goalWidgetSnapshotWriter.persist(snapshot)
+        goalWidgetUpdater.refreshAllWidgets()
     }
 
     private companion object {
