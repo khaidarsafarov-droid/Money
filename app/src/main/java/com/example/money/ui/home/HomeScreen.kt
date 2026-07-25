@@ -210,6 +210,7 @@ fun HomeScreen(
     var showAdvisorSheet by remember { mutableStateOf(false) }
     var showIncomeIdeas by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
+    var pendingMarkPaid by remember { mutableStateOf<Debtor?>(null) }
     var remindDebtor by remember { mutableStateOf<Debtor?>(null) }
 
     val personalBranchSettings by debtorsViewModel.personalBranchSettings.collectAsStateWithLifecycle()
@@ -635,6 +636,42 @@ fun HomeScreen(
         }
     }
 
+    pendingMarkPaid?.let { debtor ->
+        AlertDialog(
+            onDismissRequest = { pendingMarkPaid = null },
+            title = { Text(stringResource(R.string.mark_debt_paid_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.mark_debt_paid_message,
+                        debtor.name,
+                        Formatters.currencyFromCents(
+                            debtor.remainingAmountCents,
+                            debtor.currency,
+                            hide = privacySettings.hideAmounts,
+                        ),
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        debtorsViewModel.markAsPaid(debtor.id)
+                        pendingMarkPaid = null
+                        scope.launch { showMessage(context.getString(R.string.msg_debtor_paid)) }
+                    },
+                ) {
+                    Text(stringResource(R.string.action_mark_paid))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingMarkPaid = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
     BoxWithConstraints(modifier = modifier) {
         val isTablet = isTabletWidth(maxWidth)
         val syncState by app.syncService.connectionState.collectAsStateWithLifecycle()
@@ -792,7 +829,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
-                onMarkDebtPaid = { debtor -> debtorsViewModel.markAsPaid(debtor.id) },
+                onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
                 freedomProjection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
@@ -893,7 +930,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
-                onMarkDebtPaid = { debtor -> debtorsViewModel.markAsPaid(debtor.id) },
+                onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
                 freedomProjection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
@@ -1371,7 +1408,6 @@ private fun PhoneHomeLayout(
                     }
                 }
 
-                if (showDebtsSection) {
                 item {
                     TabRow(
                         selectedTabIndex = selectedTab,
@@ -1417,7 +1453,8 @@ private fun PhoneHomeLayout(
                 }
 
                 when (HomeTab.entries[selectedTab]) {
-                    HomeTab.Debts -> homeDebtsSection(
+                    HomeTab.Debts -> if (showDebtsSection) {
+                        homeDebtsSection(
                         debtTab = debtTab,
                         onDebtTabChange = onDebtTabChange,
                         allDebtors = allDebtors,
@@ -1452,6 +1489,7 @@ private fun PhoneHomeLayout(
                         emptyDebtorsTitle = emptyDebtorsTitle,
                         emptyDebtorsHint = emptyDebtorsHint,
                     )
+                    }
                     HomeTab.BrotherFinances -> homeOperationsSection(
                         transfers = transfers,
                         expenses = expenses,
@@ -1462,7 +1500,6 @@ private fun PhoneHomeLayout(
                         onConfirmExpense = onConfirmExpense,
                         onDeleteExpense = onDeleteExpense,
                     )
-                }
                 }
             }
         }

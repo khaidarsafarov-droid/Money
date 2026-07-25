@@ -16,6 +16,8 @@
     <string name="action_delete">Delete</string>
     <string name="action_set_goal">Set goal</string>
     <string name="action_mark_paid">Paid</string>
+    <string name="mark_debt_paid_title">Mark debt as paid?</string>
+    <string name="mark_debt_paid_message">“%1$s”: the remaining %2$s will be marked as paid. This may change the overall balance.</string>
     <string name="action_add_payment">Add payment</string>
     <string name="action_make_payment">Make payment</string>
     <string name="action_confirm">Confirm</string>
