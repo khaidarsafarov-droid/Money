@@ -102,14 +102,19 @@ object FinanceSnapshotCodec {
             put("deleted", deleted)
         }.toString()
 
-    fun encodeDebtPayment(entity: DebtPaymentEntity, debtorSyncId: String, deleted: Boolean = false): String =
+    fun encodeDebtPayment(
+        entity: DebtPaymentEntity,
+        debtorSyncId: String,
+        syncUpdatedAt: Long = entity.paidAt,
+        deleted: Boolean = false,
+    ): String =
         JSONObject().apply {
             put("id", entity.syncId)
             put("debtorId", debtorSyncId)
             put("amountCents", entity.amountCents)
             put("paidAt", SyncDates.formatDateTime(entity.paidAt))
             put("affectsBalance", entity.affectsBalance)
-            put("syncUpdatedAt", entity.paidAt)
+            put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
         }.toString()
 
@@ -117,6 +122,7 @@ object FinanceSnapshotCodec {
         entity: TransferEntity,
         debtSyncId: String? = null,
         debtPaymentSyncId: String? = null,
+        syncUpdatedAt: Long = entity.date,
         deleted: Boolean = false,
     ): String {
         val kind = if (entity.goalId == null && entity.goalSyncId == null) KIND_DEPOSIT else KIND_GOAL_TRANSFER
@@ -129,7 +135,7 @@ object FinanceSnapshotCodec {
             debtPaymentSyncId?.let { put("debtPaymentId", it) }
             put("createdAt", SyncDates.formatDateTime(entity.date))
             entity.note.takeIf { it.isNotBlank() }?.let { put("note", it) }
-            put("syncUpdatedAt", entity.date)
+            put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
         }.toString()
     }
@@ -138,6 +144,7 @@ object FinanceSnapshotCodec {
         entity: ExpenseEntity,
         debtSyncId: String? = null,
         debtPaymentSyncId: String? = null,
+        syncUpdatedAt: Long = entity.date,
         deleted: Boolean = false,
     ): String =
         JSONObject().apply {
@@ -149,9 +156,31 @@ object FinanceSnapshotCodec {
             put("note", entity.note)
             debtSyncId?.let { put("debtId", it) }
             debtPaymentSyncId?.let { put("debtPaymentId", it) }
-            put("syncUpdatedAt", entity.date)
+            put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
         }.toString()
+
+    fun encodeGoal(record: SnapshotGoal): String = encodeGoalRecord(record).toString()
+
+    fun encodeDebt(record: SnapshotDebt): String = encodeDebtRecord(record).toString()
+
+    fun encodeDebtPayment(record: SnapshotDebtPayment): String =
+        encodeDebtPaymentRecord(record).toString()
+
+    fun encodeTransaction(record: SnapshotTransaction): String =
+        encodeTransactionRecord(record).toString()
+
+    fun decodeGoal(raw: String): SnapshotGoal =
+        decodeGoals(JSONArray().put(JSONObject(raw))).single()
+
+    fun decodeDebt(raw: String): SnapshotDebt =
+        decodeDebts(JSONArray().put(JSONObject(raw))).single()
+
+    fun decodeDebtPayment(raw: String): SnapshotDebtPayment =
+        decodeDebtPayments(JSONArray().put(JSONObject(raw))).single()
+
+    fun decodeTransaction(raw: String): SnapshotTransaction =
+        decodeTransactions(JSONArray().put(JSONObject(raw))).single()
 
     fun encodeVoiceSettings(settings: VoiceReportSettings, syncUpdatedAt: Long): String =
         encodeVoiceSettings(
@@ -244,7 +273,10 @@ object FinanceSnapshotCodec {
 
     private fun decodeV2(json: JSONObject): FinanceSnapshot =
         FinanceSnapshot(
-            schemaVersion = json.getInt("schemaVersion"),
+            schemaVersion = maxOf(
+                json.getInt("schemaVersion"),
+                FinanceSnapshot.CURRENT_SCHEMA_VERSION,
+            ),
             deviceId = json.getString("deviceId"),
             updatedAt = json.getLong("updatedAt"),
             goals = decodeGoals(json.getJSONArray("goals")),

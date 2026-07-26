@@ -68,6 +68,7 @@ class AppContainer(
     val syncQueueRecorder: SyncQueueRecorder by lazy {
         SyncQueueRecorder(
             syncQueueDao = database.syncQueueDao(),
+            syncTombstoneDao = database.syncTombstoneDao(),
             debtorDao = database.debtorDao(),
             debtPaymentDao = database.debtPaymentDao(),
         )

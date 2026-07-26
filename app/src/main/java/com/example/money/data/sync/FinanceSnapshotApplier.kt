@@ -7,9 +7,11 @@ import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
+import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
 import com.example.money.domain.sync.SnapshotTransaction
+import com.example.money.domain.sync.SyncEntityType
 import com.example.money.domain.util.MoneyMath
 
 class FinanceSnapshotApplier(
@@ -27,6 +29,7 @@ class FinanceSnapshotApplier(
                 applyDebtPayments(snapshot, debtorLocalIds)
                 val paymentLocalIds = buildDebtPaymentSyncIdMap(snapshot)
                 applyTransactions(snapshot, goalLocalIds, debtorLocalIds, paymentLocalIds)
+                applyTombstones(snapshot)
             }
             snapshot.voiceSettings?.let { preferencesStore.applySyncedVoiceSettings(it) }
         }
@@ -34,11 +37,12 @@ class FinanceSnapshotApplier(
 
     private suspend fun applyGoals(snapshot: FinanceSnapshot) {
         val dao = database.savingsGoalDao()
-        val keepIds = snapshot.goals.map { it.id }.toSet()
+        val liveGoals = snapshot.goals.filterNot { it.deleted }
+        val keepIds = liveGoals.map { it.id }.toSet()
         dao.getAllGoalsOnce()
             .filter { it.syncId !in keepIds }
             .forEach { dao.delete(it) }
-        snapshot.goals.forEach { goal ->
+        liveGoals.forEach { goal ->
             val existing = dao.getBySyncId(goal.id)
             val entity = SavingsGoalEntity(
                 id = existing?.id ?: 0L,
@@ -60,7 +64,7 @@ class FinanceSnapshotApplier(
 
     private suspend fun buildGoalSyncIdMap(snapshot: FinanceSnapshot): Map<String, Long> {
         val dao = database.savingsGoalDao()
-        return snapshot.goals.associate { goal ->
+        return snapshot.goals.filterNot { it.deleted }.associate { goal ->
             val localId = dao.getBySyncId(goal.id)?.id
                 ?: error("Missing local goal for sync id ${goal.id}")
             goal.id to localId
@@ -69,11 +73,12 @@ class FinanceSnapshotApplier(
 
     private suspend fun applyDebts(snapshot: FinanceSnapshot) {
         val dao = database.debtorDao()
-        val keepIds = snapshot.debts.map { it.id }.toSet()
+        val liveDebts = snapshot.debts.filterNot { it.deleted }
+        val keepIds = liveDebts.map { it.id }.toSet()
         dao.getAllDebtorsOnce()
             .filter { it.syncId !in keepIds }
             .forEach { dao.delete(it) }
-        snapshot.debts.forEach { debt ->
+        liveDebts.forEach { debt ->
             val existing = dao.getBySyncId(debt.id)
             val entity = DebtorEntity(
                 id = existing?.id ?: 0L,
@@ -109,7 +114,7 @@ class FinanceSnapshotApplier(
 
     private suspend fun buildDebtorSyncIdMap(snapshot: FinanceSnapshot): Map<String, Long> {
         val dao = database.debtorDao()
-        return snapshot.debts.associate { debt ->
+        return snapshot.debts.filterNot { it.deleted }.associate { debt ->
             val localId = dao.getBySyncId(debt.id)?.id
                 ?: error("Missing local debtor for sync id ${debt.id}")
             debt.id to localId
@@ -121,11 +126,12 @@ class FinanceSnapshotApplier(
         debtorLocalIds: Map<String, Long>,
     ) {
         val dao = database.debtPaymentDao()
-        val keepIds = snapshot.debtPayments.map { it.id }.toSet()
+        val livePayments = snapshot.debtPayments.filterNot { it.deleted }
+        val keepIds = livePayments.map { it.id }.toSet()
         dao.getAllPaymentsOnce()
             .filter { it.syncId !in keepIds }
             .forEach { dao.deleteById(it.id) }
-        snapshot.debtPayments.forEach { payment ->
+        livePayments.forEach { payment ->
             val debtorId = debtorLocalIds[payment.debtorId]
                 ?: return@forEach
             val existing = dao.getBySyncId(payment.id)
@@ -148,7 +154,7 @@ class FinanceSnapshotApplier(
 
     private suspend fun buildDebtPaymentSyncIdMap(snapshot: FinanceSnapshot): Map<String, Long> {
         val dao = database.debtPaymentDao()
-        return snapshot.debtPayments.associate { payment ->
+        return snapshot.debtPayments.filterNot { it.deleted }.associate { payment ->
             val localId = dao.getBySyncId(payment.id)?.id
                 ?: error("Missing local debt payment for sync id ${payment.id}")
             payment.id to localId
@@ -164,11 +170,11 @@ class FinanceSnapshotApplier(
         val transferDao = database.transferDao()
         val expenseDao = database.expenseDao()
         val keepTransferIds = snapshot.transactions
-            .filter { it.kind != "EXPENSE" }
+            .filter { !it.deleted && it.kind != "EXPENSE" }
             .map { it.id }
             .toSet()
         val keepExpenseIds = snapshot.transactions
-            .filter { it.kind == "EXPENSE" }
+            .filter { !it.deleted && it.kind == "EXPENSE" }
             .map { it.id }
             .toSet()
 
@@ -179,7 +185,7 @@ class FinanceSnapshotApplier(
             .filter { it.syncId !in keepExpenseIds }
             .forEach { expenseDao.delete(it) }
 
-        snapshot.transactions.forEach { transaction ->
+        snapshot.transactions.filterNot { it.deleted }.forEach { transaction ->
             when (transaction.kind) {
                 "EXPENSE" -> applyExpenseTransaction(
                     expenseDao,
@@ -196,6 +202,67 @@ class FinanceSnapshotApplier(
                 )
             }
         }
+    }
+
+    private suspend fun applyTombstones(snapshot: FinanceSnapshot) {
+        snapshot.goals.forEach { goal ->
+            reconcileTombstone(
+                entityType = SyncEntityType.GOAL,
+                entityId = goal.id,
+                syncUpdatedAt = goal.syncUpdatedAt,
+                deleted = goal.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeGoal(goal),
+            )
+        }
+        snapshot.debts.forEach { debt ->
+            reconcileTombstone(
+                entityType = SyncEntityType.DEBT,
+                entityId = debt.id,
+                syncUpdatedAt = debt.syncUpdatedAt,
+                deleted = debt.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeDebt(debt),
+            )
+        }
+        snapshot.debtPayments.forEach { payment ->
+            reconcileTombstone(
+                entityType = SyncEntityType.DEBT_PAYMENT,
+                entityId = payment.id,
+                syncUpdatedAt = payment.syncUpdatedAt,
+                deleted = payment.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeDebtPayment(payment),
+            )
+        }
+        snapshot.transactions.forEach { transaction ->
+            reconcileTombstone(
+                entityType = SyncEntityType.TRANSACTION,
+                entityId = transaction.id,
+                syncUpdatedAt = transaction.syncUpdatedAt,
+                deleted = transaction.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeTransaction(transaction),
+            )
+        }
+    }
+
+    private suspend fun reconcileTombstone(
+        entityType: SyncEntityType,
+        entityId: String,
+        syncUpdatedAt: Long,
+        deleted: Boolean,
+        payloadJson: String,
+    ) {
+        val dao = database.syncTombstoneDao()
+        if (!deleted) {
+            dao.deleteIfNotNewer(entityType.name, entityId, syncUpdatedAt)
+            return
+        }
+        dao.upsertIfNewer(
+            SyncTombstoneEntity(
+                entityType = entityType.name,
+                entityId = entityId,
+                payloadJson = payloadJson,
+                syncUpdatedAt = syncUpdatedAt,
+            ),
+        )
     }
 
     private suspend fun applyTransferTransaction(

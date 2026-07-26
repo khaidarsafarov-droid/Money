@@ -16,9 +16,13 @@ export interface Transaction {
   kind: TransactionKind;
   amount: number;
   goalId?: string;
+  debtId?: string;
+  debtPaymentId?: string;
   createdAt: string;
   note?: string;
   category?: string;
+  syncUpdatedAt?: number;
+  deleted?: boolean;
 }
 
 /** Single payment / contribution entry for debts. Amount in USD cents. */
@@ -26,6 +30,9 @@ export interface Payment {
   id: string;
   amount: number;
   paidAt: string;
+  affectsBalance?: boolean;
+  syncUpdatedAt?: number;
+  deleted?: boolean;
 }
 
 /**

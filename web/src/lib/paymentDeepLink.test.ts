@@ -26,4 +26,10 @@ describe("resolvePaymentItem", () => {
   it("returns undefined for unknown id", () => {
     expect(resolvePaymentItem(state.items, "debt-999")).toBeUndefined();
   });
+
+  it("does not resolve sync tombstones", () => {
+    expect(
+      resolvePaymentItem([{ ...item, deleted: true }], item.id),
+    ).toBeUndefined();
+  });
 });

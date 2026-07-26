@@ -32,6 +32,21 @@ describe("computeGlobalFinanceSummary", () => {
     expect(blocked.error).toBeTruthy();
     expect(blocked.state).toBe(state);
   });
+
+  it("keeps sync tombstones out of financial totals", () => {
+    const state: FinanceState = {
+      ...emptyState,
+      transactions: [{
+        id: "deleted-deposit",
+        kind: "DEPOSIT",
+        amount: 10_000,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        deleted: true,
+      }],
+    };
+
+    expect(computeGlobalFinanceSummary(state).globalBalanceCents).toBe(0);
+  });
 });
 
 describe("computeActiveGoalMetrics", () => {

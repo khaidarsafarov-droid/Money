@@ -11,7 +11,7 @@ import { resolveStatus } from "@/lib/financeEngine";
 
 export function goalAllocatedCents(transactions: Transaction[], goalId: string): number {
   return transactions
-    .filter((tx) => tx.kind === "GOAL_TRANSFER" && tx.goalId === goalId)
+    .filter((tx) => !tx.deleted && tx.kind === "GOAL_TRANSFER" && tx.goalId === goalId)
     .reduce((sum, tx) => sum + tx.amount, 0);
 }
 
@@ -33,15 +33,15 @@ export function computeActiveGoalMetrics(items: FinancialItem[]): ActiveGoalMetr
 export function computeGlobalFinanceSummary(state: FinanceState): GlobalFinanceSummary {
   const enriched = enrichFinanceState(state);
   const totalDepositsCents = state.transactions
-    .filter((tx) => tx.kind === "DEPOSIT")
+    .filter((tx) => !tx.deleted && tx.kind === "DEPOSIT")
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   const totalGoalAllocatedCents = state.transactions
-    .filter((tx) => tx.kind === "GOAL_TRANSFER")
+    .filter((tx) => !tx.deleted && tx.kind === "GOAL_TRANSFER")
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   const totalExpensesCents = state.transactions
-    .filter((tx) => tx.kind === "EXPENSE")
+    .filter((tx) => !tx.deleted && tx.kind === "EXPENSE")
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   const goalMetrics = computeActiveGoalMetrics(enriched.items);
@@ -133,6 +133,7 @@ export function migrateLegacyGoalHistory(state: FinanceState): FinanceState {
     if (item.type !== "GOAL") continue;
 
     for (const payment of item.history) {
+      if (payment.deleted) continue;
       migrated.push({
         id: payment.id,
         kind: "GOAL_TRANSFER",
@@ -142,7 +143,7 @@ export function migrateLegacyGoalHistory(state: FinanceState): FinanceState {
       });
     }
 
-    if (item.history.length === 0 && item.amount > 0) {
+    if (item.history.every((payment) => payment.deleted) && item.amount > 0) {
       migrated.push({
         id: createId(),
         kind: "GOAL_TRANSFER",
@@ -176,5 +177,7 @@ export function migrateLegacyGoalHistory(state: FinanceState): FinanceState {
 }
 
 export function sortedTransactions(transactions: Transaction[]): Transaction[] {
-  return [...transactions].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return transactions
+    .filter((transaction) => !transaction.deleted)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

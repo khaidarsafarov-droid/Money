@@ -6,12 +6,13 @@ export function resolvePaymentItem(
   items: FinancialItem[],
   payId: string,
 ): FinancialItem | undefined {
-  const direct = items.find((item) => item.id === payId);
+  const activeItems = items.filter((item) => !item.deleted);
+  const direct = activeItems.find((item) => item.id === payId);
   if (direct) return direct;
 
-  const byPayKey = items.find((item) => itemPayKey(item) === payId);
+  const byPayKey = activeItems.find((item) => itemPayKey(item) === payId);
   if (byPayKey) return byPayKey;
 
-  const prefixed = items.find((item) => itemPayKey(item) === payId.trim());
+  const prefixed = activeItems.find((item) => itemPayKey(item) === payId.trim());
   return prefixed;
 }

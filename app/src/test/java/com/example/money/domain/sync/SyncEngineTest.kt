@@ -64,7 +64,8 @@ class SyncEngineTest {
 
         val merged = SyncEngine.merge(local, remote)
 
-        assertTrue(merged.goals.isEmpty())
+        assertTrue(merged.goals.single().deleted)
+        assertEquals(200L, merged.goals.single().syncUpdatedAt)
     }
 
     @Test
@@ -102,7 +103,8 @@ class SyncEngineTest {
 
         val merged = SyncEngine.merge(local, remote)
 
-        assertTrue(merged.goals.isEmpty())
+        assertTrue(merged.goals.single().deleted)
+        assertEquals(300L, merged.goals.single().syncUpdatedAt)
     }
 
     @Test
@@ -118,6 +120,33 @@ class SyncEngineTest {
         val merged = SyncEngine.merge(local, remote)
 
         assertEquals("Remote only", merged.goals.single().name)
+    }
+
+    @Test
+    fun merge_threePeersDoNotResurrectDeletedGoalOrDebt() {
+        val deletedOnA = snapshot(
+            deviceId = "device-a",
+            goals = listOf(goal("goal-1", "Deleted goal", 300L, deleted = true)),
+            debts = listOf(debt("debt-1", "Deleted debt", 300L, deleted = true)),
+        )
+        val staleOnB = snapshot(
+            deviceId = "device-b",
+            goals = listOf(goal("goal-1", "Stale goal B", 100L)),
+            debts = listOf(debt("debt-1", "Stale debt B", 100L)),
+        )
+        val staleOnC = snapshot(
+            deviceId = "device-c",
+            goals = listOf(goal("goal-1", "Stale goal C", 100L)),
+            debts = listOf(debt("debt-1", "Stale debt C", 100L)),
+        )
+
+        val afterAB = SyncEngine.mergeSymmetric(deletedOnA, staleOnB)
+        val afterBC = SyncEngine.mergeSymmetric(afterAB, staleOnC)
+
+        assertTrue(afterAB.goals.single().deleted)
+        assertTrue(afterAB.debts.single().deleted)
+        assertTrue(afterBC.goals.single().deleted)
+        assertTrue(afterBC.debts.single().deleted)
     }
 
     @Test
@@ -184,6 +213,7 @@ class SyncEngineTest {
     private fun snapshot(
         deviceId: String = deviceA,
         goals: List<SnapshotGoal> = emptyList(),
+        debts: List<SnapshotDebt> = emptyList(),
         transactions: List<SnapshotTransaction> = emptyList(),
     ): FinanceSnapshot =
         FinanceSnapshot(
@@ -191,7 +221,7 @@ class SyncEngineTest {
             deviceId = deviceId,
             updatedAt = 0L,
             goals = goals,
-            debts = emptyList(),
+            debts = debts,
             debtPayments = emptyList(),
             transactions = transactions,
             voiceSettings = null,
@@ -209,6 +239,25 @@ class SyncEngineTest {
             targetAmountCents = 1_000L,
             currency = "USD",
             dateDeadline = null,
+            syncUpdatedAt = syncUpdatedAt,
+            deleted = deleted,
+        )
+
+    private fun debt(
+        id: String,
+        name: String,
+        syncUpdatedAt: Long,
+        deleted: Boolean = false,
+    ): SnapshotDebt =
+        SnapshotDebt(
+            id = id,
+            name = name,
+            targetAmountCents = 1_000L,
+            currentAmountCents = 0L,
+            currency = "USD",
+            status = "ACTIVE",
+            dateGiven = "2026-01-01",
+            dateDue = null,
             syncUpdatedAt = syncUpdatedAt,
             deleted = deleted,
         )

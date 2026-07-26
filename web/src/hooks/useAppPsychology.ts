@@ -25,7 +25,7 @@ import {
 
 function toAdvisorDebts(items: FinancialItem[]) {
   return items
-    .filter((item) => item.type === "DEBT")
+    .filter((item) => item.type === "DEBT" && !item.deleted)
     .map((item) => ({
       id: item.id,
       name: item.name,
@@ -96,7 +96,7 @@ export function useAppPsychology() {
       },
       item.amount + paymentCents,
       item.target,
-      item.history.length + 1,
+      item.history.filter((payment) => !payment.deleted).length + 1,
       nowMs,
     );
     setGamification(next);

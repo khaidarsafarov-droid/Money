@@ -10,6 +10,7 @@ import com.example.money.data.local.dao.LuckDiaryDao
 import com.example.money.data.local.dao.ExpenseDao
 import com.example.money.data.local.dao.SavingsGoalDao
 import com.example.money.data.local.dao.SyncQueueDao
+import com.example.money.data.local.dao.SyncTombstoneDao
 import com.example.money.data.local.dao.TransferDao
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
@@ -17,6 +18,7 @@ import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.data.local.entity.ExpenseEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
+import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.data.local.migration.MIGRATION_1_2
 import com.example.money.data.local.migration.MIGRATION_2_3
@@ -38,6 +40,7 @@ import com.example.money.data.local.migration.MIGRATION_17_18
 import com.example.money.data.local.migration.MIGRATION_18_19
 import com.example.money.data.local.migration.MIGRATION_19_20
 import com.example.money.data.local.migration.MIGRATION_20_21
+import com.example.money.data.local.migration.MIGRATION_21_22
 
 @Database(
     entities = [
@@ -47,9 +50,10 @@ import com.example.money.data.local.migration.MIGRATION_20_21
         ExpenseEntity::class,
         SavingsGoalEntity::class,
         SyncQueueEntity::class,
+        SyncTombstoneEntity::class,
         LuckDiaryEntryEntity::class,
     ],
-    version = 21,
+    version = 22,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -62,6 +66,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
     abstract fun savingsGoalDao(): SavingsGoalDao
     abstract fun syncQueueDao(): SyncQueueDao
+    abstract fun syncTombstoneDao(): SyncTombstoneDao
 
     companion object {
         private const val DATABASE_NAME = "money.db"
@@ -85,6 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_18_19,
                     MIGRATION_19_20,
                     MIGRATION_20_21,
+                    MIGRATION_21_22,
                 ).build().also { instance = it }
             }
         }

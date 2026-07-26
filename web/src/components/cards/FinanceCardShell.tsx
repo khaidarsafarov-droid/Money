@@ -58,6 +58,7 @@ export function FinanceCardShell({
   const progressPercent = progressPercentRaw(item);
   const overAchieved = item.type === "GOAL" && isGoalOverAchieved(item);
   const daily = item.type === "GOAL" ? dailyGoalCents(item) : null;
+  const visibleHistory = item.history.filter((payment) => !payment.deleted);
 
   return (
     <SurfaceCard
@@ -147,14 +148,14 @@ export function FinanceCardShell({
 
       {action}
 
-      {item.history.length > 0 && (
+      {visibleHistory.length > 0 && (
         <details className="border-t border-milk-surface pt-2">
           <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs text-milk-muted [&::-webkit-details-marker]:hidden">
             <AppIcon icon={History} size={12} />
-            История ({item.history.length})
+            История ({visibleHistory.length})
           </summary>
           <ul className="mt-2 space-y-1 text-sm">
-            {item.history.map((payment) => (
+            {visibleHistory.map((payment) => (
               <li key={payment.id} className="flex justify-between gap-2">
                 <span className="text-milk-muted">
                   {new Date(payment.paidAt).toLocaleDateString("ru-RU")}

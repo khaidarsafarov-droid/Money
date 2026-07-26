@@ -199,9 +199,18 @@ class DebtorRepositoryImpl(
         SyncWriteGuard.withWriteLock {
             val syncAt = System.currentTimeMillis()
             val existing = debtorDao.getDebtorById(debtor.id) ?: return@withWriteLock
+            val deletedPayments = debtPaymentDao.getPaymentsForDebtor(debtor.id)
             database.withTransaction {
                 removeAllLinkedOperations(debtor.id)
                 debtorDao.delete(existing)
+            }
+            deletedPayments.forEach { payment ->
+                syncQueueRecorder.recordDebtPayment(
+                    entity = payment,
+                    deleted = true,
+                    debtorSyncId = existing.syncId,
+                    syncUpdatedAt = syncAt,
+                )
             }
             syncQueueRecorder.recordDebt(existing, syncAt, deleted = true)
         }

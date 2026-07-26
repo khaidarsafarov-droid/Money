@@ -2,9 +2,12 @@ package com.example.money.data.sync
 
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
+import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.domain.repository.FinanceSnapshotRepository
 import com.example.money.domain.sync.FinanceSnapshot
 import com.example.money.domain.sync.SnapshotVoiceSettings
+import com.example.money.domain.sync.SyncEngine
+import com.example.money.domain.sync.SyncEntityType
 import kotlinx.coroutines.flow.first
 
 class FinanceSnapshotRepositoryImpl(
@@ -15,22 +18,39 @@ class FinanceSnapshotRepositoryImpl(
 
     override suspend fun buildSnapshot(): FinanceSnapshot {
         val deviceId = deviceIdProvider.getDeviceId()
-        val goals = database.savingsGoalDao().getAllGoalsOnce()
+        val tombstones = database.syncTombstoneDao().getAll()
+        val liveGoals = database.savingsGoalDao().getAllGoalsOnce()
             .map(FinanceSnapshotCodec::toSnapshotGoal)
+        val goals = SyncEngine.mergeRecords(
+            liveGoals,
+            decodeTombstones(tombstones, SyncEntityType.GOAL, FinanceSnapshotCodec::decodeGoal),
+        ) { it.id }
         val debtors = database.debtorDao().getAllDebtorsOnce()
         val payments = database.debtPaymentDao().getAllPaymentsOnce()
         val debtorSyncIds = debtors.associate { it.id to it.syncId }
         val paymentSyncIds = payments.associate { it.id to it.syncId }
         val paymentsByDebtor = payments.groupBy { it.debtorId }
-        val debts = debtors.map { debtor ->
+        val liveDebts = debtors.map { debtor ->
             val latestPayment = paymentsByDebtor[debtor.id]?.maxOfOrNull { it.paidAt }
             val syncUpdatedAt = maxOf(debtor.dateGiven, latestPayment ?: debtor.dateGiven)
             FinanceSnapshotCodec.toSnapshotDebt(debtor, syncUpdatedAt)
         }
-        val debtPayments = payments.mapNotNull { payment ->
+        val debts = SyncEngine.mergeRecords(
+            liveDebts,
+            decodeTombstones(tombstones, SyncEntityType.DEBT, FinanceSnapshotCodec::decodeDebt),
+        ) { it.id }
+        val liveDebtPayments = payments.mapNotNull { payment ->
             val debtorSyncId = debtorSyncIds[payment.debtorId] ?: return@mapNotNull null
             FinanceSnapshotCodec.toSnapshotDebtPayment(payment, debtorSyncId)
         }
+        val debtPayments = SyncEngine.mergeRecords(
+            liveDebtPayments,
+            decodeTombstones(
+                tombstones,
+                SyncEntityType.DEBT_PAYMENT,
+                FinanceSnapshotCodec::decodeDebtPayment,
+            ),
+        ) { it.id }
         val transferTransactions = database.transferDao().getAllOnce()
             .map { transfer ->
                 FinanceSnapshotCodec.toSnapshotTransactionFromTransfer(
@@ -47,8 +67,14 @@ class FinanceSnapshotRepositoryImpl(
                     debtPaymentSyncId = expense.debtPaymentId?.let { paymentSyncIds[it] },
                 )
             }
-        val transactions = (transferTransactions + expenseTransactions)
-            .sortedBy { it.id }
+        val transactions = SyncEngine.mergeRecords(
+            transferTransactions + expenseTransactions,
+            decodeTombstones(
+                tombstones,
+                SyncEntityType.TRANSACTION,
+                FinanceSnapshotCodec::decodeTransaction,
+            ),
+        ) { it.id }
         val voiceSettings = buildVoiceSettings()
 
         val updatedAt = listOfNotNull(
@@ -76,6 +102,16 @@ class FinanceSnapshotRepositoryImpl(
 
     override fun decodeSnapshot(raw: String): FinanceSnapshot =
         FinanceSnapshotCodec.decode(raw)
+
+    private fun <T> decodeTombstones(
+        tombstones: List<SyncTombstoneEntity>,
+        entityType: SyncEntityType,
+        decode: (String) -> T,
+    ): List<T> = tombstones
+        .asSequence()
+        .filter { it.entityType == entityType.name }
+        .map { decode(it.payloadJson) }
+        .toList()
 
     private suspend fun buildVoiceSettings(): SnapshotVoiceSettings? {
         val settings = preferencesStore.voiceReportSettings.first()

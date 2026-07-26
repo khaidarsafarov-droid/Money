@@ -59,13 +59,11 @@ object SyncEngine {
             when {
                 localRecord != null && remoteRecord != null -> {
                     val winner = pickLww(localRecord, remoteRecord)
-                    if (!winner.deleted) {
-                        merged[id] = winner
-                    }
+                    merged[id] = winner
                 }
                 else -> {
                     val sole = localRecord ?: remoteRecord
-                    if (sole != null && !sole.deleted) {
+                    if (sole != null) {
                         merged[id] = sole
                     }
                 }

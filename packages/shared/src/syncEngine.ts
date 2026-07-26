@@ -34,14 +34,12 @@ export function mergeRecords<T extends LwwRecord & { id: string }>(
 
     if (localRecord && remoteRecord) {
       const winner = pickLww(localRecord, remoteRecord);
-      if (!winner.deleted) {
-        merged.set(id, winner);
-      }
+      merged.set(id, winner);
       continue;
     }
 
     const sole = localRecord ?? remoteRecord;
-    if (sole && !sole.deleted) {
+    if (sole) {
       merged.set(id, sole);
     }
   }

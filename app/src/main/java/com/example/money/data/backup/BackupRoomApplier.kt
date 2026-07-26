@@ -8,6 +8,7 @@ import com.example.money.data.local.entity.ExpenseEntity
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
+import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupBundle
@@ -32,6 +33,7 @@ class BackupRoomApplier(
                 insertExpenses(bundle, debtorLocalIds, paymentLocalIds)
                 insertLuckDiaryEntries(bundle)
                 database.syncQueueDao().clearAll()
+                database.syncTombstoneDao().clearAll()
             }
         }
     }
@@ -45,6 +47,7 @@ class BackupRoomApplier(
             expenses = database.expenseDao().getAllOnce(),
             luckDiaryEntries = database.luckDiaryDao().getAllOnce(),
             syncQueue = database.syncQueueDao().getAllPending(),
+            syncTombstones = database.syncTombstoneDao().getAll(),
         )
 
     internal suspend fun restoreRollbackLocked(snapshot: RoomRollbackSnapshot) {
@@ -59,6 +62,8 @@ class BackupRoomApplier(
                 snapshot.luckDiaryEntries.forEach { database.luckDiaryDao().insert(it) }
                 database.syncQueueDao().clearAll()
                 snapshot.syncQueue.forEach { database.syncQueueDao().insert(it) }
+                database.syncTombstoneDao().clearAll()
+                snapshot.syncTombstones.forEach { database.syncTombstoneDao().upsert(it) }
             }
         }
     }
@@ -244,5 +249,6 @@ class BackupRoomApplier(
         val expenses: List<ExpenseEntity>,
         val luckDiaryEntries: List<LuckDiaryEntryEntity>,
         val syncQueue: List<SyncQueueEntity>,
+        val syncTombstones: List<SyncTombstoneEntity>,
     )
 }
