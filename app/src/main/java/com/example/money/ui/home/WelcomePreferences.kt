@@ -26,4 +26,15 @@ object WelcomePreferences {
             .putBoolean(KEY_WELCOME_SEEN, seen)
             .commit()
     }
+
+    fun clear(context: Context) {
+        check(
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .remove(KEY_WELCOME_SEEN)
+                .commit(),
+        ) {
+            "Unable to clear the welcome state"
+        }
+    }
 }

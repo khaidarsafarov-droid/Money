@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import com.example.money.data.backup.BackupCredentialException
 import com.example.money.data.backup.BackupDeviceState
 import com.example.money.data.backup.BackupErrorCode
+import com.example.money.data.backup.LocalDataResetWarning
 import com.example.money.domain.backup.BackupAuthenticationException
 import com.example.money.domain.backup.BackupPreview
 import com.example.money.domain.backup.BackupRemoteFile
@@ -29,6 +30,7 @@ enum class BackupSettingsOperation {
     RESTORE,
     DELETE,
     DISCONNECT,
+    LOCAL_RESET,
 }
 
 enum class BackupSettingsError {
@@ -39,6 +41,8 @@ enum class BackupSettingsError {
     CREDENTIAL,
     STORAGE,
     RESTORE,
+    DELETE_CONFIRMATION,
+    LOCAL_RESET,
     UNKNOWN,
 }
 
@@ -50,6 +54,8 @@ enum class BackupSettingsMessage {
     DISCONNECTED,
     AUTOMATIC_BACKUP_ENABLED,
     AUTOMATIC_BACKUP_DISABLED,
+    LOCAL_DATA_DELETED,
+    LOCAL_DATA_DELETED_WITH_WARNINGS,
 }
 
 enum class BackupRestoreSource {
@@ -72,6 +78,8 @@ data class BackupSettingsUiState(
     val restorePreview: BackupRestorePreviewState? = null,
     val error: BackupSettingsError? = null,
     val message: BackupSettingsMessage? = null,
+    val localResetCompleted: Boolean = false,
+    val localResetWarnings: List<LocalDataResetWarning> = emptyList(),
 ) {
     val isBusy: Boolean
         get() = operation != BackupSettingsOperation.IDLE
@@ -102,6 +110,8 @@ internal fun BackupSettingsError.toDeviceError(): BackupErrorCode =
         BackupSettingsError.CREDENTIAL -> BackupErrorCode.CREDENTIAL
         BackupSettingsError.STORAGE -> BackupErrorCode.STORAGE
         BackupSettingsError.RESTORE -> BackupErrorCode.RESTORE
+        BackupSettingsError.DELETE_CONFIRMATION,
+        BackupSettingsError.LOCAL_RESET,
         BackupSettingsError.UNKNOWN -> BackupErrorCode.UNKNOWN
     }
 

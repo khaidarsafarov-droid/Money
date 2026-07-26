@@ -13,6 +13,9 @@ import com.example.money.data.backup.GoogleDriveAuthorizationResult
 import com.example.money.data.backup.GoogleDriveAuthorizer
 import com.example.money.data.backup.GoogleDriveRevocationResult
 import com.example.money.data.backup.GoogleDriveStorageProviderFactory
+import com.example.money.data.backup.LocalDataResetResult
+import com.example.money.data.backup.LocalDataResetWarning
+import com.example.money.data.backup.LocalDataResetter
 import com.example.money.domain.backup.BackupBundle
 import com.example.money.domain.backup.BackupPreview
 import com.example.money.domain.backup.BackupRecordCounts
@@ -110,18 +113,55 @@ class BackupSettingsViewModelTest {
         assertEquals(pendingIntent, viewModel.state.value.pendingAuthorization)
     }
 
+    @Test
+    fun localResetRequiresLiteralDeleteAndNeverTouchesRemoteBackups() {
+        val resetter = RecordingLocalDataResetter(
+            LocalDataResetResult(
+                warnings = listOf(LocalDataResetWarning("calendar", "permission revoked")),
+            ),
+        )
+        val provider = FakeProvider()
+        val viewModel = viewModel(
+            FakeRepository(),
+            FakeDocumentGateway(),
+            FakeAuthorizer(),
+            localDataResetter = resetter,
+            provider = provider,
+        )
+
+        viewModel.deleteAllLocalData("delete")
+
+        assertEquals(0, resetter.callCount)
+        assertEquals(BackupSettingsError.DELETE_CONFIRMATION, viewModel.state.value.error)
+
+        viewModel.deleteAllLocalData("DELETE")
+
+        assertEquals(1, resetter.callCount)
+        assertTrue(provider.operations.isEmpty())
+        assertTrue(provider.deletedFileIds.isEmpty())
+        assertTrue(viewModel.state.value.localResetCompleted)
+        assertEquals(
+            BackupSettingsMessage.LOCAL_DATA_DELETED_WITH_WARNINGS,
+            viewModel.state.value.message,
+        )
+        assertEquals(1, viewModel.state.value.localResetWarnings.size)
+    }
+
     private fun viewModel(
         repository: FakeRepository,
         documents: FakeDocumentGateway,
         authorizer: FakeAuthorizer,
+        localDataResetter: LocalDataResetter = LocalDataResetter { LocalDataResetResult() },
+        provider: FakeProvider = FakeProvider(),
     ) = BackupSettingsViewModel(
         repository = repository,
         documentGateway = documents,
         authorizer = authorizer,
-        providerFactory = GoogleDriveStorageProviderFactory { FakeProvider() },
+        providerFactory = GoogleDriveStorageProviderFactory { provider },
         stateStore = FakeStateStore(),
         credentialCache = FakeCredentialCache(),
         scheduler = AutomaticBackupScheduler { _, _ -> },
+        localDataResetter = localDataResetter,
         operationScope = scope,
         loadRemoteFilesOnStart = false,
     )
@@ -179,14 +219,39 @@ class BackupSettingsViewModelTest {
     }
 
     private class FakeProvider : BackupStorageProvider {
-        override suspend fun list(): List<BackupRemoteFile> = emptyList()
+        val deletedFileIds = mutableListOf<String>()
+        val operations = mutableListOf<String>()
 
-        override suspend fun upload(fileName: String, content: ByteArray): BackupRemoteFile =
-            BackupRemoteFile("id", fileName, content.size.toLong(), "now", "now")
+        override suspend fun list(): List<BackupRemoteFile> {
+            operations += "list"
+            return emptyList()
+        }
 
-        override suspend fun download(fileId: String): ByteArray = byteArrayOf(7, 8, 9)
+        override suspend fun upload(fileName: String, content: ByteArray): BackupRemoteFile {
+            operations += "upload"
+            return BackupRemoteFile("id", fileName, content.size.toLong(), "now", "now")
+        }
 
-        override suspend fun delete(fileId: String) = Unit
+        override suspend fun download(fileId: String): ByteArray {
+            operations += "download"
+            return byteArrayOf(7, 8, 9)
+        }
+
+        override suspend fun delete(fileId: String) {
+            operations += "delete"
+            deletedFileIds += fileId
+        }
+    }
+
+    private class RecordingLocalDataResetter(
+        private val result: LocalDataResetResult,
+    ) : LocalDataResetter {
+        var callCount = 0
+
+        override suspend fun reset(): LocalDataResetResult {
+            callCount += 1
+            return result
+        }
     }
 
     private class FakeStateStore : BackupStateStore {

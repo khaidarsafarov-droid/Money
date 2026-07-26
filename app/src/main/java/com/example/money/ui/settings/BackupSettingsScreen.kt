@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,8 +45,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.data.backup.AutomaticBackupExecutor
+import com.example.money.data.locale.AppLanguageManager
 import com.example.money.domain.backup.BackupRemoteFile
 import com.example.money.ui.theme.CreamBackground
+import com.example.money.ui.util.findActivity
 
 private sealed interface BackupPasswordAction {
     data object LocalExport : BackupPasswordAction
@@ -73,6 +76,7 @@ fun BackupSettingsScreen(
     var restorePassword by remember { mutableStateOf<CharArray?>(null) }
     var deleteFile by remember { mutableStateOf<BackupRemoteFile?>(null) }
     var showDisconnectDialog by remember { mutableStateOf(false) }
+    var showDeleteAllLocalDataDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -108,6 +112,13 @@ fun BackupSettingsScreen(
             IntentSenderRequest.Builder(pendingIntent.intentSender).build(),
         )
         viewModel.clearAuthorizationRequest()
+    }
+
+    LaunchedEffect(state.localResetCompleted) {
+        if (state.localResetCompleted) {
+            AppLanguageManager.applyStored(context)
+            context.findActivity()?.recreate() ?: onBack()
+        }
     }
 
     val feedback = state.error?.let { backupErrorMessage(it) }
@@ -193,6 +204,16 @@ fun BackupSettingsScreen(
             onDeleteRemote = {
                 showDisconnectDialog = false
                 viewModel.disconnectGoogle(deleteRemoteBackups = true)
+            },
+        )
+    }
+
+    if (showDeleteAllLocalDataDialog) {
+        DeleteAllLocalDataDialog(
+            onDismiss = { showDeleteAllLocalDataDialog = false },
+            onConfirm = { confirmation ->
+                showDeleteAllLocalDataDialog = false
+                viewModel.deleteAllLocalData(confirmation)
             },
         )
     }
@@ -324,6 +345,24 @@ fun BackupSettingsScreen(
                     )
                 }
             }
+            item {
+                BackupSectionCard(
+                    title = stringResource(R.string.backup_delete_local_title),
+                    body = stringResource(R.string.backup_delete_local_hint),
+                ) {
+                    Button(
+                        onClick = { showDeleteAllLocalDataDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isBusy,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
+                    ) {
+                        Text(stringResource(R.string.backup_delete_local_action))
+                    }
+                }
+            }
         }
     }
 }
@@ -352,6 +391,8 @@ private fun backupErrorMessage(error: BackupSettingsError): String =
             BackupSettingsError.CREDENTIAL -> R.string.backup_error_credential
             BackupSettingsError.STORAGE -> R.string.backup_error_storage
             BackupSettingsError.RESTORE -> R.string.backup_error_restore
+            BackupSettingsError.DELETE_CONFIRMATION -> R.string.backup_error_delete_confirmation
+            BackupSettingsError.LOCAL_RESET -> R.string.backup_error_local_reset
             BackupSettingsError.UNKNOWN -> R.string.backup_error_unknown
         },
     )
@@ -367,6 +408,9 @@ private fun backupMessage(message: BackupSettingsMessage): String =
             BackupSettingsMessage.DISCONNECTED -> R.string.backup_message_disconnected
             BackupSettingsMessage.AUTOMATIC_BACKUP_ENABLED -> R.string.backup_message_auto_enabled
             BackupSettingsMessage.AUTOMATIC_BACKUP_DISABLED -> R.string.backup_message_auto_disabled
+            BackupSettingsMessage.LOCAL_DATA_DELETED -> R.string.backup_message_local_data_deleted
+            BackupSettingsMessage.LOCAL_DATA_DELETED_WITH_WARNINGS ->
+                R.string.backup_message_local_data_deleted_with_warnings
         },
     )
 

@@ -25,6 +25,12 @@ class DeviceIdProvider(private val context: Context) {
         return resolved!!
     }
 
+    suspend fun clear() {
+        context.deviceIdDataStore.edit { preferences ->
+            preferences.remove(DEVICE_ID_KEY)
+        }
+    }
+
     private companion object {
         val DEVICE_ID_KEY = stringPreferencesKey("device_id")
     }

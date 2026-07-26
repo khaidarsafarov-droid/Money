@@ -14,6 +14,7 @@ import com.example.money.data.backup.BackupStateStore
 import com.example.money.data.backup.GoogleDriveAuthorizationResult
 import com.example.money.data.backup.GoogleDriveAuthorizer
 import com.example.money.data.backup.GoogleDriveStorageProviderFactory
+import com.example.money.data.backup.LocalDataResetter
 import com.example.money.data.backup.recordBackupError
 import com.example.money.data.backup.recordBackupSuccess
 import com.example.money.data.backup.requireGoogleReconnect
@@ -35,6 +36,7 @@ class BackupSettingsViewModel(
     private val stateStore: BackupStateStore,
     private val credentialCache: BackupCredentialCache,
     private val scheduler: AutomaticBackupScheduler,
+    private val localDataResetter: LocalDataResetter,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
     operationScope: CoroutineScope? = null,
     loadRemoteFilesOnStart: Boolean = true,
@@ -287,6 +289,42 @@ class BackupSettingsViewModel(
         }
     }
 
+    fun deleteAllLocalData(confirmation: String) {
+        if (confirmation != DELETE_CONFIRMATION) {
+            fail(BackupSettingsError.DELETE_CONFIRMATION)
+            return
+        }
+        scope.launch {
+            startOperation(BackupSettingsOperation.LOCAL_RESET)
+            try {
+                val result = localDataResetter.reset()
+                accessToken = null
+                clearRestoreBytes()
+                mutableState.update {
+                    it.copy(
+                        connection = GoogleBackupConnection.DISCONNECTED,
+                        remoteFiles = emptyList(),
+                        pendingAuthorization = null,
+                        restorePreview = null,
+                        localResetCompleted = true,
+                        localResetWarnings = result.warnings,
+                        message = if (result.warnings.isEmpty()) {
+                            BackupSettingsMessage.LOCAL_DATA_DELETED
+                        } else {
+                            BackupSettingsMessage.LOCAL_DATA_DELETED_WITH_WARNINGS
+                        },
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                fail(BackupSettingsError.LOCAL_RESET)
+            } finally {
+                finishOperation()
+            }
+        }
+    }
+
     fun setAutomaticBackupEnabled(enabled: Boolean, password: CharArray? = null) {
         val ownedPassword = password?.copyOf()
         password?.fill('\u0000')
@@ -530,5 +568,9 @@ class BackupSettingsViewModel(
         clearRestoreBytes()
         accessToken = null
         super.onCleared()
+    }
+
+    private companion object {
+        const val DELETE_CONFIRMATION = "DELETE"
     }
 }

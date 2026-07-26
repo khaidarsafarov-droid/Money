@@ -168,3 +168,44 @@ internal fun DisconnectGoogleBackupDialog(
         },
     )
 }
+
+@Composable
+internal fun DeleteAllLocalDataDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var confirmation by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_delete_local_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.backup_delete_local_dialog_message))
+                OutlinedTextField(
+                    value = confirmation,
+                    onValueChange = { confirmation = it },
+                    label = { Text(stringResource(R.string.backup_delete_local_confirmation_label)) },
+                    supportingText = {
+                        Text(stringResource(R.string.backup_delete_local_confirmation_help))
+                    },
+                    singleLine = true,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = confirmation == DELETE_CONFIRMATION,
+                onClick = { onConfirm(confirmation) },
+            ) {
+                Text(stringResource(R.string.backup_delete_local_action))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
+}
+
+private const val DELETE_CONFIRMATION = "DELETE"

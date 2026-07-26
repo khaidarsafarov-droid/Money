@@ -19,6 +19,7 @@ class BackupSettingsViewModelFactory(
                 stateStore = container.backupStateStore,
                 credentialCache = container.backupCredentialCache,
                 scheduler = container.automaticBackupScheduler,
+                localDataResetter = container.localDataResetter,
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

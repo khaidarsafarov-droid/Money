@@ -468,4 +468,15 @@
     <string name="backup_message_disconnected">Google Drive disconnected.</string>
     <string name="backup_message_auto_enabled">Automatic backup enabled.</string>
     <string name="backup_message_auto_disabled">Automatic backup disabled.</string>
+    <string name="backup_delete_local_title">Danger zone</string>
+    <string name="backup_delete_local_hint">Deletes all financial data, local settings, the vision image, schedules, and the saved backup password on this device. Google Drive backups remain.</string>
+    <string name="backup_delete_local_action">Delete all local data</string>
+    <string name="backup_delete_local_dialog_title">Delete all local data?</string>
+    <string name="backup_delete_local_dialog_message">This cannot be undone. Google Drive backups will not be deleted. Type DELETE to confirm.</string>
+    <string name="backup_delete_local_confirmation_label">Type DELETE</string>
+    <string name="backup_delete_local_confirmation_help">The exact uppercase word DELETE is required.</string>
+    <string name="backup_error_delete_confirmation">Type DELETE exactly to confirm deletion.</string>
+    <string name="backup_error_local_reset">Not all local data could be deleted.</string>
+    <string name="backup_message_local_data_deleted">All local data was deleted.</string>
+    <string name="backup_message_local_data_deleted_with_warnings">Local data was deleted, but some system cleanup could not finish.</string>
 </resources>

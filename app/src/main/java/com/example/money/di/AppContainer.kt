@@ -1,6 +1,8 @@
 package com.example.money.di
 
 import android.app.Application
+import androidx.core.app.NotificationManagerCompat
+import androidx.work.WorkManager
 import com.example.money.MoneyApplication
 import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.calendar.DebtCalendarReconciler
@@ -15,6 +17,7 @@ import com.example.money.data.backup.BackupRepositoryImpl
 import com.example.money.data.backup.BackupRoomApplier
 import com.example.money.data.backup.BackupStateStore
 import com.example.money.data.backup.DebtReminderRestoreReconciler
+import com.example.money.data.backup.DefaultLocalDataResetter
 import com.example.money.data.backup.DefaultPostRestoreReconciler
 import com.example.money.data.backup.EncryptedBackupCredentialCache
 import com.example.money.data.backup.GoogleDriveAuthorizationManager
@@ -22,12 +25,14 @@ import com.example.money.data.backup.GoogleDriveBackupStorageProvider
 import com.example.money.data.backup.GoogleDriveRestClient
 import com.example.money.data.backup.GoogleDriveStorageProviderFactory
 import com.example.money.data.backup.LocalBackupDocumentGateway
+import com.example.money.data.backup.LocalDataResetter
 import com.example.money.data.backup.PostRestoreReconciler
 import com.example.money.data.backup.UrlConnectionGoogleDriveHttpTransport
 import com.example.money.data.backup.VisionImageStore
 import com.example.money.data.backup.WorkManagerAutomaticBackupScheduler
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
+import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.repository.BudgetRepositoryImpl
 import com.example.money.data.repository.DebtorRepositoryImpl
 import com.example.money.data.repository.GoalRepositoryImpl
@@ -48,10 +53,14 @@ import com.example.money.notification.DebtReminderSchedulerImpl
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.WeeklyCheckInScheduler
+import com.example.money.ui.home.WelcomePreferences
 import com.example.money.voice.VoiceReportScheduler
 import com.google.android.gms.auth.api.identity.Identity
+import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 /**
  * Single composition root — ViewModels and workers resolve dependencies here
@@ -182,6 +191,44 @@ class AppContainer(
 
     private val visionImageStore: VisionImageStore by lazy {
         VisionImageStore(application, preferencesStore)
+    }
+
+    val localDataResetter: LocalDataResetter by lazy {
+        DefaultLocalDataResetter(
+            database = database,
+            preferencesStore = preferencesStore,
+            visionImageStorage = visionImageStore,
+            backupStateStore = backupStateStore,
+            credentialCache = backupCredentialCache,
+            resetAppState = {
+                deviceIdProvider.clear()
+                AppLanguageStorage.clear(application)
+                WelcomePreferences.clear(application)
+            },
+            stopPeerSync = {
+                withContext(Dispatchers.IO) {
+                    syncService.stop()
+                }
+            },
+            cleanCalendarLinks = { links ->
+                val failedLinks = links.filterNot { link ->
+                    debtCalendarSyncService.deleteDebtEvent(link.eventId, link.debtorId)
+                }
+                if (failedLinks.isNotEmpty()) {
+                    throw IOException(
+                        "Unable to remove ${failedLinks.size} linked calendar event(s)",
+                    )
+                }
+            },
+            cancelSchedules = {
+                withContext(Dispatchers.IO) {
+                    WorkManager.getInstance(application).cancelAllWork().result.get()
+                }
+            },
+            cancelNotifications = {
+                NotificationManagerCompat.from(application).cancelAll()
+            },
+        )
     }
 
     val backupRepository: BackupRepository by lazy {

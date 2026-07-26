@@ -20,4 +20,10 @@ object AppLanguageStorage {
             .putString(KEY_LANGUAGE, language.name)
             .commit()
     }
+
+    fun clear(context: Context) {
+        check(prefs(context).edit().remove(KEY_LANGUAGE).commit()) {
+            "Unable to clear the stored app language"
+        }
+    }
 }

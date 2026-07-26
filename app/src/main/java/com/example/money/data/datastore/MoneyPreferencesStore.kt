@@ -159,6 +159,10 @@ class MoneyPreferencesStore(
     private val syncQueueRecorder: SyncQueueRecorder? = null,
 ) : PortablePreferencesStorage {
 
+    suspend fun clearAll() {
+        context.moneyPreferencesDataStore.edit(MutablePreferences::clear)
+    }
+
     val widgetSnapshot: Flow<WidgetGoalSnapshot> =
         context.moneyPreferencesDataStore.data.map { prefs ->
             WidgetGoalSnapshot(

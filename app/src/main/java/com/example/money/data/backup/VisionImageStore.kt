@@ -109,16 +109,16 @@ class VisionImageStore(
     }
 
     private fun deleteManagedFile(path: String) {
-        runCatching {
-            val file = File(path)
-            val rootPath = filesDir.canonicalFile.path + File.separator
-            if (file.canonicalFile.path.startsWith(rootPath) && file.delete()) {
-                val visionRoot = File(filesDir, DIRECTORY_NAME).canonicalFile
-                file.parentFile?.canonicalFile
-                    ?.takeIf { it.parentFile == visionRoot }
-                    ?.delete()
-            }
+        val file = File(path)
+        val rootPath = filesDir.canonicalFile.path + File.separator
+        if (!file.canonicalFile.path.startsWith(rootPath)) return
+        if (file.exists() && !file.delete()) {
+            throw IOException("Unable to delete the local vision image")
         }
+        val visionRoot = File(filesDir, DIRECTORY_NAME).canonicalFile
+        file.parentFile?.canonicalFile
+            ?.takeIf { it.parentFile == visionRoot }
+            ?.delete()
     }
 
     private fun mimeTypeFor(extension: String): String = when (extension.lowercase()) {

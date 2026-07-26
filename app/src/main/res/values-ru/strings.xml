@@ -375,4 +375,15 @@
     <string name="backup_message_disconnected">Google Диск отключён.</string>
     <string name="backup_message_auto_enabled">Автоматическое копирование включено.</string>
     <string name="backup_message_auto_disabled">Автоматическое копирование выключено.</string>
+    <string name="backup_delete_local_title">Опасная зона</string>
+    <string name="backup_delete_local_hint">Удаляет все финансовые данные, локальные настройки, фото цели, расписания и сохранённый пароль резервной копии на этом устройстве. Копии на Google Диске останутся.</string>
+    <string name="backup_delete_local_action">Удалить все локальные данные</string>
+    <string name="backup_delete_local_dialog_title">Удалить все локальные данные?</string>
+    <string name="backup_delete_local_dialog_message">Это действие нельзя отменить. Резервные копии на Google Диске не будут удалены. Для подтверждения введите DELETE.</string>
+    <string name="backup_delete_local_confirmation_label">Введите DELETE</string>
+    <string name="backup_delete_local_confirmation_help">Требуется точное слово DELETE заглавными буквами.</string>
+    <string name="backup_error_delete_confirmation">Введите DELETE точно, чтобы подтвердить удаление.</string>
+    <string name="backup_error_local_reset">Не удалось удалить все локальные данные.</string>
+    <string name="backup_message_local_data_deleted">Все локальные данные удалены.</string>
+    <string name="backup_message_local_data_deleted_with_warnings">Локальные данные удалены, но часть системной очистки не завершена.</string>
 </resources>

@@ -49,6 +49,10 @@ interface BackupStateStore {
     val settings: Flow<BackupDeviceState>
 
     suspend fun update(transform: (BackupDeviceState) -> BackupDeviceState)
+
+    suspend fun clear() {
+        update { BackupDeviceState() }
+    }
 }
 
 suspend fun BackupStateStore.recordBackupSuccess(
@@ -110,6 +114,10 @@ class BackupDeviceStateStore internal constructor(
         dataStore.edit { preferences ->
             BackupDeviceStateKeys.write(preferences, transform(BackupDeviceStateKeys.fromPreferences(preferences)))
         }
+    }
+
+    override suspend fun clear() {
+        dataStore.edit(MutablePreferences::clear)
     }
 }
 
