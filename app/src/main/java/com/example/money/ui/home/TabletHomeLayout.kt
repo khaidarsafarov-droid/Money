@@ -113,6 +113,7 @@ fun TabletHomeLayout(
     onOpenAutopilotSettings: () -> Unit = {},
     onOpenCalendarSettings: () -> Unit = {},
     onOpenDebtNotificationSettings: () -> Unit = {},
+    onOpenBackupSettings: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenIncomeIdeas: () -> Unit = {},
     onEditDebtor: (Debtor) -> Unit,
@@ -226,6 +227,13 @@ fun TabletHomeLayout(
                         onClick = {
                             showSettingsMenu = false
                             onOpenCalendarSettings()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.backup_settings_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenBackupSettings()
                         },
                     )
                     DropdownMenuItem(

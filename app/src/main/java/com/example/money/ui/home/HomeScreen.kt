@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AutoMode
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Lock
@@ -144,6 +145,7 @@ fun HomeScreen(
     onOpenAutopilotSettings: () -> Unit = {},
     onOpenCalendarSettings: () -> Unit = {},
     onOpenDebtNotificationSettings: () -> Unit = {},
+    onOpenBackupSettings: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -864,6 +866,7 @@ fun HomeScreen(
                 onOpenAutopilotSettings = onOpenAutopilotSettings,
                 onOpenCalendarSettings = onOpenCalendarSettings,
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
+                onOpenBackupSettings = onOpenBackupSettings,
                 onOpenVoiceSettings = onOpenVoiceSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onEditDebtor = { editDebtor = it },
@@ -953,6 +956,7 @@ fun HomeScreen(
                 onOpenAutopilotSettings = onOpenAutopilotSettings,
                 onOpenCalendarSettings = onOpenCalendarSettings,
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
+                onOpenBackupSettings = onOpenBackupSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onOpenGoalHub = onOpenGoalHub,
                 onAddDebt = {
@@ -1083,6 +1087,7 @@ private fun PhoneHomeLayout(
     onOpenAutopilotSettings: () -> Unit,
     onOpenCalendarSettings: () -> Unit,
     onOpenDebtNotificationSettings: () -> Unit,
+    onOpenBackupSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
     onOpenGoalHub: () -> Unit,
     onAddDebt: () -> Unit,
@@ -1205,6 +1210,16 @@ private fun PhoneHomeLayout(
                             icon = Icons.Outlined.CalendarMonth,
                             onClick = {
                                 onOpenCalendarSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.backup_settings_title),
+                            icon = Icons.Outlined.CloudUpload,
+                            onClick = {
+                                onOpenBackupSettings()
                                 scope.launch { drawerState.close() }
                             },
                         )

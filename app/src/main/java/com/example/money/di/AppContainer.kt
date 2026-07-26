@@ -5,19 +5,27 @@ import com.example.money.MoneyApplication
 import com.example.money.autopilot.MicroPaymentScheduler
 import com.example.money.calendar.DebtCalendarReconciler
 import com.example.money.calendar.DebtCalendarSyncService
+import com.example.money.data.backup.AutomaticBackupExecutor
+import com.example.money.data.backup.AutomaticBackupScheduler
 import com.example.money.data.backup.BackupExporter
+import com.example.money.data.backup.BackupCredentialCache
+import com.example.money.data.backup.BackupDeviceStateStore
 import com.example.money.data.backup.BackupImporter
 import com.example.money.data.backup.BackupRepositoryImpl
 import com.example.money.data.backup.BackupRoomApplier
+import com.example.money.data.backup.BackupStateStore
 import com.example.money.data.backup.DebtReminderRestoreReconciler
 import com.example.money.data.backup.DefaultPostRestoreReconciler
+import com.example.money.data.backup.EncryptedBackupCredentialCache
 import com.example.money.data.backup.GoogleDriveAuthorizationManager
 import com.example.money.data.backup.GoogleDriveBackupStorageProvider
 import com.example.money.data.backup.GoogleDriveRestClient
+import com.example.money.data.backup.GoogleDriveStorageProviderFactory
 import com.example.money.data.backup.LocalBackupDocumentGateway
 import com.example.money.data.backup.PostRestoreReconciler
 import com.example.money.data.backup.UrlConnectionGoogleDriveHttpTransport
 import com.example.money.data.backup.VisionImageStore
+import com.example.money.data.backup.WorkManagerAutomaticBackupScheduler
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
 import com.example.money.data.repository.BudgetRepositoryImpl
@@ -204,8 +212,34 @@ class AppContainer(
         GoogleDriveAuthorizationManager(Identity.getAuthorizationClient(application))
     }
 
+    val backupStateStore: BackupStateStore by lazy {
+        BackupDeviceStateStore(application)
+    }
+
+    val backupCredentialCache: BackupCredentialCache by lazy {
+        EncryptedBackupCredentialCache(application)
+    }
+
+    val automaticBackupScheduler: AutomaticBackupScheduler by lazy {
+        WorkManagerAutomaticBackupScheduler(application)
+    }
+
     private val googleDriveRestClient: GoogleDriveRestClient by lazy {
         GoogleDriveRestClient(UrlConnectionGoogleDriveHttpTransport())
+    }
+
+    val googleDriveStorageProviderFactory: GoogleDriveStorageProviderFactory by lazy {
+        GoogleDriveStorageProviderFactory(::googleDriveBackupStorageProvider)
+    }
+
+    val automaticBackupExecutor: AutomaticBackupExecutor by lazy {
+        AutomaticBackupExecutor(
+            backupRepository = backupRepository,
+            stateStore = backupStateStore,
+            credentialCache = backupCredentialCache,
+            authorizer = googleDriveAuthorizationManager,
+            providerFactory = googleDriveStorageProviderFactory,
+        )
     }
 
     fun googleDriveBackupStorageProvider(

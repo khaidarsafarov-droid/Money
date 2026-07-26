@@ -29,14 +29,22 @@ sealed interface GoogleDriveRevocationResult {
     data class Failure(val cause: Throwable) : GoogleDriveRevocationResult
 }
 
+interface GoogleDriveAuthorizer {
+    suspend fun authorize(): GoogleDriveAuthorizationResult
+
+    fun completeAuthorization(intent: Intent?): GoogleDriveAuthorizationResult
+
+    suspend fun revokeAccess(): GoogleDriveRevocationResult
+}
+
 class GoogleDriveAuthorizationManager internal constructor(
     private val gateway: GoogleAuthorizationGateway,
-) {
+) : GoogleDriveAuthorizer {
     constructor(client: AuthorizationClient) : this(
         PlayServicesGoogleAuthorizationGateway(client),
     )
 
-    suspend fun authorize(): GoogleDriveAuthorizationResult =
+    override suspend fun authorize(): GoogleDriveAuthorizationResult =
         try {
             mapResult(gateway.authorize(AUTHORIZATION_REQUEST))
         } catch (error: CancellationException) {
@@ -45,14 +53,14 @@ class GoogleDriveAuthorizationManager internal constructor(
             GoogleDriveAuthorizationResult.Failure(error)
         }
 
-    fun completeAuthorization(intent: Intent?): GoogleDriveAuthorizationResult =
+    override fun completeAuthorization(intent: Intent?): GoogleDriveAuthorizationResult =
         try {
             mapResult(gateway.getAuthorizationResultFromIntent(intent))
         } catch (error: Exception) {
             GoogleDriveAuthorizationResult.Failure(error)
         }
 
-    suspend fun revokeAccess(): GoogleDriveRevocationResult =
+    override suspend fun revokeAccess(): GoogleDriveRevocationResult =
         try {
             gateway.revokeAccess(REVOKE_ACCESS_REQUEST)
             GoogleDriveRevocationResult.Revoked

@@ -12,16 +12,22 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+interface BackupDocumentGateway {
+    suspend fun read(uri: Uri): ByteArray
+
+    suspend fun write(uri: Uri, content: ByteArray)
+}
+
 class LocalBackupDocumentGateway(
     private val contentResolver: ContentResolver,
     private val maxBackupBytes: Int = DEFAULT_MAX_BACKUP_BYTES,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) {
+) : BackupDocumentGateway {
     init {
         require(maxBackupBytes > 0) { "maxBackupBytes must be positive" }
     }
 
-    suspend fun read(uri: Uri): ByteArray = withContext(ioDispatcher) {
+    override suspend fun read(uri: Uri): ByteArray = withContext(ioDispatcher) {
         requireContentUri(uri, operation = "read")
         try {
             rejectKnownOversize(uri)
@@ -54,7 +60,7 @@ class LocalBackupDocumentGateway(
         }
     }
 
-    suspend fun write(uri: Uri, content: ByteArray) = withContext(ioDispatcher) {
+    override suspend fun write(uri: Uri, content: ByteArray) = withContext(ioDispatcher) {
         requireContentUri(uri, operation = "write")
         if (content.size > maxBackupBytes) {
             throw BackupStorageSizeLimitException(

@@ -3,6 +3,10 @@ package com.example.money.data.backup
 import com.example.money.domain.backup.BackupRemoteFile
 import com.example.money.domain.backup.BackupStorageProvider
 
+fun interface GoogleDriveStorageProviderFactory {
+    fun create(accessToken: String): BackupStorageProvider
+}
+
 class GoogleDriveBackupStorageProvider(
     private val accessToken: String,
     private val client: GoogleDriveRestClient,

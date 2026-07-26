@@ -4,4 +4,5 @@
     <exclude domain="database" path="money.db-shm" />
     <exclude domain="database" path="money.db-wal" />
     <exclude domain="file" path="datastore/" />
+    <exclude domain="sharedpref" path="backup_credentials.xml" />
 </full-backup-content>

@@ -10,4 +10,5 @@ object AppRoutes {
     const val AUTOPILOT_SETTINGS = "autopilot_settings"
     const val CALENDAR_SETTINGS = "calendar_settings"
     const val DEBT_NOTIFICATION_SETTINGS = "debt_notification_settings"
+    const val BACKUP_SETTINGS = "backup_settings"
 }

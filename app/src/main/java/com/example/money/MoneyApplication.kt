@@ -108,6 +108,7 @@ class MoneyApplication : Application() {
         syncAutopilotSchedule()
         syncWeeklyCheckInSchedule()
         syncVoiceReportSchedule()
+        syncAutomaticBackupSchedule()
         startPeerSync()
     }
 
@@ -136,6 +137,16 @@ class MoneyApplication : Application() {
     private fun syncVoiceReportSchedule() {
         applicationScope.launch {
             VoiceReportScheduler.syncSchedule(this@MoneyApplication)
+        }
+    }
+
+    private fun syncAutomaticBackupSchedule() {
+        applicationScope.launch {
+            val settings = container.backupStateStore.settings.first()
+            container.automaticBackupScheduler.syncSchedule(
+                enabled = settings.automaticBackupEnabled,
+                wifiOnly = settings.wifiOnly,
+            )
         }
     }
 
