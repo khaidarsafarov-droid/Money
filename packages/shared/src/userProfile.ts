@@ -46,9 +46,19 @@ export function isValidAge(age: number | null | undefined): boolean {
   return Number.isInteger(age) && age >= 18 && age <= 99;
 }
 
-export function resolveDisplayName(name: string): string {
+const DEFAULT_DISPLAY_NAME_EN = "Friend";
+
+export function defaultDisplayName(locale = "ru"): string {
+  return locale.toLowerCase().startsWith("en") ? DEFAULT_DISPLAY_NAME_EN : DEFAULT_DISPLAY_NAME;
+}
+
+export function resolveDisplayName(name: string, locale = "ru"): string {
   const trimmed = name.trim();
-  return trimmed.length >= 2 ? trimmed : DEFAULT_DISPLAY_NAME;
+  const placeholder =
+    trimmed.length < 2 ||
+    trimmed === DEFAULT_DISPLAY_NAME ||
+    trimmed.toLowerCase() === DEFAULT_DISPLAY_NAME_EN.toLowerCase();
+  return placeholder ? defaultDisplayName(locale) : trimmed;
 }
 
 export function resolveGoalText(goal: string): string {
@@ -56,8 +66,18 @@ export function resolveGoalText(goal: string): string {
   return trimmed.length > 0 ? trimmed : DEFAULT_GOAL_TEXT;
 }
 
-export function personalizedGreeting(name: string, progressPercent: number): string {
-  const who = resolveDisplayName(name);
+export function personalizedGreeting(
+  name: string,
+  progressPercent: number,
+  locale = "ru",
+): string {
+  const who = resolveDisplayName(name, locale);
+  if (locale.toLowerCase().startsWith("en")) {
+    if (progressPercent > 0) {
+      return `Hi, ${who}! Today you are ${progressPercent}% closer to freedom.`;
+    }
+    return `Hi, ${who}! Let's take the first step toward freedom.`;
+  }
   if (progressPercent > 0) {
     return `Привет, ${who}! Сегодня вы на ${progressPercent}% ближе к свободе.`;
   }

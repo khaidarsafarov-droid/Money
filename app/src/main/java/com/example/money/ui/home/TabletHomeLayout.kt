@@ -15,8 +15,10 @@ import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -114,7 +116,9 @@ fun TabletHomeLayout(
     onOpenCalendarSettings: () -> Unit = {},
     onOpenDebtNotificationSettings: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
+    onPlayVoiceReport: () -> Unit = {},
     onOpenIncomeIdeas: () -> Unit = {},
+    calendarPermissionGranted: Boolean = true,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onAddDebt: () -> Unit = {},
@@ -236,6 +240,13 @@ fun TabletHomeLayout(
                         },
                     )
                     DropdownMenuItem(
+                        text = { Text(stringResource(R.string.voice_play_report)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onPlayVoiceReport()
+                        },
+                    )
+                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.income_ideas_title)) },
                         onClick = {
                             showSettingsMenu = false
@@ -318,8 +329,11 @@ fun TabletHomeLayout(
                                     .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                TextButton(onClick = onOpenAdvisor) {
-                                    Text(stringResource(R.string.advisor_open))
+                                IconButton(onClick = onOpenAdvisor) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Psychology,
+                                        contentDescription = stringResource(R.string.advisor_open),
+                                    )
                                 }
                                 if (autopilotSettings.enabled) {
                                     TextButton(onClick = onApplyAutopilot) {
@@ -333,6 +347,8 @@ fun TabletHomeLayout(
                                 DebtCalendarTab(
                                     debtors = allDebtors,
                                     hideAmounts = privacySettings.hideAmounts,
+                                    calendarPermissionGranted = calendarPermissionGranted,
+                                    onOpenCalendarSettings = onOpenCalendarSettings,
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }
@@ -343,6 +359,7 @@ fun TabletHomeLayout(
                                     extraMonthlyCents = extraMonthlyCents,
                                     onExtraMonthlyChange = onExtraMonthlyChange,
                                     onOpenGoalHub = onOpenGoalHub,
+                                    onOpenIncomeIdeas = onOpenIncomeIdeas,
                                     hideAmounts = privacySettings.hideAmounts,
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )

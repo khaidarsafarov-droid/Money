@@ -60,7 +60,7 @@ class CalendarSettingsViewModel(
         val result = debtCalendarSyncService.upsertDebtEvent(
             debtor = debtor,
             settings = settings,
-            displayName = profile.resolvedDisplayName(),
+            displayName = profile.resolvedDisplayName(debtCalendarSyncService.defaultDisplayName()),
             force = force,
         )
         val latest = app.debtorRepository.getDebtorById(debtor.id) ?: return

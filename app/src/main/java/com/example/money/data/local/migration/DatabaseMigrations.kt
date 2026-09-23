@@ -142,7 +142,7 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
                     INSERT INTO transfers (amount, date, isConfirmed, goalId)
                     VALUES (?, ?, 1, ?)
                     """.trimIndent(),
-                    arrayOf(amount, now, goalId),
+                    arrayOf<Any?>(amount, now, goalId),
                 )
             }
         }
@@ -164,7 +164,7 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
                         INSERT INTO transfers (amount, date, isConfirmed, goalId)
                         VALUES (?, ?, 1, NULL)
                         """.trimIndent(),
-                        arrayOf(amount, now),
+                        arrayOf<Any?>(amount, now),
                     )
                 }
             }
@@ -229,7 +229,7 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
                         id, sync_id, name, target_amount_cents, current_amount_cents, currency, updated_at, deadline_ms
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """.trimIndent(),
-                    arrayOf(id, syncId, name, targetCents, currentCents, currency, updatedAt, deadline),
+                    arrayOf<Any?>(id, syncId, name, targetCents, currentCents, currency, updatedAt, deadline),
                 )
             }
         }
@@ -411,7 +411,7 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
                     INSERT INTO transfers_new (id, sync_id, amount, date, isConfirmed, goalId, goal_sync_id)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     """.trimIndent(),
-                    arrayOf(id, syncId, amount, date, if (isConfirmed) 1 else 0, goalId, goalSyncId),
+                    arrayOf<Any?>(id, syncId, amount, date, if (isConfirmed) 1 else 0, goalId, goalSyncId),
                 )
             }
         }

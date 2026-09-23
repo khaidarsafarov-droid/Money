@@ -134,8 +134,8 @@ class OnboardingViewModel(
     fun completeOnboarding(onFinished: () -> Unit) {
         viewModelScope.launch {
             val draft = _draft.value
-            val name = draft.displayName.trim().ifBlank { UserProfile.DEFAULT_DISPLAY_NAME }
-            val goal = draft.goalText.trim().ifBlank { UserProfile.DEFAULT_GOAL_TEXT }
+            val name = draft.displayName.trim()
+            val goal = draft.goalText.trim()
             val motivation = buildString {
                 append(goal)
                 if (draft.priority.isNotBlank()) {

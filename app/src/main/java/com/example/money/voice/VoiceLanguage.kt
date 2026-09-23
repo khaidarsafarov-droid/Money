@@ -8,7 +8,7 @@ enum class VoiceLanguage {
     ;
 
     fun toLocale(): Locale = when (this) {
-        RU -> Locale("ru", "RU")
+        RU -> Locale.forLanguageTag("ru-RU")
         EN -> Locale.US
     }
 

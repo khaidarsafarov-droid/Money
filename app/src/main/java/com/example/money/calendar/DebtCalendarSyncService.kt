@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.CalendarContract
 import androidx.core.content.ContextCompat
+import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.LoanCategory
@@ -25,6 +26,8 @@ data class CalendarSyncResult(
 class DebtCalendarSyncService(
     private val context: Context,
 ) {
+    fun defaultDisplayName(): String = context.getString(R.string.onboarding_default_name)
+
     fun hasPermissions(): Boolean =
         ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALENDAR) ==
             android.content.pm.PackageManager.PERMISSION_GRANTED &&
@@ -49,8 +52,8 @@ class DebtCalendarSyncService(
             )
             val startMillis = dueDateAtNineAm(debtor.dateDue)
             val endMillis = startMillis + 60 * 60 * 1000
-            val title = DebtCalendarText.buildTitle(debtor, markClosed)
-            val description = DebtCalendarText.buildDescription(debtor, displayName)
+            val title = DebtCalendarText.buildTitle(context, debtor, markClosed)
+            val description = DebtCalendarText.buildDescription(context, debtor, displayName)
             val deepLink = debtDeepLink(debtor.id)
 
             val values = ContentValues().apply {
@@ -70,23 +73,23 @@ class DebtCalendarSyncService(
             val storedEventId = debtor.calendarEventId?.toLongOrNull()
             val ownedStoredEvent = storedEventId?.let { eventBelongsToDebtor(it, debtor.id) } == true
 
-            val savedId = when {
-                ownedStoredEvent -> {
+            val savedId = storedEventId
+                ?.takeIf { ownedStoredEvent }
+                ?.let { eventId ->
                     val updated = resolver.update(
-                        ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, storedEventId!!),
+                        ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId),
                         values,
                         null,
                         null,
                     )
                     if (updated > 0) {
-                        replaceReminders(storedEventId, settings)
-                        storedEventId
+                        replaceReminders(eventId, settings)
+                        eventId
                     } else {
                         insertDebtEvent(values, settings)
                     }
                 }
-                else -> insertDebtEvent(values, settings)
-            }
+                ?: insertDebtEvent(values, settings)
 
             CalendarSyncResult(savedId?.toString(), failed = savedId == null)
         } catch (_: SecurityException) {
@@ -185,7 +188,7 @@ class DebtCalendarSyncService(
                 val id = cursor.getLong(idIndex)
                 val name = cursor.getString(nameIndex) ?: ""
                 val access = cursor.getInt(accessIndex)
-                if (settings.useDebtsCalendar && name == DEBTS_CALENDAR_NAME && isWritableAccess(access)) {
+                if (settings.useDebtsCalendar && name == debtsCalendarName() && isWritableAccess(access)) {
                     return id
                 }
                 if (writablePrimaryId == null && isWritableAccess(access)) {
@@ -209,8 +212,8 @@ class DebtCalendarSyncService(
         val values = ContentValues().apply {
             put(CalendarContract.Calendars.ACCOUNT_NAME, account.first)
             put(CalendarContract.Calendars.ACCOUNT_TYPE, account.second)
-            put(CalendarContract.Calendars.NAME, DEBTS_CALENDAR_NAME)
-            put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, DEBTS_CALENDAR_NAME)
+            put(CalendarContract.Calendars.NAME, debtsCalendarName())
+            put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, debtsCalendarName())
             put(CalendarContract.Calendars.CALENDAR_COLOR, 0xFF6B6BFF.toInt())
             put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, CALENDAR_ACCESS_OWNER)
             put(CalendarContract.Calendars.OWNER_ACCOUNT, account.first)
@@ -296,47 +299,83 @@ class DebtCalendarSyncService(
         return calendar.timeInMillis
     }
 
+    private fun debtsCalendarName(): String = context.getString(R.string.calendar_debts_name)
+
     companion object {
         private const val CALENDAR_ACCESS_CONTRIBUTOR = 500
         private const val CALENDAR_ACCESS_OWNER = 700
-        const val DEBTS_CALENDAR_NAME = "Долги"
-
         fun debtDeepLinkIntent(debtorId: Long): Intent =
             Intent(Intent.ACTION_VIEW, Uri.parse("money://debt/$debtorId"))
     }
 }
 
 object DebtCalendarText {
-    fun buildTitle(debtor: Debtor, markClosed: Boolean = false): String {
-        val prefix = if (markClosed || debtor.isPaid) "[ЗАКРЫТ] " else ""
+    fun buildTitle(context: Context, debtor: Debtor, markClosed: Boolean = false): String {
         val amount = Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency)
-        return when (debtor.debtType) {
-            DebtType.CREDITOR -> "$prefix${debtor.name} должен(на) мне $amount"
-            DebtType.DEBTOR -> "${prefix}Я должен(на) ${debtor.name} $amount"
+        val body = context.getString(
+            when (debtor.debtType) {
+                DebtType.CREDITOR -> R.string.calendar_event_title_owes_me
+                DebtType.DEBTOR -> R.string.calendar_event_title_i_owe
+            },
+            debtor.name,
+            amount,
+        )
+        val prefix = if (markClosed || debtor.isPaid) {
+            context.getString(R.string.calendar_event_closed_prefix)
+        } else {
+            ""
         }
+        return prefix + body
     }
 
-    fun buildDescription(debtor: Debtor, displayName: String): String = buildString {
-        appendLine("Сумма: ${Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency)}")
-        appendLine("Изначально: ${Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency)}")
-        appendLine("Дата выдачи: ${Formatters.shortDate(debtor.dateGiven)}")
+    fun buildDescription(context: Context, debtor: Debtor, displayName: String): String = buildString {
+        appendLine(
+            context.getString(
+                R.string.calendar_event_amount,
+                Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency),
+            ),
+        )
+        appendLine(
+            context.getString(
+                R.string.calendar_event_original,
+                Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency),
+            ),
+        )
+        appendLine(
+            context.getString(
+                R.string.calendar_event_given,
+                Formatters.shortDate(debtor.dateGiven),
+            ),
+        )
         if (debtor.interestRateBps > 0) {
-            appendLine("Процентная ставка: ${"%.2f".format(debtor.interestRateBps / 100.0)}%")
+            appendLine(
+                context.getString(
+                    R.string.calendar_event_rate,
+                    "%.2f".format(debtor.interestRateBps / 100.0),
+                ),
+            )
         }
         if (debtor.debtType == DebtType.DEBTOR) {
-            appendLine("Категория: ${loanCategoryLabel(debtor.loanCategory)}")
+            appendLine(
+                context.getString(
+                    R.string.calendar_event_category,
+                    loanCategoryLabel(context, debtor.loanCategory),
+                ),
+            )
         }
         if (displayName.isNotBlank()) {
-            append("Пользователь: $displayName")
+            append(context.getString(R.string.calendar_event_user, displayName))
         }
     }
 
-    private fun loanCategoryLabel(category: LoanCategory): String = when (category) {
-        LoanCategory.CREDIT_CARD -> "Кредитная карта"
-        LoanCategory.CONSUMER -> "Потребительский кредит"
-        LoanCategory.AUTO -> "Автокредит"
-        LoanCategory.MORTGAGE -> "Ипотека"
-        LoanCategory.EDUCATION -> "Образование"
-        LoanCategory.OTHER -> "Другое"
-    }
+    private fun loanCategoryLabel(context: Context, category: LoanCategory): String = context.getString(
+        when (category) {
+            LoanCategory.CREDIT_CARD -> R.string.loan_category_credit_card
+            LoanCategory.CONSUMER -> R.string.loan_category_consumer
+            LoanCategory.AUTO -> R.string.loan_category_auto
+            LoanCategory.MORTGAGE -> R.string.loan_category_mortgage
+            LoanCategory.EDUCATION -> R.string.loan_category_education
+            LoanCategory.OTHER -> R.string.loan_category_other
+        },
+    )
 }

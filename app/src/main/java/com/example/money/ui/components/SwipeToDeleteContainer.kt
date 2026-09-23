@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("DEPRECATION")
 @Composable
 fun SwipeToDeleteContainer(
     onDelete: () -> Unit,

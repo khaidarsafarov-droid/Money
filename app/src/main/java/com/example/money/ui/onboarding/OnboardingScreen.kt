@@ -237,17 +237,18 @@ private fun PsychotypeStep(
     )
 
     OnboardingCard {
-        if (draft.showPsychotypeResult && draft.psychotypeResult != null) {
+        val psychotype = draft.psychotypeResult
+        if (draft.showPsychotypeResult && psychotype != null) {
             Text(stringResource(R.string.onboarding_psychotype_result), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
                 stringResource(
                     R.string.goal_hub_psychotype,
-                    GoalPsychologyEngines.psychotypeLabel(draft.psychotypeResult!!),
+                    GoalPsychologyEngines.psychotypeLabel(psychotype),
                 ),
                 color = GoldPrimary,
                 fontWeight = FontWeight.SemiBold,
             )
-            Text(GoalPsychologyEngines.psychotypeOnboardingDescription(draft.psychotypeResult!!))
+            Text(GoalPsychologyEngines.psychotypeOnboardingDescription(psychotype))
             Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_next))
             }

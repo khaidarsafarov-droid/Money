@@ -128,7 +128,11 @@ export function DashboardPage() {
         <div className="space-y-0.5">
           <p className="text-xs text-milk-muted">TruckerLoad · Project Money</p>
           <h1 className="text-2xl font-medium tracking-tight text-milk-text sm:text-3xl">
-            {personalizedGreeting(userProfile.displayName, debtProgressPercent)}
+            {personalizedGreeting(
+              userProfile.displayName,
+              debtProgressPercent,
+              navigator.language,
+            )}
           </h1>
           <p className="text-sm text-milk-muted">USD · точность до центов</p>
         </div>

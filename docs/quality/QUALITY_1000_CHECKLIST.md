@@ -11,19 +11,19 @@ Status legend: `[ ]` open · `[x]` done · `[~]` verified already in master · `
 | 5 | NAV | Tablet Settings entry in NavigationRail | [x] |
 | 6 | NAV | Tablet overflow menu for settings routes | [x] |
 | 7 | NAV | Tablet Goal Hub entry on Goals header | [x] |
-| 8 | NAV | Tablet weekly check-in banner wiring | [~] |
+| 8 | NAV | Tablet weekly check-in banner wiring | [x] |
 | 9 | NAV | Advisor visible on Freedom tab | [x] |
 | 10 | NAV | Advisor visible on Calendar tab | [x] |
-| 11 | NAV | Advisor entry as IconButton not only TextButton | [~] |
+| 11 | NAV | Advisor entry as IconButton not only TextButton | [x] |
 | 12 | NAV | Autopilot apply visible when enabled on Freedom | [x] |
-| 13 | NAV | Income ideas CTA on Freedom empty state | [~] |
-| 14 | NAV | Income ideas CTA on home tools chip row | [~] |
-| 15 | NAV | Goal Hub cross-link from Freedom tab | [~] |
-| 16 | NAV | Calendar settings shortcut when permission denied | [~] |
-| 17 | NAV | Voice play-report action from home tools | [~] |
-| 18 | NAV | Onboarding mentions Advisor | [~] |
-| 19 | NAV | Onboarding mentions Autopilot | [~] |
-| 20 | NAV | Onboarding mentions Goal Hub | [~] |
+| 13 | NAV | Income ideas CTA on Freedom empty state | [x] |
+| 14 | NAV | Income ideas CTA on home tools chip row | [x] |
+| 15 | NAV | Goal Hub cross-link from Freedom tab | [x] |
+| 16 | NAV | Calendar settings shortcut when permission denied | [x] |
+| 17 | NAV | Voice play-report action from home tools | [x] |
+| 18 | NAV | Onboarding mentions Advisor | [x] |
+| 19 | NAV | Onboarding mentions Autopilot | [x] |
+| 20 | NAV | Onboarding mentions Goal Hub | [x] |
 | 21 | ADV | Free-text advisor input without network | [x] |
 | 22 | ADV | Intent classifier for free-text questions | [x] |
 | 23 | ADV | Advice: which debt first snowball | [x] |
@@ -54,36 +54,36 @@ Status legend: `[ ]` open · `[x]` done · `[~]` verified already in master · `
 | 48 | A11Y | Tablet rail icons contentDescriptions | [x] |
 | 49 | A11Y | SwipeToDelete uses string resource | [x] |
 | 50 | A11Y | SemiCircularGauge uses string resource | [x] |
-| 51 | I18N | InputValidators use string resources | [~] |
-| 52 | I18N | AddBudgetDialogs use string resources | [~] |
+| 51 | I18N | InputValidators use string resources | [x] |
+| 52 | I18N | AddBudgetDialogs use string resources | [x] |
 | 53 | I18N | HomeOperations pending label resource | [x] |
 | 54 | I18N | HomeDetailPane pending label resource | [x] |
 | 55 | I18N | DebtAdvisor prompt chips resources | [x] |
 | 56 | I18N | DebtCalendar weekday headers resources | [x] |
-| 57 | I18N | DebtCalendarSync titles resources | [~] |
-| 58 | I18N | Widget fallback goal name resource | [~] |
-| 59 | I18N | UserProfile default strings by locale | [~] |
-| 60 | I18N | PersonalizedGreeting EN support | [~] |
+| 57 | I18N | DebtCalendarSync titles resources | [x] |
+| 58 | I18N | Widget fallback goal name resource | [x] |
+| 59 | I18N | UserProfile default strings by locale | [x] |
+| 60 | I18N | PersonalizedGreeting EN support | [x] |
 | 61 | BUG | Web Dashboard amount/target fields | [x] |
 | 62 | BUG | Shared MS_PER_MONTH unused remove | [x] |
 | 63 | BUG | Shared psychotype exhaustive default | [x] |
 | 64 | BUG | debtAutopilot.test roundPaymentsToTen | [x] |
-| 65 | BUG | Reduce !! in AddDebtorDialog titles | [~] |
-| 66 | BUG | Reduce !! in GoalFormDialog edit path | [~] |
-| 67 | BUG | FinanceSnapshotApplier safer missing maps | [~] |
-| 68 | BUG | DebtorRepositoryImpl paymentId null-safe | [~] |
-| 69 | BUG | DeviceIdProvider avoid !! | [~] |
-| 70 | BUG | DebtCalendarSyncService storedEventId null-safe | [~] |
+| 65 | BUG | Reduce !! in AddDebtorDialog titles | [x] |
+| 66 | BUG | Reduce !! in GoalFormDialog edit path | [x] |
+| 67 | BUG | FinanceSnapshotApplier safer missing maps | [x] |
+| 68 | BUG | DebtorRepositoryImpl paymentId null-safe | [x] |
+| 69 | BUG | DeviceIdProvider avoid !! | [x] |
+| 70 | BUG | DebtCalendarSyncService storedEventId null-safe | [x] |
 | 71 | UI | Debt list row density OK | [x] |
 | 72 | UI | Debt chips LazyRow no wrap orphan | [x] |
 | 73 | UI | Debt overview one-line | [x] |
 | 74 | UI | Dashboard metrics labeled | [x] |
 | 75 | UI | No available-balance headline | [x] |
 | 76 | UI | No expense footer duplicate | [x] |
-| 77 | UI | MoneyDialog vs AlertDialog audit note | [~] |
-| 78 | UI | GoalListItem menu icons complete | [~] |
+| 77 | UI | MoneyDialog vs AlertDialog audit note | [x] |
+| 78 | UI | GoalListItem menu icons complete | [x] |
 | 79 | UI | Filter chip selected border consistent | [x] |
-| 80 | UI | FAB clearance bottom padding | [~] |
+| 80 | UI | FAB clearance bottom padding | [x] |
 | 81 | TEST | Compile app debug Kotlin | [x] |
 | 82 | TEST | Run app debtors unit tests | [x] |
 | 83 | TEST | Run shared vitest | [x] |
@@ -606,38 +606,38 @@ Status legend: `[ ]` open · `[x]` done · `[~]` verified already in master · `
 | 600 | QA | DebtFreedomEngine: unit test coverage gap | [x] |
 | 601 | QA | DebtFreedomEngine: hardcoded locale leak | [x] |
 | 602 | QA | DebtFreedomEngine: performance list keys | [x] |
-| 603 | QA | DebtAutopilotEngine: null-safety review | [~] |
-| 604 | QA | DebtAutopilotEngine: string resources review | [~] |
-| 605 | QA | DebtAutopilotEngine: contentDescription review | [~] |
-| 606 | QA | DebtAutopilotEngine: empty state review | [~] |
-| 607 | QA | DebtAutopilotEngine: loading state review | [~] |
-| 608 | QA | DebtAutopilotEngine: error snackbar review | [~] |
-| 609 | QA | DebtAutopilotEngine: dark/light contrast note | [~] |
-| 610 | QA | DebtAutopilotEngine: touch target >=44dp | [~] |
-| 611 | QA | DebtAutopilotEngine: padding consistency | [~] |
-| 612 | QA | DebtAutopilotEngine: typography consistency | [~] |
-| 613 | QA | DebtAutopilotEngine: click target discoverability | [~] |
-| 614 | QA | DebtAutopilotEngine: deep link handling | [~] |
-| 615 | QA | DebtAutopilotEngine: state persistence | [~] |
-| 616 | QA | DebtAutopilotEngine: unit test coverage gap | [~] |
-| 617 | QA | DebtAutopilotEngine: hardcoded locale leak | [~] |
-| 618 | QA | DebtAutopilotEngine: performance list keys | [~] |
-| 619 | QA | DebtGamificationEngine: null-safety review | [~] |
-| 620 | QA | DebtGamificationEngine: string resources review | [~] |
-| 621 | QA | DebtGamificationEngine: contentDescription review | [~] |
-| 622 | QA | DebtGamificationEngine: empty state review | [~] |
-| 623 | QA | DebtGamificationEngine: loading state review | [~] |
-| 624 | QA | DebtGamificationEngine: error snackbar review | [~] |
-| 625 | QA | DebtGamificationEngine: dark/light contrast note | [~] |
-| 626 | QA | DebtGamificationEngine: touch target >=44dp | [~] |
-| 627 | QA | DebtGamificationEngine: padding consistency | [~] |
-| 628 | QA | DebtGamificationEngine: typography consistency | [~] |
-| 629 | QA | DebtGamificationEngine: click target discoverability | [~] |
-| 630 | QA | DebtGamificationEngine: deep link handling | [~] |
-| 631 | QA | DebtGamificationEngine: state persistence | [~] |
-| 632 | QA | DebtGamificationEngine: unit test coverage gap | [~] |
-| 633 | QA | DebtGamificationEngine: hardcoded locale leak | [~] |
-| 634 | QA | DebtGamificationEngine: performance list keys | [~] |
+| 603 | QA | DebtAutopilotEngine: null-safety review | [x] |
+| 604 | QA | DebtAutopilotEngine: string resources review | [x] |
+| 605 | QA | DebtAutopilotEngine: contentDescription review | [-] |
+| 606 | QA | DebtAutopilotEngine: empty state review | [-] |
+| 607 | QA | DebtAutopilotEngine: loading state review | [-] |
+| 608 | QA | DebtAutopilotEngine: error snackbar review | [-] |
+| 609 | QA | DebtAutopilotEngine: dark/light contrast note | [-] |
+| 610 | QA | DebtAutopilotEngine: touch target >=44dp | [-] |
+| 611 | QA | DebtAutopilotEngine: padding consistency | [-] |
+| 612 | QA | DebtAutopilotEngine: typography consistency | [-] |
+| 613 | QA | DebtAutopilotEngine: click target discoverability | [-] |
+| 614 | QA | DebtAutopilotEngine: deep link handling | [-] |
+| 615 | QA | DebtAutopilotEngine: state persistence | [-] |
+| 616 | QA | DebtAutopilotEngine: unit test coverage gap | [x] |
+| 617 | QA | DebtAutopilotEngine: hardcoded locale leak | [x] |
+| 618 | QA | DebtAutopilotEngine: performance list keys | [-] |
+| 619 | QA | DebtGamificationEngine: null-safety review | [x] |
+| 620 | QA | DebtGamificationEngine: string resources review | [x] |
+| 621 | QA | DebtGamificationEngine: contentDescription review | [-] |
+| 622 | QA | DebtGamificationEngine: empty state review | [-] |
+| 623 | QA | DebtGamificationEngine: loading state review | [-] |
+| 624 | QA | DebtGamificationEngine: error snackbar review | [-] |
+| 625 | QA | DebtGamificationEngine: dark/light contrast note | [-] |
+| 626 | QA | DebtGamificationEngine: touch target >=44dp | [-] |
+| 627 | QA | DebtGamificationEngine: padding consistency | [-] |
+| 628 | QA | DebtGamificationEngine: typography consistency | [-] |
+| 629 | QA | DebtGamificationEngine: click target discoverability | [-] |
+| 630 | QA | DebtGamificationEngine: deep link handling | [-] |
+| 631 | QA | DebtGamificationEngine: state persistence | [-] |
+| 632 | QA | DebtGamificationEngine: unit test coverage gap | [x] |
+| 633 | QA | DebtGamificationEngine: hardcoded locale leak | [x] |
+| 634 | QA | DebtGamificationEngine: performance list keys | [-] |
 | 635 | QA | DebtAdvisorTemplates: null-safety review | [x] |
 | 636 | QA | DebtAdvisorTemplates: string resources review | [x] |
 | 637 | QA | DebtAdvisorTemplates: contentDescription review | [x] |

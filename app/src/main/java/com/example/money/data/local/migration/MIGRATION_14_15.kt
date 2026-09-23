@@ -80,13 +80,13 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
         income.forEach { name ->
             db.execSQL(
                 "INSERT OR IGNORE INTO business_category (sync_id, name, type, created_at) VALUES (?, ?, 'INCOME', ?)",
-                arrayOf("cat-income-$name", name, now),
+                arrayOf<Any?>("cat-income-$name", name, now),
             )
         }
         expense.forEach { name ->
             db.execSQL(
                 "INSERT OR IGNORE INTO business_category (sync_id, name, type, created_at) VALUES (?, ?, 'EXPENSE', ?)",
-                arrayOf("cat-expense-$name", name, now),
+                arrayOf<Any?>("cat-expense-$name", name, now),
             )
         }
     }

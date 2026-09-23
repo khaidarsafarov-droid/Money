@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
@@ -52,6 +53,8 @@ fun GoalFormDialog(
     onConfirm: (name: String, targetAmount: Double, currentAmount: Double, deadlineMillis: Long?) -> Unit,
 ) {
     val isEdit = existingGoal != null
+    val goal = existingGoal
+    val context = LocalContext.current
 
     var name by remember(existingGoal?.id) {
         mutableStateOf(existingGoal?.name.orEmpty())
@@ -73,8 +76,8 @@ fun GoalFormDialog(
     var targetError by remember { mutableStateOf<String?>(null) }
 
     MoneyDialog(
-        title = if (isEdit) {
-            stringResource(R.string.goal_edit_title, existingGoal!!.name)
+        title = if (goal != null) {
+            stringResource(R.string.goal_edit_title, goal.name)
         } else {
             stringResource(R.string.goal_add_title)
         },
@@ -85,8 +88,8 @@ fun GoalFormDialog(
             stringResource(R.string.goal_add_confirm)
         },
         onConfirm = {
-            nameError = InputValidators.validateGoalPurpose(name)
-            targetError = InputValidators.validateTargetAmount(targetText)
+            nameError = InputValidators.validateGoalPurpose(name)?.let(context::getString)
+            targetError = InputValidators.validateTargetAmount(targetText)?.let(context::getString)
 
             val target = InputValidators.parseAmount(targetText) ?: return@MoneyDialog
 
@@ -95,7 +98,7 @@ fun GoalFormDialog(
             onConfirm(
                 name.trim(),
                 target,
-                if (isEdit) MoneyMath.fromCents(existingGoal!!.currentAmountCents) else 0.0,
+                goal?.let { MoneyMath.fromCents(it.currentAmountCents) } ?: 0.0,
                 deadlineMillis.takeIf { hasDeadline },
             )
         },
@@ -131,7 +134,7 @@ fun GoalFormDialog(
                 Text(
                     text = stringResource(
                         R.string.goal_current_readonly,
-                        formatAmountForInput(MoneyMath.fromCents(existingGoal!!.currentAmountCents)),
+                        formatAmountForInput(MoneyMath.fromCents(goal?.currentAmountCents ?: 0L)),
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

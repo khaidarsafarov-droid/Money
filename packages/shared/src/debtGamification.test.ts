@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   applyPaymentGamification,
+  badgeLabel,
   BADGE_FIRST_STEP,
   BADGE_STREAK_3,
   EMPTY_GAMIFICATION,
+  resolveWinMessage,
 } from "./debtGamification";
 
 describe("debtGamification", () => {
@@ -53,5 +55,20 @@ describe("debtGamification", () => {
       );
     }
     expect(state.unlockedBadges).toContain(BADGE_STREAK_3);
+  });
+
+  it("resolves win copy and badges in English", () => {
+    const next = applyPaymentGamification(
+      EMPTY_GAMIFICATION,
+      { paidAtMs: Date.UTC(2026, 0, 10), amountCents: 500 },
+      10_000,
+      10_000,
+      1,
+      Date.UTC(2026, 0, 10),
+    );
+    expect(next.lastWinMessage).toBe("win.closed");
+    expect(resolveWinMessage(next.lastWinMessage, "en")).toContain("Debt closed");
+    expect(badgeLabel(BADGE_FIRST_STEP, "en-US")).toBe("First step");
+    expect(resolveWinMessage("win.streak.2", "ru")).toContain("Серия");
   });
 });

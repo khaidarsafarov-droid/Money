@@ -143,6 +143,32 @@
     <string name="error_amount_positive">Сумма должна быть больше 0</string>
     <string name="error_amount_below_paid">Сумма не может быть меньше уже внесённого</string>
     <string name="error_payment_exceeds_remaining">Сумма превышает остаток долга</string>
+    <string name="voice_play_report">Прослушать отчёт</string>
+    <string name="widget_goal_fallback">Цель</string>
+    <string name="calendar_debts_name">Долги</string>
+    <string name="calendar_event_title_owes_me">%1$s должен(на) мне %2$s</string>
+    <string name="calendar_event_title_i_owe">Я должен(на) %1$s %2$s</string>
+    <string name="calendar_event_closed_prefix">[ЗАКРЫТ] </string>
+    <string name="calendar_event_amount">Сумма: %1$s</string>
+    <string name="calendar_event_original">Изначально: %1$s</string>
+    <string name="calendar_event_given">Дата выдачи: %1$s</string>
+    <string name="calendar_event_rate">Процентная ставка: %1$s%%</string>
+    <string name="calendar_event_category">Категория: %1$s</string>
+    <string name="calendar_event_user">Пользователь: %1$s</string>
+    <string name="error_name_required">Введите имя</string>
+    <string name="error_name_too_long">Слишком длинное имя</string>
+    <string name="error_goal_too_long">Слишком длинное описание</string>
+    <string name="error_amount_required">Введите сумму</string>
+    <string name="error_goal_amount_required">Введите сумму цели</string>
+    <string name="error_category_required">Введите категорию</string>
+    <string name="error_due_before_given">Срок не может быть раньше даты выдачи</string>
+    <string name="budget_new_transfer_title">Новый перевод</string>
+    <string name="budget_new_expense_title">Новый расход</string>
+    <string name="field_amount">Сумма</string>
+    <string name="field_date">Дата</string>
+    <string name="field_category">Категория</string>
+    <string name="field_note_optional">Заметка (необязательно)</string>
+    <string name="action_add">Добавить</string>
     <string name="empty_debtors_all">Список пуст</string>
     <string name="empty_debtors_all_hint">Нажмите +, чтобы добавить первый долг</string>
     <string name="empty_debtors_active">Нет активных долгов</string>
@@ -347,6 +373,13 @@
 
     <!-- Gamification (Phase 4) -->
     <string name="gamification_streak">Серия платежей: %1$d</string>
+    <string name="gamification_win_closed">Долг закрыт — отличная победа!</string>
+    <string name="gamification_win_milestone">До вехи %1$d%% осталось немного. Вы справляетесь.</string>
+    <string name="gamification_win_streak">Серия платежей: %1$d. Так держать.</string>
+    <string name="gamification_badge_first_step">Первый шаг</string>
+    <string name="gamification_badge_half_way">Полпути</string>
+    <string name="gamification_badge_freedom">Свобода</string>
+    <string name="gamification_badge_streak_3">Серия ×3</string>
 
     <!-- Autopilot (Phase 5) -->
     <string name="autopilot_settings_title">Автопилот</string>
@@ -503,7 +536,7 @@
     <!-- Onboarding -->
     <string name="onboarding_step">Шаг %1$d из %2$d</string>
     <string name="onboarding_welcome_title">Добро пожаловать в Финансовый Контроль!</string>
-    <string name="onboarding_welcome_body">Здесь вы не просто считаете долги — вы строите путь к финансовой свободе. Давайте познакомимся.</string>
+    <string name="onboarding_welcome_body">Здесь вы не просто считаете долги — вы строите путь к финансовой свободе. Советник подскажет следующий шаг, Автопилот напомнит о микроплатеже, а Goal Hub соберёт план. Давайте познакомимся.</string>
     <string name="onboarding_start">Начать знакомство</string>
     <string name="onboarding_name_title">Как вас зовут?</string>
     <string name="onboarding_name_label">Ваше имя</string>
@@ -526,7 +559,7 @@
     <string name="onboarding_default_name">Друг</string>
     <string name="onboarding_default_goal">Стать финансово свободным</string>
     <string name="onboarding_summary_greeting">%1$s, здравствуйте!</string>
-    <string name="onboarding_summary_intro">Мы подготовили для вас план, основанный на вашем психотипе и целях. Вы не один(а).</string>
+    <string name="onboarding_summary_intro">Мы подготовили для вас план, основанный на вашем психотипе и целях. Советник, Автопилот и Goal Hub уже рядом. Вы не один(а).</string>
     <string name="onboarding_summary_psychotype">Ваш психотип</string>
     <string name="onboarding_summary_fears">Ваши страхи</string>
     <string name="onboarding_summary_fears_note">мы будем работать с ними</string>

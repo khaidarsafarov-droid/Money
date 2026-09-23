@@ -28,6 +28,8 @@ describe("userProfile", () => {
   it("builds personalized greeting", () => {
     expect(personalizedGreeting("Иван", 20)).toContain("Иван");
     expect(personalizedGreeting("Иван", 20)).toContain("20%");
+    expect(personalizedGreeting("", 0, "en")).toContain("Friend");
+    expect(personalizedGreeting("Ivan", 20, "en-US")).toContain("closer to freedom");
   });
 
   it("returns psychotype onboarding copy", () => {

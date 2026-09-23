@@ -14,6 +14,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,8 @@ fun DebtCalendarTab(
     debtors: List<Debtor>,
     hideAmounts: Boolean,
     modifier: Modifier = Modifier,
+    calendarPermissionGranted: Boolean = true,
+    onOpenCalendarSettings: (() -> Unit)? = null,
 ) {
     val activeDebts = debtors.filter { !it.isPaid }
     var monthAnchor by remember { mutableStateOf(startOfMonth(System.currentTimeMillis())) }
@@ -57,6 +60,16 @@ fun DebtCalendarTab(
         colors = CardDefaults.cardColors(containerColor = CreamSurface),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (!calendarPermissionGranted && onOpenCalendarSettings != null) {
+                Text(
+                    text = stringResource(R.string.calendar_permission_denied),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(onClick = onOpenCalendarSettings) {
+                    Text(stringResource(R.string.calendar_settings_title))
+                }
+            }
             val prevMonthCd = stringResource(R.string.calendar_prev_month)
             val nextMonthCd = stringResource(R.string.calendar_next_month)
             Row(

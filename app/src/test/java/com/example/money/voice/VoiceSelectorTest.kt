@@ -16,7 +16,7 @@ class VoiceSelectorTest {
             VoiceSelector.VoiceCandidate("ru-ru-x-rff-local", "ru", setOf("female")),
         )
 
-        val picked = VoiceSelector.pickBest(candidates, Locale("ru", "RU"), VoiceGender.FEMALE)
+        val picked = VoiceSelector.pickBest(candidates, Locale.forLanguageTag("ru-RU"), VoiceGender.FEMALE)
 
         assertNotNull(picked)
         assertEquals("ru-ru-x-rff-local", picked?.name)
@@ -29,7 +29,7 @@ class VoiceSelectorTest {
             VoiceSelector.VoiceCandidate("ru-ru-x-rum-local", "ru", emptySet()),
         )
 
-        val picked = VoiceSelector.pickBest(candidates, Locale("ru", "RU"), VoiceGender.MALE)
+        val picked = VoiceSelector.pickBest(candidates, Locale.forLanguageTag("ru-RU"), VoiceGender.MALE)
 
         assertNotNull(picked)
         assertEquals("ru-ru-x-rum-local", picked?.name)
@@ -42,8 +42,8 @@ class VoiceSelectorTest {
             VoiceSelector.VoiceCandidate("ru-ru-x-rum#male_1-local", "ru", emptySet()),
         )
 
-        val female = VoiceSelector.pickBest(candidates, Locale("ru", "RU"), VoiceGender.FEMALE)
-        val male = VoiceSelector.pickBest(candidates, Locale("ru", "RU"), VoiceGender.MALE)
+        val female = VoiceSelector.pickBest(candidates, Locale.forLanguageTag("ru-RU"), VoiceGender.FEMALE)
+        val male = VoiceSelector.pickBest(candidates, Locale.forLanguageTag("ru-RU"), VoiceGender.MALE)
 
         assertEquals("ru-ru-x-ruf#female_1-local", female?.name)
         assertEquals("ru-ru-x-rum#male_1-local", male?.name)
@@ -56,7 +56,7 @@ class VoiceSelectorTest {
             VoiceSelector.VoiceCandidate("ru-ru-x-rmf-local", "ru", emptySet()),
         )
 
-        val picked = VoiceSelector.pickBest(candidates, Locale("ru", "RU"), VoiceGender.FEMALE)
+        val picked = VoiceSelector.pickBest(candidates, Locale.forLanguageTag("ru-RU"), VoiceGender.FEMALE)
 
         assertNull(picked)
     }

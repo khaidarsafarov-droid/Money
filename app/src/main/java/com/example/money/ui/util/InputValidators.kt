@@ -1,16 +1,21 @@
 package com.example.money.ui.util
 
+import androidx.annotation.StringRes
+import com.example.money.R
+
 object InputValidators {
 
-    fun validateGoalPurpose(purpose: String): String? = when {
-        purpose.isBlank() -> "Укажите, для чего эта цель"
-        purpose.length > 100 -> "Слишком длинное описание"
+    @StringRes
+    fun validateGoalPurpose(purpose: String): Int? = when {
+        purpose.isBlank() -> R.string.goal_purpose_error
+        purpose.length > 100 -> R.string.error_goal_too_long
         else -> null
     }
 
-    fun validateName(name: String): String? = when {
-        name.isBlank() -> "Введите имя"
-        name.length > 100 -> "Слишком длинное имя"
+    @StringRes
+    fun validateName(name: String): Int? = when {
+        name.isBlank() -> R.string.error_name_required
+        name.length > 100 -> R.string.error_name_too_long
         else -> null
     }
 
@@ -19,25 +24,29 @@ object InputValidators {
         return normalized.toDoubleOrNull()?.takeIf { it > 0 }
     }
 
-    fun validateAmount(text: String): String? = when {
-        text.isBlank() -> "Введите сумму"
-        parseAmount(text) == null -> "Сумма должна быть больше 0"
+    @StringRes
+    fun validateAmount(text: String): Int? = when {
+        text.isBlank() -> R.string.error_amount_required
+        parseAmount(text) == null -> R.string.error_amount_positive
         else -> null
     }
 
-    fun validateCategory(category: String): String? = when {
-        category.isBlank() -> "Введите категорию"
+    @StringRes
+    fun validateCategory(category: String): Int? = when {
+        category.isBlank() -> R.string.error_category_required
         else -> null
     }
 
-    fun validateDueDate(dateGiven: Long, dateDue: Long): String? = when {
-        dateDue < dateGiven -> "Срок не может быть раньше даты выдачи"
+    @StringRes
+    fun validateDueDate(dateGiven: Long, dateDue: Long): Int? = when {
+        dateDue < dateGiven -> R.string.error_due_before_given
         else -> null
     }
 
-    fun validateTargetAmount(text: String): String? = when {
-        text.isBlank() -> "Введите сумму цели"
-        parseAmount(text) == null -> "Сумма должна быть больше 0"
+    @StringRes
+    fun validateTargetAmount(text: String): Int? = when {
+        text.isBlank() -> R.string.error_goal_amount_required
+        parseAmount(text) == null -> R.string.error_amount_positive
         else -> null
     }
 }

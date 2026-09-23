@@ -1,5 +1,7 @@
 package com.example.money.widget
 
+import android.content.Context
+import com.example.money.R
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.Debtor
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 class GoalWidgetSnapshotWriter(
+    private val context: Context,
     private val goalRepository: GoalRepository,
     private val debtorRepository: DebtorRepository,
     private val budgetRepository: BudgetRepository,
@@ -115,7 +118,7 @@ class GoalWidgetSnapshotWriter(
                     id = goal.id,
                     payKey = "goal-${goal.id}",
                     type = WidgetItemType.GOAL,
-                    name = goal.name.ifBlank { "Цель" },
+                    name = goal.name.ifBlank { context.getString(R.string.widget_goal_fallback) },
                     remainingLabel = Formatters.currencyFromCents(goal.remainingAmountCents, hide = hide),
                     progressFraction = goal.progressFraction,
                 )

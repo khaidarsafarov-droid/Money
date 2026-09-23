@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -174,6 +176,9 @@ fun GoalListItem(
                                     showMenu = false
                                     onTransfer()
                                 },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.SwapHoriz, contentDescription = null)
+                                },
                             )
                         }
                         if (onExpense != null) {
@@ -182,6 +187,9 @@ fun GoalListItem(
                                 onClick = {
                                     showMenu = false
                                     onExpense()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.Payments, contentDescription = null)
                                 },
                             )
                         }

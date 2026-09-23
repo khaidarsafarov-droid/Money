@@ -51,7 +51,9 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
         val result = app.debtCalendarSyncService.upsertDebtEvent(
             debtor = paid,
             settings = settings,
-            displayName = profile.resolvedDisplayName(),
+            displayName = profile.resolvedDisplayName(
+                context.getString(com.example.money.R.string.onboarding_default_name),
+            ),
             markClosed = true,
             force = true,
         )

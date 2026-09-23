@@ -7,6 +7,7 @@ import com.example.money.domain.model.Debtor
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.model.DebtType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 
 /** List presentation state — tab, filter, search, and SQL-backed debtor list. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class DebtListViewModel(
     private val debtorRepository: DebtorRepository,
 ) : ViewModel() {

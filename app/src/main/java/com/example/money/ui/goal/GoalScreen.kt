@@ -99,8 +99,8 @@ fun GoalScreen(
     val activeChallenges by viewModel.activeChallenges.collectAsStateWithLifecycle()
     val debtors by viewModel.debtors.collectAsStateWithLifecycle()
 
-    val displayName = userProfile.resolvedDisplayName()
-    val goalText = userProfile.resolvedGoalText()
+    val displayName = userProfile.resolvedDisplayName(stringResource(R.string.onboarding_default_name))
+    val goalText = userProfile.resolvedGoalText(stringResource(R.string.onboarding_default_goal))
 
     var showPsychotypeTest by remember { mutableStateOf(false) }
     LaunchedEffect(psychotypeTestPrompt) {

@@ -7,9 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -55,6 +60,9 @@ fun LazyListScope.homeDebtsSection(
     onOpenAdvisor: () -> Unit,
     onApplyAutopilot: () -> Unit,
     onOpenGoalHub: () -> Unit = {},
+    onOpenIncomeIdeas: () -> Unit = {},
+    calendarPermissionGranted: Boolean = true,
+    onOpenCalendarSettings: () -> Unit = {},
     highlightedDebtorId: Long?,
     contactContext: Context,
     onRemindDebtor: (Debtor) -> Unit,
@@ -83,9 +91,13 @@ fun LazyListScope.homeDebtsSection(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onOpenAdvisor) {
-                Text(stringResource(R.string.advisor_open))
+            IconButton(onClick = onOpenAdvisor) {
+                Icon(
+                    imageVector = Icons.Outlined.Psychology,
+                    contentDescription = stringResource(R.string.advisor_open),
+                )
             }
             if (autopilotSettings.enabled) {
                 TextButton(onClick = onApplyAutopilot) {
@@ -138,6 +150,8 @@ fun LazyListScope.homeDebtsSection(
             DebtCalendarTab(
                 debtors = allDebtors,
                 hideAmounts = privacySettings.hideAmounts,
+                calendarPermissionGranted = calendarPermissionGranted,
+                onOpenCalendarSettings = onOpenCalendarSettings,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
@@ -148,6 +162,7 @@ fun LazyListScope.homeDebtsSection(
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = onExtraMonthlyChange,
                 onOpenGoalHub = onOpenGoalHub,
+                onOpenIncomeIdeas = onOpenIncomeIdeas,
                 hideAmounts = privacySettings.hideAmounts,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
