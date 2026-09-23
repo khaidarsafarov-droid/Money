@@ -89,14 +89,11 @@ export function applyPaymentGamification(
 
   const milestones = computeDebtMilestones(currentCents, targetCents);
   const next = milestones.nextMilestone;
-  let lastWinMessage: string | null = null;
-  if (progressBadges.includes(BADGE_FREEDOM)) {
-    lastWinMessage = "Долг закрыт — отличная победа!";
-  } else if (next) {
-    lastWinMessage = `До вехи ${next.percent}% осталось немного. Вы справляетесь.`;
-  } else {
-    lastWinMessage = `Серия платежей: ${streakCount}. Так держать.`;
-  }
+  const lastWinMessage = progressBadges.includes(BADGE_FREEDOM)
+    ? "win.closed"
+    : next
+      ? `win.milestone.${next.percent}`
+      : `win.streak.${streakCount}`;
 
   return {
     streakCount,
@@ -106,16 +103,48 @@ export function applyPaymentGamification(
   };
 }
 
-export function badgeLabel(badgeId: string): string {
+function isEnglish(locale: string): boolean {
+  return locale.toLowerCase().startsWith("en");
+}
+
+export function streakLabel(count: number, locale = "ru"): string {
+  return isEnglish(locale) ? `Payment streak: ${count}` : `Серия платежей: ${count}`;
+}
+
+export function resolveWinMessage(code: string | null, locale = "ru"): string | null {
+  if (!code) return null;
+  const english = isEnglish(locale);
+  if (code === "win.closed") {
+    return english ? "Debt closed — a real win!" : "Долг закрыт — отличная победа!";
+  }
+  const milestone = /^win\.milestone\.(\d+)$/.exec(code);
+  if (milestone) {
+    const percent = milestone[1];
+    return english
+      ? `A little left to the ${percent}% milestone. You are doing it.`
+      : `До вехи ${percent}% осталось немного. Вы справляетесь.`;
+  }
+  const streak = /^win\.streak\.(\d+)$/.exec(code);
+  if (streak) {
+    const count = streak[1];
+    return english
+      ? `Payment streak: ${count}. Keep going.`
+      : `Серия платежей: ${count}. Так держать.`;
+  }
+  return code;
+}
+
+export function badgeLabel(badgeId: string, locale = "ru"): string {
+  const english = isEnglish(locale);
   switch (badgeId) {
     case BADGE_FIRST_STEP:
-      return "Первый шаг";
+      return english ? "First step" : "Первый шаг";
     case BADGE_HALF_WAY:
-      return "Полпути";
+      return english ? "Halfway" : "Полпути";
     case BADGE_FREEDOM:
-      return "Свобода";
+      return english ? "Freedom" : "Свобода";
     case BADGE_STREAK_3:
-      return "Серия ×3";
+      return english ? "Streak ×3" : "Серия ×3";
     default:
       return badgeId;
   }

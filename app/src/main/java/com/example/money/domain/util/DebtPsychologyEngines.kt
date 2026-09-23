@@ -42,10 +42,9 @@ object DebtGamificationEngine {
         if (streak >= 3) badges.add(GamificationBadges.STREAK_3)
 
         val lastWin = when {
-            badges.contains(GamificationBadges.FREEDOM) -> "Долг закрыт — отличная победа!"
-            milestones.nextMilestone != null ->
-                "До вехи ${milestones.nextMilestone.percent}% осталось немного. Вы справляетесь."
-            else -> "Серия платежей: $streak. Так держать."
+            badges.contains(GamificationBadges.FREEDOM) -> "win.closed"
+            milestones.nextMilestone != null -> "win.milestone.${milestones.nextMilestone.percent}"
+            else -> "win.streak.$streak"
         }
 
         return GamificationState(
@@ -54,14 +53,6 @@ object DebtGamificationEngine {
             unlockedBadges = badges,
             lastWinMessage = lastWin,
         )
-    }
-
-    fun badgeLabel(badgeId: String): String = when (badgeId) {
-        GamificationBadges.FIRST_STEP -> "Первый шаг"
-        GamificationBadges.HALF_WAY -> "Полпути"
-        GamificationBadges.FREEDOM -> "Свобода"
-        GamificationBadges.STREAK_3 -> "Серия ×3"
-        else -> badgeId
     }
 
     private fun computeStreak(
