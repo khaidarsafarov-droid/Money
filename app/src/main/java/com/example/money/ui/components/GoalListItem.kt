@@ -143,6 +143,20 @@ fun GoalListItem(
                             style = moneyCaptionStyle(),
                         )
                     }
+                    val dailyCents = goal.dailyGoalCents
+                    val daysLeft = goal.deadlineMillis?.let { GoalProgress.daysUntilDeadline(it) }
+                    if (!goal.isCompleted && dailyCents != null && daysLeft != null) {
+                        Text(
+                            text = stringResource(
+                                R.string.goal_pace_line,
+                                Formatters.currencyFromCents(dailyCents, hide = hideAmounts),
+                                daysLeft,
+                            ),
+                            style = moneyCaptionStyle(),
+                            color = progressColor,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
                 }
 
                 Box {

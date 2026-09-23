@@ -1,7 +1,19 @@
 package com.example.money.domain.util
 
+import com.example.money.domain.model.SavingsGoal
 import kotlin.math.ceil
 import kotlin.math.max
+
+data class GoalSectionSummary(
+    val activeCount: Int,
+    val savedCents: Long,
+    val targetCents: Long,
+    val dailyCents: Long?,
+    val overdueCount: Int,
+) {
+    val progressPercent: Int
+        get() = GoalProgress.progressPercent(targetCents, savedCents)
+}
 
 object GoalProgress {
 
@@ -47,6 +59,43 @@ object GoalProgress {
     fun isDeadlinePassed(deadlineMillis: Long?, now: Long = System.currentTimeMillis()): Boolean {
         if (deadlineMillis == null) return false
         return endOfDayMillis(deadlineMillis) < now
+    }
+
+    fun orderedForSection(
+        goals: List<SavingsGoal>,
+        now: Long = System.currentTimeMillis(),
+    ): List<SavingsGoal> =
+        goals.sortedWith(
+            compareBy<SavingsGoal> { sectionRank(it, now) }
+                .thenBy { it.deadlineMillis ?: Long.MAX_VALUE }
+                .thenBy { it.name.lowercase() },
+        )
+
+    fun summarize(
+        goals: List<SavingsGoal>,
+        now: Long = System.currentTimeMillis(),
+    ): GoalSectionSummary {
+        val active = goals.filter { !it.isCompleted }
+        val dailies = active.mapNotNull { goal ->
+            dailyGoalCents(goal.remainingAmountCents, goal.deadlineMillis, now)
+        }
+        val overdueCount = active.count { goal ->
+            isDeadlinePassed(goal.deadlineMillis, now)
+        }
+        return GoalSectionSummary(
+            activeCount = active.size,
+            savedCents = active.sumOf { it.currentAmountCents },
+            targetCents = active.sumOf { it.targetAmountCents },
+            dailyCents = dailies.takeIf { it.isNotEmpty() }?.sum(),
+            overdueCount = overdueCount,
+        )
+    }
+
+    private fun sectionRank(goal: SavingsGoal, now: Long): Int {
+        if (goal.isCompleted) return 3
+        val deadline = goal.deadlineMillis ?: return 2
+        if (isDeadlinePassed(deadline, now)) return 0
+        return 1
     }
 
     private fun startOfDayMillis(millis: Long): Long {

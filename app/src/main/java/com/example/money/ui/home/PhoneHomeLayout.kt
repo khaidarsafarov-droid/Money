@@ -94,10 +94,12 @@ import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.ConfirmDeleteDialog
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
+import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
+import com.example.money.domain.util.GoalProgress
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.debtors.ContactDebtHistorySheet
@@ -466,6 +468,20 @@ internal fun PhoneHomeLayout(
                     }
                 }
 
+                val orderedGoals = GoalProgress.orderedForSection(goals)
+                if (orderedGoals.isNotEmpty()) {
+                    item {
+                        GoalsSectionSummary(
+                            goals = orderedGoals,
+                            hideAmounts = privacySettings.hideAmounts,
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.lg,
+                                vertical = MoneySpacing.sm,
+                            ),
+                        )
+                    }
+                }
+
                 if (goals.isEmpty()) {
                     item {
                         EmptyStateMessage(
@@ -481,7 +497,7 @@ internal fun PhoneHomeLayout(
                         )
                     }
                 } else {
-                    items(goals, key = { "goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
+                    items(orderedGoals, key = { "goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteGoal(goal) },
                             modifier = Modifier.padding(

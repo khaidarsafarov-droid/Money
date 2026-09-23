@@ -10,7 +10,9 @@ import {
 import type { FinancialItem, FinancialStatus } from "@/types/finance";
 import {
   dailyGoalCents,
+  daysUntilDeadline,
   displayProgressFraction,
+  formatGoalDeadline,
   goalSurplusCents,
   isGoalDeadlinePassed,
   isGoalOverAchieved,
@@ -58,6 +60,9 @@ export function FinanceCardShell({
   const progressPercent = progressPercentRaw(item);
   const overAchieved = item.type === "GOAL" && isGoalOverAchieved(item);
   const daily = item.type === "GOAL" ? dailyGoalCents(item) : null;
+  const locale = navigator.language;
+  const english = locale.toLowerCase().startsWith("en");
+  const daysLeft = item.type === "GOAL" && item.dateDeadline ? daysUntilDeadline(item.dateDeadline) : null;
 
   return (
     <SurfaceCard
@@ -116,16 +121,19 @@ export function FinanceCardShell({
 
       {item.type === "GOAL" && item.dateDeadline && (
         <p className="text-sm text-milk-muted">
-          Срок: {new Date(item.dateDeadline).toLocaleDateString("ru-RU")}
+          {english ? "Deadline" : "Срок"}: {formatGoalDeadline(item.dateDeadline, locale)}
           {isGoalDeadlinePassed(item.dateDeadline) && item.status !== "COMPLETED" && (
-            <span className="ml-1 text-milk-error">· срок прошёл</span>
+            <span className="text-milk-error">{english ? " · deadline passed" : " · срок прошёл"}</span>
           )}
         </p>
       )}
 
-      {daily != null && (
+      {daily != null && daysLeft != null && (
         <p className="text-sm text-milk-muted">
-          Ежедневно: <span className="text-milk-text">{formatMoney(daily, { hidden: hideAmounts })}</span>
+          {english ? "Daily" : "Ежедневно"}:{" "}
+          <span className="text-milk-text">{formatMoney(daily, { hidden: hideAmounts })}</span>
+          {" · "}
+          {english ? `${daysLeft} days left` : `осталось ${daysLeft} дн.`}
         </p>
       )}
 

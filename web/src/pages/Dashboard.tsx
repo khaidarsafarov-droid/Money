@@ -5,6 +5,7 @@ import { personalizedGreeting } from "@money/shared";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { FreedomForecastCard } from "@/components/debt/FreedomForecastCard";
 import { FinanceCard } from "@/components/cards/FinanceCard";
+import { GoalSectionSummary } from "@/components/cards/GoalSectionSummary";
 import { BalanceOverviewCard } from "@/components/finance/BalanceOverviewCard";
 import { TransactionHistory } from "@/components/finance/TransactionHistory";
 import { AmountModal } from "@/components/modals/AmountModal";
@@ -221,6 +222,10 @@ export function DashboardPage() {
             </div>
             <TypeFilterChips value={finance.typeFilter} onChange={finance.setTypeFilter} />
           </div>
+
+          {finance.typeFilter === "goal" ? (
+            <GoalSectionSummary items={finance.visibleItems} hideAmounts={hideAmounts} />
+          ) : null}
 
           {finance.visibleItems.length === 0 ? (
             <EmptyState

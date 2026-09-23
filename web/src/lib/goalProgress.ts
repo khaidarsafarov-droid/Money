@@ -1,5 +1,4 @@
 import type { FinancialItem } from "@/types/finance";
-import { remainingAmount } from "@/lib/financeEngine";
 
 const DAY_MS = 86_400_000;
 
@@ -56,9 +55,47 @@ export function isGoalDeadlinePassed(dateDeadline?: string, now = Date.now()): b
 
 export function dailyGoalCents(item: FinancialItem, now = Date.now()): number | null {
   if (item.type !== "GOAL" || !item.dateDeadline) return null;
-  const remaining = remainingAmount(item);
+  const remaining = Math.max(item.target - item.amount, 0);
   if (remaining <= 0) return null;
   const days = daysUntilDeadline(item.dateDeadline, now);
   if (days == null) return null;
   return Math.ceil(remaining / days);
+}
+
+export function formatGoalDeadline(dateDeadline: string, locale = "ru"): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(parseDateOnlyUtc(dateDeadline));
+}
+
+export interface GoalSectionSummary {
+  activeCount: number;
+  savedCents: number;
+  targetCents: number;
+  dailyCents: number | null;
+  overdueCount: number;
+  progressPercent: number;
+}
+
+export function summarizeGoals(items: FinancialItem[], now = Date.now()): GoalSectionSummary {
+  const active = items.filter((item) => item.type === "GOAL" && item.status !== "COMPLETED");
+  const savedCents = active.reduce((sum, item) => sum + item.amount, 0);
+  const targetCents = active.reduce((sum, item) => sum + item.target, 0);
+  const dailies = active
+    .map((item) => dailyGoalCents(item, now))
+    .filter((value): value is number => value != null);
+  const overdueCount = active.filter(
+    (item) => item.dateDeadline != null && isGoalDeadlinePassed(item.dateDeadline, now),
+  ).length;
+  return {
+    activeCount: active.length,
+    savedCents,
+    targetCents,
+    dailyCents: dailies.length > 0 ? dailies.reduce((sum, value) => sum + value, 0) : null,
+    overdueCount,
+    progressPercent: targetCents <= 0 ? 0 : Math.floor((savedCents / targetCents) * 100),
+  };
 }
