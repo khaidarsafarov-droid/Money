@@ -10,6 +10,9 @@ import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
 import com.example.money.domain.sync.SnapshotTransaction
+import com.example.money.domain.sync.SnapshotTransactionBucket
+import com.example.money.domain.sync.linkableDebtPayments
+import com.example.money.domain.sync.snapshotTransactionBucket
 import com.example.money.domain.util.MoneyMath
 
 class FinanceSnapshotApplier(
@@ -25,7 +28,7 @@ class FinanceSnapshotApplier(
                 applyDebts(snapshot)
                 val debtorLocalIds = buildDebtorSyncIdMap(snapshot)
                 applyDebtPayments(snapshot, debtorLocalIds)
-                val paymentLocalIds = buildDebtPaymentSyncIdMap(snapshot)
+                val paymentLocalIds = buildDebtPaymentSyncIdMap(snapshot, debtorLocalIds)
                 applyTransactions(snapshot, goalLocalIds, debtorLocalIds, paymentLocalIds)
             }
             snapshot.voiceSettings?.let { preferencesStore.applySyncedVoiceSettings(it) }
@@ -121,13 +124,13 @@ class FinanceSnapshotApplier(
         debtorLocalIds: Map<String, Long>,
     ) {
         val dao = database.debtPaymentDao()
-        val keepIds = snapshot.debtPayments.map { it.id }.toSet()
+        val linkable = linkableDebtPayments(snapshot.debtPayments, debtorLocalIds.keys)
+        val keepIds = linkable.map { it.id }.toSet()
         dao.getAllPaymentsOnce()
             .filter { it.syncId !in keepIds }
             .forEach { dao.deleteById(it.id) }
-        snapshot.debtPayments.forEach { payment ->
-            val debtorId = debtorLocalIds[payment.debtorId]
-                ?: return@forEach
+        linkable.forEach { payment ->
+            val debtorId = debtorLocalIds.getValue(payment.debtorId)
             val existing = dao.getBySyncId(payment.id)
             val entity = DebtPaymentEntity(
                 id = existing?.id ?: 0L,
@@ -146,9 +149,12 @@ class FinanceSnapshotApplier(
         }
     }
 
-    private suspend fun buildDebtPaymentSyncIdMap(snapshot: FinanceSnapshot): Map<String, Long> {
+    private suspend fun buildDebtPaymentSyncIdMap(
+        snapshot: FinanceSnapshot,
+        debtorLocalIds: Map<String, Long>,
+    ): Map<String, Long> {
         val dao = database.debtPaymentDao()
-        return snapshot.debtPayments.associate { payment ->
+        return linkableDebtPayments(snapshot.debtPayments, debtorLocalIds.keys).associate { payment ->
             val localId = dao.getBySyncId(payment.id)?.id
                 ?: error("Missing local debt payment for sync id ${payment.id}")
             payment.id to localId
@@ -164,11 +170,11 @@ class FinanceSnapshotApplier(
         val transferDao = database.transferDao()
         val expenseDao = database.expenseDao()
         val keepTransferIds = snapshot.transactions
-            .filter { it.kind != "EXPENSE" }
+            .filter { snapshotTransactionBucket(it.kind) == SnapshotTransactionBucket.TRANSFER }
             .map { it.id }
             .toSet()
         val keepExpenseIds = snapshot.transactions
-            .filter { it.kind == "EXPENSE" }
+            .filter { snapshotTransactionBucket(it.kind) == SnapshotTransactionBucket.EXPENSE }
             .map { it.id }
             .toSet()
 
@@ -180,20 +186,21 @@ class FinanceSnapshotApplier(
             .forEach { expenseDao.delete(it) }
 
         snapshot.transactions.forEach { transaction ->
-            when (transaction.kind) {
-                "EXPENSE" -> applyExpenseTransaction(
+            when (snapshotTransactionBucket(transaction.kind)) {
+                SnapshotTransactionBucket.EXPENSE -> applyExpenseTransaction(
                     expenseDao,
                     transaction,
                     debtorLocalIds,
                     paymentLocalIds,
                 )
-                "DEPOSIT", "GOAL_TRANSFER" -> applyTransferTransaction(
+                SnapshotTransactionBucket.TRANSFER -> applyTransferTransaction(
                     transferDao,
                     transaction,
                     goalLocalIds,
                     debtorLocalIds,
                     paymentLocalIds,
                 )
+                SnapshotTransactionBucket.IGNORED -> Unit
             }
         }
     }

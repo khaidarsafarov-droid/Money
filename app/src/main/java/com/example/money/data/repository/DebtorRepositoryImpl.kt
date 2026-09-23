@@ -155,7 +155,7 @@ class DebtorRepositoryImpl(
             val newStatus = MoneyMath.resolveDebtStatus(debtor.targetAmountCents, newCurrent)
             val syncAt = System.currentTimeMillis()
 
-            paymentId = debtPaymentDao.insert(
+            val insertedPaymentId = debtPaymentDao.insert(
                 DebtPaymentEntity(
                     debtorId = debtId,
                     amountCents = cappedPayment,
@@ -164,6 +164,7 @@ class DebtorRepositoryImpl(
                     affectsBalance = affectsBalance,
                 ),
             )
+            paymentId = insertedPaymentId
 
             val updatedDebtor = debtor.copy(
                 currentAmountCents = newCurrent,
@@ -175,7 +176,7 @@ class DebtorRepositoryImpl(
                 recordPaymentOperation(
                     debtor = updatedDebtor,
                     paymentCents = cappedPayment,
-                    paymentId = paymentId!!,
+                    paymentId = insertedPaymentId,
                     paidAt = syncAt,
                 )
             }

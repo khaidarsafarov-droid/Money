@@ -189,9 +189,10 @@ fun DebtorFormDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
+            val editingDebtor = existingDebtor
             Text(
-                if (isEdit) {
-                    stringResource(R.string.debtor_edit_title, existingDebtor!!.name)
+                if (editingDebtor != null) {
+                    stringResource(R.string.debtor_edit_title, editingDebtor.name)
                 } else {
                     stringResource(titleRes)
                 },
@@ -283,7 +284,7 @@ fun DebtorFormDialog(
                     isError = amountError != null,
                     supportingText = amountError,
                 )
-                if (isEdit && existingDebtor != null && existingDebtor.currentAmountCents > 0L) {
+                if (isEdit && existingDebtor.currentAmountCents > 0L) {
                     Text(
                         text = stringResource(
                             R.string.debtor_edit_paid_hint,
@@ -370,21 +371,21 @@ fun DebtorFormDialog(
             TextButton(
                 enabled = canSubmit,
                 onClick = {
-                    nameError = InputValidators.validateName(name)
-                    amountError = InputValidators.validateAmount(amountText)
+                    nameError = InputValidators.validateName(name)?.let(context::getString)
+                    amountError = InputValidators.validateAmount(amountText)?.let(context::getString)
                     if (amountError == null) {
                         val parsedAmount = InputValidators.parseAmount(amountText)
                         if (parsedAmount != null && MoneyMath.toCents(parsedAmount) <= 0L) {
                             amountError = context.getString(R.string.error_amount_positive)
                         }
                     }
-                    dateError = InputValidators.validateDueDate(dateGiven, dateDue)
+                    dateError = InputValidators.validateDueDate(dateGiven, dateDue)?.let(context::getString)
 
                     if (isEdit && amountError == null) {
                         val amount = InputValidators.parseAmount(amountText)
                         if (amount != null) {
                             val targetCents = MoneyMath.toCents(amount)
-                            if (targetCents < existingDebtor!!.currentAmountCents) {
+                            if (targetCents < existingDebtor.currentAmountCents) {
                                 amountError = context.getString(R.string.error_amount_below_paid)
                             }
                         }

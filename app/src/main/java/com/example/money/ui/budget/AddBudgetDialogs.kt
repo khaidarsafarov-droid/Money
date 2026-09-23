@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
@@ -31,10 +32,12 @@ fun AddTransferDialog(
     var amountError by remember { mutableStateOf<String?>(null) }
     var showOverGoalConfirm by remember { mutableStateOf(false) }
     var pendingAmount by remember { mutableStateOf<Double?>(null) }
+    val context = LocalContext.current
+    val insufficientFunds = stringResource(R.string.msg_insufficient_funds)
 
     fun submitAmount(amount: Double) {
         if (availableBalance != null && amount > availableBalance) {
-            amountError = "Недостаточно средств на общем остатке"
+            amountError = insufficientFunds
             return
         }
         if (goalRemainingAmount != null && amount > goalRemainingAmount) {
@@ -71,7 +74,7 @@ fun AddTransferDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Новый перевод") },
+        title = { Text(stringResource(R.string.budget_new_transfer_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 MoneyTextField(
@@ -80,12 +83,12 @@ fun AddTransferDialog(
                         amountText = it
                         amountError = null
                     },
-                    label = "Сумма",
+                    label = stringResource(R.string.field_amount),
                     isError = amountError != null,
                     supportingText = amountError,
                 )
                 DatePickerField(
-                    label = "Дата",
+                    label = stringResource(R.string.field_date),
                     selectedDateMillis = date,
                     onDateSelected = { date = it },
                 )
@@ -94,18 +97,18 @@ fun AddTransferDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    amountError = InputValidators.validateAmount(amountText)
+                    amountError = InputValidators.validateAmount(amountText)?.let(context::getString)
                     if (amountError != null) return@TextButton
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
                     submitAmount(amount)
                 },
             ) {
-                Text("Добавить")
+                Text(stringResource(R.string.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )
@@ -123,10 +126,11 @@ fun AddExpenseDialog(
 
     var amountError by remember { mutableStateOf<String?>(null) }
     var categoryError by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Новый расход") },
+        title = { Text(stringResource(R.string.budget_new_expense_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 MoneyTextField(
@@ -135,7 +139,7 @@ fun AddExpenseDialog(
                         amountText = it
                         amountError = null
                     },
-                    label = "Сумма",
+                    label = stringResource(R.string.field_amount),
                     isError = amountError != null,
                     supportingText = amountError,
                 )
@@ -145,7 +149,7 @@ fun AddExpenseDialog(
                         category = it
                         categoryError = null
                     },
-                    label = { Text("Категория") },
+                    label = { Text(stringResource(R.string.field_category)) },
                     isError = categoryError != null,
                     supportingText = categoryError?.let { { Text(it) } },
                     singleLine = true,
@@ -153,11 +157,11 @@ fun AddExpenseDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Заметка (необязательно)") },
+                    label = { Text(stringResource(R.string.field_note_optional)) },
                     singleLine = true,
                 )
                 DatePickerField(
-                    label = "Дата",
+                    label = stringResource(R.string.field_date),
                     selectedDateMillis = date,
                     onDateSelected = { date = it },
                 )
@@ -166,19 +170,19 @@ fun AddExpenseDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    amountError = InputValidators.validateAmount(amountText)
-                    categoryError = InputValidators.validateCategory(category)
+                    amountError = InputValidators.validateAmount(amountText)?.let(context::getString)
+                    categoryError = InputValidators.validateCategory(category)?.let(context::getString)
                     if (amountError != null || categoryError != null) return@TextButton
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
                     onConfirm(amount, category.trim(), date, note.trim())
                 },
             ) {
-                Text("Добавить")
+                Text(stringResource(R.string.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )

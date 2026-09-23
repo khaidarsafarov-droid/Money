@@ -70,23 +70,23 @@ class DebtCalendarSyncService(
             val storedEventId = debtor.calendarEventId?.toLongOrNull()
             val ownedStoredEvent = storedEventId?.let { eventBelongsToDebtor(it, debtor.id) } == true
 
-            val savedId = when {
-                ownedStoredEvent -> {
+            val savedId = storedEventId
+                ?.takeIf { ownedStoredEvent }
+                ?.let { eventId ->
                     val updated = resolver.update(
-                        ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, storedEventId!!),
+                        ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId),
                         values,
                         null,
                         null,
                     )
                     if (updated > 0) {
-                        replaceReminders(storedEventId, settings)
-                        storedEventId
+                        replaceReminders(eventId, settings)
+                        eventId
                     } else {
                         insertDebtEvent(values, settings)
                     }
                 }
-                else -> insertDebtEvent(values, settings)
-            }
+                ?: insertDebtEvent(values, settings)
 
             CalendarSyncResult(savedId?.toString(), failed = savedId == null)
         } catch (_: SecurityException) {

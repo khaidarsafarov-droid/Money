@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.example.money.R
 import com.example.money.ui.components.MoneyTextField
@@ -30,6 +31,7 @@ fun EditGoalDialog(
         mutableStateOf(formatAmountForInput(currentTarget))
     }
     var amountError by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -50,7 +52,7 @@ fun EditGoalDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    amountError = InputValidators.validateTargetAmount(amountText)
+                    amountError = InputValidators.validateTargetAmount(amountText)?.let(context::getString)
                     if (amountError != null) return@TextButton
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
                     onConfirm(amount)

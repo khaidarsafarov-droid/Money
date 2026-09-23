@@ -128,7 +128,7 @@ fun DebtPaymentDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    amountError = InputValidators.validateAmount(amountText)
+                    amountError = InputValidators.validateAmount(amountText)?.let(context::getString)
                     if (amountError != null) return@TextButton
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
                     val paymentCents = MoneyMath.toCents(amount)

@@ -1,5 +1,6 @@
 package com.example.money.ui.util
 
+import com.example.money.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -23,7 +24,7 @@ class InputValidatorsTest {
         val given = 1_000L
         val due = 500L
         assertEquals(
-            "Срок не может быть раньше даты выдачи",
+            R.string.error_due_before_given,
             InputValidators.validateDueDate(given, due),
         )
     }
