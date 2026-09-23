@@ -3,6 +3,7 @@ package com.example.money.voice
 import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
@@ -42,9 +43,22 @@ class VoiceReportAudioPolicy(private val context: Context) {
 
     fun prepareAudioRoute() {
         val manager = audioManager ?: return
-        if (isBluetoothAudioConnected()) {
+        if (!isBluetoothAudioConnected()) return
+        manager.mode = AudioManager.MODE_NORMAL
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val bluetooth = manager.availableCommunicationDevices.firstOrNull { device ->
+                device.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+                    device.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                    device.type == AudioDeviceInfo.TYPE_BLE_HEADSET
+            }
+            if (bluetooth != null) {
+                manager.setCommunicationDevice(bluetooth)
+            } else {
+                manager.clearCommunicationDevice()
+            }
+        } else {
+            @Suppress("DEPRECATION")
             manager.isSpeakerphoneOn = false
-            manager.mode = AudioManager.MODE_NORMAL
         }
     }
 

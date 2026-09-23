@@ -3,11 +3,13 @@ package com.example.money.data.sync
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
 import android.util.Log
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 class NsdPeerDiscovery(
-    context: Context,
+    private val context: Context,
     private val localServiceName: String,
     private val onPeerResolved: (PeerEndpoint) -> Unit,
     private val onPeerLost: (String) -> Unit,
@@ -19,8 +21,17 @@ class NsdPeerDiscovery(
     )
 
     private val nsdManager = context.getSystemService(NsdManager::class.java)
+
+    private fun peerHost(resolved: NsdServiceInfo): String? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            return resolved.hostAddresses.firstOrNull()?.hostAddress
+        }
+        @Suppress("DEPRECATION")
+        return resolved.host?.hostAddress
+    }
     private val registered = AtomicBoolean(false)
     private val discovering = AtomicBoolean(false)
+    private val serviceInfoCallbacks = ConcurrentHashMap<String, Any>()
 
     private val registrationListener = object : NsdManager.RegistrationListener {
         override fun onServiceRegistered(info: NsdServiceInfo) = Unit
@@ -42,29 +53,11 @@ class NsdPeerDiscovery(
         override fun onServiceFound(serviceInfo: NsdServiceInfo) {
             if (serviceInfo.serviceName == localServiceName) return
             if (!serviceInfo.serviceName.startsWith(SERVICE_PREFIX)) return
-            nsdManager.resolveService(
-                serviceInfo,
-                object : NsdManager.ResolveListener {
-                    override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                        Log.w(TAG, "NSD resolve failed for ${serviceInfo.serviceName}: $errorCode")
-                    }
-
-                    override fun onServiceResolved(resolved: NsdServiceInfo) {
-                        if (resolved.serviceName == localServiceName) return
-                        val host = resolved.host?.hostAddress ?: return
-                        onPeerResolved(
-                            PeerEndpoint(
-                                serviceName = resolved.serviceName,
-                                host = host,
-                                port = resolved.port,
-                            ),
-                        )
-                    }
-                },
-            )
+            resolveFoundService(serviceInfo)
         }
 
         override fun onServiceLost(serviceInfo: NsdServiceInfo) {
+            unregisterServiceInfo(serviceInfo.serviceName)
             onPeerLost(serviceInfo.serviceName)
         }
 
@@ -95,6 +88,7 @@ class NsdPeerDiscovery(
     }
 
     fun stop() {
+        unregisterAllServiceInfo()
         if (discovering.compareAndSet(true, false)) {
             try {
                 nsdManager.stopServiceDiscovery(discoveryListener)
@@ -109,6 +103,88 @@ class NsdPeerDiscovery(
                 Log.w(TAG, "Failed to unregister NSD service", exception)
             }
         }
+    }
+
+    private fun publishResolved(resolved: NsdServiceInfo) {
+        if (resolved.serviceName == localServiceName) return
+        val host = peerHost(resolved) ?: return
+        onPeerResolved(
+            PeerEndpoint(
+                serviceName = resolved.serviceName,
+                host = host,
+                port = resolved.port,
+            ),
+        )
+    }
+
+    private fun resolveFoundService(serviceInfo: NsdServiceInfo) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            registerServiceInfo(serviceInfo)
+            return
+        }
+        val listener = object : NsdManager.ResolveListener {
+            override fun onResolveFailed(failed: NsdServiceInfo, errorCode: Int) {
+                Log.w(TAG, "NSD resolve failed for ${failed.serviceName}: $errorCode")
+            }
+
+            override fun onServiceResolved(resolved: NsdServiceInfo) {
+                publishResolved(resolved)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            @Suppress("DEPRECATION")
+            nsdManager.resolveService(serviceInfo, context.mainExecutor, listener)
+        } else {
+            @Suppress("DEPRECATION")
+            nsdManager.resolveService(serviceInfo, listener)
+        }
+    }
+
+    private fun registerServiceInfo(serviceInfo: NsdServiceInfo) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
+        if (serviceInfoCallbacks.containsKey(serviceInfo.serviceName)) return
+        val callback = object : NsdManager.ServiceInfoCallback {
+            override fun onServiceInfoCallbackRegistrationFailed(errorCode: Int) {
+                serviceInfoCallbacks.remove(serviceInfo.serviceName)
+                Log.w(TAG, "NSD service info failed for ${serviceInfo.serviceName}: $errorCode")
+            }
+
+            override fun onServiceUpdated(updated: NsdServiceInfo) {
+                if (peerHost(updated) == null) return
+                publishResolved(updated)
+                unregisterServiceInfo(updated.serviceName)
+            }
+
+            override fun onServiceLost() {
+                val name = serviceInfo.serviceName
+                serviceInfoCallbacks.remove(name)
+                onPeerLost(name)
+            }
+
+            override fun onServiceInfoCallbackUnregistered() {
+                serviceInfoCallbacks.remove(serviceInfo.serviceName)
+            }
+        }
+        serviceInfoCallbacks[serviceInfo.serviceName] = callback
+        nsdManager.registerServiceInfoCallback(serviceInfo, context.mainExecutor, callback)
+    }
+
+    private fun unregisterServiceInfo(serviceName: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
+        unregisterResolvedServiceInfo(serviceName)
+    }
+
+    private fun unregisterResolvedServiceInfo(serviceName: String) {
+        val callback = serviceInfoCallbacks.remove(serviceName) as? NsdManager.ServiceInfoCallback ?: return
+        try {
+            nsdManager.unregisterServiceInfoCallback(callback)
+        } catch (exception: Exception) {
+            Log.w(TAG, "Failed to unregister NSD service info callback", exception)
+        }
+    }
+
+    private fun unregisterAllServiceInfo() {
+        serviceInfoCallbacks.keys.toList().forEach(::unregisterServiceInfo)
     }
 
     companion object {

@@ -10,7 +10,7 @@ enum class AppLanguage {
 
     fun toLocale(): Locale? = when (this) {
         SYSTEM -> null
-        RU -> Locale("ru", "RU")
+        RU -> Locale.forLanguageTag("ru-RU")
         EN -> Locale.US
     }
 
