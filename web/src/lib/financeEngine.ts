@@ -1,3 +1,4 @@
+import { isGoalDeadlinePassed } from "@/lib/goalProgress";
 import { createId } from "@/lib/money";
 import type { DashboardTotals, FinanceState, FinancialItem, FinancialStatus, Payment, StatusFilter, TypeFilter } from "@/types/finance";
 import { computeGlobalFinanceSummary, enrichFinanceState, addTransaction } from "@/lib/globalFinanceEngine";
@@ -62,6 +63,14 @@ export function isDebtOverdue(item: FinancialItem): boolean {
 
 function itemSortRank(item: FinancialItem): number {
   if (isDebtOverdue(item)) return 0;
+  if (
+    item.type === "GOAL" &&
+    item.status !== "COMPLETED" &&
+    item.dateDeadline &&
+    isGoalDeadlinePassed(item.dateDeadline)
+  ) {
+    return 0;
+  }
   if (item.status === "COMPLETED") return 2;
   return 1;
 }
@@ -70,6 +79,10 @@ export function sortItems(items: FinancialItem[]): FinancialItem[] {
   return [...items].sort((a, b) => {
     const rankDiff = itemSortRank(a) - itemSortRank(b);
     if (rankDiff !== 0) return rankDiff;
+    if (a.type === "GOAL" && b.type === "GOAL") {
+      const deadlineDiff = (a.dateDeadline ?? "9999-99-99").localeCompare(b.dateDeadline ?? "9999-99-99");
+      if (deadlineDiff !== 0) return deadlineDiff;
+    }
     if (a.type === "DEBT" && b.type === "DEBT" && a.dateDue && b.dateDue) {
       return a.dateDue.localeCompare(b.dateDue);
     }
