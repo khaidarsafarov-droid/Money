@@ -26,7 +26,6 @@ import com.example.money.domain.model.Expense
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.util.DebtFreedomEngine
-import com.example.money.domain.util.GoalProgress
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.debtors.DebtContactActions
@@ -99,16 +98,6 @@ fun HomeDetailPane(
                     onExpense = onExpense,
                     hideAmounts = hideAmounts,
                 )
-                selection.goal.deadlineMillis?.let { deadline ->
-                    val daysLeft = GoalProgress.daysUntilDeadline(deadline)
-                    if (daysLeft != null) {
-                        Text(
-                            text = stringResource(R.string.tablet_detail_goal_deadline, daysLeft),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
             }
             is HomeListSelection.DebtorItem -> {
                 Text(

@@ -49,9 +49,11 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.sync.SyncConnectionState
 import com.example.money.ui.components.EmptyStateMessage
+import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.domain.util.DebtFreedomEngine
+import com.example.money.domain.util.GoalProgress
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
@@ -282,12 +284,22 @@ fun TabletHomeLayout(
 
                 when (section) {
                     HomeSection.Goals -> {
+                        val orderedGoals = GoalProgress.orderedForSection(goals)
                         item {
                             RowActions(
                                 title = stringResource(R.string.goals_section_title, goals.size),
                                 actionLabel = stringResource(R.string.goal_add_title),
                                 onAction = onAddGoal,
                             )
+                        }
+                        if (orderedGoals.isNotEmpty()) {
+                            item {
+                                GoalsSectionSummary(
+                                    goals = orderedGoals,
+                                    hideAmounts = privacySettings.hideAmounts,
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                )
+                            }
                         }
                         if (goals.isEmpty()) {
                             item {
@@ -297,15 +309,26 @@ fun TabletHomeLayout(
                                 )
                             }
                         } else {
-                            items(goals, key = { "tablet-goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
+                            items(orderedGoals, key = { "tablet-goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
+                                val pace = goal.dailyGoalCents
+                                val daysLeft = goal.deadlineMillis?.let { GoalProgress.daysUntilDeadline(it) }
+                                val baseSubtitle = stringResource(
+                                    R.string.tablet_list_goal_subtitle,
+                                    Formatters.currencyFromCents(goal.currentAmountCents, hide = privacySettings.hideAmounts),
+                                    Formatters.currencyFromCents(goal.targetAmountCents, hide = privacySettings.hideAmounts),
+                                    goal.progressPercent,
+                                )
                                 HomeListCompactRow(
                                     title = goal.name,
-                                    subtitle = stringResource(
-                                        R.string.tablet_list_goal_subtitle,
-                                        Formatters.currencyFromCents(goal.currentAmountCents, hide = privacySettings.hideAmounts),
-                                        Formatters.currencyFromCents(goal.targetAmountCents, hide = privacySettings.hideAmounts),
-                                        goal.progressPercent,
-                                    ),
+                                    subtitle = if (!goal.isCompleted && pace != null && daysLeft != null) {
+                                        baseSubtitle + "\n" + stringResource(
+                                            R.string.goal_pace_line,
+                                            Formatters.currencyFromCents(pace, hide = privacySettings.hideAmounts),
+                                            daysLeft,
+                                        )
+                                    } else {
+                                        baseSubtitle
+                                    },
                                     selected = selection is HomeListSelection.GoalItem &&
                                         selection.goal.id == goal.id,
                                     onClick = { onSelectionChange(HomeListSelection.GoalItem(goal)) },
