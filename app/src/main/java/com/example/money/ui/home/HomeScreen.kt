@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -53,10 +54,9 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -91,7 +91,6 @@ import com.example.money.ui.budget.BudgetActionResult
 import com.example.money.ui.budget.BudgetViewModel
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
-import com.example.money.ui.components.ConfirmDeleteDialog
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.SyncStatusIndicator
@@ -123,14 +122,8 @@ import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
+import com.example.money.voice.VoiceReportEngine
 import kotlinx.coroutines.launch
-
-private sealed class PendingDelete {
-    data class DebtorItem(val debtor: Debtor) : PendingDelete()
-    data class GoalItem(val goal: SavingsGoal) : PendingDelete()
-    data class TransferItem(val transfer: Transfer) : PendingDelete()
-    data class ExpenseItem(val expense: Expense) : PendingDelete()
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -593,46 +586,26 @@ fun HomeScreen(
     }
 
     pendingDelete?.let { delete ->
-        when (delete) {
-            is PendingDelete.DebtorItem -> ConfirmDeleteDialog(
-                title = stringResource(R.string.delete_debtor_title),
-                message = stringResource(R.string.delete_debtor_message, delete.debtor.name),
-                onDismiss = { pendingDelete = null },
-                onConfirm = {
-                    debtorsViewModel.deleteDebtor(delete.debtor)
-                    pendingDelete = null
-                    scope.launch { showMessage(context.getString(R.string.msg_debtor_deleted)) }
-                },
-            )
-            is PendingDelete.GoalItem -> ConfirmDeleteDialog(
-                title = stringResource(R.string.delete_goal_title),
-                message = stringResource(R.string.delete_goal_message, delete.goal.name),
-                onDismiss = { pendingDelete = null },
-                onConfirm = {
-                    goalViewModel.deleteGoal(delete.goal)
-                    pendingDelete = null
-                    scope.launch { showMessage(context.getString(R.string.msg_goal_deleted)) }
-                },
-            )
-            is PendingDelete.TransferItem, is PendingDelete.ExpenseItem -> ConfirmDeleteDialog(
-                title = stringResource(R.string.delete_item_title),
-                message = stringResource(R.string.delete_item_message),
-                onDismiss = { pendingDelete = null },
-                onConfirm = {
-                    when (delete) {
-                        is PendingDelete.TransferItem -> {
-                            budgetViewModel.deleteTransfer(delete.transfer, app.debtorRepository)
-                        }
-                        is PendingDelete.ExpenseItem -> {
-                            budgetViewModel.deleteExpense(delete.expense, app.debtorRepository)
-                        }
-                        is PendingDelete.DebtorItem, is PendingDelete.GoalItem -> Unit
-                    }
-                    pendingDelete = null
-                    scope.launch { showMessage(context.getString(R.string.msg_item_deleted)) }
-                },
-            )
-        }
+        PendingDeleteDialog(
+            pending = delete,
+            onDismiss = { pendingDelete = null },
+            onDeleteDebtor = { debtor ->
+                debtorsViewModel.deleteDebtor(debtor)
+                scope.launch { showMessage(context.getString(R.string.msg_debtor_deleted)) }
+            },
+            onDeleteGoal = { goal ->
+                goalViewModel.deleteGoal(goal)
+                scope.launch { showMessage(context.getString(R.string.msg_goal_deleted)) }
+            },
+            onDeleteTransfer = { transfer ->
+                budgetViewModel.deleteTransfer(transfer, app.debtorRepository)
+                scope.launch { showMessage(context.getString(R.string.msg_item_deleted)) }
+            },
+            onDeleteExpense = { expense ->
+                budgetViewModel.deleteExpense(expense, app.debtorRepository)
+                scope.launch { showMessage(context.getString(R.string.msg_item_deleted)) }
+            },
+        )
     }
 
     BoxWithConstraints(modifier = modifier) {
@@ -828,6 +801,10 @@ fun HomeScreen(
                 onOpenCalendarSettings = onOpenCalendarSettings,
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
                 onOpenVoiceSettings = onOpenVoiceSettings,
+                onPlayVoiceReport = {
+                    scope.launch { VoiceReportEngine(app).runTestReport() }
+                },
+                calendarPermissionGranted = hasCalendarPermissions,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
@@ -876,7 +853,9 @@ fun HomeScreen(
                 budgetSummary = budgetSummary,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
-                greetingName = userProfile.resolvedDisplayName(),
+                greetingName = userProfile.resolvedDisplayName(
+                    stringResource(R.string.onboarding_default_name),
+                ),
                 debtProgressPercent = debtProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
@@ -917,6 +896,10 @@ fun HomeScreen(
                 onOpenCalendarSettings = onOpenCalendarSettings,
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
+                onPlayVoiceReport = {
+                    scope.launch { VoiceReportEngine(app).runTestReport() }
+                },
+                calendarPermissionGranted = hasCalendarPermissions,
                 onOpenGoalHub = onOpenGoalHub,
                 onAddDebt = {
                     showAddDebtorDialog = true
@@ -990,544 +973,4 @@ fun HomeScreen(
             totalExpensesCents = expensesCents,
         )
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PhoneHomeLayout(
-    drawerState: androidx.compose.material3.DrawerState,
-    snackbarHostState: SnackbarHostState,
-    topBar: @Composable () -> Unit,
-    floatingActionButton: @Composable () -> Unit,
-    listState: androidx.compose.foundation.lazy.LazyListState,
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
-    goals: List<SavingsGoal>,
-    debtors: List<Debtor>,
-    allDebtors: List<Debtor>,
-    debtTab: DebtTab,
-    onDebtTabChange: (DebtTab) -> Unit,
-    debtorFilter: DebtorFilter,
-    onDebtorFilterChange: (DebtorFilter) -> Unit,
-    debtSearchQuery: String,
-    onDebtSearchQueryChange: (String) -> Unit,
-    transfers: List<Transfer>,
-    expenses: List<Expense>,
-    budgetSummary: com.example.money.domain.model.BudgetSummary,
-    goalMetrics: com.example.money.domain.model.DashboardGoalMetrics,
-    debtMetrics: com.example.money.domain.model.DashboardDebtMetrics,
-    greetingName: String,
-    debtProgressPercent: Int,
-    highlightedDebtorId: Long?,
-    onAddGoal: () -> Unit,
-    onEditGoal: (SavingsGoal) -> Unit,
-    onDeleteGoal: (SavingsGoal) -> Unit,
-    onGoalTransfer: (SavingsGoal) -> Unit,
-    onExpense: () -> Unit,
-    onRemindDebtor: (Debtor) -> Unit,
-    onAddDebtPayment: (Debtor) -> Unit,
-    onAccelerateDebtPayment: (Debtor, Long) -> Unit,
-    onMarkDebtPaid: (Debtor) -> Unit,
-    freedomProjection: DebtFreedomEngine.FreedomProjection,
-    extraMonthlyCents: Long,
-    onExtraMonthlyChange: (Long) -> Unit,
-    onEditDebtor: (Debtor) -> Unit,
-    onDeleteDebtor: (Debtor) -> Unit,
-    onViewContactHistory: (Debtor) -> Unit,
-    onSyncCalendar: (Debtor) -> Unit,
-    onRemoveCalendar: (Debtor) -> Unit,
-    onConfirmTransfer: (Long) -> Unit,
-    onDeleteTransfer: (Transfer) -> Unit,
-    onConfirmExpense: (Long) -> Unit,
-    onDeleteExpense: (Expense) -> Unit,
-    onOpenVoiceSettings: () -> Unit,
-    onOpenAppLanguage: () -> Unit,
-    onOpenPrivacySettings: () -> Unit,
-    onOpenAutopilotSettings: () -> Unit,
-    onOpenCalendarSettings: () -> Unit,
-    onOpenDebtNotificationSettings: () -> Unit,
-    onOpenIncomeIdeas: () -> Unit,
-    onOpenGoalHub: () -> Unit,
-    onAddDebt: () -> Unit,
-    onQuickAdd: () -> Unit,
-    notificationsEnabled: Boolean,
-    onRequestNotificationPermission: () -> Unit,
-    showCheckIn: Boolean,
-    onDismissCheckIn: () -> Unit,
-    gamificationState: com.example.money.settings.GamificationState,
-    privacySettings: com.example.money.settings.PrivacySettings,
-    autopilotSettings: com.example.money.settings.AutopilotSettings,
-    onOpenAdvisor: () -> Unit,
-    onApplyAutopilot: () -> Unit,
-    scope: kotlinx.coroutines.CoroutineScope,
-    emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
-    emptyDebtorsHint: @Composable (DebtorFilter) -> String,
-) {
-    var showDebtsSection by rememberSaveable { mutableStateOf(true) }
-    LaunchedEffect(highlightedDebtorId, showCheckIn) {
-        if (highlightedDebtorId != null || showCheckIn) {
-            showDebtsSection = true
-        }
-    }
-    val activeDebtCount = allDebtors.count { !it.isPaid }
-    val transactionCount = transfers.size + expenses.size
-    val contactContext = LocalContext.current
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                LazyColumn(
-                    modifier = Modifier.padding(vertical = MoneySpacing.lg),
-                    contentPadding = PaddingValues(bottom = MoneySpacing.xl),
-                ) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.drawer_group_goals),
-                            style = moneySubheadingStyle(),
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.xl,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.goal_add_title),
-                            icon = Icons.Outlined.Flag,
-                            onClick = {
-                                onAddGoal()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.goal_hub_open),
-                            icon = Icons.Outlined.Flag,
-                            onClick = {
-                                onOpenGoalHub()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(MoneySpacing.md))
-                        Text(
-                            text = stringResource(R.string.drawer_group_settings),
-                            style = moneySubheadingStyle(),
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.xl,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.app_language_menu),
-                            icon = Icons.Outlined.Translate,
-                            onClick = {
-                                onOpenAppLanguage()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.privacy_settings_title),
-                            icon = Icons.Outlined.Lock,
-                            onClick = {
-                                onOpenPrivacySettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.autopilot_settings_title),
-                            icon = Icons.Outlined.AutoMode,
-                            onClick = {
-                                onOpenAutopilotSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.debt_notification_settings_title),
-                            icon = Icons.Outlined.Notifications,
-                            onClick = {
-                                onOpenDebtNotificationSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.calendar_settings_title),
-                            icon = Icons.Outlined.CalendarMonth,
-                            onClick = {
-                                onOpenCalendarSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(MoneySpacing.md))
-                        Text(
-                            text = stringResource(R.string.drawer_group_tools),
-                            style = moneySubheadingStyle(),
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.xl,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.income_ideas_title),
-                            icon = Icons.Outlined.Lightbulb,
-                            onClick = {
-                                onOpenIncomeIdeas()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.voice_settings_menu),
-                            icon = Icons.Outlined.Mic,
-                            onClick = {
-                                onOpenVoiceSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                }
-            }
-        },
-    ) {
-        Scaffold(
-            containerColor = CreamBackground,
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            topBar = topBar,
-            floatingActionButton = floatingActionButton,
-        ) { innerPadding ->
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(bottom = 88.dp),
-            ) {
-                item {
-                    Text(
-                        text = if (debtProgressPercent > 0) {
-                            stringResource(R.string.home_greeting_progress, greetingName, debtProgressPercent)
-                        } else {
-                            stringResource(R.string.home_greeting_simple, greetingName)
-                        },
-                        modifier = Modifier.padding(
-                            horizontal = MoneySpacing.lg,
-                            vertical = MoneySpacing.sm,
-                        ),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = GoldPrimary,
-                    )
-                }
-                if (!notificationsEnabled) {
-                    item {
-                        NotificationPermissionBanner(
-                            onRequestPermission = onRequestNotificationPermission,
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.lg,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                }
-                item {
-                    GlobalBalanceHeader(
-                        summary = budgetSummary,
-                        goalMetrics = goalMetrics,
-                        debtMetrics = debtMetrics,
-                        hideAmounts = privacySettings.hideAmounts,
-                        onOwesMeClick = {
-                            showDebtsSection = true
-                            onTabSelected(HomeTab.Debts.ordinal)
-                            onDebtTabChange(DebtTab.OwesMe)
-                        },
-                        onIOweClick = {
-                            showDebtsSection = true
-                            onTabSelected(HomeTab.Debts.ordinal)
-                            onDebtTabChange(DebtTab.IOwe)
-                        },
-                        modifier = Modifier.padding(
-                            horizontal = MoneySpacing.lg,
-                            vertical = MoneySpacing.sm,
-                        ),
-                    )
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(MoneySpacing.sm))
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = MoneySpacing.lg),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.goals_section_title, goals.size),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        TextButton(onClick = onOpenGoalHub) {
-                            Text(stringResource(R.string.goal_hub_open))
-                        }
-                    }
-                }
-
-                if (goals.isEmpty()) {
-                    item {
-                        EmptyStateMessage(
-                            title = stringResource(R.string.empty_goals_title),
-                            hint = stringResource(R.string.empty_goals_hint),
-                            actionLabel = stringResource(R.string.empty_goals_action),
-                            onAction = onAddGoal,
-                            icon = Icons.Outlined.Flag,
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.lg,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                } else {
-                    items(goals, key = { "goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
-                        SwipeToDeleteContainer(
-                            onDelete = { onDeleteGoal(goal) },
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.lg,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        ) {
-                            GoalListItem(
-                                goal = goal,
-                                onEdit = { onEditGoal(goal) },
-                                onDelete = { onDeleteGoal(goal) },
-                                onTransfer = if (!goal.isCompleted) {
-                                    { onGoalTransfer(goal) }
-                                } else {
-                                    null
-                                },
-                                onExpense = onExpense,
-                                hideAmounts = privacySettings.hideAmounts,
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(MoneySpacing.sectionGap))
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDebtsSection = !showDebtsSection }
-                            .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.dashboard_debts_section),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.dashboard_debts_summary,
-                                    activeDebtCount,
-                                    transactionCount,
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Icon(
-                            imageVector = if (showDebtsSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = stringResource(
-                                if (showDebtsSection) R.string.cd_collapse_debts else R.string.cd_expand_debts,
-                            ),
-                            tint = GoldPrimary,
-                        )
-                    }
-                }
-
-                if (showDebtsSection) {
-                item {
-                    TabRow(
-                        selectedTabIndex = selectedTab,
-                        containerColor = CreamBackground,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        indicator = { tabPositions ->
-                            if (selectedTab < tabPositions.size) {
-                                TabRowDefaults.SecondaryIndicator(
-                                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                    color = GoldPrimary,
-                                    height = 3.dp,
-                                )
-                            }
-                        },
-                        divider = {},
-                    ) {
-                        HomeTab.entries.forEachIndexed { index, tab ->
-                            val selected = selectedTab == index
-                            Tab(
-                                selected = selected,
-                                onClick = { onTabSelected(index) },
-                                modifier = Modifier.then(
-                                    if (selected) {
-                                        Modifier.background(
-                                            StatusActiveBg,
-                                            MaterialTheme.shapes.small,
-                                        )
-                                    } else {
-                                        Modifier
-                                    },
-                                ),
-                                text = {
-                                    Text(
-                                        text = stringResource(tab.titleRes),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selected) GoldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                },
-                            )
-                        }
-                    }
-                }
-
-                when (HomeTab.entries[selectedTab]) {
-                    HomeTab.Debts -> homeDebtsSection(
-                        debtTab = debtTab,
-                        onDebtTabChange = onDebtTabChange,
-                        allDebtors = allDebtors,
-                        debtors = debtors,
-                        debtorFilter = debtorFilter,
-                        onDebtorFilterChange = onDebtorFilterChange,
-                        debtSearchQuery = debtSearchQuery,
-                        onDebtSearchQueryChange = onDebtSearchQueryChange,
-                        freedomProjection = freedomProjection,
-                        extraMonthlyCents = extraMonthlyCents,
-                        onExtraMonthlyChange = onExtraMonthlyChange,
-                        showCheckIn = showCheckIn,
-                        onDismissCheckIn = onDismissCheckIn,
-                        gamificationState = gamificationState,
-                        privacySettings = privacySettings,
-                        autopilotSettings = autopilotSettings,
-                        onOpenAdvisor = onOpenAdvisor,
-                        onApplyAutopilot = onApplyAutopilot,
-                        onOpenGoalHub = onOpenGoalHub,
-                        highlightedDebtorId = highlightedDebtorId,
-                        contactContext = contactContext,
-                        onRemindDebtor = onRemindDebtor,
-                        onAddDebtPayment = onAddDebtPayment,
-                        onAccelerateDebtPayment = onAccelerateDebtPayment,
-                        onMarkDebtPaid = onMarkDebtPaid,
-                        onEditDebtor = onEditDebtor,
-                        onDeleteDebtor = onDeleteDebtor,
-                        onViewContactHistory = onViewContactHistory,
-                        onSyncCalendar = onSyncCalendar,
-                        onRemoveCalendar = onRemoveCalendar,
-                        onAddDebt = onAddDebt,
-                        emptyDebtorsTitle = emptyDebtorsTitle,
-                        emptyDebtorsHint = emptyDebtorsHint,
-                    )
-                    HomeTab.BrotherFinances -> homeOperationsSection(
-                        transfers = transfers,
-                        expenses = expenses,
-                        goals = goals,
-                        onQuickAdd = onQuickAdd,
-                        onConfirmTransfer = onConfirmTransfer,
-                        onDeleteTransfer = onDeleteTransfer,
-                        onConfirmExpense = onConfirmExpense,
-                        onDeleteExpense = onDeleteExpense,
-                    )
-                }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NotificationPermissionBanner(
-    onRequestPermission: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Column(
-            modifier = Modifier.padding(MoneySpacing.cardPadding),
-            verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
-        ) {
-            Text(
-                text = stringResource(R.string.notification_permission_needed),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            MoneyButton(
-                text = stringResource(R.string.notification_permission_action),
-                onClick = onRequestPermission,
-                priority = MoneyButtonPriority.Secondary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SettingsDrawerItem(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-) {
-    NavigationDrawerItem(
-        label = { Text(label) },
-        selected = false,
-        onClick = onClick,
-        icon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-            )
-        },
-        modifier = Modifier.padding(horizontal = MoneySpacing.md),
-    )
-}
-
-@Composable
-private fun emptyDebtorsTitle(filter: DebtorFilter): String = when (filter) {
-    DebtorFilter.ALL -> stringResource(R.string.empty_debtors_all)
-    DebtorFilter.ACTIVE -> stringResource(R.string.empty_debtors_active)
-    DebtorFilter.OVERDUE -> stringResource(R.string.empty_debtors_overdue)
-    DebtorFilter.PAID -> stringResource(R.string.empty_debtors_paid)
-}
-
-@Composable
-private fun emptyDebtorsHint(filter: DebtorFilter): String = when (filter) {
-    DebtorFilter.ALL -> stringResource(R.string.empty_debtors_all_hint)
-    DebtorFilter.ACTIVE -> stringResource(R.string.empty_debtors_active_hint)
-    DebtorFilter.OVERDUE -> stringResource(R.string.empty_debtors_overdue_hint)
-    DebtorFilter.PAID -> stringResource(R.string.empty_debtors_paid_hint)
 }
