@@ -465,7 +465,7 @@ class DebtorsViewModel(
         val result = debtCalendarSyncService.upsertDebtEvent(
             debtor = debtor,
             settings = settings,
-            displayName = profile.resolvedDisplayName(),
+            displayName = profile.resolvedDisplayName(debtCalendarSyncService.defaultDisplayName()),
             markClosed = markClosed,
             force = force,
         )
