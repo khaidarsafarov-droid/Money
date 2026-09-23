@@ -54,8 +54,8 @@ Status legend: `[ ]` open · `[x]` done · `[~]` verified already in master · `
 | 48 | A11Y | Tablet rail icons contentDescriptions | [x] |
 | 49 | A11Y | SwipeToDelete uses string resource | [x] |
 | 50 | A11Y | SemiCircularGauge uses string resource | [x] |
-| 51 | I18N | InputValidators use string resources | [~] |
-| 52 | I18N | AddBudgetDialogs use string resources | [~] |
+| 51 | I18N | InputValidators use string resources | [x] |
+| 52 | I18N | AddBudgetDialogs use string resources | [x] |
 | 53 | I18N | HomeOperations pending label resource | [x] |
 | 54 | I18N | HomeDetailPane pending label resource | [x] |
 | 55 | I18N | DebtAdvisor prompt chips resources | [x] |
@@ -68,12 +68,12 @@ Status legend: `[ ]` open · `[x]` done · `[~]` verified already in master · `
 | 62 | BUG | Shared MS_PER_MONTH unused remove | [x] |
 | 63 | BUG | Shared psychotype exhaustive default | [x] |
 | 64 | BUG | debtAutopilot.test roundPaymentsToTen | [x] |
-| 65 | BUG | Reduce !! in AddDebtorDialog titles | [~] |
-| 66 | BUG | Reduce !! in GoalFormDialog edit path | [~] |
-| 67 | BUG | FinanceSnapshotApplier safer missing maps | [~] |
-| 68 | BUG | DebtorRepositoryImpl paymentId null-safe | [~] |
-| 69 | BUG | DeviceIdProvider avoid !! | [~] |
-| 70 | BUG | DebtCalendarSyncService storedEventId null-safe | [~] |
+| 65 | BUG | Reduce !! in AddDebtorDialog titles | [x] |
+| 66 | BUG | Reduce !! in GoalFormDialog edit path | [x] |
+| 67 | BUG | FinanceSnapshotApplier safer missing maps | [x] |
+| 68 | BUG | DebtorRepositoryImpl paymentId null-safe | [x] |
+| 69 | BUG | DeviceIdProvider avoid !! | [x] |
+| 70 | BUG | DebtCalendarSyncService storedEventId null-safe | [x] |
 | 71 | UI | Debt list row density OK | [x] |
 | 72 | UI | Debt chips LazyRow no wrap orphan | [x] |
 | 73 | UI | Debt overview one-line | [x] |
