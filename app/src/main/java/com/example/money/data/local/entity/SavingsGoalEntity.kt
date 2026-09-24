@@ -25,6 +25,8 @@ data class SavingsGoalEntity(
     val updatedAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "deadline_ms")
     val deadlineMillis: Long? = null,
+    @ColumnInfo(name = "kind", defaultValue = "MONEY")
+    val kind: String = "MONEY",
 ) {
     /** Для обратной совместимости с логикой бюджета (double). */
     val targetAmount: Double

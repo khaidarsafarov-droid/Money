@@ -81,6 +81,7 @@ object FinanceSnapshotCodec {
             put("targetAmountCents", entity.targetAmountCents)
             put("currency", entity.currency)
             entity.deadlineMillis?.let { put("dateDeadline", SyncDates.formatDate(it)) }
+            put("goalKind", entity.kind)
             put("syncUpdatedAt", entity.updatedAt)
             put("deleted", deleted)
         }.toString()
@@ -175,6 +176,7 @@ object FinanceSnapshotCodec {
             targetAmountCents = entity.targetAmountCents,
             currency = entity.currency,
             dateDeadline = entity.deadlineMillis?.let(SyncDates::formatDate),
+            goalKind = entity.kind,
             syncUpdatedAt = entity.updatedAt,
         )
 
@@ -382,6 +384,7 @@ object FinanceSnapshotCodec {
             put("targetAmountCents", goal.targetAmountCents)
             put("currency", goal.currency)
             goal.dateDeadline?.let { put("dateDeadline", it) }
+            goal.goalKind?.let { put("goalKind", it) }
             put("syncUpdatedAt", goal.syncUpdatedAt)
             put("deleted", goal.deleted)
         }
@@ -456,6 +459,7 @@ object FinanceSnapshotCodec {
                         targetAmountCents = item.getLong("targetAmountCents"),
                         currency = item.getString("currency"),
                         dateDeadline = item.optString("dateDeadline").takeIf { item.has("dateDeadline") },
+                        goalKind = item.optString("goalKind").takeIf { item.has("goalKind") && it.isNotBlank() },
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
                     ),

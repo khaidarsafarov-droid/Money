@@ -110,6 +110,7 @@ import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.debtors.IncomeIdeasDialog
+import com.example.money.ui.goal.GoalActionsDialog
 import com.example.money.ui.goal.GoalFormDialog
 import com.example.money.ui.goal.GoalViewModel
 import com.example.money.settings.UserProfile
@@ -164,6 +165,7 @@ fun HomeScreen(
     )
 
     val goals by goalViewModel.goals.collectAsStateWithLifecycle()
+    val goalActions by goalViewModel.actions.collectAsStateWithLifecycle()
     val allDebtors by debtorsViewModel.allDebtorsList.collectAsStateWithLifecycle()
     val debtors by debtListViewModel.debtors.collectAsStateWithLifecycle()
     val debtTab by debtListViewModel.debtTab.collectAsStateWithLifecycle()
@@ -197,6 +199,7 @@ fun HomeScreen(
     var showGoalTransferDialog by remember { mutableStateOf<SavingsGoal?>(null) }
     var showAddGoalDialog by remember { mutableStateOf(false) }
     var editGoal by remember { mutableStateOf<SavingsGoal?>(null) }
+    var stepsGoalId by remember { mutableStateOf<Long?>(null) }
     var showWelcomeDialog by remember { mutableStateOf(false) }
     var showQuickAddDialog by remember { mutableStateOf(false) }
     var showTopMenu by remember { mutableStateOf(false) }
@@ -557,19 +560,35 @@ fun HomeScreen(
     if (showAddGoalDialog) {
         GoalFormDialog(
             onDismiss = { showAddGoalDialog = false },
-            onConfirm = { name, target, current, deadline ->
-                goalViewModel.addGoal(name, target, current, deadline)
+            onConfirm = { name, kind, target, current, deadline ->
+                goalViewModel.addGoal(name, target, current, deadline, kind)
                 showAddGoalDialog = false
                 scope.launch { showMessage(context.getString(R.string.msg_goal_added)) }
             },
         )
     }
+    stepsGoalId?.let { goalId ->
+        val goal = goals.find { it.id == goalId }
+        if (goal != null) {
+            GoalActionsDialog(
+                goal = goal,
+                actions = goalActions.filter { it.goalId == goal.id },
+                hideAmounts = privacySettings.hideAmounts,
+                onDismiss = { stepsGoalId = null },
+                onAddAction = { title -> goalViewModel.addAction(goal.id, title) },
+                onToggleAction = { action, completed ->
+                    goalViewModel.setActionCompleted(action.id, completed)
+                },
+                onDeleteAction = { action -> goalViewModel.deleteAction(action.id) },
+            )
+        }
+    }
     editGoal?.let { goal ->
         GoalFormDialog(
             existingGoal = goal,
             onDismiss = { editGoal = null },
-            onConfirm = { name, target, current, deadline ->
-                goalViewModel.updateGoal(goal, name, target, current, deadline)
+            onConfirm = { name, kind, target, current, deadline ->
+                goalViewModel.updateGoal(goal, name, target, current, deadline, kind)
                 editGoal = null
                 scope.launch { showMessage(context.getString(R.string.msg_goal_saved)) }
             },
@@ -756,6 +775,7 @@ fun HomeScreen(
                 debtMetrics = debtMetrics,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
+                onOpenGoal = { stepsGoalId = it.id },
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onExpense = { showExpenseDialog = true },
@@ -863,6 +883,7 @@ fun HomeScreen(
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
+                onOpenGoal = { stepsGoalId = it.id },
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onExpense = { showExpenseDialog = true },

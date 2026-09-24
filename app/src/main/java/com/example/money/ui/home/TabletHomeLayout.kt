@@ -45,6 +45,7 @@ import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.Expense
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.sync.SyncConnectionState
@@ -94,6 +95,7 @@ fun TabletHomeLayout(
     debtMetrics: DashboardDebtMetrics,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
+    onOpenGoal: (SavingsGoal) -> Unit,
     onDeleteGoal: (SavingsGoal) -> Unit,
     onGoalTransfer: (SavingsGoal) -> Unit,
     onExpense: () -> Unit,
@@ -312,12 +314,24 @@ fun TabletHomeLayout(
                             items(orderedGoals, key = { "tablet-goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
                                 val pace = goal.dailyGoalCents
                                 val daysLeft = goal.deadlineMillis?.let { GoalProgress.daysUntilDeadline(it) }
-                                val baseSubtitle = stringResource(
-                                    R.string.tablet_list_goal_subtitle,
-                                    Formatters.currencyFromCents(goal.currentAmountCents, hide = privacySettings.hideAmounts),
-                                    Formatters.currencyFromCents(goal.targetAmountCents, hide = privacySettings.hideAmounts),
-                                    goal.progressPercent,
-                                )
+                                val baseSubtitle = if (goal.kind == GoalKind.ACTION) {
+                                    if (goal.actionTotal > 0) {
+                                        stringResource(
+                                            R.string.goal_action_progress,
+                                            goal.actionDone,
+                                            goal.actionTotal,
+                                        )
+                                    } else {
+                                        stringResource(R.string.goal_kind_action)
+                                    }
+                                } else {
+                                    stringResource(
+                                        R.string.tablet_list_goal_subtitle,
+                                        Formatters.currencyFromCents(goal.currentAmountCents, hide = privacySettings.hideAmounts),
+                                        Formatters.currencyFromCents(goal.targetAmountCents, hide = privacySettings.hideAmounts),
+                                        goal.progressPercent,
+                                    )
+                                }
                                 HomeListCompactRow(
                                     title = goal.name,
                                     subtitle = if (!goal.isCompleted && pace != null && daysLeft != null) {
@@ -506,6 +520,7 @@ fun TabletHomeLayout(
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
                 onEditGoal = onEditGoal,
+                onOpenGoal = onOpenGoal,
                 onDeleteGoal = onDeleteGoal,
                 onGoalTransfer = onGoalTransfer,
                 onExpense = onExpense,

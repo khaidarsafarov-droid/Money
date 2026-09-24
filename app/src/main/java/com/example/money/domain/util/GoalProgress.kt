@@ -1,5 +1,6 @@
 package com.example.money.domain.util
 
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import kotlin.math.ceil
 import kotlin.math.max
@@ -75,7 +76,8 @@ object GoalProgress {
         goals: List<SavingsGoal>,
         now: Long = System.currentTimeMillis(),
     ): GoalSectionSummary {
-        val active = goals.filter { !it.isCompleted }
+        val moneyGoals = goals.filter { it.kind == GoalKind.MONEY }
+        val active = moneyGoals.filter { !it.isCompleted }
         val dailies = active.mapNotNull { goal ->
             dailyGoalCents(goal.remainingAmountCents, goal.deadlineMillis, now)
         }

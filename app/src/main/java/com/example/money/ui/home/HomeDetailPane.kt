@@ -40,6 +40,7 @@ fun HomeDetailPane(
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics = DashboardDebtMetrics(0, 0, 0, 0),
     onEditGoal: (SavingsGoal) -> Unit,
+    onOpenGoal: (SavingsGoal) -> Unit,
     onDeleteGoal: (SavingsGoal) -> Unit,
     onGoalTransfer: (SavingsGoal) -> Unit,
     onExpense: () -> Unit,
@@ -89,6 +90,7 @@ fun HomeDetailPane(
                 GoalListItem(
                     goal = selection.goal,
                     onEdit = { onEditGoal(selection.goal) },
+                    onOpen = { onOpenGoal(selection.goal) },
                     onDelete = { onDeleteGoal(selection.goal) },
                     onTransfer = if (!selection.goal.isCompleted) {
                         { onGoalTransfer(selection.goal) }

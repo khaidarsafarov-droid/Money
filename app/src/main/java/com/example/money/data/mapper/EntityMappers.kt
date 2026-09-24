@@ -1,11 +1,14 @@
 package com.example.money.data.mapper
 
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtorWithPayments
 import com.example.money.data.local.entity.ExpenseEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
+import com.example.money.domain.model.GoalAction
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.DebtPayment
 import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.model.DebtType
@@ -142,6 +145,7 @@ fun SavingsGoalEntity.toDomain(): SavingsGoal = SavingsGoal(
     currency = currency,
     updatedAt = updatedAt,
     deadlineMillis = deadlineMillis,
+    kind = GoalKind.fromStored(kind),
 )
 
 fun SavingsGoal.toEntity(): SavingsGoalEntity = SavingsGoalEntity(
@@ -153,6 +157,15 @@ fun SavingsGoal.toEntity(): SavingsGoalEntity = SavingsGoalEntity(
     currency = currency,
     updatedAt = updatedAt,
     deadlineMillis = deadlineMillis,
+    kind = kind.name,
+)
+
+fun GoalActionEntity.toDomain(): GoalAction = GoalAction(
+    id = id,
+    goalId = goalId,
+    title = title,
+    completed = completed,
+    sortOrder = sortOrder,
 )
 
 /** Конвертация legacy double amount в cents при добавлении долга из UI. */

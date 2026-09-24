@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
 import com.example.money.ui.theme.CreamSurface
@@ -49,11 +50,17 @@ fun GoalListItem(
     goal: SavingsGoal,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onOpen: () -> Unit = {},
     onTransfer: (() -> Unit)? = null,
     onExpense: (() -> Unit)? = null,
     hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val isMoney = goal.kind == GoalKind.MONEY
+    val transferAction = if (isMoney) onTransfer else null
+    val expenseAction = if (isMoney) onExpense else null
+    val barFraction = if (isMoney) goal.progressFraction else goal.actionProgressFraction
+    val barPercent = if (isMoney) goal.progressPercent else goal.actionProgressPercent
     val isDeadlinePassed = goal.deadlineMillis != null &&
         GoalProgress.isDeadlinePassed(goal.deadlineMillis) &&
         !goal.isCompleted
@@ -66,6 +73,7 @@ fun GoalListItem(
     var showMenu by remember { mutableStateOf(false) }
 
     Card(
+        onClick = onOpen,
         modifier = modifier
             .fillMaxWidth()
             .then(
@@ -113,26 +121,44 @@ fun GoalListItem(
                         )
                     }
 
-                    Text(
-                        text = Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
-                        style = moneyDisplayStyle(),
-                    )
-
-                    Text(
-                        text = if (goal.isOverAchieved) {
-                            stringResource(
-                                R.string.goal_over_achieved,
-                                Formatters.currencyFromCents(goal.surplusAmountCents, hide = hideAmounts),
-                            )
-                        } else {
-                            stringResource(
-                                R.string.goal_remaining,
-                                Formatters.currencyFromCents(goal.remainingAmountCents, hide = hideAmounts),
-                                Formatters.currencyFromCents(goal.targetAmountCents, hide = hideAmounts),
-                            )
-                        },
-                        style = moneyCaptionStyle(),
-                    )
+                    if (isMoney) {
+                        Text(
+                            text = Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
+                            style = moneyDisplayStyle(),
+                        )
+                        Text(
+                            text = if (goal.isOverAchieved) {
+                                stringResource(
+                                    R.string.goal_over_achieved,
+                                    Formatters.currencyFromCents(goal.surplusAmountCents, hide = hideAmounts),
+                                )
+                            } else {
+                                stringResource(
+                                    R.string.goal_remaining,
+                                    Formatters.currencyFromCents(goal.remainingAmountCents, hide = hideAmounts),
+                                    Formatters.currencyFromCents(goal.targetAmountCents, hide = hideAmounts),
+                                )
+                            },
+                            style = moneyCaptionStyle(),
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.goal_kind_action),
+                            style = moneyCaptionStyle(),
+                            color = GoldPrimary,
+                        )
+                    }
+                    if (goal.actionTotal > 0) {
+                        Text(
+                            text = stringResource(
+                                R.string.goal_action_progress,
+                                goal.actionDone,
+                                goal.actionTotal,
+                            ),
+                            style = moneyCaptionStyle(),
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
 
                     goal.deadlineMillis?.let { deadline ->
                         Text(
@@ -145,7 +171,7 @@ fun GoalListItem(
                     }
                     val dailyCents = goal.dailyGoalCents
                     val daysLeft = goal.deadlineMillis?.let { GoalProgress.daysUntilDeadline(it) }
-                    if (!goal.isCompleted && dailyCents != null && daysLeft != null) {
+                    if (isMoney && !goal.isCompleted && dailyCents != null && daysLeft != null) {
                         Text(
                             text = stringResource(
                                 R.string.goal_pace_line,
@@ -183,24 +209,24 @@ fun GoalListItem(
                                 Icon(Icons.Outlined.Edit, contentDescription = null)
                             },
                         )
-                        if (!goal.isCompleted && onTransfer != null) {
+                        if (!goal.isCompleted && transferAction != null) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.goal_action_transfer)) },
                                 onClick = {
                                     showMenu = false
-                                    onTransfer()
+                                    transferAction()
                                 },
                                 leadingIcon = {
                                     Icon(Icons.Outlined.SwapHoriz, contentDescription = null)
                                 },
                             )
                         }
-                        if (onExpense != null) {
+                        if (expenseAction != null) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.goal_action_expense)) },
                                 onClick = {
                                     showMenu = false
-                                    onExpense()
+                                    expenseAction()
                                 },
                                 leadingIcon = {
                                     Icon(Icons.Outlined.Payments, contentDescription = null)
@@ -227,36 +253,36 @@ fun GoalListItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 LinearProgressIndicator(
-                    progress = { goal.progressFraction },
+                    progress = { barFraction.coerceIn(0f, 1f) },
                     modifier = Modifier.weight(1f),
                     color = progressColor,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
                 Text(
-                    text = "${goal.progressPercent}%",
+                    text = "$barPercent%",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = progressColor,
                 )
             }
 
-            if (!goal.isCompleted) {
+            if (!goal.isCompleted && (transferAction != null || expenseAction != null)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
                 ) {
-                    if (onTransfer != null) {
+                    if (transferAction != null) {
                         MoneyButton(
                             text = stringResource(R.string.goal_action_transfer),
-                            onClick = onTransfer,
+                            onClick = transferAction,
                             priority = MoneyButtonPriority.Primary,
                             modifier = Modifier.weight(1f),
                         )
                     }
-                    if (onExpense != null) {
+                    if (expenseAction != null) {
                         MoneyButton(
                             text = stringResource(R.string.goal_action_expense),
-                            onClick = onExpense,
+                            onClick = expenseAction,
                             priority = MoneyButtonPriority.Secondary,
                             modifier = Modifier.weight(1f),
                         )

@@ -3,6 +3,8 @@ package com.example.money.ui.goal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.money.domain.model.GoalAction
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.domain.util.MoneyMath
@@ -23,6 +25,13 @@ class GoalViewModel(
             initialValue = emptyList(),
         )
 
+    val actions: StateFlow<List<GoalAction>> = goalRepository.observeActions()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList(),
+        )
+
     val activeGoals: StateFlow<List<SavingsGoal>> = goals
         .map { list -> list.filter { !it.isCompleted } }
         .stateIn(
@@ -31,13 +40,20 @@ class GoalViewModel(
             initialValue = emptyList(),
         )
 
-    fun addGoal(name: String, targetAmount: Double, currentAmount: Double = 0.0, deadlineMillis: Long? = null) {
+    fun addGoal(
+        name: String,
+        targetAmount: Double,
+        currentAmount: Double = 0.0,
+        deadlineMillis: Long? = null,
+        kind: GoalKind = GoalKind.MONEY,
+    ) {
         viewModelScope.launch {
             goalRepository.addGoal(
                 name = name,
                 targetAmountCents = MoneyMath.toCents(targetAmount),
                 currentAmountCents = MoneyMath.toCents(currentAmount),
                 deadlineMillis = deadlineMillis,
+                kind = kind,
             )
         }
     }
@@ -48,6 +64,7 @@ class GoalViewModel(
         targetAmount: Double,
         currentAmount: Double,
         deadlineMillis: Long?,
+        kind: GoalKind = goal.kind,
     ) {
         viewModelScope.launch {
             goalRepository.updateGoal(
@@ -56,8 +73,27 @@ class GoalViewModel(
                     targetAmountCents = MoneyMath.toCents(targetAmount),
                     currentAmountCents = MoneyMath.toCents(currentAmount),
                     deadlineMillis = deadlineMillis,
+                    kind = kind,
                 ),
             )
+        }
+    }
+
+    fun addAction(goalId: Long, title: String) {
+        viewModelScope.launch {
+            goalRepository.addAction(goalId, title)
+        }
+    }
+
+    fun setActionCompleted(actionId: Long, completed: Boolean) {
+        viewModelScope.launch {
+            goalRepository.setActionCompleted(actionId, completed)
+        }
+    }
+
+    fun deleteAction(actionId: Long) {
+        viewModelScope.launch {
+            goalRepository.deleteAction(actionId)
         }
     }
 

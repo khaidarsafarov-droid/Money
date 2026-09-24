@@ -12,6 +12,7 @@ data class SnapshotGoal(
     val targetAmountCents: Long,
     val currency: String,
     val dateDeadline: String?,
+    val goalKind: String? = null,
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
 ) : LwwRecord

@@ -1,5 +1,6 @@
 package com.example.money.domain.util
 
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -86,6 +87,41 @@ class GoalProgressTest {
         val days = GoalProgress.daysUntilDeadline(active.deadlineMillis!!, now)!!
         assertEquals(kotlin.math.ceil(8_000.0 / days).toLong(), summary.dailyCents)
         assertEquals(0, summary.overdueCount)
+    }
+
+    @Test
+    fun summarize_ignoresActionGoals() {
+        val money = goal("Trip", current = 1_000, target = 4_000)
+        val steps = goal("Run", current = 0, target = 0).copy(
+            kind = GoalKind.ACTION,
+            actionDone = 1,
+            actionTotal = 2,
+        )
+        val summary = GoalProgress.summarize(listOf(money, steps))
+
+        assertEquals(1, summary.activeCount)
+        assertEquals(1_000, summary.savedCents)
+        assertEquals(4_000, summary.targetCents)
+    }
+
+    @Test
+    fun orderedForSection_putsFinishedActionGoalWithCompleted() {
+        val now = day(2026, Calendar.JUNE, 1)
+        val openSteps = goal("Open steps", current = 0, target = 0).copy(
+            kind = GoalKind.ACTION,
+            actionDone = 1,
+            actionTotal = 3,
+        )
+        val doneSteps = goal("Done steps", current = 0, target = 0).copy(
+            kind = GoalKind.ACTION,
+            actionDone = 2,
+            actionTotal = 2,
+        )
+        val ordered = GoalProgress.orderedForSection(listOf(doneSteps, openSteps), now)
+
+        assertEquals(listOf("Open steps", "Done steps"), ordered.map { it.name })
+        assertTrue(doneSteps.isCompleted)
+        assertFalse(openSteps.isCompleted)
     }
 
     private fun day(year: Int, month: Int, dayOfMonth: Int): Long =

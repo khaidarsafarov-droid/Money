@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.money.data.local.dao.GoalActionDao
 import com.example.money.data.local.dao.DebtorDao
 import com.example.money.data.local.dao.DebtPaymentDao
 import com.example.money.data.local.dao.LuckDiaryDao
@@ -11,6 +12,7 @@ import com.example.money.data.local.dao.ExpenseDao
 import com.example.money.data.local.dao.SavingsGoalDao
 import com.example.money.data.local.dao.SyncQueueDao
 import com.example.money.data.local.dao.TransferDao
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
@@ -38,6 +40,7 @@ import com.example.money.data.local.migration.MIGRATION_17_18
 import com.example.money.data.local.migration.MIGRATION_18_19
 import com.example.money.data.local.migration.MIGRATION_19_20
 import com.example.money.data.local.migration.MIGRATION_20_21
+import com.example.money.data.local.migration.MIGRATION_21_22
 
 @Database(
     entities = [
@@ -46,10 +49,11 @@ import com.example.money.data.local.migration.MIGRATION_20_21
         TransferEntity::class,
         ExpenseEntity::class,
         SavingsGoalEntity::class,
+        GoalActionEntity::class,
         SyncQueueEntity::class,
         LuckDiaryEntryEntity::class,
     ],
-    version = 21,
+    version = 22,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -61,6 +65,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transferDao(): TransferDao
     abstract fun expenseDao(): ExpenseDao
     abstract fun savingsGoalDao(): SavingsGoalDao
+    abstract fun goalActionDao(): GoalActionDao
     abstract fun syncQueueDao(): SyncQueueDao
 
     companion object {
@@ -85,6 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_18_19,
                     MIGRATION_19_20,
                     MIGRATION_20_21,
+                    MIGRATION_21_22,
                 ).build().also { instance = it }
             }
         }
