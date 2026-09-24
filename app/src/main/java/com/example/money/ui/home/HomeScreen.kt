@@ -219,6 +219,7 @@ fun HomeScreen(
     var tabletSection by remember {
         mutableStateOf(
             when (launchConfig.initialTab) {
+                HomeTab.Goals -> HomeSection.Goals
                 HomeTab.Debts -> HomeSection.Debts
                 HomeTab.BrotherFinances -> HomeSection.Operations
             },
@@ -251,6 +252,7 @@ fun HomeScreen(
     ) {
         selectedTab = launchConfig.initialTab.ordinal
         tabletSection = when (launchConfig.initialTab) {
+            HomeTab.Goals -> HomeSection.Goals
             HomeTab.Debts -> HomeSection.Debts
             HomeTab.BrotherFinances -> HomeSection.Operations
         }
@@ -699,7 +701,7 @@ fun HomeScreen(
                 }
             } else {
                 when (HomeTab.entries[selectedTab]) {
-                    HomeTab.BrotherFinances -> true
+                    HomeTab.Goals, HomeTab.BrotherFinances -> true
                     HomeTab.Debts -> canAddDebtor
                 }
             }
@@ -714,6 +716,7 @@ fun HomeScreen(
                             }
                         } else {
                             when (HomeTab.entries[selectedTab]) {
+                                HomeTab.Goals -> showAddGoalDialog = true
                                 HomeTab.Debts -> showAddDebtorDialog = true
                                 HomeTab.BrotherFinances -> showQuickAddDialog = true
                             }

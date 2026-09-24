@@ -22,6 +22,7 @@ data class HomeLaunchConfig(
 }
 
 enum class HomeTab(val titleRes: Int) {
+    Goals(R.string.section_goals),
     Debts(R.string.tab_debts),
     BrotherFinances(R.string.tab_operations),
 }

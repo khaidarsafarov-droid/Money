@@ -240,16 +240,6 @@ internal fun PhoneHomeLayout(
                         )
                     }
                     item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.goal_hub_open),
-                            icon = Icons.Outlined.Flag,
-                            onClick = {
-                                onOpenGoalHub()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
                         Spacer(modifier = Modifier.height(MoneySpacing.md))
                         Text(
                             text = stringResource(R.string.drawer_group_settings),
@@ -296,6 +286,16 @@ internal fun PhoneHomeLayout(
                             icon = Icons.Outlined.Notifications,
                             onClick = {
                                 onOpenDebtNotificationSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.goal_hub_open),
+                            icon = Icons.Outlined.Flag,
+                            onClick = {
+                                onOpenGoalHub()
                                 scope.launch { drawerState.close() }
                             },
                         )
@@ -450,25 +450,58 @@ internal fun PhoneHomeLayout(
                 }
 
                 item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = MoneySpacing.lg),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    SecondaryTabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = CreamBackground,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        indicator = {
+                            TabRowDefaults.SecondaryIndicator(
+                                modifier = Modifier.tabIndicatorOffset(selectedTab),
+                                color = GoldPrimary,
+                                height = 3.dp,
+                            )
+                        },
+                        divider = {},
                     ) {
-                        Text(
-                            text = stringResource(R.string.goals_section_title, goals.size),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        TextButton(onClick = onOpenGoalHub) {
-                            Text(stringResource(R.string.goal_hub_open))
+                        HomeTab.entries.forEachIndexed { index, tab ->
+                            val selected = selectedTab == index
+                            Tab(
+                                selected = selected,
+                                onClick = { onTabSelected(index) },
+                                modifier = Modifier.then(
+                                    if (selected) {
+                                        Modifier.background(
+                                            StatusActiveBg,
+                                            MaterialTheme.shapes.small,
+                                        )
+                                    } else {
+                                        Modifier
+                                    },
+                                ),
+                                text = {
+                                    Text(
+                                        text = stringResource(tab.titleRes),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (selected) GoldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                },
+                            )
                         }
                     }
                 }
 
                 val orderedGoals = GoalProgress.orderedForSection(goals)
+                if (HomeTab.entries[selectedTab] == HomeTab.Goals) {
+                item {
+                    Text(
+                        text = stringResource(R.string.goals_section_title, goals.size),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = MoneySpacing.lg),
+                    )
+                }
+
                 if (orderedGoals.isNotEmpty()) {
                     item {
                         GoalsSectionSummary(
@@ -520,11 +553,9 @@ internal fun PhoneHomeLayout(
                         }
                     }
                 }
-
-                item {
-                    Spacer(modifier = Modifier.height(MoneySpacing.sectionGap))
                 }
 
+                if (HomeTab.entries[selectedTab] == HomeTab.Debts) {
                 item {
                     Row(
                         modifier = Modifier
@@ -561,50 +592,7 @@ internal fun PhoneHomeLayout(
                 }
 
                 if (showDebtsSection) {
-                item {
-                    SecondaryTabRow(
-                        selectedTabIndex = selectedTab,
-                        containerColor = CreamBackground,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        indicator = {
-                            TabRowDefaults.SecondaryIndicator(
-                                modifier = Modifier.tabIndicatorOffset(selectedTab),
-                                color = GoldPrimary,
-                                height = 3.dp,
-                            )
-                        },
-                        divider = {},
-                    ) {
-                        HomeTab.entries.forEachIndexed { index, tab ->
-                            val selected = selectedTab == index
-                            Tab(
-                                selected = selected,
-                                onClick = { onTabSelected(index) },
-                                modifier = Modifier.then(
-                                    if (selected) {
-                                        Modifier.background(
-                                            StatusActiveBg,
-                                            MaterialTheme.shapes.small,
-                                        )
-                                    } else {
-                                        Modifier
-                                    },
-                                ),
-                                text = {
-                                    Text(
-                                        text = stringResource(tab.titleRes),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selected) GoldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                },
-                            )
-                        }
-                    }
-                }
-
-                when (HomeTab.entries[selectedTab]) {
-                    HomeTab.Debts -> homeDebtsSection(
+                homeDebtsSection(
                         debtTab = debtTab,
                         onDebtTabChange = onDebtTabChange,
                         allDebtors = allDebtors,
@@ -642,7 +630,9 @@ internal fun PhoneHomeLayout(
                         emptyDebtorsTitle = emptyDebtorsTitle,
                         emptyDebtorsHint = emptyDebtorsHint,
                     )
-                    HomeTab.BrotherFinances -> homeOperationsSection(
+                }
+                if (HomeTab.entries[selectedTab] == HomeTab.BrotherFinances) {
+                    homeOperationsSection(
                         transfers = transfers,
                         expenses = expenses,
                         goals = goals,
@@ -653,9 +643,9 @@ internal fun PhoneHomeLayout(
                         onDeleteExpense = onDeleteExpense,
                     )
                 }
-                }
             }
         }
+    }
     }
 }
 
