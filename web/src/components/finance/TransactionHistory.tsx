@@ -19,8 +19,10 @@ function labelForTransaction(tx: Transaction, goals: FinancialItem[]): string {
       const goal = goals.find((item) => item.id === tx.goalId);
       return goal ? `Перевод · ${goal.name}` : "Перевод в цель";
     }
-    default:
-      return "Операция";
+    default: {
+      const unreachable: never = tx.kind;
+      return unreachable;
+    }
   }
 }
 
@@ -33,27 +35,32 @@ export function TransactionHistory({ transactions, goals }: TransactionHistoryPr
 
   return (
     <section className="space-y-2">
-      <h2 className="text-base font-medium text-milk-text">Операции</h2>
-      <ul className="divide-y divide-milk-surface overflow-hidden rounded-lg border border-milk-surface bg-white">
-        {transactions.slice(0, 12).map((tx) => {
+      <ul className="space-y-2">
+        {transactions.map((tx) => {
           const positive = isPositiveTransaction(tx.kind);
           return (
             <li
               key={tx.id}
-              className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm"
+              className="flex items-center justify-between gap-3 rounded-[22px] bg-white px-3 py-3 text-sm shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]"
             >
-              <div className="flex min-w-0 items-center gap-2">
-                <AppIcon
-                  icon={
-                    tx.kind === "EXPENSE"
-                      ? ArrowUpRight
-                      : tx.kind === "GOAL_TRANSFER"
-                        ? PiggyBank
-                        : ArrowDownLeft
-                  }
-                  size={14}
-                  className={positive ? "text-finance-positive" : "text-finance-negative"}
-                />
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
+                    positive ? "bg-pastel-mint" : "bg-pastel-peach"
+                  }`}
+                >
+                  <AppIcon
+                    icon={
+                      tx.kind === "EXPENSE"
+                        ? ArrowUpRight
+                        : tx.kind === "GOAL_TRANSFER"
+                          ? PiggyBank
+                          : ArrowDownLeft
+                    }
+                    size={16}
+                    className={positive ? "text-finance-positive" : "text-finance-negative"}
+                  />
+                </span>
                 <div className="min-w-0">
                   <p className="truncate text-milk-text">
                     {labelForTransaction(tx, goals)}

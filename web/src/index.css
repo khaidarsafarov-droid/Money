@@ -1,62 +1,71 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --color-milk-bg: #fafaf9;
-  --color-milk-surface: #e8e6e3;
-  --color-milk-text: #1c1917;
-  --color-milk-muted: #57534e;
-  --color-milk-accent: #57534e;
-  --color-milk-accent-dark: #44403c;
+  --color-milk-bg: #e7f6ef;
+  --color-milk-surface: #d3eee3;
+  --color-milk-text: #12352c;
+  --color-milk-muted: #5c7d72;
+  --color-milk-accent: #0f6e5c;
+  --color-milk-accent-dark: #0a5347;
   --color-milk-glass: #ffffff;
-  --color-milk-success: #3d6b4a;
-  --color-milk-warning: #8a7344;
-  --color-milk-error: #8b3a32;
-  --color-finance-positive: #3d6b4a;
-  --color-finance-negative: #9a4a4a;
-  --color-finance-positive-soft: rgb(61 107 74 / 0.08);
-  --color-finance-negative-soft: rgb(154 74 74 / 0.08);
-  --color-milk-gold: #a68b3d;
+  --color-milk-success: #0f6e5c;
+  --color-milk-warning: #d4893a;
+  --color-milk-error: #c45c4a;
+  --color-finance-positive: #0e8a62;
+  --color-finance-negative: #d15b4a;
+  --color-finance-positive-soft: rgb(14 138 98 / 0.12);
+  --color-finance-negative-soft: rgb(209 91 74 / 0.12);
+  --color-milk-gold: #e39a3c;
+  --color-pastel-mint: #d9f6e6;
+  --color-pastel-peach: #ffe4cc;
+  --color-pastel-lilac: #ece3fb;
+  --color-pastel-sand: #fff4cf;
 }
 
 @layer base {
   body {
     @apply min-h-dvh bg-milk-bg font-sans text-milk-text antialiased;
+    background-image:
+      radial-gradient(1100px 480px at -8% -12%, #c6f3de 0%, transparent 62%),
+      radial-gradient(820px 380px at 108% -6%, #d8f7e8 0%, transparent 58%),
+      radial-gradient(760px 460px at 78% 112%, #d0f0e1 0%, transparent 52%);
+    background-attachment: fixed;
   }
 
   ::selection {
-    @apply bg-milk-surface text-milk-text;
+    @apply bg-pastel-mint text-milk-text;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply rounded-lg border border-milk-surface bg-white;
+    @apply rounded-[24px] border border-white/80 bg-white shadow-[0_10px_30px_rgb(15_110_92_/_0.06)];
   }
 
   .pill-btn {
-    @apply min-h-11 rounded-md px-4 py-2.5 text-sm font-medium transition-colors duration-150 active:scale-[0.98];
+    @apply min-h-11 rounded-full px-4 py-2.5 text-sm font-medium transition-colors duration-150 active:scale-[0.98];
   }
 
   .pill-btn-primary {
-    @apply rounded-md px-4 py-2 text-sm font-medium transition-colors duration-150 bg-milk-text text-white hover:bg-milk-accent-dark;
+    @apply rounded-full bg-milk-accent px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-milk-accent-dark;
   }
 
   .pill-btn-secondary {
-    @apply rounded-md px-4 py-2 text-sm font-medium transition-colors duration-150 border border-milk-surface bg-white text-milk-text hover:bg-milk-bg;
+    @apply rounded-full border border-milk-surface bg-white px-4 py-2 text-sm font-medium text-milk-text transition-colors duration-150 hover:bg-pastel-mint;
   }
 
   .pill-btn-ghost {
-    @apply rounded-md px-4 py-2 text-sm font-medium transition-colors duration-150 bg-transparent text-milk-muted hover:bg-milk-bg hover:text-milk-text;
+    @apply rounded-full bg-transparent px-4 py-2 text-sm font-medium text-milk-muted transition-colors duration-150 hover:bg-white/70 hover:text-milk-text;
   }
 
   .balance-card {
-    @apply rounded-lg border border-milk-surface bg-white p-5;
+    @apply relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#15967c] to-[#0b5346] p-5 text-white shadow-[0_18px_40px_rgb(11_83_70_/_0.28)];
   }
 
   .text-display {
-    @apply text-2xl font-bold tracking-tight text-milk-text;
+    @apply text-2xl font-semibold tracking-tight text-milk-text;
   }
 
   .text-heading {
@@ -72,6 +81,6 @@
   }
 
   .goal-card-active {
-    @apply border-milk-accent/30;
+    @apply border-milk-accent/25;
   }
 }

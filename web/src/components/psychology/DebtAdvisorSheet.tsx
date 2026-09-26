@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { AdvisorMessage, AdvisorPromptId } from "@money/shared";
+import { FinOrb } from "@/components/ui/FinOrb";
 import { Modal } from "@/components/ui/Modal";
 
 interface DebtAdvisorSheetProps {
@@ -15,49 +16,72 @@ const PROMPTS: { id: AdvisorPromptId; label: string }[] = [
   { id: "motivation", label: "Мотивация" },
 ];
 
-export function DebtAdvisorSheet({ open, messages, onPrompt, onClose }: DebtAdvisorSheetProps) {
+export function AdvisorConversation({
+  messages,
+  onPrompt,
+}: {
+  messages: AdvisorMessage[];
+  onPrompt: (promptId: AdvisorPromptId) => void;
+}) {
   const [pending, setPending] = useState<AdvisorPromptId | null>(null);
 
   return (
-    <Modal open={open} title="Советник по долгам" onClose={onClose}>
-      <div className="space-y-3">
-        <p className="text-sm text-milk-muted">
-          Подсказки на основе ваших данных — без интернета и без осуждения.
-        </p>
-
-        <div className="flex flex-wrap gap-1.5">
-          {PROMPTS.map((prompt) => (
-            <button
-              key={prompt.id}
-              type="button"
-              disabled={pending === prompt.id}
-              onClick={() => {
-                setPending(prompt.id);
-                onPrompt(prompt.id);
-                setPending(null);
-              }}
-              className="pill-btn-secondary text-sm"
-            >
-              {prompt.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="max-h-72 space-y-1.5 overflow-y-auto">
-          {messages.map((message, index) => (
-            <div
-              key={`${message.atMs}-${index}`}
-              className={`rounded-md px-3 py-2 text-sm ${
-                message.role === "advisor"
-                  ? "bg-milk-bg text-milk-text"
-                  : "text-milk-muted"
-              }`}
-            >
-              {message.text}
-            </div>
-          ))}
+    <div className="space-y-4">
+      <div className="space-y-3 text-center">
+        <FinOrb />
+        <div>
+          <h2 className="text-lg font-semibold text-milk-text">Советник</h2>
+          <p className="mt-1 text-sm text-milk-muted">
+            Подсказки на основе ваших данных — без интернета и без осуждения.
+          </p>
         </div>
       </div>
+
+      <div className="flex flex-wrap justify-center gap-1.5">
+        {PROMPTS.map((prompt) => (
+          <button
+            key={prompt.id}
+            type="button"
+            disabled={pending === prompt.id}
+            onClick={() => {
+              setPending(prompt.id);
+              onPrompt(prompt.id);
+              setPending(null);
+            }}
+            className="pill-btn-secondary text-sm"
+          >
+            {prompt.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="max-h-[28rem] space-y-2 overflow-y-auto">
+        {messages.length === 0 ? (
+          <p className="rounded-[22px] bg-white px-4 py-3 text-center text-sm text-milk-muted shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]">
+            Чем я могу помочь?
+          </p>
+        ) : null}
+        {messages.map((message, index) => (
+          <div
+            key={`${message.atMs}-${index}`}
+            className={`max-w-[90%] rounded-[22px] px-4 py-3 text-sm ${
+              message.role === "advisor"
+                ? "bg-white text-milk-text shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]"
+                : "ml-auto bg-milk-accent text-white"
+            }`}
+          >
+            {message.text}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function DebtAdvisorSheet({ open, messages, onPrompt, onClose }: DebtAdvisorSheetProps) {
+  return (
+    <Modal open={open} title="Советник по долгам" onClose={onClose}>
+      <AdvisorConversation messages={messages} onPrompt={onPrompt} />
     </Modal>
   );
 }
