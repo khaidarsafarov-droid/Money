@@ -359,14 +359,40 @@ internal fun PhoneHomeLayout(
             containerColor = CreamBackground,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
-            floatingActionButton = floatingActionButton,
+            bottomBar = {
+                val dockTab = if (showDebtsSection) {
+                    when (HomeTab.entries[selectedTab]) {
+                        HomeTab.Debts -> PhoneDockTab.Debts
+                        HomeTab.BrotherFinances -> PhoneDockTab.Operations
+                    }
+                } else {
+                    PhoneDockTab.Home
+                }
+                PhoneDockBar(
+                    selected = dockTab,
+                    onHome = {
+                        showDebtsSection = false
+                        scope.launch { listState.animateScrollToItem(0) }
+                    },
+                    onOperations = {
+                        showDebtsSection = true
+                        onTabSelected(HomeTab.BrotherFinances.ordinal)
+                    },
+                    onDebts = {
+                        showDebtsSection = true
+                        onTabSelected(HomeTab.Debts.ordinal)
+                    },
+                    onAdvisor = onOpenAdvisor,
+                    fab = floatingActionButton,
+                )
+            },
         ) { innerPadding ->
             LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(bottom = 88.dp),
+                contentPadding = PaddingValues(bottom = 24.dp),
             ) {
                 item {
                     Text(
@@ -428,6 +454,7 @@ internal fun PhoneHomeLayout(
                         goalMetrics = goalMetrics,
                         debtMetrics = debtMetrics,
                         hideAmounts = privacySettings.hideAmounts,
+                        progressPercent = debtProgressPercent,
                         onOwesMeClick = {
                             showDebtsSection = true
                             onTabSelected(HomeTab.Debts.ordinal)

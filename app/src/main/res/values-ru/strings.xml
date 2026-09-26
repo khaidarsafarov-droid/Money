@@ -53,6 +53,10 @@
     <string name="tab_debts">Долги</string>
     <string name="tab_debtors">Должники</string>
     <string name="tab_operations">Операции</string>
+    <string name="nav_home">Главная</string>
+    <string name="home_score_title">Прогресс</string>
+    <string name="home_score_debts">Доля уже закрытой суммы долгов</string>
+    <string name="home_score_goals">Доля накоплений от суммы целей</string>
     <string name="menu_add_goal">Новая цель</string>
     <string name="menu_add_debt">Новый долг</string>
 

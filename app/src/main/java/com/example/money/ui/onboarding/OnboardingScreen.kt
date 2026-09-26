@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
@@ -43,6 +44,7 @@ import com.example.money.R
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.UserEmotion
 import com.example.money.settings.UserGender
+import com.example.money.ui.components.FinOrb
 import com.example.money.ui.home.WelcomePreferences
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
@@ -128,6 +130,7 @@ private fun OnboardingCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        shape = RoundedCornerShape(28.dp),
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
     }
@@ -136,6 +139,7 @@ private fun OnboardingCard(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun WelcomeStep(onNext: () -> Unit) {
     OnboardingCard {
+        FinOrb(modifier = Modifier.align(Alignment.CenterHorizontally))
         Text(stringResource(R.string.onboarding_welcome_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.onboarding_welcome_body), style = MaterialTheme.typography.bodyLarge)
         Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) {
@@ -389,6 +393,7 @@ private fun SummaryStep(
     }
 
     OnboardingCard {
+        FinOrb(modifier = Modifier.align(Alignment.CenterHorizontally))
         Text(stringResource(R.string.onboarding_summary_greeting, name), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.onboarding_summary_intro))
         SummaryRow(

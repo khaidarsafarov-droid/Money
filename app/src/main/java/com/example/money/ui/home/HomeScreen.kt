@@ -751,6 +751,7 @@ fun HomeScreen(
                 budgetSummary = budgetSummary,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
+                debtProgressPercent = debtProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
