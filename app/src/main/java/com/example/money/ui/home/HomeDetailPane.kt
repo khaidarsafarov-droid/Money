@@ -22,9 +22,7 @@ import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.model.Debtor
-import com.example.money.domain.model.Expense
 import com.example.money.domain.model.SavingsGoal
-import com.example.money.domain.model.Transfer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.GoalListItem
@@ -55,10 +53,6 @@ fun HomeDetailPane(
     onViewContactHistory: (Debtor) -> Unit = {},
     onSyncCalendar: (Debtor) -> Unit = {},
     onRemoveCalendar: (Debtor) -> Unit = {},
-    onConfirmTransfer: (Long) -> Unit,
-    onDeleteTransfer: (Transfer) -> Unit,
-    onConfirmExpense: (Long) -> Unit,
-    onDeleteExpense: (Expense) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -173,12 +167,6 @@ fun HomeDetailPane(
                     },
                     amountColor = FinancePositive,
                     isPending = !selection.transfer.isConfirmed,
-                    onConfirm = if (!selection.transfer.isConfirmed) {
-                        { onConfirmTransfer(selection.transfer.id) }
-                    } else {
-                        null
-                    },
-                    onDelete = { onDeleteTransfer(selection.transfer) },
                 )
             }
             is HomeListSelection.ExpenseItem -> {
@@ -199,12 +187,6 @@ fun HomeDetailPane(
                     },
                     amountColor = FinanceNegative,
                     isPending = !selection.expense.isConfirmed,
-                    onConfirm = if (!selection.expense.isConfirmed) {
-                        { onConfirmExpense(selection.expense.id) }
-                    } else {
-                        null
-                    },
-                    onDelete = { onDeleteExpense(selection.expense) },
                 )
             }
         }

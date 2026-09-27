@@ -218,6 +218,13 @@
     <string name="global_balance_deposits_label">Пополнения</string>
     <string name="global_balance_expenses_label">Расходы</string>
     <string name="operations_section_title">Операции</string>
+    <string name="history_title">История</string>
+    <string name="history_readonly_hint">Только просмотр</string>
+    <string name="history_empty_hint">Здесь появится история пополнений, расходов, платежей и записей по целям</string>
+    <string name="history_debt_payment">Оплата · %1$s</string>
+    <string name="history_debt_opened">Долг · %1$s</string>
+    <string name="history_goal_note">Запись · %1$s</string>
+    <string name="history_goal_record">Цель · %1$s</string>
     <string name="operation_deposit">Пополнение</string>
     <string name="operation_expense">Расход</string>
     <string name="operation_goal_transfer">Перевод · %1$s</string>

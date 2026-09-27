@@ -83,6 +83,7 @@ fun TabletHomeLayout(
     topBar: @Composable () -> Unit,
     floatingActionButton: @Composable () -> Unit,
     goals: List<SavingsGoal>,
+    goalActions: List<com.example.money.domain.model.GoalAction> = emptyList(),
     debtors: List<Debtor>,
     allDebtors: List<Debtor>,
     debtTab: DebtTab,
@@ -134,10 +135,6 @@ fun TabletHomeLayout(
     onViewContactHistory: (Debtor) -> Unit = {},
     onSyncCalendar: (Debtor) -> Unit = {},
     onRemoveCalendar: (Debtor) -> Unit = {},
-    onConfirmTransfer: (Long) -> Unit,
-    onDeleteTransfer: (Transfer) -> Unit,
-    onConfirmExpense: (Long) -> Unit,
-    onDeleteExpense: (Expense) -> Unit,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
     modifier: Modifier = Modifier,
@@ -147,7 +144,11 @@ fun TabletHomeLayout(
         containerColor = CreamBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = topBar,
-        floatingActionButton = floatingActionButton,
+        floatingActionButton = {
+            if (section != HomeSection.Operations) {
+                floatingActionButton()
+            }
+        },
     ) { innerPadding ->
         Row(
             modifier = Modifier
@@ -325,7 +326,14 @@ fun TabletHomeLayout(
                                 modifier = Modifier.padding(bottom = 8.dp),
                             )
                         }
-                        if (transfers.isEmpty() && expenses.isEmpty()) {
+                        val recent = buildAppHistory(
+                            transfers = transfers,
+                            expenses = expenses,
+                            debtors = allDebtors,
+                            goals = goals,
+                            goalActions = goalActions,
+                        ).take(5)
+                        if (recent.isEmpty()) {
                             item {
                                 EmptyStateMessage(
                                     title = stringResource(R.string.empty_budget),
@@ -333,9 +341,6 @@ fun TabletHomeLayout(
                                 )
                             }
                         } else {
-                            val recent = (transfers.map { it.date to it as Any } + expenses.map { it.date to it as Any })
-                                .sortedByDescending { it.first }
-                                .take(5)
                             item {
                                 Text(
                                     text = stringResource(R.string.operations_section_title),
@@ -346,38 +351,17 @@ fun TabletHomeLayout(
                                         .clickable { onSectionChange(HomeSection.Operations) },
                                 )
                             }
-                            items(recent, key = { (_, op) ->
-                                when (op) {
-                                    is Transfer -> "home-t-${op.syncId.ifBlank { "id-${op.id}" }}"
-                                    is Expense -> "home-e-${op.syncId.ifBlank { "id-${op.id}" }}"
-                                    else -> "home-op"
-                                }
-                            }) { (_, op) ->
-                                when (op) {
-                                    is Transfer -> {
-                                        val goalName = op.goalId?.let { id -> goals.find { it.id == id }?.name }
-                                        HomeListCompactRow(
-                                            title = "+${Formatters.currencyCompact(op.amount)}",
-                                            subtitle = goalName ?: stringResource(R.string.operation_deposit),
-                                            selected = false,
-                                            onClick = {
-                                                onSectionChange(HomeSection.Operations)
-                                                onSelectionChange(HomeListSelection.TransferItem(op, goalName))
-                                            },
-                                            modifier = Modifier.padding(vertical = 4.dp),
-                                        )
-                                    }
-                                    is Expense -> HomeListCompactRow(
-                                        title = "−${Formatters.currencyCompact(op.amount)}",
-                                        subtitle = op.category,
-                                        selected = false,
-                                        onClick = {
-                                            onSectionChange(HomeSection.Operations)
-                                            onSelectionChange(HomeListSelection.ExpenseItem(op))
-                                        },
-                                        modifier = Modifier.padding(vertical = 4.dp),
-                                    )
-                                }
+                            items(recent, key = { "home-${it.key}" }) { event ->
+                                HomeListCompactRow(
+                                    title = historyEventTitle(event),
+                                    subtitle = historyEventSubtitle(event, goals),
+                                    selected = false,
+                                    onClick = {
+                                        onSectionChange(HomeSection.Operations)
+                                        onSelectionChange(HomeListSelection.Overview)
+                                    },
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                )
                             }
                         }
                     }
@@ -549,42 +533,35 @@ fun TabletHomeLayout(
                         }
                     }
                     HomeSection.Operations -> {
-                        if (transfers.isEmpty() && expenses.isEmpty()) {
+                        val history = buildAppHistory(
+                            transfers = transfers,
+                            expenses = expenses,
+                            debtors = allDebtors,
+                            goals = goals,
+                            goalActions = goalActions,
+                        )
+                        item {
+                            Text(
+                                text = stringResource(R.string.history_readonly_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                            )
+                        }
+                        if (history.isEmpty()) {
                             item {
                                 EmptyStateMessage(
                                     title = stringResource(R.string.empty_budget),
-                                    hint = stringResource(R.string.empty_budget_hint),
+                                    hint = stringResource(R.string.history_empty_hint),
                                 )
                             }
                         } else {
-                            items(transfers, key = { "tablet-t-${it.syncId.ifBlank { "id-${it.id}" }}" }) { transfer ->
-                                val goalName = transfer.goalId?.let { id ->
-                                    goals.find { it.id == id }?.name
-                                }
-                                val subtitle = when {
-                                    transfer.note.isNotBlank() -> transfer.note
-                                    goalName != null -> stringResource(R.string.operation_goal_transfer, goalName)
-                                    else -> stringResource(R.string.operation_deposit)
-                                }
+                            items(history, key = { "tablet-${it.key}" }) { event ->
                                 HomeListCompactRow(
-                                    title = "+${Formatters.currencyCompact(transfer.amount)}",
-                                    subtitle = subtitle,
-                                    selected = selection is HomeListSelection.TransferItem &&
-                                        selection.transfer.id == transfer.id,
-                                    onClick = {
-                                        onSelectionChange(HomeListSelection.TransferItem(transfer, goalName))
-                                    },
-                                    modifier = Modifier.padding(vertical = 4.dp),
-                                )
-                            }
-                            items(expenses, key = { "tablet-e-${it.syncId.ifBlank { "id-${it.id}" }}" }) { expense ->
-                                val subtitle = expense.note.ifBlank { expense.category }
-                                HomeListCompactRow(
-                                    title = "−${Formatters.currencyCompact(expense.amount)}",
-                                    subtitle = subtitle,
-                                    selected = selection is HomeListSelection.ExpenseItem &&
-                                        selection.expense.id == expense.id,
-                                    onClick = { onSelectionChange(HomeListSelection.ExpenseItem(expense)) },
+                                    title = historyEventTitle(event),
+                                    subtitle = historyEventSubtitle(event, goals),
+                                    selected = false,
+                                    onClick = { onSelectionChange(HomeListSelection.Overview) },
                                     modifier = Modifier.padding(vertical = 4.dp),
                                 )
                             }
@@ -620,10 +597,6 @@ fun TabletHomeLayout(
                 onViewContactHistory = onViewContactHistory,
                 onSyncCalendar = onSyncCalendar,
                 onRemoveCalendar = onRemoveCalendar,
-                onConfirmTransfer = onConfirmTransfer,
-                onDeleteTransfer = onDeleteTransfer,
-                onConfirmExpense = onConfirmExpense,
-                onDeleteExpense = onDeleteExpense,
                 modifier = Modifier
                     .weight(0.58f)
                     .fillMaxHeight(),

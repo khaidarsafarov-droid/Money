@@ -263,6 +263,13 @@
     <string name="metric_sign_deposit">+</string>
     <string name="metric_sign_expense">−</string>
     <string name="operations_section_title">Operations</string>
+    <string name="history_title">History</string>
+    <string name="history_readonly_hint">View only</string>
+    <string name="history_empty_hint">Deposits, expenses, payments, and goal notes will show up here</string>
+    <string name="history_debt_payment">Payment · %1$s</string>
+    <string name="history_debt_opened">Debt · %1$s</string>
+    <string name="history_goal_note">Note · %1$s</string>
+    <string name="history_goal_record">Goal · %1$s</string>
     <string name="operation_deposit">Deposit</string>
     <string name="operation_expense">Expense</string>
     <string name="operation_goal_transfer">Transfer · %1$s</string>

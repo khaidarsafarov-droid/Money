@@ -45,6 +45,7 @@ internal fun PhoneDockBar(
     onOperations: () -> Unit,
     onDebts: () -> Unit,
     onMore: () -> Unit,
+    showFab: Boolean = true,
     fab: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -78,8 +79,10 @@ internal fun PhoneDockBar(
                     selected = selected == PhoneDockTab.Operations,
                     onClick = onOperations,
                 )
-                Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) {
-                    fab()
+                if (showFab) {
+                    Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+                        fab()
+                    }
                 }
                 DockItem(
                     label = stringResource(R.string.tab_debts),

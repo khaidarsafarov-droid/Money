@@ -84,7 +84,7 @@ fun FinanceListItem(
     amountColor: Color,
     isPending: Boolean = false,
     onConfirm: (() -> Unit)? = null,
-    onDelete: () -> Unit,
+    onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -118,18 +118,20 @@ fun FinanceListItem(
                         style = moneyCaptionStyle(),
                     )
                 }
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.defaultMinSize(
-                        minWidth = MoneySpacing.minTouchTarget,
-                        minHeight = MoneySpacing.minTouchTarget,
-                    ),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.action_delete),
-                        tint = MaterialTheme.colorScheme.error,
-                    )
+                if (onDelete != null) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.defaultMinSize(
+                            minWidth = MoneySpacing.minTouchTarget,
+                            minHeight = MoneySpacing.minTouchTarget,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = stringResource(R.string.action_delete),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
             if (isPending && onConfirm != null) {

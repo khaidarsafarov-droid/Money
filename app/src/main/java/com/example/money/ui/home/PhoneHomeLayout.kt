@@ -142,6 +142,7 @@ internal fun PhoneHomeLayout(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     goals: List<SavingsGoal>,
+    goalActions: List<com.example.money.domain.model.GoalAction> = emptyList(),
     debtors: List<Debtor>,
     allDebtors: List<Debtor>,
     debtTab: DebtTab,
@@ -177,10 +178,6 @@ internal fun PhoneHomeLayout(
     onViewContactHistory: (Debtor) -> Unit,
     onSyncCalendar: (Debtor) -> Unit,
     onRemoveCalendar: (Debtor) -> Unit,
-    onConfirmTransfer: (Long) -> Unit,
-    onDeleteTransfer: (Transfer) -> Unit,
-    onConfirmExpense: (Long) -> Unit,
-    onDeleteExpense: (Expense) -> Unit,
     onOpenVoiceSettings: () -> Unit,
     onOpenAppLanguage: () -> Unit,
     onOpenPrivacySettings: () -> Unit,
@@ -355,6 +352,7 @@ internal fun PhoneHomeLayout(
                         onTabSelected(HomeTab.Debts.ordinal)
                     },
                     onMore = { scope.launch { drawerState.open() } },
+                    showFab = HomeTab.entries[selectedTab] != HomeTab.BrotherFinances,
                     fab = floatingActionButton,
                 )
             },
@@ -445,10 +443,8 @@ internal fun PhoneHomeLayout(
                         transfers = transfers,
                         expenses = expenses,
                         goals = goals,
-                        onConfirmTransfer = onConfirmTransfer,
-                        onDeleteTransfer = onDeleteTransfer,
-                        onConfirmExpense = onConfirmExpense,
-                        onDeleteExpense = onDeleteExpense,
+                        debtors = allDebtors,
+                        goalActions = goalActions,
                         limit = 5,
                         onOpenAll = { onTabSelected(HomeTab.BrotherFinances.ordinal) },
                     )
@@ -566,10 +562,8 @@ internal fun PhoneHomeLayout(
                         transfers = transfers,
                         expenses = expenses,
                         goals = goals,
-                        onConfirmTransfer = onConfirmTransfer,
-                        onDeleteTransfer = onDeleteTransfer,
-                        onConfirmExpense = onConfirmExpense,
-                        onDeleteExpense = onDeleteExpense,
+                        debtors = allDebtors,
+                        goalActions = goalActions,
                     )
                 }
             }
