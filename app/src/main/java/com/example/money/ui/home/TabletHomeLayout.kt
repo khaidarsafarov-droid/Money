@@ -22,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -36,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,6 +69,7 @@ import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtSearchField
 import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.theme.CreamBackground
+import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -93,6 +96,7 @@ fun TabletHomeLayout(
     budgetSummary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
+    debtProgressPercent: Int = 0,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
     onOpenGoal: (SavingsGoal) -> Unit,
@@ -151,6 +155,13 @@ fun TabletHomeLayout(
                 .padding(innerPadding),
         ) {
             NavigationRail(containerColor = CreamBackground) {
+                val railColors = NavigationRailItemDefaults.colors(
+                    selectedIconColor = GoldPrimary,
+                    selectedTextColor = GoldPrimary,
+                    indicatorColor = Color(0xFFD9F6E6),
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 var showSettingsMenu by remember { mutableStateOf(false) }
                 SyncStatusIndicator(
                     state = syncState,
@@ -174,6 +185,7 @@ fun TabletHomeLayout(
                             )
                         },
                         label = { Text(stringResource(item.titleRes)) },
+                        colors = railColors,
                     )
                 }
                 NavigationRailItem(
@@ -186,6 +198,7 @@ fun TabletHomeLayout(
                         )
                     },
                     label = { Text(stringResource(R.string.goal_hub_open)) },
+                    colors = railColors,
                 )
                 NavigationRailItem(
                     selected = false,
@@ -197,6 +210,7 @@ fun TabletHomeLayout(
                         )
                     },
                     label = { Text(stringResource(R.string.settings_open)) },
+                    colors = railColors,
                 )
                 DropdownMenu(
                     expanded = showSettingsMenu,
@@ -275,11 +289,12 @@ fun TabletHomeLayout(
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 item {
-                    GlobalBalanceHeader(
+                        GlobalBalanceHeader(
                         summary = budgetSummary,
                         goalMetrics = goalMetrics,
                         debtMetrics = debtMetrics,
                         hideAmounts = privacySettings.hideAmounts,
+                        progressPercent = debtProgressPercent,
                         onOwesMeClick = {
                             onSectionChange(HomeSection.Debts)
                             onDebtTabChange(DebtTab.OwesMe)

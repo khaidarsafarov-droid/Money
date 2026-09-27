@@ -75,6 +75,10 @@
     <string name="tab_debts">Debts</string>
     <string name="tab_debtors">Debtors</string>
     <string name="tab_operations">Operations</string>
+    <string name="nav_home">Home</string>
+    <string name="home_score_title">Progress</string>
+    <string name="home_score_debts">Share of debt already paid off</string>
+    <string name="home_score_goals">Share of savings toward goal totals</string>
     <string name="menu_add_goal">New goal</string>
     <string name="menu_add_debt">New debt</string>
 

@@ -1,6 +1,7 @@
 package com.example.money.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,7 +45,7 @@ fun MoneyButton(
                 onClick = onClick,
                 modifier = minSizeModifier,
                 enabled = enabled,
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(50),
                 contentPadding = contentPadding,
             ) {
                 MoneyButtonContent(text = text, icon = icon)
@@ -55,7 +56,7 @@ fun MoneyButton(
                 onClick = onClick,
                 modifier = minSizeModifier,
                 enabled = enabled,
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(50),
                 contentPadding = contentPadding,
             ) {
                 MoneyButtonContent(text = text, icon = icon)

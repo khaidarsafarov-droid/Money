@@ -811,6 +811,7 @@ fun HomeScreen(
                 budgetSummary = budgetSummary,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
+                debtProgressPercent = debtProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },

@@ -23,7 +23,7 @@ export function TypeFilterChips({ value, onChange }: TypeFilterChipsProps) {
             onClick={() => onChange(filter.id)}
             className={
               selected
-                ? "pill-btn-secondary border-milk-gold/40 bg-milk-bg font-semibold text-milk-gold"
+                ? "pill-btn-primary"
                 : "pill-btn-ghost"
             }
           >

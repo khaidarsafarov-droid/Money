@@ -1,5 +1,16 @@
 import { AnimatePresence } from "framer-motion";
-import { HandCoins, Inbox, Target, TrendingUp } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowLeft,
+  ArrowUpRight,
+  HandCoins,
+  Inbox,
+  PiggyBank,
+  Search,
+  Settings,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { useCallback, useState } from "react";
 import { personalizedGreeting } from "@money/shared";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
@@ -13,11 +24,12 @@ import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
 import { DebtFormModal } from "@/components/modals/DebtFormModal";
 import { GoalFormModal } from "@/components/modals/GoalFormModal";
 import { PaymentModal } from "@/components/modals/PaymentModal";
-import { DebtAdvisorSheet } from "@/components/psychology/DebtAdvisorSheet";
+import { AdvisorConversation } from "@/components/psychology/DebtAdvisorSheet";
 import { GamificationBanner } from "@/components/psychology/GamificationBanner";
 import { PsychologySettingsPanel } from "@/components/psychology/PsychologySettingsPanel";
+import { AppTabBar, type AppTab } from "@/components/ui/AppTabBar";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ExpandableFab } from "@/components/ui/ExpandableFab";
+import { ScoreRing } from "@/components/ui/ScoreRing";
 import { AppIcon } from "@/components/ui/SurfaceCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusFilterTabs } from "@/components/ui/StatusFilterTabs";
@@ -46,8 +58,10 @@ export function DashboardPage() {
   const [amountAction, setAmountAction] = useState<AmountAction | null>(null);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showAddDebt, setShowAddDebt] = useState(false);
-  const [showAdvisor, setShowAdvisor] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<FinancialItem | null>(null);
+  const [tab, setTab] = useState<AppTab>("home");
+  const [recordQuery, setRecordQuery] = useState("");
+  const [activityQuery, setActivityQuery] = useState("");
 
   const hideAmounts = psychology.privacy.hideAmounts;
   const money = useCallback(
@@ -108,6 +122,19 @@ export function DashboardPage() {
     return <OnboardingFlow />;
   }
 
+  const recordQueryNormalized = recordQuery.trim().toLowerCase();
+  const listedItems = recordQueryNormalized
+    ? finance.visibleItems.filter((item) => item.name.toLowerCase().includes(recordQueryNormalized))
+    : finance.visibleItems;
+  const activityQueryNormalized = activityQuery.trim().toLowerCase();
+  const visibleTransactions = activityQueryNormalized
+    ? finance.transactions.filter((tx) => {
+        const goalName = goals.find((item) => item.id === tx.goalId)?.name ?? "";
+        return `${tx.note ?? ""} ${tx.category ?? ""} ${goalName}`
+          .toLowerCase()
+          .includes(activityQueryNormalized);
+      })
+    : finance.transactions;
   const debtProgressPercent =
     activeDebts.length > 0
       ? Math.min(
@@ -122,158 +149,264 @@ export function DashboardPage() {
           ),
         )
       : 0;
+  const goalPoolCents =
+    finance.globalFinance.totalAccumulatedCents + finance.globalFinance.totalRemainingToGoalCents;
+  const goalProgressPercent =
+    goalPoolCents > 0
+      ? Math.round((finance.globalFinance.totalAccumulatedCents / goalPoolCents) * 100)
+      : 0;
+  const score = activeDebts.length > 0 ? debtProgressPercent : goalProgressPercent;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-5xl px-4 pb-28 pt-6 sm:px-6">
-      <header className="mb-6 space-y-4">
-        <div className="space-y-0.5">
-          <p className="text-xs text-milk-muted">TruckerLoad · Project Money</p>
-          <h1 className="text-2xl font-medium tracking-tight text-milk-text sm:text-3xl">
-            {personalizedGreeting(
-              userProfile.displayName,
-              debtProgressPercent,
-              navigator.language,
-            )}
-          </h1>
-          <p className="text-sm text-milk-muted">USD · точность до центов</p>
-        </div>
-
-        <BalanceOverviewCard
-          finance={finance.globalFinance}
-          formatUsd={usd}
-          hideAmounts={hideAmounts}
-        />
-
-        <PsychologySettingsPanel
-          privacy={psychology.privacy}
-          autopilot={psychology.autopilot}
-          onPrivacyChange={psychology.updatePrivacy}
-          onAutopilotChange={psychology.updateAutopilot}
-          hideAmounts={hideAmounts}
-        />
-
-        <SyncPanel
-          peerUrl={webSync.peerUrl}
-          onPeerUrlChange={webSync.setPeerUrl}
-          status={webSync.status}
-          lastError={webSync.lastError}
-          lastSyncedAt={webSync.lastSyncedAt}
-          onSync={() => {
-            void webSync.syncNow().then((ok) => {
-              if (ok) showToast("Данные синхронизированы с телефоном");
-            });
-          }}
-        />
-
-        <div className="grid gap-3 sm:grid-cols-3">
-          <StatCard
-            label="Долги"
-            value={usd(finance.dashboardTotals.totalDebtRemainingUsd)}
-            icon={HandCoins}
-            hint="Осталось получить"
+    <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-32 pt-6">
+      {tab === "more" ? (
+        <section className="space-y-4">
+          <button
+            type="button"
+            onClick={() => setTab("home")}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-milk-accent"
+          >
+            <AppIcon icon={ArrowLeft} size={16} className="text-milk-accent" />
+            Назад
+          </button>
+          <h1 className="text-2xl font-semibold tracking-tight">Настройки</h1>
+          <PsychologySettingsPanel
+            privacy={psychology.privacy}
+            autopilot={psychology.autopilot}
+            onPrivacyChange={psychology.updatePrivacy}
+            onAutopilotChange={psychology.updateAutopilot}
+            hideAmounts={hideAmounts}
           />
-          <StatCard
-            label="Свободно"
-            value={usd(finance.dashboardTotals.availableBalanceUsd)}
-            icon={TrendingUp}
-            hint="Для переводов и расходов"
+          <SyncPanel
+            peerUrl={webSync.peerUrl}
+            onPeerUrlChange={webSync.setPeerUrl}
+            status={webSync.status}
+            lastError={webSync.lastError}
+            lastSyncedAt={webSync.lastSyncedAt}
+            onSync={() => {
+              void webSync.syncNow().then((ok) => {
+                if (ok) showToast("Данные синхронизированы с телефоном");
+              });
+            }}
           />
-          <StatCard
-            label="Активных"
-            value={String(finance.dashboardTotals.activeCount)}
-            icon={Target}
-            hint={`Завершено: ${finance.dashboardTotals.completedCount}`}
-          />
-        </div>
-      </header>
+        </section>
+      ) : (
+        <>
+          <header className="mb-5 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-milk-muted">Финансовый контроль</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-milk-text">
+                {personalizedGreeting(
+                  userProfile.displayName,
+                  debtProgressPercent,
+                  navigator.language,
+                )}
+              </h1>
+            </div>
+            <button
+              type="button"
+              aria-label="Настройки"
+              onClick={() => setTab("more")}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_8px_20px_rgb(15_110_92_/_0.08)]"
+            >
+              <AppIcon icon={Settings} size={18} className="text-milk-accent" />
+            </button>
+          </header>
 
-      <main className="space-y-6">
-        {hasOperations ? (
-          <TransactionHistory transactions={finance.transactions} goals={goals} />
-        ) : null}
+          <main className="space-y-5">
+            {tab === "home" ? (
+              <>
+                <BalanceOverviewCard
+                  finance={finance.globalFinance}
+                  formatUsd={usd}
+                  hideAmounts={hideAmounts}
+                />
 
-        <div className="space-y-4">
-          {(finance.typeFilter === "debt" || finance.typeFilter === "all") && activeDebts.length > 0 ? (
-            <>
-              <FreedomForecastCard debts={activeDebts} hideAmounts={hideAmounts} />
-              <GamificationBanner state={psychology.gamification} />
-              <div className="flex flex-wrap gap-1.5">
-                <button type="button" onClick={() => setShowAdvisor(true)} className="pill-btn-secondary">
-                  Советник
-                </button>
-                {psychology.autopilot.enabled ? (
-                  <button type="button" onClick={applyAutopilot} className="pill-btn-primary">
-                    Внести сейчас
+                <section className="space-y-3">
+                  <h2 className="text-base font-semibold">Сводка</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    <StatCard
+                      label="Долги"
+                      value={usd(finance.dashboardTotals.totalDebtRemainingUsd)}
+                      icon={HandCoins}
+                      hint="Осталось получить"
+                      tone="mint"
+                    />
+                    <StatCard
+                      label="Свободно"
+                      value={usd(finance.dashboardTotals.availableBalanceUsd)}
+                      icon={TrendingUp}
+                      hint="Для переводов"
+                      tone="peach"
+                    />
+                    <StatCard
+                      label="Активных"
+                      value={String(finance.dashboardTotals.activeCount)}
+                      icon={Target}
+                      hint={`Завершено: ${finance.dashboardTotals.completedCount}`}
+                      tone="lilac"
+                    />
+                    <StatCard
+                      label="Накоплено"
+                      value={money(finance.globalFinance.totalAccumulatedCents)}
+                      icon={PiggyBank}
+                      hint="На активных целях"
+                      tone="sand"
+                    />
+                  </div>
+                </section>
+
+                <ScoreRing
+                  value={score}
+                  label={activeDebts.length > 0 ? "Погашение долгов" : "Накопления"}
+                  caption={
+                    activeDebts.length > 0
+                      ? "Доля уже закрытой суммы долгов"
+                      : "Доля накоплений от суммы целей"
+                  }
+                />
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAmountAction("deposit")}
+                    className="pill-btn-primary inline-flex flex-1 items-center justify-center gap-1.5"
+                  >
+                    <AppIcon icon={ArrowDownLeft} size={16} className="text-white" />
+                    Пополнить
                   </button>
-                ) : null}
-              </div>
-            </>
-          ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setAmountAction("expense")}
+                    className="pill-btn-secondary inline-flex flex-1 items-center justify-center gap-1.5"
+                  >
+                    <AppIcon icon={ArrowUpRight} size={16} />
+                    Расход
+                  </button>
+                </div>
 
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-medium text-milk-text">
-                Записи ({finance.visibleItems.length})
-              </h2>
-              <StatusFilterTabs
-                value={finance.statusFilter}
-                onChange={finance.setStatusFilter}
-              />
-            </div>
-            <TypeFilterChips value={finance.typeFilter} onChange={finance.setTypeFilter} />
-          </div>
-
-          {finance.typeFilter === "goal" ? (
-            <GoalSectionSummary items={finance.visibleItems} hideAmounts={hideAmounts} />
-          ) : null}
-
-          {finance.visibleItems.length === 0 ? (
-            <EmptyState
-              icon={Inbox}
-              title="Пока пусто"
-              description={emptyDescription}
-              action={
-                finance.statusFilter !== "completed" ? (
+                {activeDebts.length > 0 ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddGoal(true)}
-                      className="pill-btn-primary inline-flex items-center gap-1.5"
-                    >
-                      <AppIcon icon={Target} size={14} className="text-white" />
-                      Новая цель
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddDebt(true)}
-                      className="pill-btn-secondary inline-flex items-center gap-1.5"
-                    >
-                      <AppIcon icon={HandCoins} size={14} />
-                      Новый долг
-                    </button>
+                    <FreedomForecastCard debts={activeDebts} hideAmounts={hideAmounts} />
+                    <GamificationBanner state={psychology.gamification} />
+                    {psychology.autopilot.enabled ? (
+                      <button type="button" onClick={applyAutopilot} className="pill-btn-primary w-full">
+                        Внести сейчас
+                      </button>
+                    ) : null}
                   </>
-                ) : undefined
-              }
-            />
-          ) : (
-            <div className="grid gap-3 lg:grid-cols-2">
-              <AnimatePresence mode="popLayout">
-                {finance.visibleItems.map((item) => (
-                  <FinanceCard
-                    key={item.id}
-                    item={item}
-                    hideAmounts={hideAmounts}
-                    onAddPayment={openPayment}
-                    onGoalTransfer={setTransferGoal}
-                    onGoalExpense={() => setAmountAction("expense")}
-                    onDelete={setPendingDelete}
+                ) : null}
+              </>
+            ) : null}
+
+            {tab === "activity" ? (
+              <section className="space-y-3">
+                <h2 className="text-base font-semibold">Операции</h2>
+                <label className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
+                  <AppIcon icon={Search} size={16} />
+                  <input
+                    value={activityQuery}
+                    onChange={(event) => setActivityQuery(event.target.value)}
+                    placeholder="Поиск операций"
+                    className="w-full bg-transparent text-sm outline-none placeholder:text-milk-muted"
                   />
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-      </main>
+                </label>
+                {visibleTransactions.length === 0 ? (
+                  <EmptyState
+                    icon={Inbox}
+                    title={hasOperations ? "Ничего не найдено" : "Операций пока нет"}
+                    description={
+                      hasOperations
+                        ? "Попробуйте другой запрос."
+                        : "Пополните баланс или запишите расход — история появится здесь."
+                    }
+                  />
+                ) : (
+                  <TransactionHistory transactions={visibleTransactions} goals={goals} />
+                )}
+              </section>
+            ) : null}
+
+            {tab === "records" ? (
+              <section className="space-y-4">
+                <div className="space-y-3">
+                  <h2 className="text-base font-semibold">Записи ({listedItems.length})</h2>
+                  <label className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
+                    <AppIcon icon={Search} size={16} />
+                    <input
+                      value={recordQuery}
+                      onChange={(event) => setRecordQuery(event.target.value)}
+                      placeholder="Поиск целей и долгов"
+                      className="w-full bg-transparent text-sm outline-none placeholder:text-milk-muted"
+                    />
+                  </label>
+                  <StatusFilterTabs value={finance.statusFilter} onChange={finance.setStatusFilter} />
+                  <TypeFilterChips value={finance.typeFilter} onChange={finance.setTypeFilter} />
+                </div>
+
+                {finance.typeFilter === "goal" ? (
+                  <GoalSectionSummary items={listedItems} hideAmounts={hideAmounts} />
+                ) : null}
+
+                {listedItems.length === 0 ? (
+                  <EmptyState
+                    icon={Inbox}
+                    title={recordQueryNormalized ? "Ничего не найдено" : "Пока пусто"}
+                    description={
+                      recordQueryNormalized ? "Попробуйте другое название." : emptyDescription
+                    }
+                    action={
+                      !recordQueryNormalized && finance.statusFilter !== "completed" ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setShowAddGoal(true)}
+                            className="pill-btn-primary inline-flex items-center gap-1.5"
+                          >
+                            <AppIcon icon={Target} size={14} className="text-white" />
+                            Новая цель
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowAddDebt(true)}
+                            className="pill-btn-secondary inline-flex items-center gap-1.5"
+                          >
+                            <AppIcon icon={HandCoins} size={14} />
+                            Новый долг
+                          </button>
+                        </>
+                      ) : undefined
+                    }
+                  />
+                ) : (
+                  <div className="grid gap-3">
+                    <AnimatePresence mode="popLayout">
+                      {listedItems.map((item) => (
+                        <FinanceCard
+                          key={item.id}
+                          item={item}
+                          hideAmounts={hideAmounts}
+                          onAddPayment={openPayment}
+                          onGoalTransfer={setTransferGoal}
+                          onGoalExpense={() => setAmountAction("expense")}
+                          onDelete={setPendingDelete}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </section>
+            ) : null}
+
+            {tab === "advisor" ? (
+              <AdvisorConversation
+                messages={psychology.advisorHistory}
+                onPrompt={(promptId) => psychology.askAdvisor(promptId, finance.state.items)}
+              />
+            ) : null}
+          </main>
+        </>
+      )}
 
       <PaymentModal
         item={paymentItem}
@@ -297,13 +430,6 @@ export function DashboardPage() {
           }
           return result;
         }}
-      />
-
-      <DebtAdvisorSheet
-        open={showAdvisor}
-        messages={psychology.advisorHistory}
-        onPrompt={(promptId) => psychology.askAdvisor(promptId, finance.state.items)}
-        onClose={() => setShowAdvisor(false)}
       />
 
       <AmountModal
@@ -381,11 +507,15 @@ export function DashboardPage() {
         }}
       />
 
-      <ExpandableFab
-        onAddGoal={() => setShowAddGoal(true)}
-        onAddDebt={() => setShowAddDebt(true)}
-        onAddDeposit={() => setAmountAction("deposit")}
-        onAddExpense={() => setAmountAction("expense")}
+      <AppTabBar
+        tab={tab}
+        onTabChange={setTab}
+        actions={[
+          { label: "Пополнить", icon: ArrowDownLeft, onClick: () => setAmountAction("deposit") },
+          { label: "Расход", icon: ArrowUpRight, onClick: () => setAmountAction("expense") },
+          { label: "Новый долг", icon: HandCoins, onClick: () => setShowAddDebt(true) },
+          { label: "Новая цель", icon: Target, onClick: () => setShowAddGoal(true) },
+        ]}
       />
     </div>
   );

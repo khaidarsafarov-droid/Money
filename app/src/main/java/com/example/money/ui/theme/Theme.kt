@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 private val MoneyColorScheme = lightColorScheme(
     primary = GoldPrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFF3E6C8),
+    primaryContainer = Color(0xFFD9F6E6),
     onPrimaryContainer = BrownText,
     secondary = BrownMuted,
     onSecondary = Color.White,
@@ -19,7 +19,7 @@ private val MoneyColorScheme = lightColorScheme(
     onBackground = BrownText,
     surface = CreamSurface,
     onSurface = BrownText,
-    surfaceVariant = Color(0xFFEFE6DA),
+    surfaceVariant = Color(0xFFD3EEE3),
     onSurfaceVariant = BrownMuted,
     error = OverdueRed,
     onError = Color.White,
@@ -27,11 +27,11 @@ private val MoneyColorScheme = lightColorScheme(
 )
 
 private val MoneyShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(20.dp),
-    extraLarge = RoundedCornerShape(24.dp),
+    extraSmall = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(32.dp),
 )
 
 @Composable

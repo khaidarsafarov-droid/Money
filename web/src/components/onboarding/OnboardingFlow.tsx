@@ -13,6 +13,7 @@ import {
   type UserFearId,
   type UserGender,
 } from "@money/shared";
+import { FinOrb } from "@/components/ui/FinOrb";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 const FEAR_OPTIONS: { id: UserFearId; label: string }[] = [
@@ -33,7 +34,7 @@ const EMOTIONS: { id: UserEmotion; emoji: string }[] = [
 ];
 
 const inputClass =
-  "w-full rounded-md border border-milk-surface bg-white px-3 py-2 text-sm text-milk-text outline-none focus:border-milk-accent";
+  "w-full rounded-2xl border border-milk-surface bg-milk-bg px-3 py-2.5 text-sm text-milk-text outline-none focus:border-milk-accent";
 
 export function OnboardingFlow() {
   const { completeOnboarding } = useUserProfile();
@@ -87,21 +88,22 @@ export function OnboardingFlow() {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-milk-bg p-4">
-      <p className="text-sm text-milk-muted">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col p-4">
+      <p className="text-sm font-medium text-milk-muted">
         Шаг {step + 1} из {totalSteps}
       </p>
-      <div className="mb-4 h-1 overflow-hidden rounded-full bg-milk-surface">
+      <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-white">
         <div
-          className="h-full bg-milk-text transition-all"
+          className="h-full rounded-full bg-milk-accent transition-all"
           style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
         />
       </div>
 
-      <div className="flex-1 rounded-lg border border-milk-surface bg-white p-4">
+      <div className="flex-1 rounded-[28px] border border-white/80 bg-white p-5 shadow-[0_12px_32px_rgb(15_110_92_/_0.08)]">
         {step === 0 && (
           <>
-            <h1 className="text-xl font-medium text-milk-text">Добро пожаловать в Финансовый Контроль</h1>
+            <FinOrb className="mb-5" />
+            <h1 className="text-xl font-semibold text-milk-text">Добро пожаловать в Финансовый Контроль</h1>
             <p className="mt-3 text-sm text-milk-muted">
               Здесь вы не просто считаете долги — вы строите путь к финансовой свободе.
             </p>
@@ -266,7 +268,8 @@ export function OnboardingFlow() {
 
         {step === 5 && (
           <>
-            <h2 className="text-lg font-medium text-milk-text">{displayName}, здравствуйте!</h2>
+            <FinOrb className="mb-5" />
+            <h2 className="text-lg font-semibold text-milk-text">{displayName}, здравствуйте!</h2>
             <p className="mt-3 text-sm text-milk-muted">
               Мы подготовили для вас план, основанный на вашем психотипе и целях.
             </p>
