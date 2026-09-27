@@ -46,6 +46,7 @@ fun GlobalBalanceHeader(
     onIOweClick: () -> Unit = {},
     hideAmounts: Boolean = false,
     progressPercent: Int? = null,
+    compact: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     MintFinanceHeader(
@@ -56,6 +57,7 @@ fun GlobalBalanceHeader(
         onOwesMeClick = onOwesMeClick,
         onIOweClick = onIOweClick,
         progressPercent = progressPercent,
+        compact = compact,
         modifier = modifier,
     )
 }

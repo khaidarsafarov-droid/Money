@@ -56,6 +56,7 @@ fun MintFinanceHeader(
     onOwesMeClick: () -> Unit,
     onIOweClick: () -> Unit,
     progressPercent: Int?,
+    compact: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val goalPool = goalMetrics.totalAccumulated + goalMetrics.totalRemainingToGoal
@@ -74,6 +75,7 @@ fun MintFinanceHeader(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         BalanceHero(summary = summary, hideAmounts = hideAmounts)
+        if (compact) return@Column
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
                 label = stringResource(R.string.debt_dashboard_owes_me),
@@ -240,6 +242,77 @@ private fun ScoreCard(score: Int, caption: String) {
                 color = Color.White,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 22.sp,
+            )
+        }
+    }
+}
+
+/**
+ * Four tappable previews on the home screen. Net debt replaces the separate
+ * "owes me" and "I owe" tiles; the breakdown stays inside the Debts section.
+ */
+@Composable
+fun HomePreviewCards(
+    goalMetrics: DashboardGoalMetrics,
+    debtMetrics: DashboardDebtMetrics,
+    hideAmounts: Boolean,
+    progressPercent: Int?,
+    onDebtsClick: () -> Unit,
+    onAccumulatedClick: () -> Unit,
+    onRemainingClick: () -> Unit,
+    onProgressClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val goalPool = goalMetrics.totalAccumulated + goalMetrics.totalRemainingToGoal
+    val goalPercent = if (goalPool > 0.0) {
+        ((goalMetrics.totalAccumulated / goalPool) * 100.0).roundToInt().coerceIn(0, 100)
+    } else {
+        0
+    }
+    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
+    val score = if (debtActive > 0) {
+        (progressPercent ?: 0).coerceIn(0, 100)
+    } else {
+        goalPercent
+    }
+    val net = debtMetrics.owedToMeCents - debtMetrics.iOweCents
+    val netAmount = Formatters.currencyFromCents(kotlin.math.abs(net), hide = hideAmounts)
+    val netText = if (!hideAmounts && net < 0L) "−$netAmount" else netAmount
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            PastelStat(
+                label = stringResource(R.string.tab_debts),
+                value = netText,
+                container = PastelMint,
+                onClick = onDebtsClick,
+                modifier = Modifier.weight(1f),
+            )
+            PastelStat(
+                label = stringResource(R.string.home_preview_accumulated),
+                value = Formatters.currencyCompact(goalMetrics.totalAccumulated, hide = hideAmounts),
+                container = PastelLilac,
+                onClick = onAccumulatedClick,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            PastelStat(
+                label = stringResource(R.string.global_balance_remaining_label),
+                value = Formatters.currencyCompact(goalMetrics.totalRemainingToGoal, hide = hideAmounts),
+                container = PastelSand,
+                onClick = onRemainingClick,
+                modifier = Modifier.weight(1f),
+            )
+            PastelStat(
+                label = stringResource(R.string.home_preview_progress),
+                value = stringResource(R.string.home_preview_progress_value, score),
+                container = PastelPeach,
+                onClick = onProgressClick,
+                modifier = Modifier.weight(1f),
             )
         }
     }

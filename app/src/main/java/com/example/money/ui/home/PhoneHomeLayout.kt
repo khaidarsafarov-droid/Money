@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
@@ -95,6 +96,7 @@ import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.ConfirmDeleteDialog
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
+import com.example.money.ui.components.HomePreviewCards
 import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
@@ -126,7 +128,6 @@ import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
-import com.example.money.voice.VoiceReportEngine
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,11 +187,9 @@ internal fun PhoneHomeLayout(
     onOpenDebtNotificationSettings: () -> Unit,
     onOpenBackupSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
-    onPlayVoiceReport: () -> Unit,
     calendarPermissionGranted: Boolean,
     onOpenGoalHub: () -> Unit,
     onAddDebt: () -> Unit,
-    onQuickAdd: () -> Unit,
     notificationsEnabled: Boolean,
     onRequestNotificationPermission: () -> Unit,
     showCheckIn: Boolean,
@@ -204,14 +203,6 @@ internal fun PhoneHomeLayout(
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
 ) {
-    var showDebtsSection by rememberSaveable { mutableStateOf(true) }
-    LaunchedEffect(highlightedDebtorId, showCheckIn) {
-        if (highlightedDebtorId != null || showCheckIn) {
-            showDebtsSection = true
-        }
-    }
-    val activeDebtCount = allDebtors.count { !it.isPaid }
-    val transactionCount = transfers.size + expenses.size
     val contactContext = LocalContext.current
 
     ModalNavigationDrawer(
@@ -223,35 +214,76 @@ internal fun PhoneHomeLayout(
                     contentPadding = PaddingValues(bottom = MoneySpacing.xl),
                 ) {
                     item {
-                        Text(
-                            text = stringResource(R.string.drawer_group_goals),
-                            style = moneySubheadingStyle(),
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.xl,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                    item {
                         SettingsDrawerItem(
-                            label = stringResource(R.string.goal_add_title),
-                            icon = Icons.Outlined.Flag,
+                            label = stringResource(R.string.advisor_open),
+                            icon = Icons.Outlined.Psychology,
                             onClick = {
-                                onAddGoal()
+                                onOpenAdvisor()
                                 scope.launch { drawerState.close() }
                             },
                         )
                     }
                     item {
-                        Spacer(modifier = Modifier.height(MoneySpacing.md))
-                        Text(
-                            text = stringResource(R.string.drawer_group_settings),
-                            style = moneySubheadingStyle(),
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.xl,
-                                vertical = MoneySpacing.sm,
-                            ),
+                        DrawerGroupLabel(stringResource(R.string.drawer_group_data))
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.section_goals),
+                            icon = Icons.Outlined.Flag,
+                            onClick = {
+                                onTabSelected(HomeTab.Goals.ordinal)
+                                scope.launch { drawerState.close() }
+                            },
                         )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.backup_settings_title),
+                            icon = Icons.Outlined.CloudUpload,
+                            onClick = {
+                                onOpenBackupSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        DrawerGroupLabel(stringResource(R.string.drawer_group_tools))
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.income_ideas_title),
+                            icon = Icons.Outlined.Lightbulb,
+                            onClick = {
+                                onOpenIncomeIdeas()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.voice_settings_menu),
+                            icon = Icons.Outlined.Mic,
+                            onClick = {
+                                onOpenVoiceSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        DrawerGroupLabel(stringResource(R.string.drawer_group_autopilot))
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.autopilot_settings_title),
+                            icon = Icons.Outlined.AutoMode,
+                            onClick = {
+                                onOpenAutopilotSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        DrawerGroupLabel(stringResource(R.string.drawer_group_settings))
                     }
                     item {
                         SettingsDrawerItem(
@@ -275,30 +307,10 @@ internal fun PhoneHomeLayout(
                     }
                     item {
                         SettingsDrawerItem(
-                            label = stringResource(R.string.autopilot_settings_title),
-                            icon = Icons.Outlined.AutoMode,
-                            onClick = {
-                                onOpenAutopilotSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
                             label = stringResource(R.string.debt_notification_settings_title),
                             icon = Icons.Outlined.Notifications,
                             onClick = {
                                 onOpenDebtNotificationSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.goal_hub_open),
-                            icon = Icons.Outlined.Flag,
-                            onClick = {
-                                onOpenGoalHub()
                                 scope.launch { drawerState.close() }
                             },
                         )
@@ -313,57 +325,6 @@ internal fun PhoneHomeLayout(
                             },
                         )
                     }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.backup_settings_title),
-                            icon = Icons.Outlined.CloudUpload,
-                            onClick = {
-                                onOpenBackupSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(MoneySpacing.md))
-                        Text(
-                            text = stringResource(R.string.drawer_group_tools),
-                            style = moneySubheadingStyle(),
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.xl,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.income_ideas_title),
-                            icon = Icons.Outlined.Lightbulb,
-                            onClick = {
-                                onOpenIncomeIdeas()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.voice_play_report),
-                            icon = Icons.Outlined.Mic,
-                            onClick = {
-                                onPlayVoiceReport()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.voice_settings_menu),
-                            icon = Icons.Outlined.Mic,
-                            onClick = {
-                                onOpenVoiceSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
                 }
             }
         },
@@ -374,26 +335,24 @@ internal fun PhoneHomeLayout(
             topBar = topBar,
             bottomBar = {
                 val dockTab = when (HomeTab.entries[selectedTab]) {
-                    HomeTab.Goals -> PhoneDockTab.Home
+                    HomeTab.Home -> PhoneDockTab.Home
+                    HomeTab.Goals -> null
                     HomeTab.Debts -> PhoneDockTab.Debts
                     HomeTab.BrotherFinances -> PhoneDockTab.Operations
                 }
                 PhoneDockBar(
                     selected = dockTab,
                     onHome = {
-                        showDebtsSection = false
-                        onTabSelected(HomeTab.Goals.ordinal)
+                        onTabSelected(HomeTab.Home.ordinal)
                         scope.launch { listState.animateScrollToItem(0) }
                     },
                     onOperations = {
-                        showDebtsSection = true
                         onTabSelected(HomeTab.BrotherFinances.ordinal)
                     },
                     onDebts = {
-                        showDebtsSection = true
                         onTabSelected(HomeTab.Debts.ordinal)
                     },
-                    onAdvisor = onOpenAdvisor,
+                    onMore = { scope.launch { drawerState.open() } },
                     fab = floatingActionButton,
                 )
             },
@@ -405,6 +364,7 @@ internal fun PhoneHomeLayout(
                     .padding(innerPadding),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
+                if (HomeTab.entries[selectedTab] == HomeTab.Home) {
                 item {
                     Text(
                         text = if (debtProgressPercent > 0) {
@@ -421,32 +381,6 @@ internal fun PhoneHomeLayout(
                         color = GoldPrimary,
                     )
                 }
-                item {
-                    Row(
-                        modifier = Modifier.padding(horizontal = MoneySpacing.lg),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        AssistChip(
-                            onClick = onOpenIncomeIdeas,
-                            label = { Text(stringResource(R.string.income_ideas_title)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Lightbulb,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                        AssistChip(
-                            onClick = onPlayVoiceReport,
-                            label = { Text(stringResource(R.string.voice_play_report)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Mic,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    }
                 }
                 if (!notificationsEnabled) {
                     item {
@@ -459,74 +393,63 @@ internal fun PhoneHomeLayout(
                         )
                     }
                 }
-                item {
-                    GlobalBalanceHeader(
-                        summary = budgetSummary,
-                        goalMetrics = goalMetrics,
-                        debtMetrics = debtMetrics,
-                        hideAmounts = privacySettings.hideAmounts,
-                        progressPercent = debtProgressPercent,
-                        onOwesMeClick = {
-                            showDebtsSection = true
-                            onTabSelected(HomeTab.Debts.ordinal)
-                            onDebtTabChange(DebtTab.OwesMe)
-                        },
-                        onIOweClick = {
-                            showDebtsSection = true
-                            onTabSelected(HomeTab.Debts.ordinal)
-                            onDebtTabChange(DebtTab.IOwe)
-                        },
-                        modifier = Modifier.padding(
-                            horizontal = MoneySpacing.lg,
-                            vertical = MoneySpacing.sm,
-                        ),
-                    )
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(MoneySpacing.sm))
-                }
-
-                item {
-                    SecondaryTabRow(
-                        selectedTabIndex = selectedTab,
-                        containerColor = CreamBackground,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        indicator = {
-                            TabRowDefaults.SecondaryIndicator(
-                                modifier = Modifier.tabIndicatorOffset(selectedTab),
-                                color = GoldPrimary,
-                                height = 3.dp,
-                            )
-                        },
-                        divider = {},
-                    ) {
-                        HomeTab.entries.forEachIndexed { index, tab ->
-                            val selected = selectedTab == index
-                            Tab(
-                                selected = selected,
-                                onClick = { onTabSelected(index) },
-                                modifier = Modifier.then(
-                                    if (selected) {
-                                        Modifier.background(
-                                            StatusActiveBg,
-                                            MaterialTheme.shapes.small,
-                                        )
-                                    } else {
-                                        Modifier
-                                    },
-                                ),
-                                text = {
-                                    Text(
-                                        text = stringResource(tab.titleRes),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selected) GoldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                },
-                            )
-                        }
+                val page = HomeTab.entries[selectedTab]
+                if (page == HomeTab.Home) {
+                    item {
+                        GlobalBalanceHeader(
+                            summary = budgetSummary,
+                            goalMetrics = goalMetrics,
+                            debtMetrics = debtMetrics,
+                            hideAmounts = privacySettings.hideAmounts,
+                            progressPercent = debtProgressPercent,
+                            compact = true,
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.lg,
+                                vertical = MoneySpacing.sm,
+                            ),
+                        )
                     }
+                    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
+                    item {
+                        HomePreviewCards(
+                            goalMetrics = goalMetrics,
+                            debtMetrics = debtMetrics,
+                            hideAmounts = privacySettings.hideAmounts,
+                            progressPercent = debtProgressPercent,
+                            onDebtsClick = {
+                                onDebtTabChange(
+                                    if (debtMetrics.iOweCents > debtMetrics.owedToMeCents) {
+                                        DebtTab.IOwe
+                                    } else {
+                                        DebtTab.OwesMe
+                                    },
+                                )
+                                onTabSelected(HomeTab.Debts.ordinal)
+                            },
+                            onAccumulatedClick = { onTabSelected(HomeTab.Goals.ordinal) },
+                            onRemainingClick = { onTabSelected(HomeTab.Goals.ordinal) },
+                            onProgressClick = {
+                                onTabSelected(
+                                    if (debtActive > 0) HomeTab.Debts.ordinal else HomeTab.Goals.ordinal,
+                                )
+                            },
+                            modifier = Modifier.padding(
+                                horizontal = MoneySpacing.lg,
+                                vertical = MoneySpacing.sm,
+                            ),
+                        )
+                    }
+                    homeOperationsSection(
+                        transfers = transfers,
+                        expenses = expenses,
+                        goals = goals,
+                        onConfirmTransfer = onConfirmTransfer,
+                        onDeleteTransfer = onDeleteTransfer,
+                        onConfirmExpense = onConfirmExpense,
+                        onDeleteExpense = onDeleteExpense,
+                        limit = 5,
+                        onOpenAll = { onTabSelected(HomeTab.BrotherFinances.ordinal) },
+                    )
                 }
 
                 val orderedGoals = GoalProgress.orderedForSection(goals)
@@ -558,9 +481,6 @@ internal fun PhoneHomeLayout(
                         EmptyStateMessage(
                             title = stringResource(R.string.empty_goals_title),
                             hint = stringResource(R.string.empty_goals_hint),
-                            actionLabel = stringResource(R.string.empty_goals_action),
-                            onAction = onAddGoal,
-                            icon = Icons.Outlined.Flag,
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
                                 vertical = MoneySpacing.sm,
@@ -592,45 +512,17 @@ internal fun PhoneHomeLayout(
                         }
                     }
                 }
+                item {
+                    TextButton(
+                        onClick = onOpenGoalHub,
+                        modifier = Modifier.padding(horizontal = MoneySpacing.sm),
+                    ) {
+                        Text(stringResource(R.string.goal_hub_open))
+                    }
+                }
                 }
 
                 if (HomeTab.entries[selectedTab] == HomeTab.Debts) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDebtsSection = !showDebtsSection }
-                            .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.dashboard_debts_section),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.dashboard_debts_summary,
-                                    activeDebtCount,
-                                    transactionCount,
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Icon(
-                            imageVector = if (showDebtsSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = stringResource(
-                                if (showDebtsSection) R.string.cd_collapse_debts else R.string.cd_expand_debts,
-                            ),
-                            tint = GoldPrimary,
-                        )
-                    }
-                }
-
-                if (showDebtsSection) {
                 homeDebtsSection(
                         debtTab = debtTab,
                         onDebtTabChange = onDebtTabChange,
@@ -648,10 +540,7 @@ internal fun PhoneHomeLayout(
                         gamificationState = gamificationState,
                         privacySettings = privacySettings,
                         autopilotSettings = autopilotSettings,
-                        onOpenAdvisor = onOpenAdvisor,
                         onApplyAutopilot = onApplyAutopilot,
-                        onOpenGoalHub = onOpenGoalHub,
-                        onOpenIncomeIdeas = onOpenIncomeIdeas,
                         calendarPermissionGranted = calendarPermissionGranted,
                         onOpenCalendarSettings = onOpenCalendarSettings,
                         highlightedDebtorId = highlightedDebtorId,
@@ -665,18 +554,15 @@ internal fun PhoneHomeLayout(
                         onViewContactHistory = onViewContactHistory,
                         onSyncCalendar = onSyncCalendar,
                         onRemoveCalendar = onRemoveCalendar,
-                        onAddDebt = onAddDebt,
                         emptyDebtorsTitle = emptyDebtorsTitle,
                         emptyDebtorsHint = emptyDebtorsHint,
                     )
-                }
                 }
                 if (HomeTab.entries[selectedTab] == HomeTab.BrotherFinances) {
                     homeOperationsSection(
                         transfers = transfers,
                         expenses = expenses,
                         goals = goals,
-                        onQuickAdd = onQuickAdd,
                         onConfirmTransfer = onConfirmTransfer,
                         onDeleteTransfer = onDeleteTransfer,
                         onConfirmExpense = onConfirmExpense,
@@ -713,6 +599,20 @@ internal fun NotificationPermissionBanner(
             )
         }
     }
+}
+
+@Composable
+private fun DrawerGroupLabel(text: String) {
+    Text(
+        text = text,
+        style = moneySubheadingStyle(),
+        modifier = Modifier.padding(
+            start = MoneySpacing.xl,
+            end = MoneySpacing.xl,
+            top = MoneySpacing.md,
+            bottom = MoneySpacing.sm,
+        ),
+    )
 }
 
 @Composable

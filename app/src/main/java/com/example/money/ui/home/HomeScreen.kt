@@ -83,6 +83,7 @@ import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.Expense
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.ui.budget.AddExpenseDialog
@@ -123,7 +124,6 @@ import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
-import com.example.money.voice.VoiceReportEngine
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -170,7 +170,6 @@ fun HomeScreen(
     val allDebtors by debtorsViewModel.allDebtorsList.collectAsStateWithLifecycle()
     val debtors by debtListViewModel.debtors.collectAsStateWithLifecycle()
     val debtTab by debtListViewModel.debtTab.collectAsStateWithLifecycle()
-    val canAddDebtor = debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe
     val debtorFilter by debtListViewModel.filter.collectAsStateWithLifecycle()
     val debtSearchQuery by debtListViewModel.searchQuery.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
@@ -202,7 +201,8 @@ fun HomeScreen(
     var editGoal by remember { mutableStateOf<SavingsGoal?>(null) }
     var stepsGoalId by remember { mutableStateOf<Long?>(null) }
     var showWelcomeDialog by remember { mutableStateOf(false) }
-    var showQuickAddDialog by remember { mutableStateOf(false) }
+    var showAddSheet by remember { mutableStateOf(false) }
+    var addHighlight by remember { mutableStateOf(AddAction.Expense) }
     var showTopMenu by remember { mutableStateOf(false) }
     var showAdvisorSheet by remember { mutableStateOf(false) }
     var showIncomeIdeas by remember { mutableStateOf(false) }
@@ -224,6 +224,7 @@ fun HomeScreen(
     var tabletSection by remember {
         mutableStateOf(
             when (launchConfig.initialTab) {
+                HomeTab.Home -> HomeSection.Home
                 HomeTab.Goals -> HomeSection.Goals
                 HomeTab.Debts -> HomeSection.Debts
                 HomeTab.BrotherFinances -> HomeSection.Operations
@@ -257,6 +258,7 @@ fun HomeScreen(
     ) {
         selectedTab = launchConfig.initialTab.ordinal
         tabletSection = when (launchConfig.initialTab) {
+            HomeTab.Home -> HomeSection.Home
             HomeTab.Goals -> HomeSection.Goals
             HomeTab.Debts -> HomeSection.Debts
             HomeTab.BrotherFinances -> HomeSection.Operations
@@ -267,7 +269,8 @@ fun HomeScreen(
             showExpenseDialog = true
         }
         if (launchConfig.openQuickAddDialog) {
-            showQuickAddDialog = true
+            addHighlight = AddAction.Expense
+            showAddSheet = true
         }
 
         val targetDebtorId = launchConfig.openDebtPaymentForDebtorId
@@ -373,7 +376,7 @@ fun HomeScreen(
         )
     }
 
-    if (showAddDebtorDialog && canAddDebtor) {
+    if (showAddDebtorDialog) {
         DebtorFormDialog(
             debtType = when (debtTab) {
                 DebtTab.OwesMe -> DebtType.CREDITOR
@@ -596,15 +599,22 @@ fun HomeScreen(
             },
         )
     }
-    if (showQuickAddDialog) {
-        QuickAddDialog(
-            hasActiveDebts = allDebtors.any { !it.isPaid },
-            onDismiss = { showQuickAddDialog = false },
-            onDeposit = { showTransferDialog = true },
+    if (showAddSheet) {
+        AddActionSheet(
+            highlighted = addHighlight,
+            onDismiss = { showAddSheet = false },
             onExpense = { showExpenseDialog = true },
-            onDebtPayment = {
-                allDebtors.firstOrNull { !it.isPaid }?.let { showDebtPaymentDialog = it }
+            onDeposit = { showTransferDialog = true },
+            onDebt = { showAddDebtorDialog = true },
+            onGoalContribution = {
+                val goal = goals.firstOrNull { it.kind == GoalKind.MONEY && !it.isCompleted }
+                if (goal != null) {
+                    showGoalTransferDialog = goal
+                } else {
+                    showAddGoalDialog = true
+                }
             },
+            onNewGoal = { showAddGoalDialog = true },
         )
     }
 
@@ -679,13 +689,6 @@ fun HomeScreen(
                         fontWeight = FontWeight.SemiBold,
                     )
                 },
-                navigationIcon = {
-                    if (!isTablet) {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.cd_open_drawer))
-                        }
-                    }
-                },
                 actions = {
                     if (!isTablet) {
                         SyncStatusIndicator(
@@ -693,6 +696,7 @@ fun HomeScreen(
                             modifier = Modifier.padding(end = 4.dp),
                         )
                     }
+                    syncState.webSocketUrl?.let { webSocketUrl ->
                     IconButton(onClick = { showTopMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_more_options))
                     }
@@ -700,26 +704,6 @@ fun HomeScreen(
                         expanded = showTopMenu,
                         onDismissRequest = { showTopMenu = false },
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_add_goal)) },
-                            onClick = {
-                                showTopMenu = false
-                                showAddGoalDialog = true
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_add_debt)) },
-                            onClick = {
-                                showTopMenu = false
-                                if (canAddDebtor) {
-                                    showAddDebtorDialog = true
-                                } else {
-                                    debtListViewModel.setDebtTab(DebtTab.OwesMe)
-                                    showAddDebtorDialog = true
-                                }
-                            },
-                        )
-                        syncState.webSocketUrl?.let { webSocketUrl ->
                             DropdownMenuItem(
                                 text = {
                                     Column {
@@ -743,7 +727,7 @@ fun HomeScreen(
                                     }
                                 },
                             )
-                        }
+                    }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
@@ -751,39 +735,27 @@ fun HomeScreen(
         }
 
         val fab: @Composable () -> Unit = {
-            val showFab = if (isTablet) {
-                when (tabletSection) {
-                    HomeSection.Goals, HomeSection.Operations -> true
-                    HomeSection.Debts -> canAddDebtor
-                }
-            } else {
-                when (HomeTab.entries[selectedTab]) {
-                    HomeTab.Goals, HomeTab.BrotherFinances -> true
-                    HomeTab.Debts -> canAddDebtor
-                }
-            }
-            if (showFab) {
-                FloatingActionButton(
-                    onClick = {
-                        if (isTablet) {
-                            when (tabletSection) {
-                                HomeSection.Goals -> showAddGoalDialog = true
-                                HomeSection.Debts -> showAddDebtorDialog = true
-                                HomeSection.Operations -> showQuickAddDialog = true
-                            }
-                        } else {
-                            when (HomeTab.entries[selectedTab]) {
-                                HomeTab.Goals -> showAddGoalDialog = true
-                                HomeTab.Debts -> showAddDebtorDialog = true
-                                HomeTab.BrotherFinances -> showQuickAddDialog = true
-                            }
+            FloatingActionButton(
+                onClick = {
+                    addHighlight = if (isTablet) {
+                        when (tabletSection) {
+                            HomeSection.Debts -> AddAction.Debt
+                            HomeSection.Goals -> AddAction.NewGoal
+                            HomeSection.Home, HomeSection.Operations -> AddAction.Expense
                         }
-                    },
-                    containerColor = GoldPrimary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.widget_quick_add))
-                }
+                    } else {
+                        when (HomeTab.entries[selectedTab]) {
+                            HomeTab.Debts -> AddAction.Debt
+                            HomeTab.Goals -> AddAction.NewGoal
+                            HomeTab.Home, HomeTab.BrotherFinances -> AddAction.Expense
+                        }
+                    }
+                    showAddSheet = true
+                },
+                containerColor = GoldPrimary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_sheet_title))
             }
         }
 
@@ -864,9 +836,6 @@ fun HomeScreen(
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
                 onOpenBackupSettings = onOpenBackupSettings,
                 onOpenVoiceSettings = onOpenVoiceSettings,
-                onPlayVoiceReport = {
-                    scope.launch { VoiceReportEngine(app).runTestReport() }
-                },
                 calendarPermissionGranted = hasCalendarPermissions,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onEditDebtor = { editDebtor = it },
@@ -878,14 +847,7 @@ fun HomeScreen(
                 },
                 onSyncCalendar = debtorsViewModel::syncDebtToCalendarManually,
                 onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
-                onAddDebt = {
-                    if (canAddDebtor) {
-                        showAddDebtorDialog = true
-                    } else {
-                        debtListViewModel.setDebtTab(DebtTab.OwesMe)
-                        showAddDebtorDialog = true
-                    }
-                },
+                onAddDebt = { showAddDebtorDialog = true },
                 onConfirmTransfer = budgetViewModel::confirmTransfer,
                 onDeleteTransfer = { pendingDelete = PendingDelete.TransferItem(it) },
                 onConfirmExpense = budgetViewModel::confirmExpense,
@@ -961,15 +923,9 @@ fun HomeScreen(
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
                 onOpenBackupSettings = onOpenBackupSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
-                onPlayVoiceReport = {
-                    scope.launch { VoiceReportEngine(app).runTestReport() }
-                },
                 calendarPermissionGranted = hasCalendarPermissions,
                 onOpenGoalHub = onOpenGoalHub,
-                onAddDebt = {
-                    showAddDebtorDialog = true
-                },
-                onQuickAdd = { showQuickAddDialog = true },
+                onAddDebt = { showAddDebtorDialog = true },
                 notificationsEnabled = notificationsEnabled,
                 onRequestNotificationPermission = onRequestNotificationPermission,
                 showCheckIn = showCheckIn,

@@ -58,6 +58,7 @@
     <string name="tab_debtors">Должники</string>
     <string name="tab_operations">Операции</string>
     <string name="nav_home">Главная</string>
+    <string name="nav_more">Ещё</string>
     <string name="home_score_title">Прогресс</string>
     <string name="home_score_debts">Доля уже закрытой суммы долгов</string>
     <string name="home_score_goals">Доля накоплений от суммы целей</string>
@@ -139,7 +140,7 @@
     <string name="empty_debtors_paid">Нет погашенных долгов</string>
     <string name="empty_debtors_paid_hint">Отметьте долг как погашенный кнопкой на карточке</string>
     <string name="empty_budget">Нет операций</string>
-    <string name="empty_budget_hint">Используйте кнопки «Перевод» и «Расход» на карточке «Личные цели» или + внизу</string>
+    <string name="empty_budget_hint">Нажмите + внизу экрана, чтобы добавить операцию</string>
     <string name="debtor_not_found">Должник не найден</string>
     <string name="error_payment_failed">Не удалось применить платёж</string>
     <string name="debtor_add_title">Новый долг</string>
@@ -189,6 +190,8 @@
     <string name="dashboard_see_more">Подробнее</string>
     <string name="dashboard_see_less">Свернуть</string>
     <string name="drawer_group_goals">Цели</string>
+    <string name="drawer_group_data">Данные</string>
+    <string name="drawer_group_autopilot">Автопилот</string>
     <string name="drawer_group_settings">Настройки</string>
     <string name="drawer_group_tools">Инструменты</string>
     <string name="goal_status_active">Активна</string>
@@ -270,7 +273,7 @@
     <string name="msg_goal_added">Цель добавлена</string>
     <string name="msg_goal_deleted">Цель удалена</string>
     <string name="empty_goals_title">Нет целей</string>
-    <string name="empty_goals_hint">Нажмите «Новая цель» и укажите, для чего копите</string>
+    <string name="empty_goals_hint">Нажмите + внизу экрана, чтобы создать цель</string>
     <string name="delete_goal_title">Удалить цель?</string>
     <string name="delete_goal_message">Цель «%1$s» будет удалена без возможности восстановления.</string>
     <string name="goal_card_title">Личные цели</string>

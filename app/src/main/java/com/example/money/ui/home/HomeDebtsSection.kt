@@ -1,20 +1,12 @@
 package com.example.money.ui.home
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Psychology
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -57,10 +49,7 @@ fun LazyListScope.homeDebtsSection(
     gamificationState: GamificationState,
     privacySettings: PrivacySettings,
     autopilotSettings: AutopilotSettings,
-    onOpenAdvisor: () -> Unit,
     onApplyAutopilot: () -> Unit,
-    onOpenGoalHub: () -> Unit = {},
-    onOpenIncomeIdeas: () -> Unit = {},
     calendarPermissionGranted: Boolean = true,
     onOpenCalendarSettings: () -> Unit = {},
     highlightedDebtorId: Long?,
@@ -74,7 +63,6 @@ fun LazyListScope.homeDebtsSection(
     onViewContactHistory: (Debtor) -> Unit,
     onSyncCalendar: (Debtor) -> Unit,
     onRemoveCalendar: (Debtor) -> Unit,
-    onAddDebt: () -> Unit,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
 ) {
@@ -85,24 +73,13 @@ fun LazyListScope.homeDebtsSection(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
     }
-    item {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onOpenAdvisor) {
-                Icon(
-                    imageVector = Icons.Outlined.Psychology,
-                    contentDescription = stringResource(R.string.advisor_open),
-                )
-            }
-            if (autopilotSettings.enabled) {
-                TextButton(onClick = onApplyAutopilot) {
-                    Text(stringResource(R.string.autopilot_apply_now))
-                }
+    if (autopilotSettings.enabled) {
+        item {
+            TextButton(
+                onClick = onApplyAutopilot,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            ) {
+                Text(stringResource(R.string.autopilot_apply_now))
             }
         }
     }
@@ -161,8 +138,6 @@ fun LazyListScope.homeDebtsSection(
                 projection = freedomProjection,
                 extraMonthlyCents = extraMonthlyCents,
                 onExtraMonthlyChange = onExtraMonthlyChange,
-                onOpenGoalHub = onOpenGoalHub,
-                onOpenIncomeIdeas = onOpenIncomeIdeas,
                 hideAmounts = privacySettings.hideAmounts,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
@@ -187,8 +162,6 @@ fun LazyListScope.homeDebtsSection(
                 EmptyStateMessage(
                     title = emptyDebtorsTitle(debtorFilter),
                     hint = emptyDebtorsHint(debtorFilter),
-                    actionLabel = stringResource(R.string.empty_debtors_action),
-                    onAction = onAddDebt,
                     modifier = Modifier.padding(
                         horizontal = MoneySpacing.lg,
                         vertical = MoneySpacing.sm,

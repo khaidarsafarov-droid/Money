@@ -13,8 +13,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.People
-import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -35,16 +35,16 @@ internal enum class PhoneDockTab {
     Home,
     Operations,
     Debts,
-    Advisor,
+    More,
 }
 
 @Composable
 internal fun PhoneDockBar(
-    selected: PhoneDockTab,
+    selected: PhoneDockTab?,
     onHome: () -> Unit,
     onOperations: () -> Unit,
     onDebts: () -> Unit,
-    onAdvisor: () -> Unit,
+    onMore: () -> Unit,
     fab: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -88,10 +88,10 @@ internal fun PhoneDockBar(
                     onClick = onDebts,
                 )
                 DockItem(
-                    label = stringResource(R.string.advisor_open),
-                    icon = Icons.Outlined.Psychology,
-                    selected = selected == PhoneDockTab.Advisor,
-                    onClick = onAdvisor,
+                    label = stringResource(R.string.nav_more),
+                    icon = Icons.Outlined.MoreHoriz,
+                    selected = false,
+                    onClick = onMore,
                 )
             }
         }
