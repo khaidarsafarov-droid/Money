@@ -307,6 +307,14 @@
     <string name="goal_action_kind_hint">Прогресс считается по выполненным шагам. Шаги можно добавить после создания цели.</string>
     <string name="goal_actions_title">Шаги к цели</string>
     <string name="goal_action_add">Добавить шаг</string>
+    <string name="goal_log_button">Записать</string>
+    <string name="goal_log_title">Запись: %1$s</string>
+    <string name="goal_log_amount">Сумма</string>
+    <string name="goal_log_note">Что сделал</string>
+    <string name="goal_log_need_input">Укажите сумму или что сделали</string>
+    <string name="goal_log_save">Сохранить на цели</string>
+    <string name="goal_log_saved">Запись сохранена на цели</string>
+    <string name="goal_log_collected">Собрано %1$s</string>
     <string name="goal_action_hint">Что сделать</string>
     <string name="goal_action_progress">%1$d из %2$d шагов</string>
     <string name="goal_action_empty">Добавьте шаги — по ним будет виден прогресс цели</string>

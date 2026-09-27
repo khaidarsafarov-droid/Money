@@ -113,6 +113,7 @@ import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.debtors.IncomeIdeasDialog
 import com.example.money.ui.goal.GoalActionsDialog
 import com.example.money.ui.goal.GoalFormDialog
+import com.example.money.ui.goal.GoalProgressLogDialog
 import com.example.money.ui.goal.GoalViewModel
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
@@ -198,6 +199,7 @@ fun HomeScreen(
     var showExpenseDialog by remember { mutableStateOf(false) }
     var showGoalTransferDialog by remember { mutableStateOf<SavingsGoal?>(null) }
     var showAddGoalDialog by remember { mutableStateOf(false) }
+    var progressLogGoal by remember { mutableStateOf<SavingsGoal?>(null) }
     var editGoal by remember { mutableStateOf<SavingsGoal?>(null) }
     var stepsGoalId by remember { mutableStateOf<Long?>(null) }
     var showWelcomeDialog by remember { mutableStateOf(false) }
@@ -588,6 +590,39 @@ fun HomeScreen(
             )
         }
     }
+    progressLogGoal?.let { goal ->
+        GoalProgressLogDialog(
+            goal = goal,
+            hideAmounts = privacySettings.hideAmounts,
+            availableBalance = availableBalanceUsd,
+            onDismiss = { progressLogGoal = null },
+            onSave = { amount, note, date ->
+                fun saveNote() {
+                    if (note.isNotBlank()) {
+                        goalViewModel.addAction(goal.id, note, completed = true)
+                    }
+                    progressLogGoal = null
+                    scope.launch {
+                        showMessage(context.getString(R.string.goal_log_saved))
+                    }
+                }
+                if (amount != null) {
+                    budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
+                        when (result) {
+                            BudgetActionResult.Success -> saveNote()
+                            BudgetActionResult.InsufficientFunds -> {
+                                scope.launch {
+                                    showMessage(context.getString(R.string.msg_insufficient_funds))
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    saveNote()
+                }
+            },
+        )
+    }
     editGoal?.let { goal ->
         GoalFormDialog(
             existingGoal = goal,
@@ -789,6 +824,7 @@ fun HomeScreen(
                 onOpenGoal = { stepsGoalId = it.id },
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
+                onLogGoal = { progressLogGoal = it },
                 onExpense = { showExpenseDialog = true },
                 onRemindDebtor = { debtor -> remindDebtor = debtor },
                 onAddDebtPayment = { debtor ->
@@ -888,6 +924,7 @@ fun HomeScreen(
                 onOpenGoal = { stepsGoalId = it.id },
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
+                onLogGoal = { progressLogGoal = it },
                 onExpense = { showExpenseDialog = true },
                 onRemindDebtor = { debtor -> remindDebtor = debtor },
                 onAddDebtPayment = { debtor ->

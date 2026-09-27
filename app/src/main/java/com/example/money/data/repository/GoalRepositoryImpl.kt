@@ -96,7 +96,7 @@ class GoalRepositoryImpl(
         }
     }
 
-    override suspend fun addAction(goalId: Long, title: String): Long =
+    override suspend fun addAction(goalId: Long, title: String, completed: Boolean): Long =
         SyncWriteGuard.withWriteLock {
             val trimmed = title.trim()
             if (trimmed.isEmpty()) return@withWriteLock 0L
@@ -105,7 +105,7 @@ class GoalRepositoryImpl(
                 GoalActionEntity(
                     goalId = goalId,
                     title = trimmed,
-                    completed = false,
+                    completed = completed,
                     sortOrder = sortOrder,
                 ),
             )

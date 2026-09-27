@@ -23,7 +23,7 @@ interface GoalRepository {
 
     suspend fun deleteGoal(goal: SavingsGoal)
 
-    suspend fun addAction(goalId: Long, title: String): Long
+    suspend fun addAction(goalId: Long, title: String, completed: Boolean = false): Long
 
     suspend fun setActionCompleted(actionId: Long, completed: Boolean)
 

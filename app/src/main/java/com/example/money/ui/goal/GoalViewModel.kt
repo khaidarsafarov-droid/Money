@@ -79,9 +79,9 @@ class GoalViewModel(
         }
     }
 
-    fun addAction(goalId: Long, title: String) {
+    fun addAction(goalId: Long, title: String, completed: Boolean = false) {
         viewModelScope.launch {
-            goalRepository.addAction(goalId, title)
+            goalRepository.addAction(goalId, title, completed)
         }
     }
 

@@ -85,6 +85,7 @@ import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.Expense
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.ui.budget.AddExpenseDialog
@@ -162,6 +163,7 @@ internal fun PhoneHomeLayout(
     onOpenGoal: (SavingsGoal) -> Unit,
     onDeleteGoal: (SavingsGoal) -> Unit,
     onGoalTransfer: (SavingsGoal) -> Unit,
+    onLogGoal: (SavingsGoal) -> Unit,
     onExpense: () -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
@@ -501,12 +503,13 @@ internal fun PhoneHomeLayout(
                                 onEdit = { onEditGoal(goal) },
                                 onOpen = { onOpenGoal(goal) },
                                 onDelete = { onDeleteGoal(goal) },
-                                onTransfer = if (!goal.isCompleted) {
+                                onTransfer = if (!goal.isCompleted && goal.kind == GoalKind.MONEY) {
                                     { onGoalTransfer(goal) }
                                 } else {
                                     null
                                 },
                                 onExpense = onExpense,
+                                onLog = { onLogGoal(goal) },
                                 hideAmounts = privacySettings.hideAmounts,
                             )
                         }

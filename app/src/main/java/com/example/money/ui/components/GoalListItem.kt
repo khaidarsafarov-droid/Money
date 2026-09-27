@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Card
@@ -53,6 +54,7 @@ fun GoalListItem(
     onOpen: () -> Unit = {},
     onTransfer: (() -> Unit)? = null,
     onExpense: (() -> Unit)? = null,
+    onLog: (() -> Unit)? = null,
     hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -146,6 +148,13 @@ fun GoalListItem(
                             text = stringResource(R.string.goal_kind_action),
                             style = moneyCaptionStyle(),
                             color = GoldPrimary,
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.goal_log_collected,
+                                Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
+                            ),
+                            style = moneyDisplayStyle(),
                         )
                     }
                     if (goal.actionTotal > 0) {
@@ -266,28 +275,14 @@ fun GoalListItem(
                 )
             }
 
-            if (!goal.isCompleted && (transferAction != null || expenseAction != null)) {
-                Row(
+            if (onLog != null) {
+                MoneyButton(
+                    text = stringResource(R.string.goal_log_button),
+                    onClick = onLog,
+                    priority = MoneyButtonPriority.Secondary,
+                    icon = Icons.Outlined.EditNote,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
-                ) {
-                    if (transferAction != null) {
-                        MoneyButton(
-                            text = stringResource(R.string.goal_action_transfer),
-                            onClick = transferAction,
-                            priority = MoneyButtonPriority.Primary,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    if (expenseAction != null) {
-                        MoneyButton(
-                            text = stringResource(R.string.goal_action_expense),
-                            onClick = expenseAction,
-                            priority = MoneyButtonPriority.Secondary,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
+                )
             }
         }
     }
