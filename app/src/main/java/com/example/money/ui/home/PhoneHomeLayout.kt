@@ -373,18 +373,16 @@ internal fun PhoneHomeLayout(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
             bottomBar = {
-                val dockTab = if (showDebtsSection) {
-                    when (HomeTab.entries[selectedTab]) {
-                        HomeTab.Debts -> PhoneDockTab.Debts
-                        HomeTab.BrotherFinances -> PhoneDockTab.Operations
-                    }
-                } else {
-                    PhoneDockTab.Home
+                val dockTab = when (HomeTab.entries[selectedTab]) {
+                    HomeTab.Goals -> PhoneDockTab.Home
+                    HomeTab.Debts -> PhoneDockTab.Debts
+                    HomeTab.BrotherFinances -> PhoneDockTab.Operations
                 }
                 PhoneDockBar(
                     selected = dockTab,
                     onHome = {
                         showDebtsSection = false
+                        onTabSelected(HomeTab.Goals.ordinal)
                         scope.launch { listState.animateScrollToItem(0) }
                     },
                     onOperations = {
@@ -672,6 +670,7 @@ internal fun PhoneHomeLayout(
                         emptyDebtorsHint = emptyDebtorsHint,
                     )
                 }
+                }
                 if (HomeTab.entries[selectedTab] == HomeTab.BrotherFinances) {
                     homeOperationsSection(
                         transfers = transfers,
@@ -686,7 +685,6 @@ internal fun PhoneHomeLayout(
                 }
             }
         }
-    }
     }
 }
 
