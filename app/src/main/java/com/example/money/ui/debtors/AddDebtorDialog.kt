@@ -1,5 +1,7 @@
 package com.example.money.ui.debtors
 
+import android.Manifest
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import com.example.money.contacts.ContactResolver
 import com.example.money.contacts.PickedContact
 import com.example.money.messaging.ContactInfoResolver
+import com.example.money.messaging.SmsPermissions
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
@@ -146,19 +149,45 @@ fun DebtorFormDialog(
             }
     }
 
+    var pendingContactUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun applyPickedContactDetails(uri: Uri): String {
+        val info = ContactInfoResolver.resolve(context, uri)
+        val resolvedPhone = info?.phone?.takeIf { it.isNotBlank() }
+        val resolvedEmail = info?.email?.takeIf { it.isNotBlank() }
+        if (resolvedPhone != null) phone = resolvedPhone
+        if (resolvedEmail != null) email = resolvedEmail
+        return resolvedPhone ?: phone
+    }
+
+    val contactsPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val uri = pendingContactUri
+        pendingContactUri = null
+        if (granted && uri != null) {
+            applyPickedContactDetails(uri)
+        }
+    }
+
+    fun applyPickedContact(uri: Uri) {
+        ContactResolver.resolve(context, uri)?.let { contact ->
+            pickedContact = contact
+            name = contact.displayName
+            nameError = null
+        }
+        val filledPhone = applyPickedContactDetails(uri)
+        if (filledPhone.isBlank() && !SmsPermissions.canReadContacts(context)) {
+            pendingContactUri = uri
+            contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        }
+    }
+
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
     ) { uri ->
         if (uri != null) {
-            ContactResolver.resolve(context, uri)?.let { contact ->
-                pickedContact = contact
-                name = contact.displayName
-                nameError = null
-                ContactInfoResolver.resolve(context, uri)?.let { info ->
-                    if (info.phone.isNotBlank()) phone = info.phone
-                    if (info.email.isNotBlank()) email = info.email
-                }
-            }
+            applyPickedContact(uri)
         }
     }
 
