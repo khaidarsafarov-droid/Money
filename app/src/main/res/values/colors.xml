@@ -16,13 +16,13 @@
     <color name="brown_muted">#FF6B5A48</color>
     <color name="gauge_track">#FFE8DFD0</color>
 
-    <!-- Glance widget -->
-    <color name="widget_background">@color/cream_background</color>
-    <color name="widget_surface">@color/cream_surface</color>
-    <color name="widget_primary">@color/gold_primary</color>
-    <color name="widget_on_surface">@color/brown_text</color>
-    <color name="widget_on_surface_variant">@color/brown_muted</color>
-    <color name="widget_progress_track">@color/gauge_track</color>
+    <!-- Glance widget, same mint palette as the home screen -->
+    <color name="widget_background">#FFE7F6EF</color>
+    <color name="widget_surface">#FFF7FCF9</color>
+    <color name="widget_primary">#FF0F6E5C</color>
+    <color name="widget_on_surface">#FF12352C</color>
+    <color name="widget_on_surface_variant">#FF5C7D72</color>
+    <color name="widget_progress_track">#FFD3EEE3</color>
     <color name="finance_positive">#FF4A7C59</color>
     <color name="finance_negative">#FFB35D5D</color>
     <color name="overdue_red">#FFB85450</color>

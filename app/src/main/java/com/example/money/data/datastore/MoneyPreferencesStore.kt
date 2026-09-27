@@ -81,6 +81,7 @@ object MoneyPreferenceKeys {
     val WIDGET_HIDE_AMOUNTS = booleanPreferencesKey("widget_hide_amounts")
     val WIDGET_STREAK_COUNT = intPreferencesKey("widget_streak_count")
     val WIDGET_LAST_WIN = stringPreferencesKey("widget_last_win")
+    val WIDGET_SCORE_USES_DEBTS = booleanPreferencesKey("widget_score_uses_debts")
 
     val VOICE_REPORTS_ENABLED = booleanPreferencesKey("voice_reports_enabled")
     val VOICE_REPORT_HOUR = intPreferencesKey("voice_report_hour")
@@ -200,6 +201,7 @@ class MoneyPreferencesStore(
                 hideAmounts = prefs[MoneyPreferenceKeys.WIDGET_HIDE_AMOUNTS] ?: false,
                 streakCount = prefs[MoneyPreferenceKeys.WIDGET_STREAK_COUNT] ?: 0,
                 lastWinMessage = prefs[MoneyPreferenceKeys.WIDGET_LAST_WIN],
+                scoreUsesDebts = prefs[MoneyPreferenceKeys.WIDGET_SCORE_USES_DEBTS] ?: false,
             )
         }
 
@@ -235,6 +237,7 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.ACTIVE_GOALS_COUNT] = snapshot.activeGoalsCount
             prefs[MoneyPreferenceKeys.OVERDUE_DEBT_COUNT] = snapshot.overdueDebtCount
             prefs[MoneyPreferenceKeys.WIDGET_HIDE_AMOUNTS] = snapshot.hideAmounts
+            prefs[MoneyPreferenceKeys.WIDGET_SCORE_USES_DEBTS] = snapshot.scoreUsesDebts
             prefs[MoneyPreferenceKeys.WIDGET_STREAK_COUNT] = snapshot.streakCount
             snapshot.lastWinMessage?.let {
                 prefs[MoneyPreferenceKeys.WIDGET_LAST_WIN] = it

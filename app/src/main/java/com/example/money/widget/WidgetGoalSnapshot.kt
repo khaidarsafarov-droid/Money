@@ -46,6 +46,8 @@ data class WidgetGoalSnapshot(
     val hideAmounts: Boolean = false,
     val streakCount: Int = 0,
     val lastWinMessage: String? = null,
+    /** True when [progressPercent] is the home debt score, otherwise the goal score. */
+    val scoreUsesDebts: Boolean = false,
 ) {
     companion object {
         val Empty = WidgetGoalSnapshot(

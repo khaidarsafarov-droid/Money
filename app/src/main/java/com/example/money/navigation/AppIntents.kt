@@ -17,6 +17,9 @@ object AppIntents {
     const val ACTION_OPEN_DEBTOR = "open_debtor"
     const val ACTION_DEBT_PAYMENT = "debt_payment"
     const val ACTION_WEEKLY_CHECKIN = "weekly_checkin"
+    const val ACTION_OPEN_OWES_ME = "open_owes_me"
+    const val ACTION_OPEN_I_OWE = "open_i_owe"
+    const val ACTION_OPEN_GOALS = "open_goals"
 
     fun parseLaunchConfig(intent: Intent?): HomeLaunchConfig {
         if (intent == null) return HomeLaunchConfig()
@@ -55,6 +58,15 @@ object AppIntents {
                 initialDebtTab = DebtTab.IOwe,
                 openWeeklyCheckIn = true,
             )
+            ACTION_OPEN_OWES_ME -> HomeLaunchConfig(
+                initialTab = HomeTab.Debts,
+                initialDebtTab = DebtTab.OwesMe,
+            )
+            ACTION_OPEN_I_OWE -> HomeLaunchConfig(
+                initialTab = HomeTab.Debts,
+                initialDebtTab = DebtTab.IOwe,
+            )
+            ACTION_OPEN_GOALS -> HomeLaunchConfig(initialTab = HomeTab.Goals)
             else -> HomeLaunchConfig()
         }
     }
@@ -87,6 +99,24 @@ object AppIntents {
         Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_ACTION, ACTION_WEEKLY_CHECKIN)
+        }
+
+    fun openOwesMeIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_ACTION, ACTION_OPEN_OWES_ME)
+        }
+
+    fun openIOweIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_ACTION, ACTION_OPEN_I_OWE)
+        }
+
+    fun openGoalsIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_ACTION, ACTION_OPEN_GOALS)
         }
 
     fun openDebtPaymentIntent(context: Context, debtorId: Long): Intent =
