@@ -14,6 +14,9 @@ interface LuckDiaryDao {
     @Query("SELECT * FROM luck_diary_entry ORDER BY entry_date DESC")
     fun observeAll(): Flow<List<LuckDiaryEntryEntity>>
 
+    @Query("SELECT * FROM luck_diary_entry ORDER BY entry_date DESC")
+    suspend fun getAllOnce(): List<LuckDiaryEntryEntity>
+
     @Insert
     suspend fun insert(entry: LuckDiaryEntryEntity): Long
 
@@ -22,4 +25,7 @@ interface LuckDiaryDao {
 
     @Delete
     suspend fun delete(entry: LuckDiaryEntryEntity)
+
+    @Query("DELETE FROM luck_diary_entry")
+    suspend fun clearAll()
 }

@@ -40,7 +40,9 @@ export function decodeFinanceSnapshot(raw: string): FinanceSnapshot {
 
   if (candidate.schemaVersion >= 2) {
     validateSnapshotArrays(candidate);
-    return candidate;
+    return candidate.schemaVersion < SYNC_SCHEMA_VERSION
+      ? migrateVersion2Snapshot(candidate)
+      : candidate;
   }
   return migrateLegacySnapshot(json as LegacyFinanceSnapshot);
 }
@@ -61,6 +63,23 @@ function validateSnapshotArrays(snapshot: FinanceSnapshot): void {
       throw new Error(`Snapshot field "${key}" exceeds maximum record count`);
     }
   }
+}
+
+function migrateVersion2Snapshot(snapshot: FinanceSnapshot): FinanceSnapshot {
+  return {
+    ...snapshot,
+    schemaVersion: SYNC_SCHEMA_VERSION,
+    debts: snapshot.debts.map((debt) => ({
+      ...debt,
+      debtType: debt.debtType ?? "CREDITOR",
+      affectsBalance: debt.affectsBalance ?? false,
+      note: debt.note ?? "",
+    })),
+    debtPayments: snapshot.debtPayments.map((payment) => ({
+      ...payment,
+      affectsBalance: payment.affectsBalance ?? true,
+    })),
+  };
 }
 
 interface LegacyFinanceSnapshot {
@@ -184,6 +203,9 @@ function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
         : typeof debt.dateDue === "number"
           ? new Date(debt.dateDue).toISOString().slice(0, 10)
           : debt.dateDue,
+      debtType: "CREDITOR",
+      affectsBalance: false,
+      note: "",
       syncUpdatedAt: debt.syncUpdatedAt,
       deleted: debt.deleted,
     })),
@@ -194,6 +216,7 @@ function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
       paidAt: typeof payment.paidAt === "number"
         ? new Date(payment.paidAt).toISOString()
         : payment.paidAt,
+      affectsBalance: true,
       syncUpdatedAt: payment.syncUpdatedAt,
       deleted: payment.deleted,
     })),

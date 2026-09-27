@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SYNC_SCHEMA_VERSION } from "./constants";
 import { mergeFinanceSnapshots, mergeFinanceSnapshotsSymmetric, mergeVoiceSettings } from "./syncEngine";
 import type { FinanceSnapshot, SnapshotGoal } from "./sync";
 
@@ -26,7 +27,7 @@ function snapshot(
   goals: SnapshotGoal[] = [],
 ): FinanceSnapshot {
   return {
-    schemaVersion: 2,
+    schemaVersion: SYNC_SCHEMA_VERSION,
     deviceId,
     updatedAt: 0,
     goals,
@@ -62,7 +63,7 @@ describe("mergeFinanceSnapshots", () => {
 
     const merged = mergeFinanceSnapshots(local, remote);
 
-    expect(merged.goals).toHaveLength(0);
+    expect(merged.goals).toEqual([goal("1", "Deleted", 200, true)]);
   });
 
   it("keeps local when tombstone is older", () => {
@@ -80,7 +81,7 @@ describe("mergeFinanceSnapshots", () => {
 
     const merged = mergeFinanceSnapshots(local, remote);
 
-    expect(merged.goals).toHaveLength(0);
+    expect(merged.goals).toEqual([goal("1", "Deleted", 300, true)]);
   });
 
   it("keeps record only on remote when local has no tombstone", () => {
@@ -91,6 +92,18 @@ describe("mergeFinanceSnapshots", () => {
 
     expect(merged.goals).toHaveLength(1);
     expect(merged.goals[0]?.name).toBe("Remote only");
+  });
+
+  it("retains a deletion across three sequential peers", () => {
+    const deletedOnA = snapshot("device-a", [goal("1", "Deleted", 300, true)]);
+    const staleOnB = snapshot("device-b", [goal("1", "Stale B", 100)]);
+    const staleOnC = snapshot("device-c", [goal("1", "Stale C", 100)]);
+
+    const afterAB = mergeFinanceSnapshotsSymmetric(deletedOnA, staleOnB);
+    const afterBC = mergeFinanceSnapshotsSymmetric(afterAB, staleOnC);
+
+    expect(afterAB.goals[0]?.deleted).toBe(true);
+    expect(afterBC.goals[0]?.deleted).toBe(true);
   });
 });
 

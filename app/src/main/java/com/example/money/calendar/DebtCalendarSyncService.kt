@@ -23,16 +23,8 @@ data class CalendarSyncResult(
     val failed: Boolean,
 )
 
-class DebtCalendarSyncService(
-    private val context: Context,
-) {
-    fun defaultDisplayName(): String = context.getString(R.string.onboarding_default_name)
-
-    fun hasPermissions(): Boolean =
-        ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALENDAR) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_CALENDAR) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED
+interface DebtCalendarEventGateway {
+    fun hasPermissions(): Boolean
 
     suspend fun upsertDebtEvent(
         debtor: Debtor,
@@ -40,6 +32,26 @@ class DebtCalendarSyncService(
         displayName: String = "",
         markClosed: Boolean = false,
         force: Boolean = false,
+    ): CalendarSyncResult
+}
+
+class DebtCalendarSyncService(
+    private val context: Context,
+) : DebtCalendarEventGateway {
+    fun defaultDisplayName(): String = context.getString(R.string.onboarding_default_name)
+
+    override fun hasPermissions(): Boolean =
+        ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALENDAR) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_CALENDAR) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    override suspend fun upsertDebtEvent(
+        debtor: Debtor,
+        settings: CalendarSettings,
+        displayName: String,
+        markClosed: Boolean,
+        force: Boolean,
     ): CalendarSyncResult = withContext(Dispatchers.IO) {
         if ((!force && !settings.autoSyncEnabled) || !hasPermissions()) {
             return@withContext CalendarSyncResult(debtor.calendarEventId, failed = !hasPermissions())

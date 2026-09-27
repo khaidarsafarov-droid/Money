@@ -46,6 +46,9 @@ export function financeStateToSnapshot(
       status: financialStatusToDebtStatus(debt.status),
       dateGiven: debt.dateGiven ?? new Date().toISOString().slice(0, 10),
       dateDue: debt.dateDue,
+      debtType: "CREDITOR",
+      affectsBalance: false,
+      note: "",
       syncUpdatedAt: debt.updatedAt ? Date.parse(debt.updatedAt) : updatedAt,
       deleted: debt.deleted,
     }));
@@ -58,7 +61,9 @@ export function financeStateToSnapshot(
         debtorId: debt.id,
         amountCents: payment.amount,
         paidAt: payment.paidAt,
-        syncUpdatedAt: Date.parse(payment.paidAt) || updatedAt,
+        affectsBalance: payment.affectsBalance ?? true,
+        syncUpdatedAt: payment.syncUpdatedAt ?? (Date.parse(payment.paidAt) || updatedAt),
+        deleted: payment.deleted,
       })),
     );
 
@@ -67,10 +72,13 @@ export function financeStateToSnapshot(
     kind: tx.kind,
     amountCents: tx.amount,
     goalId: tx.goalId,
+    debtId: tx.debtId,
+    debtPaymentId: tx.debtPaymentId,
     createdAt: tx.createdAt,
     note: tx.note,
     category: tx.category,
-    syncUpdatedAt: Date.parse(tx.createdAt) || updatedAt,
+    syncUpdatedAt: tx.syncUpdatedAt ?? (Date.parse(tx.createdAt) || updatedAt),
+    deleted: tx.deleted,
   }));
 
   return {
@@ -87,18 +95,19 @@ export function financeStateToSnapshot(
 export function snapshotToFinanceState(snapshot: FinanceSnapshot): FinanceState {
   const paymentsByDebtor = new Map<string, Payment[]>();
   for (const payment of snapshot.debtPayments) {
-    if (payment.deleted) continue;
     const list = paymentsByDebtor.get(payment.debtorId) ?? [];
     list.push({
       id: payment.id,
       amount: payment.amountCents,
       paidAt: payment.paidAt,
+      affectsBalance: payment.affectsBalance,
+      syncUpdatedAt: payment.syncUpdatedAt,
+      deleted: payment.deleted,
     });
     paymentsByDebtor.set(payment.debtorId, list);
   }
 
   const goalItems: FinancialItem[] = snapshot.goals
-    .filter((goal) => !goal.deleted)
     .map((goal) => ({
       id: goal.id,
       type: "GOAL",
@@ -109,10 +118,10 @@ export function snapshotToFinanceState(snapshot: FinanceSnapshot): FinanceState 
       history: [],
       dateDeadline: goal.dateDeadline,
       updatedAt: new Date(goal.syncUpdatedAt).toISOString(),
+      deleted: goal.deleted,
     }));
 
   const debtItems: FinancialItem[] = snapshot.debts
-    .filter((debt) => !debt.deleted)
     .map((debt) => ({
       id: debt.id,
       type: "DEBT",
@@ -124,18 +133,22 @@ export function snapshotToFinanceState(snapshot: FinanceSnapshot): FinanceState 
       dateGiven: debt.dateGiven,
       dateDue: debt.dateDue,
       updatedAt: new Date(debt.syncUpdatedAt).toISOString(),
+      deleted: debt.deleted,
     }));
 
   const transactions: Transaction[] = snapshot.transactions
-    .filter((tx) => !tx.deleted)
     .map((tx) => ({
       id: tx.id,
       kind: tx.kind,
       amount: tx.amountCents,
       goalId: tx.goalId,
+      debtId: tx.debtId,
+      debtPaymentId: tx.debtPaymentId,
       createdAt: tx.createdAt,
       note: tx.note,
       category: tx.category,
+      syncUpdatedAt: tx.syncUpdatedAt,
+      deleted: tx.deleted,
     }));
 
   return {

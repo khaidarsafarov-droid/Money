@@ -70,11 +70,23 @@ interface DebtorDao {
     @Update
     suspend fun update(debtor: DebtorEntity)
 
+    @Query(
+        """
+        UPDATE debtor
+        SET calendar_event_id = :eventId, calendar_sync_failed = :failed
+        WHERE id = :debtorId
+        """,
+    )
+    suspend fun updateCalendarSyncState(debtorId: Long, eventId: String?, failed: Boolean)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(debtor: DebtorEntity)
 
     @Delete
     suspend fun delete(debtor: DebtorEntity)
+
+    @Query("DELETE FROM debtor")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -100,4 +112,7 @@ interface DebtPaymentDao {
 
     @Query("SELECT * FROM debt_payment WHERE debtor_id = :debtorId ORDER BY paid_at DESC")
     suspend fun getPaymentsForDebtor(debtorId: Long): List<DebtPaymentEntity>
+
+    @Query("DELETE FROM debt_payment")
+    suspend fun clearAll()
 }

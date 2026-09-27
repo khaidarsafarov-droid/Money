@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.money.MoneyApplication
+import com.example.money.calendar.DebtCalendarReconciler
 import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.settings.CalendarSettings
@@ -17,6 +18,7 @@ class CalendarSettingsViewModel(
     private val app: MoneyApplication,
     private val preferencesStore: MoneyPreferencesStore,
     private val debtCalendarSyncService: DebtCalendarSyncService,
+    private val debtCalendarReconciler: DebtCalendarReconciler,
 ) : ViewModel() {
 
     val settings: StateFlow<CalendarSettings> = preferencesStore.calendarSettings.stateIn(
@@ -43,12 +45,7 @@ class CalendarSettingsViewModel(
     }
 
     private suspend fun syncMissingDebtEvents(settings: CalendarSettings) {
-        if (!debtCalendarSyncService.hasPermissions()) return
-        app.debtorRepository.getAllDebtors().first()
-            .filter { !it.isPaid && (it.calendarEventId.isNullOrBlank() || it.calendarSyncFailed) }
-            .forEach { debtor ->
-                upsertAndPersist(debtor, settings, force = false)
-            }
+        debtCalendarReconciler.reconcileMissingActiveEvents(settings)
     }
 
     private suspend fun upsertAndPersist(
@@ -96,7 +93,12 @@ class CalendarSettingsViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(CalendarSettingsViewModel::class.java)) {
-                return CalendarSettingsViewModel(app, app.preferencesStore, app.debtCalendarSyncService) as T
+                return CalendarSettingsViewModel(
+                    app,
+                    app.preferencesStore,
+                    app.debtCalendarSyncService,
+                    app.container.debtCalendarReconciler,
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

@@ -65,4 +65,7 @@ interface TransferDao {
 
     @Delete
     suspend fun delete(transfer: TransferEntity)
+
+    @Query("DELETE FROM transfers")
+    suspend fun clearAll()
 }

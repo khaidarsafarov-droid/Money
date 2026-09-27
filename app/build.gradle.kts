@@ -4,6 +4,23 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val releaseStoreFile = providers.environmentVariable("MONEY_RELEASE_STORE_FILE").orNull
+val releaseStorePassword = providers.environmentVariable("MONEY_RELEASE_STORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("MONEY_RELEASE_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("MONEY_RELEASE_KEY_PASSWORD").orNull
+val releaseSigningValues = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+)
+val hasReleaseSigning = releaseSigningValues.all { !it.isNullOrBlank() }
+val hasAnyReleaseSigning = releaseSigningValues.any { !it.isNullOrBlank() }
+
+check(!hasAnyReleaseSigning || hasReleaseSigning) {
+    "Release signing requires all MONEY_RELEASE_* environment variables"
+}
+
 android {
     namespace = "com.example.money"
     compileSdk {
@@ -16,14 +33,29 @@ android {
         applicationId = "com.example.money"
         minSdk = 24
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(requireNotNull(releaseStoreFile))
+                storePassword = requireNotNull(releaseStorePassword)
+                keyAlias = requireNotNull(releaseKeyAlias)
+                keyPassword = requireNotNull(releaseKeyPassword)
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+            // Keep shrinking off until a signed release candidate is exercised on devices.
             optimization {
                 enable = false
             }
@@ -69,8 +101,10 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.websockets)
+    implementation(libs.play.services.auth)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
+    testImplementation(libs.json)
     testImplementation(libs.robolectric)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

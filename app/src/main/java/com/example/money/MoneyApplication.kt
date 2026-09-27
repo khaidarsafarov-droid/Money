@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import com.example.money.di.AppContainer
+import com.example.money.data.backup.GoogleDriveAuthorizationManager
+import com.example.money.data.backup.LocalBackupDocumentGateway
 import com.example.money.data.locale.AppLanguageManager
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.datastore.MoneyPreferencesStore
@@ -12,9 +14,11 @@ import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncService
 import com.example.money.domain.repository.BudgetRepository
+import com.example.money.domain.repository.BackupRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.FinanceSnapshotRepository
 import com.example.money.domain.repository.GoalRepository
+import com.example.money.domain.backup.BackupStorageProvider
 import com.example.money.calendar.DebtCalendarSyncService
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.PersonalDebtMessageScheduler
@@ -60,12 +64,20 @@ class MoneyApplication : Application() {
     val debtorRepository: DebtorRepository get() = container.debtorRepository
     val budgetRepository: BudgetRepository get() = container.budgetRepository
     val goalRepository: GoalRepository get() = container.goalRepository
+    val backupRepository: BackupRepository get() = container.backupRepository
+    val localBackupDocumentGateway: LocalBackupDocumentGateway
+        get() = container.localBackupDocumentGateway
+    val googleDriveAuthorizationManager: GoogleDriveAuthorizationManager
+        get() = container.googleDriveAuthorizationManager
     val luckDiaryRepository: com.example.money.domain.repository.LuckDiaryRepository
         get() = container.luckDiaryRepository
     val debtReminderScheduler: DebtReminderScheduler get() = container.debtReminderScheduler
     val debtCalendarSyncService: DebtCalendarSyncService get() = container.debtCalendarSyncService
     val personalDebtMessageScheduler: PersonalDebtMessageScheduler
         get() = container.personalDebtMessageScheduler
+
+    fun googleDriveBackupStorageProvider(accessToken: String): BackupStorageProvider =
+        container.googleDriveBackupStorageProvider(accessToken)
 
     private val widgetGoalRepository: WidgetGoalRepository by lazy {
         WidgetGoalRepository(this)
@@ -97,6 +109,7 @@ class MoneyApplication : Application() {
         syncAutopilotSchedule()
         syncWeeklyCheckInSchedule()
         syncVoiceReportSchedule()
+        syncAutomaticBackupSchedule()
         startPeerSync()
     }
 
@@ -128,6 +141,16 @@ class MoneyApplication : Application() {
         }
     }
 
+    private fun syncAutomaticBackupSchedule() {
+        applicationScope.launch {
+            val settings = container.backupStateStore.settings.first()
+            container.automaticBackupScheduler.syncSchedule(
+                enabled = settings.automaticBackupEnabled,
+                wifiOnly = settings.wifiOnly,
+            )
+        }
+    }
+
     private fun startWidgetPipeline() {
         applicationScope.launch {
             goalWidgetSnapshotWriter.observeSnapshotChanges().collect { snapshot ->
@@ -139,6 +162,12 @@ class MoneyApplication : Application() {
             }
         }
         goalWidgetUpdater.start(applicationScope)
+    }
+
+    suspend fun refreshWidgetSnapshot() {
+        val snapshot = goalWidgetSnapshotWriter.observeSnapshotChanges().first()
+        goalWidgetSnapshotWriter.persist(snapshot)
+        goalWidgetUpdater.refreshAllWidgets()
     }
 
     private companion object {

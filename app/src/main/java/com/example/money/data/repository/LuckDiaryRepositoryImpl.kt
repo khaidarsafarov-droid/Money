@@ -3,6 +3,7 @@ package com.example.money.data.repository
 import com.example.money.data.local.dao.LuckDiaryDao
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.data.sync.SyncIds
+import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.model.LuckDiaryEntry
 import com.example.money.domain.repository.LuckDiaryRepository
 import kotlinx.coroutines.flow.Flow
@@ -16,14 +17,20 @@ class LuckDiaryRepositoryImpl(
         luckDiaryDao.observeAll().map { entries -> entries.map { it.toDomain() } }
 
     override suspend fun addEntry(entry: LuckDiaryEntry): Long =
-        luckDiaryDao.insert(entry.toEntity())
+        SyncWriteGuard.withWriteLock {
+            luckDiaryDao.insert(entry.toEntity())
+        }
 
     override suspend fun updateEntry(entry: LuckDiaryEntry) {
-        luckDiaryDao.update(entry.toEntity())
+        SyncWriteGuard.withWriteLock {
+            luckDiaryDao.update(entry.toEntity())
+        }
     }
 
     override suspend fun deleteEntry(entry: LuckDiaryEntry) {
-        luckDiaryDao.delete(entry.toEntity())
+        SyncWriteGuard.withWriteLock {
+            luckDiaryDao.delete(entry.toEntity())
+        }
     }
 
     private fun LuckDiaryEntryEntity.toDomain() = LuckDiaryEntry(

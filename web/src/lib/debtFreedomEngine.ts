@@ -25,10 +25,12 @@ export function toDebtFreedomInput(item: FinancialItem): DebtFreedomDebtInput {
     targetCents: item.target,
     currentCents: item.amount,
     isCompleted: item.status === "COMPLETED",
-    payments: item.history.map((payment) => ({
-      amountCents: payment.amount,
-      paidAtMs: new Date(payment.paidAt).getTime(),
-    })),
+    payments: item.history
+      .filter((payment) => !payment.deleted)
+      .map((payment) => ({
+        amountCents: payment.amount,
+        paidAtMs: new Date(payment.paidAt).getTime(),
+      })),
     dateDueMs: item.dateDue ? new Date(item.dateDue).getTime() : undefined,
   };
 }
@@ -38,7 +40,7 @@ export function projectDebtFreedom(
   extraMonthlyCents = 0,
 ): FreedomProjection {
   const debts = items
-    .filter((item) => item.type === "DEBT")
+    .filter((item) => item.type === "DEBT" && !item.deleted)
     .map(toDebtFreedomInput);
   return calculateFreedomProjection(debts, extraMonthlyCents);
 }

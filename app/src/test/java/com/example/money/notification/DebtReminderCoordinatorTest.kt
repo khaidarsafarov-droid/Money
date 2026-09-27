@@ -103,6 +103,8 @@ class DebtReminderCoordinatorTest {
             cancelledIds += debtorId
         }
 
+        override suspend fun cancelAll() = Unit
+
         override fun scheduleDailyFollowUp(debtor: Debtor) = Unit
         override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
             scheduleCount += 1

@@ -11,8 +11,20 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.longPreferencesKey
+import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.sync.SyncQueueRecorder
+import com.example.money.domain.backup.BackupAutopilotPreferences
+import com.example.money.domain.backup.BackupCalendarPreferences
+import com.example.money.domain.backup.BackupGamificationPreferences
+import com.example.money.domain.backup.BackupGoalPsychologyPreferences
+import com.example.money.domain.backup.BackupPersonalDebtPreferences
+import com.example.money.domain.backup.BackupPreferences
+import com.example.money.domain.backup.BackupPrivacyPreferences
+import com.example.money.domain.backup.BackupUserPreferences
+import com.example.money.domain.backup.BackupVoicePreferences
+import com.example.money.domain.backup.BackupWeeklyCheckInPreferences
 import com.example.money.domain.sync.SnapshotVoiceSettings
+import com.example.money.settings.AppLanguage
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.CurrencyRegion
@@ -26,6 +38,7 @@ import com.example.money.settings.UserEmotion
 import com.example.money.settings.UserGender
 import com.example.money.settings.UserProfile
 import com.example.money.settings.WeeklyCheckInSettings
+import com.example.money.ui.home.WelcomePreferences
 import com.example.money.voice.VoiceGender
 import com.example.money.voice.VoiceLanguage
 import com.example.money.voice.VoiceReportSettings
@@ -144,7 +157,11 @@ object MoneyPreferenceKeys {
 class MoneyPreferencesStore(
     private val context: Context,
     private val syncQueueRecorder: SyncQueueRecorder? = null,
-) {
+) : PortablePreferencesStorage {
+
+    suspend fun clearAll() {
+        context.moneyPreferencesDataStore.edit(MutablePreferences::clear)
+    }
 
     val widgetSnapshot: Flow<WidgetGoalSnapshot> =
         context.moneyPreferencesDataStore.data.map { prefs ->
@@ -228,6 +245,202 @@ class MoneyPreferencesStore(
     suspend fun setCurrencyRegion(region: CurrencyRegion) {
         context.moneyPreferencesDataStore.edit { prefs ->
             prefs[MoneyPreferenceKeys.CURRENCY_REGION] = region.name
+        }
+    }
+
+    override suspend fun exportPortable(): BackupPreferences {
+        val prefs = context.moneyPreferencesDataStore.data.first()
+        val voice = prefs.toVoiceReportSettings()
+        val privacy = prefs.toPrivacySettings()
+        val gamification = prefs.toGamificationState()
+        val autopilot = prefs.toAutopilotSettings()
+        val goalPsychology = prefs.toGoalPsychologyProfile()
+        val user = prefs.toUserProfile()
+        val calendar = prefs.toCalendarSettings()
+        val personalDebt = prefs.toPersonalBranchSettings()
+        return BackupPreferences(
+            appLanguage = AppLanguageStorage.read(context).name,
+            currencyRegion = CurrencyRegion.fromCode(
+                prefs[MoneyPreferenceKeys.CURRENCY_REGION] ?: CurrencyRegion.US.name,
+            ).name,
+            welcomeSeen = WelcomePreferences.isWelcomeSeen(context),
+            voice = BackupVoicePreferences(
+                enabled = voice.enabled,
+                reportHour = voice.reportHour,
+                reportMinute = voice.reportMinute,
+                language = voice.language.name,
+                gender = voice.gender.name,
+                forceInSilentMode = voice.forceInSilentMode,
+            ),
+            privacy = BackupPrivacyPreferences(
+                hideAmounts = privacy.hideAmounts,
+                hideOnWidget = privacy.hideOnWidget,
+            ),
+            gamification = BackupGamificationPreferences(
+                streakCount = gamification.streakCount,
+                lastPaymentIsoDate = gamification.lastPaymentIsoDate,
+                unlockedBadges = gamification.unlockedBadges,
+                lastWinMessage = gamification.lastWinMessage,
+            ),
+            autopilot = BackupAutopilotPreferences(
+                enabled = autopilot.enabled,
+                dailyAmountCents = autopilot.dailyAmountCents,
+                strategy = autopilot.strategy.name,
+                reminderHour = autopilot.reminderHour,
+                reminderMinute = autopilot.reminderMinute,
+                roundPaymentsToTen = autopilot.roundPaymentsToTen,
+            ),
+            weeklyCheckIn = BackupWeeklyCheckInPreferences(
+                enabled = prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_ENABLED] ?: false,
+                hour = prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_HOUR] ?: 10,
+            ),
+            advisorHistoryJson = prefs[MoneyPreferenceKeys.ADVISOR_HISTORY_JSON] ?: "[]",
+            goalPsychology = BackupGoalPsychologyPreferences(
+                psychotype = goalPsychology.psychotype?.name,
+                psychotypeAnswersJson = goalPsychology.psychotypeAnswersJson,
+                psychotypeTestCompleted = goalPsychology.psychotypeTestCompleted,
+                selectedFearIds = goalPsychology.selectedFearIds,
+                wordPowerEnabled = goalPsychology.wordPowerEnabled,
+                personalMotivation = goalPsychology.personalMotivation,
+                paydayDayOfMonth = goalPsychology.paydayDayOfMonth,
+                payoffStrategy = goalPsychology.payoffStrategy,
+                weeklyChecklistJson = goalPsychology.weeklyChecklistJson,
+                activeChallengesJson = goalPsychology.activeChallengesJson,
+                goalBadges = goalPsychology.goalBadges,
+            ),
+            user = BackupUserPreferences(
+                displayName = user.displayName,
+                gender = user.gender.name,
+                age = user.age,
+                customFear = user.customFear,
+                goalText = user.goalText,
+                emotion = user.emotion?.name,
+                priority = user.priority,
+                onboardingCompleted = user.onboardingCompleted,
+            ),
+            calendar = BackupCalendarPreferences(
+                autoSyncEnabled = calendar.autoSyncEnabled,
+                remindOneDayBefore = calendar.remindOneDayBefore,
+                remindThreeDaysBefore = calendar.remindThreeDaysBefore,
+                remindOnDueDay = calendar.remindOnDueDay,
+                useDebtsCalendar = calendar.useDebtsCalendar,
+            ),
+            personalDebt = BackupPersonalDebtPreferences(
+                debtNotificationsEnabled = personalDebt.debtNotificationsEnabled,
+                debtAdvanceRemind1Day = personalDebt.debtAdvanceRemind1Day,
+                debtAdvanceRemind3Days = personalDebt.debtAdvanceRemind3Days,
+                debtAutoMessageEnabled = personalDebt.debtAutoMessageEnabled,
+                debtAutoMessageSms = personalDebt.debtAutoMessageSms,
+                debtAutoMessageWhatsapp = personalDebt.debtAutoMessageWhatsapp,
+                debtAutoMessageTelegram = personalDebt.debtAutoMessageTelegram,
+                debtAutoMessageEmail = personalDebt.debtAutoMessageEmail,
+                debtDirectSmsEnabled = personalDebt.debtDirectSmsEnabled,
+            ),
+        )
+    }
+
+    override suspend fun importPortable(preferences: BackupPreferences) {
+        AppLanguageStorage.write(context, AppLanguage.fromStored(preferences.appLanguage))
+        WelcomePreferences.setWelcomeSeen(context, preferences.welcomeSeen)
+        context.moneyPreferencesDataStore.edit { prefs ->
+            val localVoice = prefs.toVoiceReportSettings()
+            prefs[MoneyPreferenceKeys.CURRENCY_REGION] =
+                CurrencyRegion.fromCode(preferences.currencyRegion).name
+            prefs.writeVoiceReportSettings(
+                VoiceReportSettings(
+                    enabled = preferences.voice.enabled,
+                    reportHour = preferences.voice.reportHour,
+                    reportMinute = preferences.voice.reportMinute,
+                    language = VoiceLanguage.fromStored(preferences.voice.language),
+                    gender = VoiceGender.fromStored(preferences.voice.gender),
+                    forceInSilentMode = preferences.voice.forceInSilentMode,
+                    lastVoiceReportDate = localVoice.lastVoiceReportDate,
+                    lastAppOpenDate = localVoice.lastAppOpenDate,
+                ),
+            )
+            prefs.writePrivacySettings(
+                PrivacySettings(
+                    hideAmounts = preferences.privacy.hideAmounts,
+                    hideOnWidget = preferences.privacy.hideOnWidget,
+                ),
+            )
+            prefs.writeGamificationState(
+                GamificationState(
+                    streakCount = preferences.gamification.streakCount,
+                    lastPaymentIsoDate = preferences.gamification.lastPaymentIsoDate,
+                    unlockedBadges = preferences.gamification.unlockedBadges,
+                    lastWinMessage = preferences.gamification.lastWinMessage,
+                ),
+            )
+            prefs.writeAutopilotSettings(
+                AutopilotSettings(
+                    enabled = preferences.autopilot.enabled,
+                    dailyAmountCents = preferences.autopilot.dailyAmountCents,
+                    strategy = AutopilotStrategy.fromStored(preferences.autopilot.strategy),
+                    reminderHour = preferences.autopilot.reminderHour,
+                    reminderMinute = preferences.autopilot.reminderMinute,
+                    roundPaymentsToTen = preferences.autopilot.roundPaymentsToTen,
+                ),
+            )
+            prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_ENABLED] = preferences.weeklyCheckIn.enabled
+            prefs[MoneyPreferenceKeys.WEEKLY_CHECKIN_HOUR] = preferences.weeklyCheckIn.hour
+            prefs[MoneyPreferenceKeys.ADVISOR_HISTORY_JSON] = preferences.advisorHistoryJson
+            val localVisionPath = prefs.toGoalPsychologyProfile().visionPhotoPath
+            prefs.writeGoalPsychologyProfile(
+                GoalPsychologyProfile(
+                    psychotype = preferences.goalPsychology.psychotype?.let(
+                        FinancialPsychotype::fromStored,
+                    ),
+                    psychotypeAnswersJson = preferences.goalPsychology.psychotypeAnswersJson,
+                    selectedFearIds = preferences.goalPsychology.selectedFearIds,
+                    wordPowerEnabled = preferences.goalPsychology.wordPowerEnabled,
+                    personalMotivation = preferences.goalPsychology.personalMotivation,
+                    visionPhotoPath = localVisionPath,
+                    paydayDayOfMonth = preferences.goalPsychology.paydayDayOfMonth,
+                    payoffStrategy = preferences.goalPsychology.payoffStrategy,
+                    weeklyChecklistJson = preferences.goalPsychology.weeklyChecklistJson,
+                    activeChallengesJson = preferences.goalPsychology.activeChallengesJson,
+                    goalBadges = preferences.goalPsychology.goalBadges,
+                    psychotypeTestCompleted = preferences.goalPsychology.psychotypeTestCompleted,
+                ),
+            )
+            prefs.writeUserProfile(
+                UserProfile(
+                    displayName = preferences.user.displayName,
+                    gender = UserGender.fromStored(preferences.user.gender),
+                    age = preferences.user.age,
+                    customFear = preferences.user.customFear,
+                    goalText = preferences.user.goalText,
+                    emotion = UserEmotion.fromStored(preferences.user.emotion),
+                    priority = preferences.user.priority,
+                    onboardingCompleted = preferences.user.onboardingCompleted,
+                ),
+            )
+            val localCalendar = prefs.toCalendarSettings()
+            prefs.writeCalendarSettings(
+                CalendarSettings(
+                    autoSyncEnabled = preferences.calendar.autoSyncEnabled,
+                    remindOneDayBefore = preferences.calendar.remindOneDayBefore,
+                    remindThreeDaysBefore = preferences.calendar.remindThreeDaysBefore,
+                    remindOnDueDay = preferences.calendar.remindOnDueDay,
+                    useDebtsCalendar = preferences.calendar.useDebtsCalendar,
+                    debtsCalendarId = localCalendar.debtsCalendarId,
+                    permissionRequested = localCalendar.permissionRequested,
+                ),
+            )
+            prefs.writePersonalBranchSettings(
+                PersonalBranchSettings(
+                    debtNotificationsEnabled = preferences.personalDebt.debtNotificationsEnabled,
+                    debtAdvanceRemind1Day = preferences.personalDebt.debtAdvanceRemind1Day,
+                    debtAdvanceRemind3Days = preferences.personalDebt.debtAdvanceRemind3Days,
+                    debtAutoMessageEnabled = preferences.personalDebt.debtAutoMessageEnabled,
+                    debtAutoMessageSms = preferences.personalDebt.debtAutoMessageSms,
+                    debtAutoMessageWhatsapp = preferences.personalDebt.debtAutoMessageWhatsapp,
+                    debtAutoMessageTelegram = preferences.personalDebt.debtAutoMessageTelegram,
+                    debtAutoMessageEmail = preferences.personalDebt.debtAutoMessageEmail,
+                    debtDirectSmsEnabled = preferences.personalDebt.debtDirectSmsEnabled,
+                ),
+            )
         }
     }
 

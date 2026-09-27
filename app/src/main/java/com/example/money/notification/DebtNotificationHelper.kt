@@ -1,5 +1,6 @@
 package com.example.money.notification
 
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
@@ -145,12 +146,29 @@ object DebtNotificationHelper {
     }
 
     fun cancel(context: Context, debtorId: Long) {
-        NotificationManagerCompat.from(context).cancel(debtorId.toInt())
+        val manager = NotificationManagerCompat.from(context)
+        cancel(manager, debtorId.toInt())
         MessagingChannel.entries.forEach { channel ->
-            NotificationManagerCompat.from(context).cancel((debtorId * 100 + channel.ordinal).toInt())
+            cancel(manager, (debtorId * 100 + channel.ordinal).toInt())
         }
         listOf(1, 3).forEach { days ->
-            NotificationManagerCompat.from(context).cancel((debtorId * 10 + days).toInt())
+            cancel(manager, (debtorId * 10 + days).toInt())
+        }
+    }
+
+    fun cancelAll(context: Context) {
+        try {
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.activeNotifications
+                .filter { notification ->
+                    notification.tag == NOTIFICATION_TAG ||
+                        notification.notification.channelId == NotificationChannels.DEBT_REMINDERS
+                }
+                .forEach { notification ->
+                    manager.cancel(notification.tag, notification.id)
+                }
+        } catch (_: Exception) {
+            // Notification cleanup is best-effort; WorkManager cancellation still prevents new stale alerts.
         }
     }
 
@@ -268,12 +286,19 @@ object DebtNotificationHelper {
 
     private fun notify(context: Context, id: Int, notification: android.app.Notification): Boolean =
         try {
-            NotificationManagerCompat.from(context).notify(id, notification)
+            NotificationManagerCompat.from(context).notify(NOTIFICATION_TAG, id, notification)
             true
         } catch (_: SecurityException) {
             false
         }
 
+    private fun cancel(manager: NotificationManagerCompat, id: Int) {
+        manager.cancel(NOTIFICATION_TAG, id)
+        manager.cancel(id)
+    }
+
     private fun notificationRequestCode(debtorId: Long, actionCode: Int): Int =
         (debtorId * 10 + actionCode).toInt()
+
+    private const val NOTIFICATION_TAG = "debt_reminder"
 }

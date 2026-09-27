@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AutoMode
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Lock
@@ -182,6 +183,7 @@ internal fun PhoneHomeLayout(
     onOpenAutopilotSettings: () -> Unit,
     onOpenCalendarSettings: () -> Unit,
     onOpenDebtNotificationSettings: () -> Unit,
+    onOpenBackupSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
     onPlayVoiceReport: () -> Unit,
     calendarPermissionGranted: Boolean,
@@ -306,6 +308,16 @@ internal fun PhoneHomeLayout(
                             icon = Icons.Outlined.CalendarMonth,
                             onClick = {
                                 onOpenCalendarSettings()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.backup_settings_title),
+                            icon = Icons.Outlined.CloudUpload,
+                            onClick = {
+                                onOpenBackupSettings()
                                 scope.launch { drawerState.close() }
                             },
                         )

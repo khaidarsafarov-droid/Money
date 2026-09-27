@@ -22,6 +22,7 @@ import com.example.money.ui.home.HomeScreen
 import com.example.money.ui.onboarding.OnboardingScreen
 import com.example.money.ui.settings.AppLanguageScreen
 import com.example.money.ui.settings.AutopilotSettingsScreen
+import com.example.money.ui.settings.BackupSettingsScreen
 import com.example.money.ui.settings.CalendarSettingsScreen
 import com.example.money.ui.settings.DebtNotificationSettingsScreen
 import com.example.money.ui.settings.PrivacySettingsScreen
@@ -114,6 +115,7 @@ fun MoneyNavHost(
                 onOpenAutopilotSettings = { navController.navigate(AppRoutes.AUTOPILOT_SETTINGS) },
                 onOpenCalendarSettings = { navController.navigate(AppRoutes.CALENDAR_SETTINGS) },
                 onOpenDebtNotificationSettings = { navController.navigate(AppRoutes.DEBT_NOTIFICATION_SETTINGS) },
+                onOpenBackupSettings = { navController.navigate(AppRoutes.BACKUP_SETTINGS) },
                 onOpenGoalHub = { navController.navigate(AppRoutes.GOAL_HUB) },
             )
         }
@@ -144,6 +146,9 @@ fun MoneyNavHost(
         }
         composable(AppRoutes.VOICE_SETTINGS) {
             VoiceSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.BACKUP_SETTINGS) {
+            BackupSettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

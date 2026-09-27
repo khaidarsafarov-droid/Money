@@ -78,6 +78,50 @@ describe("snapshotAdapter", () => {
     const snapshot = financeStateToSnapshot(state, "web-device");
     expect(snapshot.goals).toHaveLength(1);
     expect(snapshot.goals[0]?.deleted).toBe(true);
-    expect(snapshotToFinanceState(snapshot).items).toHaveLength(0);
+    const restored = snapshotToFinanceState(snapshot);
+    expect(restored.items).toHaveLength(1);
+    expect(restored.items[0]?.deleted).toBe(true);
+  });
+
+  it("retains payment and transaction tombstones through local state", () => {
+    const state: FinanceState = {
+      currency: "USD",
+      items: [{
+        id: "debt-1",
+        type: "DEBT",
+        name: "Debt",
+        status: "ACTIVE",
+        amount: 0,
+        target: 1_000,
+        dateGiven: "2026-01-01",
+        history: [{
+          id: "payment-1",
+          amount: 100,
+          paidAt: "2026-01-02T00:00:00.000Z",
+          syncUpdatedAt: 200,
+          deleted: true,
+        }],
+      }],
+      transactions: [{
+        id: "transaction-1",
+        kind: "EXPENSE",
+        amount: 100,
+        createdAt: "2026-01-02T00:00:00.000Z",
+        syncUpdatedAt: 200,
+        deleted: true,
+      }],
+    };
+
+    const first = financeStateToSnapshot(state, "web-device", 300);
+    const second = financeStateToSnapshot(
+      snapshotToFinanceState(first),
+      "web-device",
+      400,
+    );
+
+    expect(second.debtPayments[0]?.deleted).toBe(true);
+    expect(second.debtPayments[0]?.syncUpdatedAt).toBe(200);
+    expect(second.transactions[0]?.deleted).toBe(true);
+    expect(second.transactions[0]?.syncUpdatedAt).toBe(200);
   });
 });

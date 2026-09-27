@@ -24,6 +24,9 @@ export interface SnapshotDebt extends LwwRecord {
   status: string;
   dateGiven: string;
   dateDue?: string;
+  debtType: string;
+  affectsBalance: boolean;
+  note: string;
 }
 
 export interface SnapshotDebtPayment extends LwwRecord {
@@ -31,6 +34,7 @@ export interface SnapshotDebtPayment extends LwwRecord {
   debtorId: string;
   amountCents: number;
   paidAt: string;
+  affectsBalance: boolean;
 }
 
 export interface SnapshotTransaction extends LwwRecord {
@@ -38,6 +42,8 @@ export interface SnapshotTransaction extends LwwRecord {
   kind: "DEPOSIT" | "GOAL_TRANSFER" | "EXPENSE";
   amountCents: number;
   goalId?: string;
+  debtId?: string;
+  debtPaymentId?: string;
   createdAt: string;
   note?: string;
   category?: string;

@@ -10,6 +10,8 @@ import com.example.money.domain.model.Debtor
 import com.example.money.settings.PersonalBranchSettings
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 interface DebtReminderScheduler {
 
@@ -21,6 +23,8 @@ interface DebtReminderScheduler {
 
     fun cancel(debtorId: Long)
 
+    suspend fun cancelAll()
+
     fun scheduleDailyFollowUp(debtor: Debtor)
 
     fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings)
@@ -30,6 +34,7 @@ interface DebtReminderScheduler {
     companion object {
         val SNOOZE_DELAY_MS: Long = TimeUnit.HOURS.toMillis(1)
         const val OVERDUE_NOTIFICATION_HOUR = 9
+        const val WORK_TAG = "debt_reminder_work"
 
         fun dueDateAtNineAm(dueMillis: Long): Long {
             val calendar = Calendar.getInstance().apply {
@@ -121,6 +126,16 @@ class DebtReminderSchedulerImpl(
         DebtNotificationHelper.cancel(context, debtorId)
     }
 
+    override suspend fun cancelAll() {
+        try {
+            withContext(Dispatchers.IO) {
+                workManager.cancelAllWorkByTag(DebtReminderScheduler.WORK_TAG).result.get()
+            }
+        } finally {
+            DebtNotificationHelper.cancelAll(context)
+        }
+    }
+
     override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
         if (debtor.isPaid || debtor.id == 0L) return
         if (!settings.debtNotificationsEnabled) {
@@ -152,6 +167,7 @@ class DebtReminderSchedulerImpl(
         val request = OneTimeWorkRequestBuilder<DebtAdvanceReminderWorker>()
             .setInitialDelay(delay.coerceIn(MIN_SCHEDULE_DELAY_MS, MAX_SCHEDULE_DELAY_MS), TimeUnit.MILLISECONDS)
             .setInputData(inputData)
+            .addTag(DebtReminderScheduler.WORK_TAG)
             .build()
         workManager.enqueueUniqueWork(
             DebtAdvanceReminderWorker.uniqueWorkName(debtor.id, daysBefore),
@@ -180,6 +196,7 @@ class DebtReminderSchedulerImpl(
         val request = OneTimeWorkRequestBuilder<DebtReminderWorker>()
             .setInitialDelay(safeDelayMillis, TimeUnit.MILLISECONDS)
             .setInputData(inputData)
+            .addTag(DebtReminderScheduler.WORK_TAG)
             .addTag(DebtReminderWorker.uniqueWorkName(debtor.id))
             .build()
 

@@ -49,4 +49,7 @@ interface ExpenseDao {
 
     @Delete
     suspend fun delete(expense: ExpenseEntity)
+
+    @Query("DELETE FROM expenses")
+    suspend fun clearAll()
 }

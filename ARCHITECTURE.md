@@ -9,8 +9,8 @@ Monolithic Local Engine: одна финансовая модель, offline-fir
 | Валюта | Только **USD** |
 | Точность | Все суммы — **целые центы** (`number` / `Long`) |
 | Источник правды | **Транзакции** (DEPOSIT, GOAL_TRANSFER, EXPENSE) для целей и глобального баланса |
-| Offline-first | Room (Android) + localStorage v5 (web) |
-| Sync | LWW по `syncUpdatedAt`, tombstone `deleted` |
+| Offline-first | Room v22 (Android) + localStorage v5 (web) |
+| Sync | Schema v3, LWW по `syncUpdatedAt`, отдельные tombstones |
 | UI | Milk-Rich M3: фон `#F9F7F2`, positive `#4A7C59`, negative `#B35D5D` |
 
 ## Структура репозитория
@@ -40,7 +40,7 @@ Money/
 | Модуль | Назначение |
 |--------|------------|
 | `domain/util/GlobalFinanceEngine.kt` | DEPOSIT − GOAL_TRANSFER − EXPENSE |
-| `data/local/` | Room: `transfers`, `expenses`, `savings_goal`, `debtor`, `sync_queue` |
+| `data/local/` | Room v22: business tables, `sync_queue`, `sync_tombstone` |
 | `GoalRepositoryImpl` | `currentAmountCents` **derived** из transfers |
 
 ### Формулы (обе платформы)
@@ -83,11 +83,13 @@ flowchart LR
 | Применение snapshot | `data/sync/FinanceSnapshotApplier.kt` |
 | TS mirror | `packages/shared/src/syncEngine.ts` |
 
-**Протокол:** initiator (больший `deviceId`) шлёт JSON snapshot первым → acceptor отвечает → обе стороны `mergeSymmetric(local, remote)` → apply → `sync_queue.clearAll()`.
+**Протокол v3:** initiator (больший `deviceId`) шлёт JSON snapshot первым → acceptor отвечает → обе стороны `mergeSymmetric(local, remote)` → apply → `sync_queue.clearAll()`. Snapshot включает debts/payments, unified transactions, voice settings и tombstones.
 
 **Порт:** динамический (`port = 0`), публикуется через NSD. Фиксированный 8080 не используется — меньше конфликтов на устройстве.
 
-**Web P2P:** пока **не реализован** (offline localStorage). Контракт готов в `@money/shared`.
+**Web P2P:** ручное подключение к URL Android WebSocket peer через
+`useWebSync.ts`; browser не публикует NSD service и продолжает хранить данные в
+localStorage.
 
 ### Маппинг TS ↔ Kotlin (snapshot)
 
@@ -122,6 +124,33 @@ flowchart LR
 | Voice settings | RU/EN, Male/Female, `VoiceSettingsScreen` |
 | Network indicator | `SyncStatusIndicator` (green / grey) |
 
+## Backup layer
+
+```mermaid
+flowchart LR
+  Room[Room v22] --> Exporter[BackupExporter]
+  DataStore[Portable DataStore settings] --> Exporter
+  Image[Vision image] --> Exporter
+  Exporter --> Crypto[PBKDF2 + AES-256-GCM]
+  Crypto --> Local[Storage Access Framework file]
+  Crypto --> Drive[Optional Google Drive appDataFolder]
+  Local --> Importer[Validated replace + rollback]
+  Drive --> Importer
+  Importer --> Reconcile[WorkManager, widget, calendar reconciliation]
+```
+
+- `data/backup/` содержит portable bundle v1, codec, password crypto, Room apply/
+  rollback, local document gateway, optional Google Drive REST provider и daily
+  WorkManager backup.
+- Google scope ограничен `drive.appdata`; обычные Drive-файлы недоступны.
+- Restore заменяет локальные business tables и portable preferences, очищает
+  sync queue/tombstones и возвращает warnings для post-restore reconciliation.
+- `DefaultLocalDataResetter` под `SyncWriteGuard` удаляет Room и local state,
+  останавливает P2P, сбрасывает device ID, credential, schedules/notifications и
+  calendar links. Remote backups остаются, пока пользователь отдельно не выберет
+  их удаление.
+- Операционные инструкции: `docs/BACKUP_RESTORE.md`.
+
 ## Зависимости между слоями
 
 ```
@@ -141,19 +170,26 @@ SyncService (только после мутаций → sync_queue)
 ## Тесты
 
 ```bash
-# из корня
-npm install
-npm run test:shared    # LWW merge
-npm run test:web       # finance engine + UI logic
+# Node workspaces
+npm ci
+npm test
+npm run build --workspace=money-web
 
-# Android
-./gradlew.bat :app:testDebugUnitTest
+# Android JVM tests/builds
+ANDROID_HOME=$HOME/android-sdk ./gradlew :app:testDebugUnitTest :app:assembleDebug
+ANDROID_HOME=$HOME/android-sdk ./gradlew :app:bundleRelease
 ```
+
+Android coverage includes Room migrations, sync v3/tombstones, repositories,
+backup encryption/round-trip/rollback, Google Drive transport, automatic backup,
+safe local reset, reminders/calendar, ViewModels, finance and psychology logic.
+Node coverage includes shared sync/finance engines and web state/UI logic. CI
+runs both suites plus Android debug and web production builds.
 
 ## Roadmap (следующие шаги)
 
 1. **UUID ids** — убрать коллизии auto-increment при P2P
-2. **Web P2P client** — WebSocket к Android peer (или QR pairing)
+2. **Web pairing/discovery** — заменить ручной WebSocket URL на безопасное pairing
 3. **Unified snapshot** — Android `transactions[]` в JSON или adapter transfers+expenses ↔ transactions
 4. **Codegen** — генерация Kotlin data class из `@money/shared` (optional)
 
@@ -166,7 +202,7 @@ npm run test:web       # finance engine + UI logic
 | Phase C — Milk-Rich dashboard | ✅ |
 | Phase D — Widget + TTS | ✅ |
 | `packages/shared` | ✅ |
-| Web в P2P | ⏳ |
+| Web в P2P | ✅ ручной WebSocket URL |
 
 ---
 
