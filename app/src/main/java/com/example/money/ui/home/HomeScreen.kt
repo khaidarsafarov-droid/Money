@@ -205,6 +205,7 @@ fun HomeScreen(
     var showWelcomeDialog by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
     var addHighlight by remember { mutableStateOf(AddAction.Expense) }
+    var addSheetActions by remember { mutableStateOf(AddAction.entries.toList()) }
     var showTopMenu by remember { mutableStateOf(false) }
     var showAdvisorSheet by remember { mutableStateOf(false) }
     var showIncomeIdeas by remember { mutableStateOf(false) }
@@ -272,6 +273,7 @@ fun HomeScreen(
         }
         if (launchConfig.openQuickAddDialog) {
             addHighlight = AddAction.Expense
+            addSheetActions = AddAction.entries.toList()
             showAddSheet = true
         }
 
@@ -637,6 +639,7 @@ fun HomeScreen(
     if (showAddSheet) {
         AddActionSheet(
             highlighted = addHighlight,
+            actions = addSheetActions,
             onDismiss = { showAddSheet = false },
             onExpense = { showExpenseDialog = true },
             onDeposit = { showTransferDialog = true },
@@ -770,27 +773,30 @@ fun HomeScreen(
         }
 
         val fab: @Composable () -> Unit = {
+            val pagePlus = if (isTablet) {
+                plusActionFor(tabletSection)
+            } else {
+                plusActionFor(HomeTab.entries[selectedTab])
+            }
             FloatingActionButton(
                 onClick = {
-                    addHighlight = if (isTablet) {
-                        when (tabletSection) {
-                            HomeSection.Debts -> AddAction.Debt
-                            HomeSection.Goals -> AddAction.NewGoal
-                            HomeSection.Home, HomeSection.Operations -> AddAction.Expense
-                        }
-                    } else {
-                        when (HomeTab.entries[selectedTab]) {
-                            HomeTab.Debts -> AddAction.Debt
-                            HomeTab.Goals -> AddAction.NewGoal
-                            HomeTab.Home, HomeTab.BrotherFinances -> AddAction.Expense
+                    when (pagePlus) {
+                        PagePlusAction.AddDebt -> showAddDebtorDialog = true
+                        PagePlusAction.AddGoal -> showAddGoalDialog = true
+                        PagePlusAction.AddAnything, PagePlusAction.AddOperation -> {
+                            addHighlight = plusHighlight(pagePlus)
+                            addSheetActions = plusSheetActions(pagePlus).orEmpty()
+                            showAddSheet = true
                         }
                     }
-                    showAddSheet = true
                 },
                 containerColor = GoldPrimary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_sheet_title))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(plusContentRes(pagePlus)),
+                )
             }
         }
 

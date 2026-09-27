@@ -144,11 +144,7 @@ fun TabletHomeLayout(
         containerColor = CreamBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = topBar,
-        floatingActionButton = {
-            if (section != HomeSection.Operations) {
-                floatingActionButton()
-            }
-        },
+        floatingActionButton = floatingActionButton,
     ) { innerPadding ->
         Row(
             modifier = Modifier

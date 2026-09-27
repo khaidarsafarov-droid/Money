@@ -15,7 +15,6 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Savings
-import androidx.compose.material.icons.outlined.TrendingDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +33,7 @@ import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.StatusActiveBg
 
-/** Actions offered by the single primary control (the dock FAB). */
+/** Actions a page plus button can open from the add sheet. */
 enum class AddAction {
     Expense,
     Deposit,
@@ -44,14 +43,14 @@ enum class AddAction {
 }
 
 /**
- * Bottom sheet that replaces the old quick-add dialog.
- * [highlighted] is listed first and tinted so the section the user came from
- * (debts, goals) stays one tap away without a second filled button.
+ * Bottom sheet for pages whose plus button offers more than one record type.
+ * [actions] limits the list to that page. [highlighted] is listed first.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddActionSheet(
     highlighted: AddAction,
+    actions: List<AddAction> = AddAction.entries,
     onDismiss: () -> Unit,
     onExpense: () -> Unit,
     onDeposit: () -> Unit,
@@ -59,7 +58,7 @@ fun AddActionSheet(
     onGoalContribution: () -> Unit,
     onNewGoal: () -> Unit,
 ) {
-    val ordered = AddAction.entries.sortedBy { action -> if (action == highlighted) 0 else 1 }
+    val ordered = actions.sortedBy { action -> if (action == highlighted) 0 else 1 }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier

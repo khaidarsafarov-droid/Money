@@ -46,7 +46,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -332,6 +331,7 @@ internal fun PhoneHomeLayout(
             containerColor = CreamBackground,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
+            floatingActionButton = floatingActionButton,
             bottomBar = {
                 val dockTab = when (HomeTab.entries[selectedTab]) {
                     HomeTab.Home -> PhoneDockTab.Home
@@ -352,8 +352,6 @@ internal fun PhoneHomeLayout(
                         onTabSelected(HomeTab.Debts.ordinal)
                     },
                     onMore = { scope.launch { drawerState.open() } },
-                    showFab = HomeTab.entries[selectedTab] != HomeTab.BrotherFinances,
-                    fab = floatingActionButton,
                 )
             },
         ) { innerPadding ->
