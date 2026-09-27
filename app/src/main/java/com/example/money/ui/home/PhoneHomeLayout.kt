@@ -158,6 +158,7 @@ internal fun PhoneHomeLayout(
     highlightedDebtorId: Long?,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
+    onOpenGoal: (SavingsGoal) -> Unit,
     onDeleteGoal: (SavingsGoal) -> Unit,
     onGoalTransfer: (SavingsGoal) -> Unit,
     onExpense: () -> Unit,
@@ -553,6 +554,7 @@ internal fun PhoneHomeLayout(
                             GoalListItem(
                                 goal = goal,
                                 onEdit = { onEditGoal(goal) },
+                                onOpen = { onOpenGoal(goal) },
                                 onDelete = { onDeleteGoal(goal) },
                                 onTransfer = if (!goal.isCompleted) {
                                     { onGoalTransfer(goal) }

@@ -15,6 +15,7 @@ import com.example.money.domain.sync.SnapshotTransactionBucket
 import com.example.money.domain.sync.SyncEntityType
 import com.example.money.domain.sync.linkableDebtPayments
 import com.example.money.domain.sync.snapshotTransactionBucket
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.util.MoneyMath
 
 class FinanceSnapshotApplier(
@@ -56,6 +57,7 @@ class FinanceSnapshotApplier(
                 currency = goal.currency,
                 updatedAt = goal.syncUpdatedAt,
                 deadlineMillis = goal.dateDeadline?.let(SyncDates::parseDate),
+                kind = goal.goalKind ?: existing?.kind ?: GoalKind.MONEY.name,
             )
             if (existing == null) {
                 dao.insert(entity)

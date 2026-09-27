@@ -272,6 +272,15 @@
     <!-- Goals -->
     <string name="goals_section_title">My goals (%1$d)</string>
     <string name="goal_add_title">New goal</string>
+    <string name="goal_kind_label">Goal type</string>
+    <string name="goal_kind_money">Money</string>
+    <string name="goal_kind_action">Actions</string>
+    <string name="goal_action_kind_hint">Progress is the share of completed steps. You can add steps after the goal is created.</string>
+    <string name="goal_actions_title">Steps toward the goal</string>
+    <string name="goal_action_add">Add step</string>
+    <string name="goal_action_hint">What to do</string>
+    <string name="goal_action_progress">%1$d of %2$d steps</string>
+    <string name="goal_action_empty">Add steps to track progress toward this goal</string>
     <string name="goal_edit_title">Edit — %1$s</string>
     <string name="goal_name_label">What is this goal for?</string>
     <string name="goal_name_hint">e.g. truck repair, vacation, trip reserve</string>

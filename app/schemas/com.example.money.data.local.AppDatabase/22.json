@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 22,
-    "identityHash": "a74e9b7420df28226425a9581beae58e",
+    "identityHash": "8226ccb1bfb9fc2cd7fb19cded609a84",
     "entities": [
       {
         "tableName": "debtor",
@@ -473,7 +473,7 @@
       },
       {
         "tableName": "savings_goal",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sync_id` TEXT NOT NULL, `name` TEXT NOT NULL, `target_amount_cents` INTEGER NOT NULL, `current_amount_cents` INTEGER NOT NULL, `currency` TEXT NOT NULL, `updated_at` INTEGER NOT NULL, `deadline_ms` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sync_id` TEXT NOT NULL, `name` TEXT NOT NULL, `target_amount_cents` INTEGER NOT NULL, `current_amount_cents` INTEGER NOT NULL, `currency` TEXT NOT NULL, `updated_at` INTEGER NOT NULL, `deadline_ms` INTEGER, `kind` TEXT NOT NULL DEFAULT 'MONEY')",
         "fields": [
           {
             "fieldPath": "id",
@@ -521,6 +521,13 @@
             "fieldPath": "deadlineMillis",
             "columnName": "deadline_ms",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'MONEY'"
           }
         ],
         "primaryKey": {
@@ -538,6 +545,72 @@
             ],
             "orders": [],
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_savings_goal_sync_id` ON `${TABLE_NAME}` (`sync_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "goal_action",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `goal_id` INTEGER NOT NULL, `title` TEXT NOT NULL, `completed` INTEGER NOT NULL, `sort_order` INTEGER NOT NULL, FOREIGN KEY(`goal_id`) REFERENCES `savings_goal`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "goalId",
+            "columnName": "goal_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completed",
+            "columnName": "completed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sort_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_goal_action_goal_id",
+            "unique": false,
+            "columnNames": [
+              "goal_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_goal_action_goal_id` ON `${TABLE_NAME}` (`goal_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "savings_goal",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "goal_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
           }
         ]
       },
@@ -708,7 +781,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a74e9b7420df28226425a9581beae58e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8226ccb1bfb9fc2cd7fb19cded609a84')"
     ]
   }
 }

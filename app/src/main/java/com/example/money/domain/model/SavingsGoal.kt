@@ -9,6 +9,9 @@ data class SavingsGoal(
     val currency: String = "USD",
     val updatedAt: Long,
     val deadlineMillis: Long? = null,
+    val kind: GoalKind = GoalKind.MONEY,
+    val actionDone: Int = 0,
+    val actionTotal: Int = 0,
 ) {
     val targetAmount: Double
         get() = targetAmountCents / 100.0
@@ -49,6 +52,15 @@ data class SavingsGoal(
             deadlineMillis,
         )
 
+    val actionProgressFraction: Float
+        get() = if (actionTotal <= 0) 0f else actionDone.toFloat() / actionTotal.toFloat()
+
+    val actionProgressPercent: Int
+        get() = if (actionTotal <= 0) 0 else (actionDone * 100) / actionTotal
+
     val isCompleted: Boolean
-        get() = currentAmountCents >= targetAmountCents && targetAmountCents > 0L
+        get() = when (kind) {
+            GoalKind.MONEY -> currentAmountCents >= targetAmountCents && targetAmountCents > 0L
+            GoalKind.ACTION -> actionTotal > 0 && actionDone >= actionTotal
+        }
 }

@@ -39,6 +39,20 @@ class Migration21To22Test {
 
         try {
             val database = helper.writableDatabase
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `savings_goal` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `sync_id` TEXT NOT NULL,
+                    `name` TEXT NOT NULL,
+                    `target_amount_cents` INTEGER NOT NULL,
+                    `current_amount_cents` INTEGER NOT NULL,
+                    `currency` TEXT NOT NULL,
+                    `updated_at` INTEGER NOT NULL,
+                    `deadline_ms` INTEGER
+                )
+                """.trimIndent(),
+            )
             MIGRATION_21_22.migrate(database)
 
             val columns = mutableListOf<Pair<String, Int>>()
@@ -58,6 +72,27 @@ class Migration21To22Test {
                     "sync_updated_at" to 0,
                 ),
                 columns,
+            )
+
+            val goalColumns = mutableListOf<String>()
+            database.query("PRAGMA table_info(`savings_goal`)").use { cursor ->
+                val nameIndex = cursor.getColumnIndexOrThrow("name")
+                while (cursor.moveToNext()) {
+                    goalColumns += cursor.getString(nameIndex)
+                }
+            }
+            assertEquals(true, goalColumns.contains("kind"))
+
+            val actionColumns = mutableListOf<String>()
+            database.query("PRAGMA table_info(`goal_action`)").use { cursor ->
+                val nameIndex = cursor.getColumnIndexOrThrow("name")
+                while (cursor.moveToNext()) {
+                    actionColumns += cursor.getString(nameIndex)
+                }
+            }
+            assertEquals(
+                listOf("id", "goal_id", "title", "completed", "sort_order"),
+                actionColumns,
             )
         } finally {
             helper.close()
