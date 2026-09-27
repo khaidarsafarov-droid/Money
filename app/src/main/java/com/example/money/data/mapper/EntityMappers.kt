@@ -122,6 +122,7 @@ fun ExpenseEntity.toDomain(): Expense = Expense(
     isConfirmed = isConfirmed,
     debtId = debtId,
     debtPaymentId = debtPaymentId,
+    goalId = goalId,
 )
 
 fun Expense.toEntity(): ExpenseEntity = ExpenseEntity(
@@ -134,6 +135,7 @@ fun Expense.toEntity(): ExpenseEntity = ExpenseEntity(
     isConfirmed = isConfirmed,
     debtId = debtId,
     debtPaymentId = debtPaymentId,
+    goalId = goalId,
 )
 
 fun SavingsGoalEntity.toDomain(): SavingsGoal = SavingsGoal(

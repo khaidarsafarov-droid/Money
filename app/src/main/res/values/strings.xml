@@ -231,10 +231,12 @@
     <string name="msg_transfer_added">Перевод сохранён и учтён в балансе.</string>
     <string name="msg_expense_added">Расход сохранён и учтён в балансе.</string>
     <string name="msg_insufficient_funds">Недостаточно средств на общем остатке.</string>
+    <string name="msg_goal_insufficient">Недостаточно средств на цели.</string>
+    <string name="msg_goal_expense_added">Расход из цели сохранён.</string>
     <string name="msg_goal_transfer_added">Перевод в цель выполнен.</string>
     <string name="global_balance_available">Доступно: %1$s</string>
     <string name="global_balance_label">Доступный остаток</string>
-    <string name="global_balance_widget_formula_hint">Пополнения %1$s − в цели %2$s − расходы %3$s</string>
+    <string name="global_balance_widget_formula_hint">Пополнения %1$s − расходы %2$s. В целях %3$s</string>
     <string name="dashboard_see_more">Подробнее</string>
     <string name="dashboard_see_less">Свернуть</string>
     <string name="drawer_group_goals">Цели</string>
@@ -250,7 +252,7 @@
     <string name="empty_budget_action">Добавить операцию</string>
     <string name="dashboard_debts_section">Долги и операции</string>
     <string name="dashboard_debts_summary">%1$d активных долгов · %2$d операций в бюджете</string>
-    <string name="global_balance_available_hint">Пополнения − в цели (%1$s) − расходы</string>
+    <string name="global_balance_available_hint">Пополнения − расходы. В целях: %1$s</string>
     <string name="global_balance_goal_allocated_label">В цели</string>
     <string name="global_balance_income_minus_expenses">Доходы − расходы</string>
     <string name="global_balance_accumulated_label">В целях</string>
@@ -281,6 +283,7 @@
     <string name="history_debt_opened">Долг · %1$s</string>
     <string name="history_goal_note">Запись · %1$s</string>
     <string name="history_goal_record">Цель · %1$s</string>
+    <string name="history_goal_expense">Расход из цели · %1$s</string>
     <string name="operation_deposit">Пополнение</string>
     <string name="operation_expense">Расход</string>
     <string name="operation_goal_transfer">Перевод · %1$s</string>
@@ -288,7 +291,8 @@
     <string name="goal_action_expense">Расход</string>
     <string name="goal_transfer_title">Перевод в цель</string>
     <string name="goal_current_readonly">Накоплено: %1$s (из операций)</string>
-    <string name="goal_starts_at_zero_hint">Накопления начинаются с нуля. Пополните общий баланс и переведите средства на цель.</string>
+    <string name="goal_expense_title">Расход из цели</string>
+    <string name="goal_starts_at_zero_hint">Накопления начинаются с нуля. Запишите сумму прямо в цель — свободные деньги от этого не уменьшатся.</string>
     <string name="msg_goal_saved">Цель сохранена</string>
     <string name="msg_item_deleted">Запись удалена</string>
 

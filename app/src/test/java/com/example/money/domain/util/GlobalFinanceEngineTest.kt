@@ -16,7 +16,13 @@ class GlobalFinanceEngineTest {
         )
 
         assertEquals(450.0, summary.globalBalance, 0.001)
-        assertEquals(250.0, summary.availableBalance, 0.001)
+        assertEquals(450.0, summary.availableBalance, 0.001)
+    }
+
+    @Test
+    fun goalNetCents_subtractsGoalExpensesAndStaysAtZero() {
+        assertEquals(15_000L, GlobalFinanceEngine.goalNetCents(20_000L, 5_000L))
+        assertEquals(0L, GlobalFinanceEngine.goalNetCents(1_000L, 4_000L))
     }
 
     @Test
@@ -51,7 +57,7 @@ class GlobalFinanceEngineTest {
             totalExpenses = 10.0,
         )
 
-        assertTrue(GlobalFinanceEngine.canAfford(summary, 50.0))
-        assertFalse(GlobalFinanceEngine.canAfford(summary, 51.0))
+        assertTrue(GlobalFinanceEngine.canAfford(summary, 90.0))
+        assertFalse(GlobalFinanceEngine.canAfford(summary, 91.0))
     }
 }

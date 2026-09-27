@@ -10,4 +10,6 @@ data class Expense(
     val isConfirmed: Boolean = false,
     val debtId: Long? = null,
     val debtPaymentId: Long? = null,
+    /** Set when the expense is taken from a goal. Free-wallet expenses leave this empty. */
+    val goalId: Long? = null,
 )

@@ -30,7 +30,7 @@ class BackupRoomApplier(
                 val debtorLocalIds = insertDebtors(bundle)
                 val paymentLocalIds = insertDebtPayments(bundle, debtorLocalIds)
                 insertTransfers(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
-                insertExpenses(bundle, debtorLocalIds, paymentLocalIds)
+                insertExpenses(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
                 insertLuckDiaryEntries(bundle)
                 database.syncQueueDao().clearAll()
                 database.syncTombstoneDao().clearAll()
@@ -188,6 +188,7 @@ class BackupRoomApplier(
 
     private suspend fun insertExpenses(
         bundle: BackupBundle,
+        goalLocalIds: Map<String, Long>,
         debtorLocalIds: Map<String, Long>,
         paymentLocalIds: Map<String, Long>,
     ) {
@@ -214,6 +215,10 @@ class BackupRoomApplier(
                             "debt payment",
                         )
                     },
+                    goalId = expense.goalSyncId?.let { syncId ->
+                        goalLocalIds.requireReference(syncId, "Expense ${expense.syncId}", "goal")
+                    },
+                    goalSyncId = expense.goalSyncId,
                 ),
             )
         }

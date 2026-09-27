@@ -164,7 +164,7 @@ internal fun PhoneHomeLayout(
     onDeleteGoal: (SavingsGoal) -> Unit,
     onGoalTransfer: (SavingsGoal) -> Unit,
     onLogGoal: (SavingsGoal) -> Unit,
-    onExpense: () -> Unit,
+    onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
@@ -502,7 +502,7 @@ internal fun PhoneHomeLayout(
                                 } else {
                                     null
                                 },
-                                onExpense = onExpense,
+                                onExpense = { onExpense(goal) },
                                 onLog = { onLogGoal(goal) },
                                 hideAmounts = privacySettings.hideAmounts,
                             )

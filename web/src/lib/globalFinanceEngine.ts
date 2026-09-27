@@ -15,6 +15,17 @@ export function goalAllocatedCents(transactions: Transaction[], goalId: string):
     .reduce((sum, tx) => sum + tx.amount, 0);
 }
 
+export function goalSpentCents(transactions: Transaction[], goalId: string): number {
+  return transactions
+    .filter((tx) => !tx.deleted && tx.kind === "EXPENSE" && tx.goalId === goalId)
+    .reduce((sum, tx) => sum + tx.amount, 0);
+}
+
+/** Saved on a goal after a manual expense taken from that goal. */
+export function goalNetCents(transactions: Transaction[], goalId: string): number {
+  return Math.max(goalAllocatedCents(transactions, goalId) - goalSpentCents(transactions, goalId), 0);
+}
+
 export function computeActiveGoalMetrics(items: FinancialItem[]): ActiveGoalMetrics {
   const activeGoals = items.filter(
     (item) => item.type === "GOAL" && !item.deleted && item.status !== "COMPLETED",
@@ -41,13 +52,12 @@ export function computeGlobalFinanceSummary(state: FinanceState): GlobalFinanceS
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   const totalExpensesCents = state.transactions
-    .filter((tx) => !tx.deleted && tx.kind === "EXPENSE")
+    .filter((tx) => !tx.deleted && tx.kind === "EXPENSE" && !tx.goalId)
     .reduce((sum, tx) => sum + tx.amount, 0);
 
   const goalMetrics = computeActiveGoalMetrics(enriched.items);
-  const globalBalanceCents = totalDepositsCents - totalExpensesCents;
-  const availableBalanceCents =
-    totalDepositsCents - totalGoalAllocatedCents - totalExpensesCents;
+  const availableBalanceCents = totalDepositsCents - totalExpensesCents;
+  const globalBalanceCents = availableBalanceCents;
 
   return {
     totalDepositsCents,
@@ -63,7 +73,7 @@ export function computeGlobalFinanceSummary(state: FinanceState): GlobalFinanceS
 export function enrichGoalItem(item: FinancialItem, transactions: Transaction[]): FinancialItem {
   if (item.type !== "GOAL") return item;
 
-  const amount = goalAllocatedCents(transactions, item.id);
+  const amount = goalNetCents(transactions, item.id);
   return {
     ...item,
     amount,
@@ -96,10 +106,12 @@ export function addTransaction(
 
   const summary = computeGlobalFinanceSummary(state);
 
-  if (input.kind === "GOAL_TRANSFER" || input.kind === "EXPENSE") {
-    if (input.amountCents > summary.availableBalanceCents) {
-      return { state, error: "Недостаточно средств на общем остатке" };
+  if (input.kind === "EXPENSE" && input.goalId) {
+    if (input.amountCents > goalNetCents(state.transactions, input.goalId)) {
+      return { state, error: "Недостаточно средств на цели" };
     }
+  } else if (input.kind === "EXPENSE" && input.amountCents > summary.availableBalanceCents) {
+    return { state, error: "Недостаточно средств на общем остатке" };
   }
 
   if (input.kind === "GOAL_TRANSFER" && !input.goalId) {
@@ -157,23 +169,7 @@ export function migrateLegacyGoalHistory(state: FinanceState): FinanceState {
 
   if (migrated.length === 0) return state;
 
-  const withLedger: FinanceState = { ...state, transactions: migrated };
-  const totalGoal = migrated
-    .filter((tx) => tx.kind === "GOAL_TRANSFER")
-    .reduce((sum, tx) => sum + tx.amount, 0);
-
-  const deposit: Transaction = {
-    id: createId(),
-    kind: "DEPOSIT",
-    amount: totalGoal,
-    createdAt: new Date().toISOString(),
-    note: "Миграция: начальный баланс",
-  };
-
-  return enrichFinanceState({
-    ...withLedger,
-    transactions: [deposit, ...withLedger.transactions],
-  });
+  return enrichFinanceState({ ...state, transactions: migrated });
 }
 
 export function sortedTransactions(transactions: Transaction[]): Transaction[] {

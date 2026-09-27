@@ -12,6 +12,7 @@ import com.example.money.data.sync.SyncIds
         Index(value = ["sync_id"], unique = true),
         Index(value = ["isConfirmed"]),
         Index(value = ["debt_id"]),
+        Index(value = ["goalId"]),
     ],
 )
 data class ExpenseEntity(
@@ -29,4 +30,8 @@ data class ExpenseEntity(
     val debtId: Long? = null,
     @ColumnInfo(name = "debt_payment_id")
     val debtPaymentId: Long? = null,
+    /** null — расход из свободных денег; иначе расход из этой цели. */
+    val goalId: Long? = null,
+    @ColumnInfo(name = "goal_sync_id")
+    val goalSyncId: String? = null,
 )

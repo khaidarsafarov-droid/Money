@@ -185,8 +185,15 @@ internal fun historyEventSubtitle(event: AppHistoryEvent, goals: List<SavingsGoa
     }
     is AppHistoryEvent.ExpenseEvent -> {
         val expense = event.expense
+        val goalName = expense.goalId?.let { goalId -> goals.find { it.id == goalId }?.name }
         buildString {
-            append(stringResource(R.string.operation_expense))
+            append(
+                when {
+                    goalName != null -> stringResource(R.string.history_goal_expense, goalName)
+                    expense.goalId != null -> stringResource(R.string.goal_expense_title)
+                    else -> stringResource(R.string.operation_expense)
+                },
+            )
             append(" · ")
             append(expense.category)
             append(" · ")

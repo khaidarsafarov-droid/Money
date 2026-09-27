@@ -155,6 +155,7 @@ object FinanceSnapshotCodec {
             put("createdAt", SyncDates.formatDateTime(entity.date))
             put("category", entity.category)
             put("note", entity.note)
+            entity.goalSyncId?.let { put("goalId", it) }
             debtSyncId?.let { put("debtId", it) }
             debtPaymentSyncId?.let { put("debtPaymentId", it) }
             put("syncUpdatedAt", syncUpdatedAt)

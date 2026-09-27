@@ -14,6 +14,7 @@ import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
 import com.example.money.domain.util.GlobalFinanceEngine
+import com.example.money.domain.util.MoneyMath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -78,7 +79,6 @@ class BudgetRepositoryImpl(
     override suspend fun addGoalTransferIfAffordable(transfer: Transfer): Boolean =
         SyncWriteGuard.withWriteLock {
             database.withTransaction {
-                if (!canAffordCurrentBalance(transfer.amount)) return@withTransaction false
                 val goalSyncId = transfer.goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
                 val id = transferDao.insert(
                     transfer.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
@@ -100,8 +100,16 @@ class BudgetRepositoryImpl(
     override suspend fun addExpenseIfAffordable(expense: Expense): Boolean =
         SyncWriteGuard.withWriteLock {
             database.withTransaction {
-                if (!canAffordCurrentBalance(expense.amount)) return@withTransaction false
-                val id = expenseDao.insert(expense.copy(isConfirmed = true).toEntity())
+                val goalId = expense.goalId
+                if (goalId != null) {
+                    if (!canSpendFromGoal(goalId, expense.amount)) return@withTransaction false
+                } else if (!canAffordCurrentBalance(expense.amount)) {
+                    return@withTransaction false
+                }
+                val goalSyncId = goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
+                val id = expenseDao.insert(
+                    expense.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
+                )
                 expenseDao.getById(id)?.let { syncQueueRecorder.recordExpense(it) }
                 true
             }
@@ -144,5 +152,14 @@ class BudgetRepositoryImpl(
             totalExpenses = expenseDao.getConfirmedTotalOnce(),
         )
         return GlobalFinanceEngine.canAfford(summary, amount)
+    }
+
+    private suspend fun canSpendFromGoal(goalId: Long, amount: Double): Boolean {
+        if (savingsGoalDao.getGoalById(goalId) == null) return false
+        val netCents = GlobalFinanceEngine.goalNetCents(
+            transferCents = MoneyMath.toCents(transferDao.getGoalTransferTotalOnce(goalId)),
+            expenseCents = MoneyMath.toCents(expenseDao.getGoalExpenseTotalOnce(goalId)),
+        )
+        return amount <= MoneyMath.fromCents(netCents) + 0.000_001
     }
 }

@@ -197,6 +197,7 @@ fun HomeScreen(
     var debtPaymentPrefillCents by remember { mutableLongStateOf(0L) }
     var showTransferDialog by remember { mutableStateOf(false) }
     var showExpenseDialog by remember { mutableStateOf(false) }
+    var goalExpenseTarget by remember { mutableStateOf<SavingsGoal?>(null) }
     var showGoalTransferDialog by remember { mutableStateOf<SavingsGoal?>(null) }
     var showAddGoalDialog by remember { mutableStateOf(false) }
     var progressLogGoal by remember { mutableStateOf<SavingsGoal?>(null) }
@@ -527,7 +528,6 @@ fun HomeScreen(
     }
     showGoalTransferDialog?.let { goal ->
         AddTransferDialog(
-            availableBalance = availableBalanceUsd,
             onDismiss = { showGoalTransferDialog = null },
             onConfirm = { amount, date ->
                 budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
@@ -546,18 +546,40 @@ fun HomeScreen(
             },
         )
     }
-    if (showExpenseDialog) {
+    val expenseGoal = goalExpenseTarget
+    if (showExpenseDialog || expenseGoal != null) {
         AddExpenseDialog(
-            onDismiss = { showExpenseDialog = false },
+            titleRes = if (expenseGoal != null) {
+                R.string.goal_expense_title
+            } else {
+                R.string.budget_new_expense_title
+            },
+            spendLimit = expenseGoal?.let { it.currentAmountCents / 100.0 },
+            onDismiss = {
+                showExpenseDialog = false
+                goalExpenseTarget = null
+            },
             onConfirm = { amount, category, date, note ->
-                budgetViewModel.addExpense(amount, category, date, note) { result ->
+                val goalId = expenseGoal?.id
+                budgetViewModel.addExpense(amount, category, date, note, goalId) { result ->
                     showExpenseDialog = false
+                    goalExpenseTarget = null
                     scope.launch {
                         showMessage(
                             context.getString(
                                 when (result) {
-                                    BudgetActionResult.Success -> R.string.msg_expense_added
-                                    BudgetActionResult.InsufficientFunds -> R.string.msg_insufficient_funds
+                                    BudgetActionResult.Success ->
+                                        if (goalId != null) {
+                                            R.string.msg_goal_expense_added
+                                        } else {
+                                            R.string.msg_expense_added
+                                        }
+                                    BudgetActionResult.InsufficientFunds ->
+                                        if (goalId != null) {
+                                            R.string.msg_goal_insufficient
+                                        } else {
+                                            R.string.msg_insufficient_funds
+                                        }
                                 },
                             ),
                         )
@@ -596,7 +618,6 @@ fun HomeScreen(
         GoalProgressLogDialog(
             goal = goal,
             hideAmounts = privacySettings.hideAmounts,
-            availableBalance = availableBalanceUsd,
             onDismiss = { progressLogGoal = null },
             onSave = { amount, note, date ->
                 fun saveNote() {
@@ -832,7 +853,7 @@ fun HomeScreen(
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onLogGoal = { progressLogGoal = it },
-                onExpense = { showExpenseDialog = true },
+                onExpense = { goalExpenseTarget = it },
                 onRemindDebtor = { debtor -> remindDebtor = debtor },
                 onAddDebtPayment = { debtor ->
                     debtPaymentPrefillCents = 0L
@@ -929,7 +950,7 @@ fun HomeScreen(
                 onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onLogGoal = { progressLogGoal = it },
-                onExpense = { showExpenseDialog = true },
+                onExpense = { goalExpenseTarget = it },
                 onRemindDebtor = { debtor -> remindDebtor = debtor },
                 onAddDebtPayment = { debtor ->
                     debtPaymentPrefillCents = 0L

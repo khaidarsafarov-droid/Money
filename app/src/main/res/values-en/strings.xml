@@ -213,6 +213,8 @@
     <string name="msg_transfer_added">Transfer saved and applied to balance.</string>
     <string name="msg_expense_added">Expense saved and applied to balance.</string>
     <string name="msg_insufficient_funds">Insufficient funds in overall balance.</string>
+    <string name="msg_goal_insufficient">Not enough saved on this goal.</string>
+    <string name="msg_goal_expense_added">Expense from the goal saved.</string>
     <string name="msg_goal_transfer_added">Transfer to goal completed.</string>
     <string name="global_balance_available">Balance: %1$s</string>
     <string name="global_balance_label">Available balance</string>
@@ -233,8 +235,8 @@
     <string name="action_more">More</string>
     <string name="dashboard_debts_section">Debts &amp; transactions</string>
     <string name="dashboard_debts_summary">%1$d active debts · %2$d budget transactions</string>
-    <string name="global_balance_widget_formula_hint">Deposits %1$s − to goals %2$s − expenses %3$s</string>
-    <string name="global_balance_available_hint">Deposits − to goals (%1$s) − expenses</string>
+    <string name="global_balance_widget_formula_hint">Deposits %1$s − expenses %2$s. On goals %3$s</string>
+    <string name="global_balance_available_hint">Deposits − expenses. On goals: %1$s</string>
     <string name="global_balance_goal_allocated_label">To goals</string>
     <string name="debt_search_hint">Search by name, note, phone, or email</string>
     <string name="debt_search_clear">Clear search</string>
@@ -270,6 +272,7 @@
     <string name="history_debt_opened">Debt · %1$s</string>
     <string name="history_goal_note">Note · %1$s</string>
     <string name="history_goal_record">Goal · %1$s</string>
+    <string name="history_goal_expense">Expense from goal · %1$s</string>
     <string name="operation_deposit">Deposit</string>
     <string name="operation_expense">Expense</string>
     <string name="operation_goal_transfer">Transfer · %1$s</string>
@@ -277,7 +280,8 @@
     <string name="goal_action_expense">Expense</string>
     <string name="goal_transfer_title">Transfer to goal</string>
     <string name="goal_current_readonly">Saved: %1$s (from transactions)</string>
-    <string name="goal_starts_at_zero_hint">Savings start at zero. Top up your balance and transfer funds to a goal.</string>
+    <string name="goal_expense_title">Expense from goal</string>
+    <string name="goal_starts_at_zero_hint">Savings start at zero. Record the amount directly on the goal — free money stays untouched.</string>
     <string name="msg_goal_saved">Goal saved</string>
     <string name="msg_item_deleted">Entry deleted</string>
 

@@ -28,6 +28,14 @@ interface TransferDao {
 
     @Query(
         """
+        SELECT COALESCE(SUM(amount), 0) FROM transfers
+        WHERE isConfirmed = 1 AND goalId = :goalId
+        """,
+    )
+    suspend fun getGoalTransferTotalOnce(goalId: Long): Double
+
+    @Query(
+        """
         SELECT goalId, COALESCE(SUM(amount), 0) AS totalAmount
         FROM transfers
         WHERE isConfirmed = 1 AND goalId IS NOT NULL

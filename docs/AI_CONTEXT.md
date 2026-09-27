@@ -108,9 +108,10 @@ separately as Android-Keystore-wrapped SharedPreferences.
 ### Balance formulas (both platforms)
 
 ```
-globalBalance     = deposits − expenses
-availableBalance  = deposits − goalTransfers − expenses
-totalAccumulated  = Σ accumulated on active goals
+globalBalance     = deposits − free expenses
+availableBalance  = deposits − free expenses
+goal balance      = goal transfers − expenses taken from that goal
+totalAccumulated  = Σ goal balance on active goals
 remainingToGoal   = Σ (target − accumulated) on active goals
 ```
 

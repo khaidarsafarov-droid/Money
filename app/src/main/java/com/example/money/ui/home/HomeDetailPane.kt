@@ -42,7 +42,7 @@ fun HomeDetailPane(
     onDeleteGoal: (SavingsGoal) -> Unit,
     onGoalTransfer: (SavingsGoal) -> Unit,
     onLogGoal: (SavingsGoal) -> Unit = {},
-    onExpense: () -> Unit,
+    onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
     onAccelerateDebtPayment: (Debtor, Long) -> Unit = { _, _ -> },
@@ -93,7 +93,7 @@ fun HomeDetailPane(
                         null
                     },
                     onLog = { onLogGoal(selection.goal) },
-                    onExpense = onExpense,
+                    onExpense = { onExpense(selection.goal) },
                     hideAmounts = hideAmounts,
                 )
             }

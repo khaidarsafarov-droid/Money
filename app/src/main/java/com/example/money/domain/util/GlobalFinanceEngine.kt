@@ -21,6 +21,10 @@ object GlobalFinanceEngine {
         return amount <= summary.availableBalance + 0.000_001
     }
 
+    /** Saved on a goal after a manual expense taken from that goal. */
+    fun goalNetCents(transferCents: Long, expenseCents: Long): Long =
+        (transferCents - expenseCents).coerceAtLeast(0L)
+
     fun activeGoalMetrics(goals: List<com.example.money.domain.model.SavingsGoal>): DashboardGoalMetrics {
         val activeGoals = goals.filter { it.kind == GoalKind.MONEY && !it.isCompleted }
         val accumulated = activeGoals.sumOf { it.currentAmountCents } / 100.0

@@ -131,6 +131,7 @@ class AppContainer(
         GoalRepositoryImpl(
             savingsGoalDao = database.savingsGoalDao(),
             transferDao = database.transferDao(),
+            expenseDao = database.expenseDao(),
             goalActionDao = database.goalActionDao(),
             syncQueueRecorder = syncQueueRecorder,
         )

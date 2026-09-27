@@ -22,8 +22,35 @@ describe("computeGlobalFinanceSummary", () => {
 
     const summary = computeGlobalFinanceSummary(state);
     expect(summary.globalBalanceCents).toBe(45_000);
-    expect(summary.availableBalanceCents).toBe(25_000);
+    expect(summary.availableBalanceCents).toBe(45_000);
     expect(summary.totalAccumulatedCents).toBe(20_000);
+  });
+
+  it("lets a goal contribution succeed when the free wallet is empty", () => {
+    const withGoal = addGoal(emptyState, { name: "Trip", target: 100_000 });
+    const goalId = withGoal.items[0]!.id;
+    const result = addTransaction(withGoal, { kind: "GOAL_TRANSFER", amountCents: 20_000, goalId });
+    expect(result.error).toBeUndefined();
+    const summary = computeGlobalFinanceSummary(result.state);
+    expect(summary.availableBalanceCents).toBe(0);
+    expect(summary.totalAccumulatedCents).toBe(20_000);
+  });
+
+  it("spends a goal expense only from that goal", () => {
+    const withGoal = addGoal(emptyState, { name: "Trip", target: 100_000 });
+    const goalId = withGoal.items[0]!.id;
+    let state = addTransaction(withGoal, { kind: "DEPOSIT", amountCents: 6_000 }).state!;
+    state = addTransaction(state, { kind: "GOAL_TRANSFER", amountCents: 5_000, goalId }).state!;
+    state = addTransaction(state, {
+      kind: "EXPENSE",
+      amountCents: 1_000,
+      goalId,
+      category: "from goal",
+    }).state!;
+
+    const summary = computeGlobalFinanceSummary(state);
+    expect(summary.availableBalanceCents).toBe(6_000);
+    expect(summary.totalAccumulatedCents).toBe(4_000);
   });
 
   it("blocks spending below zero available balance", () => {
@@ -68,13 +95,15 @@ describe("computeActiveGoalMetrics", () => {
 });
 
 describe("migrateLegacyGoalHistory", () => {
-  it("creates matching deposit for migrated goal balances", () => {
+  it("keeps migrated savings on the goal wallet", () => {
     const legacy = addGoal(emptyState, { name: "Old", target: 100_000 });
     legacy.items[0]!.amount = 30_000;
 
     const migrated = migrateLegacyGoalHistory(legacy);
     expect(migrated.transactions.some((tx) => tx.kind === "GOAL_TRANSFER")).toBe(true);
-    expect(migrated.transactions.some((tx) => tx.kind === "DEPOSIT")).toBe(true);
-    expect(computeGlobalFinanceSummary(migrated).availableBalanceCents).toBe(0);
+    expect(migrated.transactions.some((tx) => tx.kind === "DEPOSIT")).toBe(false);
+    const summary = computeGlobalFinanceSummary(migrated);
+    expect(summary.availableBalanceCents).toBe(0);
+    expect(summary.totalAccumulatedCents).toBe(30_000);
   });
 });

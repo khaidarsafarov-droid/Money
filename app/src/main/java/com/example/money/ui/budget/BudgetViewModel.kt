@@ -72,6 +72,7 @@ class BudgetViewModel(
         category: String,
         date: Long,
         note: String,
+        goalId: Long? = null,
         onResult: (BudgetActionResult) -> Unit = {},
     ) {
         viewModelScope.launch {
@@ -81,6 +82,7 @@ class BudgetViewModel(
                     category = category,
                     date = date,
                     note = note,
+                    goalId = goalId,
                 ),
             )
             onResult(if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds)

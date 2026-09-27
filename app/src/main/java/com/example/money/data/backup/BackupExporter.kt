@@ -144,6 +144,9 @@ class BackupExporter(
                                 "debt payment",
                             )
                         },
+                        goalSyncId = expense.goalId?.let { goalId ->
+                            goalSyncIds.requireReference(goalId, "Expense ${expense.syncId}", "goal")
+                        },
                     )
                 },
                 luckDiaryEntries = luckEntries.map { entry ->

@@ -203,6 +203,7 @@ class FinanceSnapshotApplier(
                 SnapshotTransactionBucket.EXPENSE -> applyExpenseTransaction(
                     expenseDao,
                     transaction,
+                    goalLocalIds,
                     debtorLocalIds,
                     paymentLocalIds,
                 )
@@ -313,10 +314,13 @@ class FinanceSnapshotApplier(
     private suspend fun applyExpenseTransaction(
         expenseDao: com.example.money.data.local.dao.ExpenseDao,
         transaction: SnapshotTransaction,
+        goalLocalIds: Map<String, Long>,
         debtorLocalIds: Map<String, Long>,
         paymentLocalIds: Map<String, Long>,
     ) {
         val existing = expenseDao.getBySyncId(transaction.id)
+        val goalSyncId = transaction.goalId
+        val goalId = goalSyncId?.let { goalLocalIds[it] }
         val debtId = transaction.debtId?.let { debtorLocalIds[it] }
         val debtPaymentId = transaction.debtPaymentId?.let { paymentLocalIds[it] }
         val entity = ExpenseEntity(
@@ -329,6 +333,8 @@ class FinanceSnapshotApplier(
             isConfirmed = true,
             debtId = debtId,
             debtPaymentId = debtPaymentId,
+            goalId = goalId,
+            goalSyncId = goalSyncId,
         )
         if (existing == null) {
             expenseDao.insert(entity)

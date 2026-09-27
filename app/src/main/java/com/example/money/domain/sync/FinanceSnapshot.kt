@@ -71,7 +71,8 @@ data class SnapshotVoiceSettings(
 
 /**
  * Canonical offline snapshot for Project Money P2P sync (schema v3).
- * Goal balances are derived from GOAL_TRANSFER transactions, not stored on goals.
+ * Goal balances are derived from GOAL_TRANSFER transactions minus expenses
+ * that name that goal. They are not stored on goals.
  */
 data class FinanceSnapshot(
     val schemaVersion: Int,

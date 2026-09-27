@@ -1,5 +1,6 @@
 package com.example.money.data.repository
 
+import com.example.money.data.local.dao.ExpenseDao
 import com.example.money.data.local.dao.GoalActionDao
 import com.example.money.data.local.dao.SavingsGoalDao
 import com.example.money.data.local.dao.TransferDao
@@ -12,6 +13,7 @@ import com.example.money.domain.model.GoalAction
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
+import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.MoneyMath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.map
 class GoalRepositoryImpl(
     private val savingsGoalDao: SavingsGoalDao,
     private val transferDao: TransferDao,
+    private val expenseDao: ExpenseDao,
     private val goalActionDao: GoalActionDao,
     private val syncQueueRecorder: SyncQueueRecorder,
 ) : GoalRepository {
@@ -28,16 +31,23 @@ class GoalRepositoryImpl(
         combine(
             savingsGoalDao.observeAllGoals(),
             transferDao.observeGoalTransferTotals(),
+            expenseDao.observeGoalExpenseTotals(),
             goalActionDao.observeAll(),
-        ) { goals, totals, actions ->
+        ) { goals, totals, spent, actions ->
             val allocatedByGoal = totals.associate { row ->
+                row.goalId to MoneyMath.toCents(row.totalAmount)
+            }
+            val spentByGoal = spent.associate { row ->
                 row.goalId to MoneyMath.toCents(row.totalAmount)
             }
             val actionsByGoal = actions.groupBy { it.goalId }
             goals.map { entity ->
                 val steps = actionsByGoal[entity.id].orEmpty()
                 entity.toDomain().copy(
-                    currentAmountCents = allocatedByGoal[entity.id] ?: 0L,
+                    currentAmountCents = GlobalFinanceEngine.goalNetCents(
+                        transferCents = allocatedByGoal[entity.id] ?: 0L,
+                        expenseCents = spentByGoal[entity.id] ?: 0L,
+                    ),
                     actionDone = steps.count { it.completed },
                     actionTotal = steps.size,
                 )

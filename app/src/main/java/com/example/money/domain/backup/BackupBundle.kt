@@ -61,6 +61,7 @@ data class BackupExpense(
     val isConfirmed: Boolean,
     val debtorSyncId: String?,
     val debtPaymentSyncId: String?,
+    val goalSyncId: String? = null,
 )
 
 data class BackupLuckDiaryEntry(

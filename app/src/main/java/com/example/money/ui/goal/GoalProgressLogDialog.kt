@@ -32,7 +32,6 @@ import com.example.money.ui.util.InputValidators
 fun GoalProgressLogDialog(
     goal: SavingsGoal,
     hideAmounts: Boolean,
-    availableBalance: Double?,
     onDismiss: () -> Unit,
     onSave: (amount: Double?, note: String, dateMillis: Long) -> Unit,
 ) {
@@ -42,7 +41,6 @@ fun GoalProgressLogDialog(
     var error by remember { mutableStateOf<String?>(null) }
     val needInput = stringResource(R.string.goal_log_need_input)
     val badAmount = stringResource(R.string.error_amount_positive)
-    val insufficient = stringResource(R.string.msg_insufficient_funds)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -96,10 +94,6 @@ fun GoalProgressLogDialog(
                     }
                     if (amount == null && trimmedNote.isEmpty()) {
                         error = needInput
-                        return@TextButton
-                    }
-                    if (amount != null && availableBalance != null && amount > availableBalance) {
-                        error = insufficient
                         return@TextButton
                     }
                     onSave(amount, trimmedNote, date)

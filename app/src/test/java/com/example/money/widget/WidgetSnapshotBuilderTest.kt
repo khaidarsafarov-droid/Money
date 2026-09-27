@@ -40,7 +40,7 @@ class WidgetSnapshotBuilderTest {
             ),
         )
 
-        assertEquals(250.0, snapshot.availableBalance, 0.001)
+        assertEquals(450.0, snapshot.availableBalance, 0.001)
         assertEquals(450.0, snapshot.globalBalance, 0.001)
         assertEquals(40.0, snapshot.totalAccumulated, 0.001)
         assertEquals(60.0, snapshot.totalRemainingToGoal, 0.001)

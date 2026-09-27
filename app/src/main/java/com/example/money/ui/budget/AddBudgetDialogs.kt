@@ -116,6 +116,8 @@ fun AddTransferDialog(
 
 @Composable
 fun AddExpenseDialog(
+    titleRes: Int = R.string.budget_new_expense_title,
+    spendLimit: Double? = null,
     onDismiss: () -> Unit,
     onConfirm: (amount: Double, category: String, date: Long, note: String) -> Unit,
 ) {
@@ -127,10 +129,11 @@ fun AddExpenseDialog(
     var amountError by remember { mutableStateOf<String?>(null) }
     var categoryError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val overLimit = stringResource(R.string.msg_goal_insufficient)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.budget_new_expense_title)) },
+        title = { Text(stringResource(titleRes)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 MoneyTextField(
@@ -174,6 +177,10 @@ fun AddExpenseDialog(
                     categoryError = InputValidators.validateCategory(category)?.let(context::getString)
                     if (amountError != null || categoryError != null) return@TextButton
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
+                    if (spendLimit != null && amount > spendLimit + 0.000_001) {
+                        amountError = overLimit
+                        return@TextButton
+                    }
                     onConfirm(amount, category.trim(), date, note.trim())
                 },
             ) {

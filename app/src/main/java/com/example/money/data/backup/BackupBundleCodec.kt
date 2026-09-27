@@ -422,6 +422,7 @@ class BackupBundleCodec(
             put(KEY_IS_CONFIRMED, expense.isConfirmed)
             putOptional(KEY_DEBTOR_SYNC_ID, expense.debtorSyncId)
             putOptional(KEY_DEBT_PAYMENT_SYNC_ID, expense.debtPaymentSyncId)
+            putOptional(KEY_GOAL_SYNC_ID, expense.goalSyncId)
         }
 
     private fun encodeLuckDiaryEntry(entry: BackupLuckDiaryEntry): JSONObject =
@@ -626,6 +627,7 @@ class BackupBundleCodec(
             isConfirmed = json.getBoolean(KEY_IS_CONFIRMED),
             debtorSyncId = json.optionalString(KEY_DEBTOR_SYNC_ID),
             debtPaymentSyncId = json.optionalString(KEY_DEBT_PAYMENT_SYNC_ID),
+            goalSyncId = json.optionalString(KEY_GOAL_SYNC_ID),
         )
 
     private fun decodeLuckDiaryEntry(json: JSONObject): BackupLuckDiaryEntry =
