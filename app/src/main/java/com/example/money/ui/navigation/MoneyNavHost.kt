@@ -4,13 +4,18 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -19,7 +24,10 @@ import com.example.money.settings.UserProfile
 import com.example.money.ui.goal.GoalScreen
 import com.example.money.ui.home.HomeLaunchConfig
 import com.example.money.ui.home.HomeScreen
+import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.onboarding.OnboardingScreen
+import com.example.money.ui.onboarding.OnboardingSessionViewModel
+import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.settings.AppLanguageScreen
 import com.example.money.ui.settings.AutopilotSettingsScreen
 import com.example.money.ui.settings.BackupSettingsScreen
@@ -27,6 +35,7 @@ import com.example.money.ui.settings.CalendarSettingsScreen
 import com.example.money.ui.settings.DebtNotificationSettingsScreen
 import com.example.money.ui.settings.PrivacySettingsScreen
 import com.example.money.ui.settings.VoiceSettingsScreen
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @Composable
@@ -41,9 +50,11 @@ fun MoneyNavHost(
     val app = context.applicationContext as MoneyApplication
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
-    val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(
-        initialValue = UserProfile(),
-    )
+    val onboardingSession: OnboardingSessionViewModel = viewModel()
+    val storedProfile by app.preferencesStore.userProfile
+        .map<UserProfile, UserProfile?> { it }
+        .collectAsStateWithLifecycle(initialValue = null)
+    val userProfile = storedProfile ?: UserProfile()
     val calendarSettings by app.preferencesStore.calendarSettings.collectAsStateWithLifecycle(
         initialValue = com.example.money.settings.CalendarSettings(),
     )
@@ -87,8 +98,23 @@ fun MoneyNavHost(
         }
     }
 
-    if (!userProfile.onboardingCompleted) {
-        OnboardingScreen(onComplete = { }, modifier = modifier)
+    val onboardingSaved = OnboardingPreferences.isCompleted(context)
+    LaunchedEffect(storedProfile?.onboardingCompleted) {
+        if (storedProfile?.onboardingCompleted == true) {
+            OnboardingPreferences.markCompleted(context)
+        }
+    }
+    if (storedProfile == null && !onboardingSaved) {
+        Box(modifier.fillMaxSize().background(CreamBackground))
+        return
+    }
+    val onboardingCompleted = onboardingSaved || storedProfile?.onboardingCompleted == true
+    if (onboardingSession.active || !onboardingCompleted) {
+        SideEffect { onboardingSession.active = true }
+        OnboardingScreen(
+            onComplete = { onboardingSession.active = false },
+            modifier = modifier,
+        )
         return
     }
 

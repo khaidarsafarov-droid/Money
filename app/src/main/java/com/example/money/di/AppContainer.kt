@@ -53,6 +53,7 @@ import com.example.money.notification.DebtReminderSchedulerImpl
 import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.notification.PersonalDebtMessageSchedulerImpl
 import com.example.money.notification.WeeklyCheckInScheduler
+import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.home.WelcomePreferences
 import com.example.money.voice.VoiceReportScheduler
 import com.google.android.gms.auth.api.identity.Identity
@@ -206,6 +207,7 @@ class AppContainer(
                 deviceIdProvider.clear()
                 AppLanguageStorage.clear(application)
                 WelcomePreferences.clear(application)
+                OnboardingPreferences.clear(application)
             },
             stopPeerSync = {
                 withContext(Dispatchers.IO) {

@@ -38,6 +38,7 @@ import com.example.money.settings.UserEmotion
 import com.example.money.settings.UserGender
 import com.example.money.settings.UserProfile
 import com.example.money.settings.WeeklyCheckInSettings
+import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.home.WelcomePreferences
 import com.example.money.voice.VoiceGender
 import com.example.money.voice.VoiceLanguage
@@ -419,6 +420,7 @@ class MoneyPreferencesStore(
                     onboardingCompleted = preferences.user.onboardingCompleted,
                 ),
             )
+            OnboardingPreferences.setCompleted(context, preferences.user.onboardingCompleted)
             val localCalendar = prefs.toCalendarSettings()
             prefs.writeCalendarSettings(
                 CalendarSettings(

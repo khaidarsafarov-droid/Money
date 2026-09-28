@@ -45,6 +45,7 @@ import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.UserEmotion
 import com.example.money.settings.UserGender
 import com.example.money.ui.components.FinOrb
+import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.home.WelcomePreferences
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
@@ -114,6 +115,7 @@ fun OnboardingScreen(
                             draft = draft,
                             debtCount = debtCount,
                             onFinish = {
+                                OnboardingPreferences.markCompleted(context)
                                 WelcomePreferences.markWelcomeSeen(context)
                                 viewModel.completeOnboarding(onComplete)
                             },
@@ -150,6 +152,7 @@ private fun WelcomeStep(onNext: () -> Unit) {
 
 @Composable
 private fun NameStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
+    val context = LocalContext.current
     OnboardingCard {
         Text(stringResource(R.string.onboarding_name_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         OutlinedTextField(
@@ -192,7 +195,11 @@ private fun NameStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
             )
         }
         Button(
-            onClick = viewModel::nextStep,
+            onClick = {
+                viewModel.saveIdentity {
+                    OnboardingPreferences.markCompleted(context)
+                }
+            },
             enabled = viewModel.isValidName() && viewModel.isValidAge(),
             modifier = Modifier.fillMaxWidth(),
         ) {

@@ -11,6 +11,7 @@ import com.example.money.settings.FinancialPsychotype
 import com.example.money.settings.UserEmotion
 import com.example.money.settings.UserGender
 import com.example.money.settings.UserProfile
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 data class OnboardingDraft(
@@ -61,6 +63,24 @@ class OnboardingViewModel(
     fun nextStep() {
         if (_step.value < TOTAL_STEPS - 1) {
             _step.value += 1
+        }
+    }
+
+    /** Stores the name, gender, and age before the rest of the wizard. */
+    fun saveIdentity(onSaved: () -> Unit) {
+        viewModelScope.launch {
+            val draft = _draft.value
+            withContext(NonCancellable) {
+                preferencesStore.updateUserProfile { current ->
+                    current.copy(
+                        displayName = draft.displayName.trim(),
+                        gender = draft.gender,
+                        age = parsedAge(),
+                    )
+                }
+            }
+            onSaved()
+            nextStep()
         }
     }
 
@@ -146,27 +166,29 @@ class OnboardingViewModel(
             val psychotype = draft.psychotypeResult ?: FinancialPsychotype.BALANCED
             val answersJson = JSONArray(draft.psychotypeAnswers.mapNotNull { it?.toString() }).toString()
 
-            preferencesStore.updateUserProfile {
-                UserProfile(
-                    displayName = name,
-                    gender = draft.gender,
-                    age = parsedAge(),
-                    customFear = draft.customFear.trim(),
-                    goalText = goal,
-                    emotion = draft.emotion,
-                    priority = draft.priority.trim(),
-                    onboardingCompleted = true,
-                )
-            }
+            withContext(NonCancellable) {
+                preferencesStore.updateUserProfile {
+                    UserProfile(
+                        displayName = name,
+                        gender = draft.gender,
+                        age = parsedAge(),
+                        customFear = draft.customFear.trim(),
+                        goalText = goal,
+                        emotion = draft.emotion,
+                        priority = draft.priority.trim(),
+                        onboardingCompleted = true,
+                    )
+                }
 
-            preferencesStore.updateGoalPsychologyProfile {
-                it.copy(
-                    psychotype = psychotype,
-                    psychotypeAnswersJson = answersJson,
-                    psychotypeTestCompleted = true,
-                    selectedFearIds = draft.selectedFearIds,
-                    personalMotivation = motivation,
-                )
+                preferencesStore.updateGoalPsychologyProfile {
+                    it.copy(
+                        psychotype = psychotype,
+                        psychotypeAnswersJson = answersJson,
+                        psychotypeTestCompleted = true,
+                        selectedFearIds = draft.selectedFearIds,
+                        personalMotivation = motivation,
+                    )
+                }
             }
 
             onFinished()
