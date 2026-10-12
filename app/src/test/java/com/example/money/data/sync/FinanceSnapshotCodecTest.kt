@@ -1,8 +1,10 @@
 package com.example.money.data.sync
 
+import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.domain.sync.FinanceSnapshot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -44,5 +46,22 @@ class FinanceSnapshotCodecTest {
         assertFalse(decoded.debts.single().affectsBalance)
         assertEquals("", decoded.debts.single().note)
         assertTrue(decoded.debtPayments.single().affectsBalance)
+        assertNull(decoded.debtPayments.single().currency)
+    }
+
+    @Test
+    fun debtPaymentCurrencyRoundTrips() {
+        val encoded = FinanceSnapshotCodec.encodeDebtPayment(
+            DebtPaymentEntity(
+                syncId = "payment-1",
+                debtorId = 1L,
+                amountCents = 100L,
+                currency = "TJS",
+                paidAt = 1_700_000_000_000L,
+            ),
+            debtorSyncId = "debt-1",
+        )
+
+        assertEquals("TJS", FinanceSnapshotCodec.decodeDebtPayment(encoded).currency)
     }
 }

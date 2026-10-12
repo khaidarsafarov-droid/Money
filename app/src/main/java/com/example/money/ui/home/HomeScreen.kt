@@ -647,7 +647,7 @@ fun HomeScreen(
                         showMessage(context.getString(R.string.goal_log_saved))
                     }
                 }
-                if (amount != null) {
+                if (amount != null && goal.kind == GoalKind.MONEY) {
                     budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
                         when (result) {
                             BudgetActionResult.Success -> saveNote()

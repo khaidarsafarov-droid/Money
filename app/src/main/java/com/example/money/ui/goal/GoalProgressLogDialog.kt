@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
+import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.MoneyTextField
@@ -25,8 +26,8 @@ import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 
 /**
- * One entry on a goal: an amount (added to that goal's saved total) and/or a note
- * of what was done (stored on the goal and counted as completed).
+ * Money goals record an amount on that goal and an optional completed task.
+ * Any other goal records only the task.
  */
 @Composable
 fun GoalProgressLogDialog(
@@ -41,30 +42,33 @@ fun GoalProgressLogDialog(
     var error by remember { mutableStateOf<String?>(null) }
     val needInput = stringResource(R.string.goal_log_need_input)
     val badAmount = stringResource(R.string.error_amount_positive)
+    val tracksMoney = goal.kind == GoalKind.MONEY
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.goal_log_title, goal.name)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = stringResource(
-                        R.string.goal_saved_progress,
-                        Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
-                        Formatters.currencyFromCents(goal.targetAmountCents, hide = hideAmounts),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                MoneyTextField(
-                    value = amountText,
-                    onValueChange = {
-                        amountText = it
-                        error = null
-                    },
-                    label = stringResource(R.string.goal_log_amount),
-                    isError = error != null,
-                    supportingText = error,
-                )
+                if (tracksMoney) {
+                    Text(
+                        text = stringResource(
+                            R.string.goal_saved_progress,
+                            Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
+                            Formatters.currencyFromCents(goal.targetAmountCents, hide = hideAmounts),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    MoneyTextField(
+                        value = amountText,
+                        onValueChange = {
+                            amountText = it
+                            error = null
+                        },
+                        label = stringResource(R.string.goal_log_amount),
+                        isError = error != null,
+                        supportingText = error,
+                    )
+                }
                 OutlinedTextField(
                     value = note,
                     onValueChange = {
@@ -74,21 +78,27 @@ fun GoalProgressLogDialog(
                     label = { Text(stringResource(R.string.goal_log_note)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                DatePickerField(
-                    label = stringResource(R.string.field_date),
-                    selectedDateMillis = date,
-                    onDateSelected = { date = it },
-                )
+                if (tracksMoney) {
+                    DatePickerField(
+                        label = stringResource(R.string.field_date),
+                        selectedDateMillis = date,
+                        onDateSelected = { date = it },
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     val trimmedNote = note.trim()
-                    val amount = amountText.trim().takeIf { it.isNotEmpty() }?.let { raw ->
-                        InputValidators.parseAmount(raw)
+                    val amount = if (tracksMoney) {
+                        amountText.trim().takeIf { it.isNotEmpty() }?.let { raw ->
+                            InputValidators.parseAmount(raw)
+                        }
+                    } else {
+                        null
                     }
-                    if (amountText.isNotBlank() && amount == null) {
+                    if (tracksMoney && amountText.isNotBlank() && amount == null) {
                         error = badAmount
                         return@TextButton
                     }

@@ -110,7 +110,7 @@ export function useFinanceManager() {
   );
 
   const addExpense = useCallback(
-    (amountInput: string, category = "Общий"): { ok: boolean; error?: string } => {
+    (amountInput: string, category = "Общий", goalId?: string): { ok: boolean; error?: string } => {
       const amountCents = parseMoneyInput(amountInput);
       if (!amountCents) {
         return { ok: false, error: "Введите корректную сумму" };
@@ -119,6 +119,7 @@ export function useFinanceManager() {
         kind: "EXPENSE",
         amountCents,
         category,
+        goalId,
       });
       if (result.error) return { ok: false, error: result.error };
       persist(result.state);

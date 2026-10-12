@@ -62,6 +62,7 @@ export interface SnapshotDebtPayment extends LwwRecord {
   amountCents: number;
   paidAt: string;
   affectsBalance: boolean;
+  currency?: string;
 }
 
 export interface SnapshotTransaction extends LwwRecord {

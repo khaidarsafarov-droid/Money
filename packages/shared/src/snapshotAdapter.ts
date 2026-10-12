@@ -62,6 +62,7 @@ export function financeStateToSnapshot(
         amountCents: payment.amount,
         paidAt: payment.paidAt,
         affectsBalance: payment.affectsBalance ?? true,
+        ...(payment.currency ? { currency: payment.currency } : {}),
         syncUpdatedAt: payment.syncUpdatedAt ?? (Date.parse(payment.paidAt) || updatedAt),
         deleted: payment.deleted,
       })),
@@ -101,6 +102,7 @@ export function snapshotToFinanceState(snapshot: FinanceSnapshot): FinanceState 
       amount: payment.amountCents,
       paidAt: payment.paidAt,
       affectsBalance: payment.affectsBalance,
+      ...(payment.currency ? { currency: payment.currency } : {}),
       syncUpdatedAt: payment.syncUpdatedAt,
       deleted: payment.deleted,
     });

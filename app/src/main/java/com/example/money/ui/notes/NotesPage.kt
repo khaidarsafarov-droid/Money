@@ -22,9 +22,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -229,6 +231,15 @@ private fun NoteEditor(
 ) {
     var title by remember(note.id, note.title) { mutableStateOf(note.title) }
     var body by remember(note.id, note.body) { mutableStateOf(note.body) }
+    val latestTitle = rememberUpdatedState(title)
+    val latestBody = rememberUpdatedState(body)
+    val latestNote = rememberUpdatedState(note)
+    val latestUpdate = rememberUpdatedState(onUpdateNote)
+    DisposableEffect(note.id) {
+        onDispose {
+            persistText(latestNote.value, latestTitle.value, latestBody.value, latestUpdate.value)
+        }
+    }
     Column(
         modifier = modifier
             .fillMaxSize()

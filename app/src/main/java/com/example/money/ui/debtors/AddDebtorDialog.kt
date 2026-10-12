@@ -94,7 +94,7 @@ fun DebtorFormDialog(
         mutableStateOf(existingDebtor?.note.orEmpty())
     }
     var affectsBalance by remember(existingDebtor?.id, debtType) {
-        mutableStateOf(false)
+        mutableStateOf(existingDebtor?.affectsBalance ?: false)
     }
     var dateGiven by remember(existingDebtor?.id, debtType) {
         mutableLongStateOf(existingDebtor?.dateGiven ?: System.currentTimeMillis())

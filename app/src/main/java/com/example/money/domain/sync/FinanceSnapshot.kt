@@ -41,6 +41,8 @@ data class SnapshotDebtPayment(
     val affectsBalance: Boolean = true,
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
+    /** Null when an older snapshot did not carry a payment currency. */
+    val currency: String? = null,
 ) : LwwRecord
 
 data class SnapshotTransaction(

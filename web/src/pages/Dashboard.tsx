@@ -55,6 +55,7 @@ export function DashboardPage() {
   const [paymentItem, setPaymentItem] = useState<FinancialItem | null>(null);
   const [paymentPrefillCents, setPaymentPrefillCents] = useState(0);
   const [transferGoal, setTransferGoal] = useState<FinancialItem | null>(null);
+  const [expenseGoal, setExpenseGoal] = useState<FinancialItem | null>(null);
   const [amountAction, setAmountAction] = useState<AmountAction | null>(null);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showAddDebt, setShowAddDebt] = useState(false);
@@ -277,7 +278,10 @@ export function DashboardPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAmountAction("expense")}
+                    onClick={() => {
+                      setExpenseGoal(null);
+                      setAmountAction("expense");
+                    }}
                     className="pill-btn-secondary inline-flex flex-1 items-center justify-center gap-1.5"
                   >
                     <AppIcon icon={ArrowUpRight} size={16} />
@@ -388,7 +392,10 @@ export function DashboardPage() {
                           hideAmounts={hideAmounts}
                           onAddPayment={openPayment}
                           onGoalTransfer={setTransferGoal}
-                          onGoalExpense={() => setAmountAction("expense")}
+                          onGoalExpense={() => {
+                            setExpenseGoal(item);
+                            setAmountAction("expense");
+                          }}
                           onDelete={setPendingDelete}
                         />
                       ))}
@@ -461,13 +468,16 @@ export function DashboardPage() {
 
       <AmountModal
         open={amountAction === "expense"}
-        title="Общий расход"
-        hint={availableHint}
+        title={expenseGoal ? `Расход — ${expenseGoal.name}` : "Общий расход"}
+        hint={expenseGoal ? "Сумма спишется только с этой цели." : availableHint}
         submitLabel="Списать"
-        onClose={() => setAmountAction(null)}
+        onClose={() => {
+          setAmountAction(null);
+          setExpenseGoal(null);
+        }}
         onSubmit={(amount) => {
-          const result = finance.addExpense(amount);
-          if (result.ok) showToast("Расход сохранён");
+          const result = finance.addExpense(amount, "Общий", expenseGoal?.id);
+          if (result.ok) showToast(expenseGoal ? "Расход с цели сохранён" : "Расход сохранён");
           return result;
         }}
       />
@@ -512,7 +522,14 @@ export function DashboardPage() {
         onTabChange={setTab}
         actions={[
           { label: "Пополнить", icon: ArrowDownLeft, onClick: () => setAmountAction("deposit") },
-          { label: "Расход", icon: ArrowUpRight, onClick: () => setAmountAction("expense") },
+          {
+            label: "Расход",
+            icon: ArrowUpRight,
+            onClick: () => {
+              setExpenseGoal(null);
+              setAmountAction("expense");
+            },
+          },
           { label: "Новый долг", icon: HandCoins, onClick: () => setShowAddDebt(true) },
           { label: "Новая цель", icon: Target, onClick: () => setShowAddGoal(true) },
         ]}

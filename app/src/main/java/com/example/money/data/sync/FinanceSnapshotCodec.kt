@@ -130,6 +130,7 @@ object FinanceSnapshotCodec {
             put("amountCents", entity.amountCents)
             put("paidAt", SyncDates.formatDateTime(entity.paidAt))
             put("affectsBalance", entity.affectsBalance)
+            put("currency", entity.currency)
             put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
         }.toString()
@@ -249,6 +250,7 @@ object FinanceSnapshotCodec {
             paidAt = SyncDates.formatDateTime(entity.paidAt),
             affectsBalance = entity.affectsBalance,
             syncUpdatedAt = entity.paidAt,
+            currency = entity.currency,
         )
 
     fun toSnapshotTransactionFromTransfer(
@@ -464,6 +466,7 @@ object FinanceSnapshotCodec {
             put("amountCents", payment.amountCents)
             put("paidAt", payment.paidAt)
             put("affectsBalance", payment.affectsBalance)
+            payment.currency?.let { put("currency", it) }
             put("syncUpdatedAt", payment.syncUpdatedAt)
             put("deleted", payment.deleted)
         }
@@ -555,6 +558,7 @@ object FinanceSnapshotCodec {
                         affectsBalance = item.optBoolean("affectsBalance", true),
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
+                        currency = item.optString("currency").takeIf { item.has("currency") && it.isNotBlank() },
                     ),
                 )
             }

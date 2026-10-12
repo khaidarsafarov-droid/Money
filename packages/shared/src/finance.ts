@@ -31,6 +31,7 @@ export interface Payment {
   amount: number;
   paidAt: string;
   affectsBalance?: boolean;
+  currency?: string;
   syncUpdatedAt?: number;
   deleted?: boolean;
 }

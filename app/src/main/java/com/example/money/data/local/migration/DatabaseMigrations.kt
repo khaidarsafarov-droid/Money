@@ -26,6 +26,14 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+/**
+ * Shipped history. Do not rewrite MIGRATION_2_3, MIGRATION_3_4, or MIGRATION_5_6.
+ * Databases already past version 6 have run them. Changing the SQL changes the
+ * upgrade path. MIGRATION_2_3 stores a zero current amount, MIGRATION_3_4 forces
+ * USD, and MIGRATION_5_6 inserts both a per-goal transfer and a second transfer
+ * for the same sum with a null goal id. A later repair cannot tell that second
+ * row from a real deposit.
+ */
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(

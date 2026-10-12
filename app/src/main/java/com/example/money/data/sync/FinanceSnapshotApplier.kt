@@ -158,7 +158,7 @@ class FinanceSnapshotApplier(
                 syncId = payment.id,
                 debtorId = debtorId,
                 amountCents = payment.amountCents,
-                currency = "USD",
+                currency = payment.currency ?: existing?.currency ?: "USD",
                 paidAt = SyncDates.parseDateTime(payment.paidAt),
                 affectsBalance = payment.affectsBalance,
             )
