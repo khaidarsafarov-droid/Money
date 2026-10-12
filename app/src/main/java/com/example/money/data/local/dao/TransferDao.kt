@@ -59,6 +59,9 @@ interface TransferDao {
     @Query("SELECT * FROM transfers WHERE sync_id = :syncId LIMIT 1")
     suspend fun getBySyncId(syncId: String): TransferEntity?
 
+    @Query("SELECT * FROM transfers WHERE goalId = :goalId")
+    suspend fun getByGoalId(goalId: Long): List<TransferEntity>
+
     @Query("SELECT * FROM transfers WHERE debt_id = :debtId")
     suspend fun getByDebtId(debtId: Long): List<TransferEntity>
 

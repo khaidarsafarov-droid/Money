@@ -19,6 +19,9 @@ interface GoalActionDao {
     @Query("SELECT * FROM goal_action WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): GoalActionEntity?
 
+    @Query("SELECT * FROM goal_action WHERE goal_id = :goalId")
+    suspend fun getByGoalId(goalId: Long): List<GoalActionEntity>
+
     @Query("SELECT * FROM goal_action WHERE sync_id = :syncId LIMIT 1")
     suspend fun getBySyncId(syncId: String): GoalActionEntity?
 

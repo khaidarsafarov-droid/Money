@@ -145,7 +145,10 @@ class AppContainer(
     }
 
     val noteRepository: NoteRepository by lazy {
-        NoteRepositoryImpl(database.financeNoteDao())
+        NoteRepositoryImpl(
+            noteDao = database.financeNoteDao(),
+            syncQueueRecorder = syncQueueRecorder,
+        )
     }
 
     val debtReminderScheduler: DebtReminderScheduler by lazy {

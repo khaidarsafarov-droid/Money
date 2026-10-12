@@ -13,9 +13,11 @@ import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
 import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
+import com.example.money.data.sync.FinanceSnapshotCodec
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupBundle
 import com.example.money.domain.backup.BackupValidationException
+import com.example.money.domain.sync.SyncEntityType
 
 class BackupRoomApplier(
     private val database: AppDatabase,
@@ -28,6 +30,7 @@ class BackupRoomApplier(
     internal suspend fun applyLocked(bundle: BackupBundle) {
         SyncWriteGuard.runWithoutRecording {
             database.withTransaction {
+                val prior = capturePriorSyncState()
                 clearBusinessTables()
                 val goalLocalIds = insertGoals(bundle)
                 val debtorLocalIds = insertDebtors(bundle)
@@ -40,9 +43,175 @@ class BackupRoomApplier(
                 insertNoteLines(bundle, noteLocalIds)
                 database.syncQueueDao().clearAll()
                 database.syncTombstoneDao().clearAll()
+                writeRestoreTombstones(bundle, prior)
             }
         }
     }
+
+    private suspend fun capturePriorSyncState(): PriorSyncState =
+        PriorSyncState(
+            goals = database.savingsGoalDao().getAllGoalsOnce(),
+            debtors = database.debtorDao().getAllDebtorsOnce(),
+            debtPayments = database.debtPaymentDao().getAllPaymentsOnce(),
+            transfers = database.transferDao().getAllOnce(),
+            expenses = database.expenseDao().getAllOnce(),
+            goalActions = database.goalActionDao().getAllOnce(),
+            notes = database.financeNoteDao().getAllNotesOnce(),
+            noteLines = database.financeNoteDao().getAllLinesOnce(),
+            tombstones = database.syncTombstoneDao().getAll(),
+        )
+
+    private suspend fun writeRestoreTombstones(bundle: BackupBundle, prior: PriorSyncState) {
+        val now = System.currentTimeMillis()
+        val goalIds = bundle.goals.map { it.syncId }.toSet()
+        val debtorIds = bundle.debtors.map { it.syncId }.toSet()
+        val paymentIds = bundle.debtPayments.map { it.syncId }.toSet()
+        val transactionIds = bundle.transfers.map { it.syncId }.toSet() +
+            bundle.expenses.map { it.syncId }.toSet()
+        val actionIds = bundle.goalActions.map { it.syncId }.toSet()
+        val noteIds = bundle.notes.map { it.syncId }.toSet()
+        val lineIds = bundle.noteLines.map { it.syncId }.toSet()
+        val goalSyncByLocal = prior.goals.associate { it.id to it.syncId }
+        val debtorSyncByLocal = prior.debtors.associate { it.id to it.syncId }
+        val paymentSyncByLocal = prior.debtPayments.associate { it.id to it.syncId }
+        val noteSyncByLocal = prior.notes.associate { it.id to it.syncId }
+
+        prior.goals.filter { it.syncId !in goalIds }.forEach { goal ->
+            upsertDeleted(
+                SyncEntityType.GOAL,
+                goal.syncId,
+                FinanceSnapshotCodec.encodeGoal(goal.copy(updatedAt = now), deleted = true),
+                now,
+            )
+        }
+        prior.debtors.filter { it.syncId !in debtorIds }.forEach { debtor ->
+            upsertDeleted(
+                SyncEntityType.DEBT,
+                debtor.syncId,
+                FinanceSnapshotCodec.encodeDebt(debtor, now, deleted = true),
+                now,
+            )
+        }
+        prior.debtPayments.filter { it.syncId !in paymentIds }.forEach { payment ->
+            val debtorSyncId = debtorSyncByLocal[payment.debtorId] ?: return@forEach
+            upsertDeleted(
+                SyncEntityType.DEBT_PAYMENT,
+                payment.syncId,
+                FinanceSnapshotCodec.encodeDebtPayment(
+                    entity = payment,
+                    debtorSyncId = debtorSyncId,
+                    syncUpdatedAt = now,
+                    deleted = true,
+                ),
+                now,
+            )
+        }
+        prior.transfers.filter { it.syncId !in transactionIds }.forEach { transfer ->
+            upsertDeleted(
+                SyncEntityType.TRANSACTION,
+                transfer.syncId,
+                FinanceSnapshotCodec.encodeTransactionFromTransfer(
+                    entity = transfer,
+                    debtSyncId = transfer.debtId?.let { debtorSyncByLocal[it] },
+                    debtPaymentSyncId = transfer.debtPaymentId?.let { paymentSyncByLocal[it] },
+                    syncUpdatedAt = now,
+                    deleted = true,
+                ),
+                now,
+            )
+        }
+        prior.expenses.filter { it.syncId !in transactionIds }.forEach { expense ->
+            upsertDeleted(
+                SyncEntityType.TRANSACTION,
+                expense.syncId,
+                FinanceSnapshotCodec.encodeTransactionFromExpense(
+                    entity = expense,
+                    debtSyncId = expense.debtId?.let { debtorSyncByLocal[it] },
+                    debtPaymentSyncId = expense.debtPaymentId?.let { paymentSyncByLocal[it] },
+                    syncUpdatedAt = now,
+                    deleted = true,
+                ),
+                now,
+            )
+        }
+        prior.goalActions.filter { it.syncId !in actionIds }.forEach { action ->
+            val goalSyncId = goalSyncByLocal[action.goalId] ?: return@forEach
+            upsertDeleted(
+                SyncEntityType.GOAL_ACTION,
+                action.syncId,
+                FinanceSnapshotCodec.encodeGoalAction(
+                    action.copy(updatedAt = now),
+                    goalSyncId,
+                    deleted = true,
+                ),
+                now,
+            )
+        }
+        prior.notes.filter { it.syncId !in noteIds }.forEach { note ->
+            upsertDeleted(
+                SyncEntityType.NOTE,
+                note.syncId,
+                FinanceSnapshotCodec.encodeNote(note.copy(updatedAt = now), deleted = true),
+                now,
+            )
+        }
+        prior.noteLines.filter { it.syncId !in lineIds }.forEach { line ->
+            val noteSyncId = noteSyncByLocal[line.noteId] ?: return@forEach
+            upsertDeleted(
+                SyncEntityType.NOTE_LINE,
+                line.syncId,
+                FinanceSnapshotCodec.encodeNoteLine(
+                    line.copy(updatedAt = now),
+                    noteSyncId,
+                    deleted = true,
+                ),
+                now,
+            )
+        }
+        prior.tombstones.forEach { tombstone ->
+            val absent = when (tombstone.entityType) {
+                SyncEntityType.GOAL.name -> tombstone.entityId !in goalIds
+                SyncEntityType.DEBT.name -> tombstone.entityId !in debtorIds
+                SyncEntityType.DEBT_PAYMENT.name -> tombstone.entityId !in paymentIds
+                SyncEntityType.TRANSACTION.name -> tombstone.entityId !in transactionIds
+                SyncEntityType.GOAL_ACTION.name -> tombstone.entityId !in actionIds
+                SyncEntityType.NOTE.name -> tombstone.entityId !in noteIds
+                SyncEntityType.NOTE_LINE.name -> tombstone.entityId !in lineIds
+                else -> true
+            }
+            if (absent) {
+                database.syncTombstoneDao().upsertIfNewer(tombstone)
+            }
+        }
+    }
+
+    private suspend fun upsertDeleted(
+        entityType: SyncEntityType,
+        entityId: String,
+        payloadJson: String,
+        syncUpdatedAt: Long,
+    ) {
+        database.syncTombstoneDao().upsertIfNewer(
+            SyncTombstoneEntity(
+                entityType = entityType.name,
+                entityId = entityId,
+                payloadJson = payloadJson,
+                syncUpdatedAt = syncUpdatedAt,
+            ),
+        )
+    }
+
+    private data class PriorSyncState(
+        val goals: List<SavingsGoalEntity>,
+        val debtors: List<DebtorEntity>,
+        val debtPayments: List<DebtPaymentEntity>,
+        val transfers: List<TransferEntity>,
+        val expenses: List<ExpenseEntity>,
+        val goalActions: List<GoalActionEntity>,
+        val notes: List<FinanceNoteEntity>,
+        val noteLines: List<FinanceNoteLineEntity>,
+        val tombstones: List<SyncTombstoneEntity>,
+    )
 
     internal suspend fun captureRollbackLocked(): RoomRollbackSnapshot =
         RoomRollbackSnapshot(

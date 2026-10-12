@@ -12,6 +12,13 @@ import com.example.money.data.local.entity.FinanceNoteLineEntity
 import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
+import com.example.money.data.repository.BudgetRepositoryImpl
+import com.example.money.data.repository.GoalRepositoryImpl
+import com.example.money.data.repository.NoteRepositoryImpl
+import com.example.money.domain.model.Expense
+import com.example.money.domain.model.GoalKind
+import com.example.money.domain.model.NoteKind
+import com.example.money.domain.model.SavingsGoal
 import com.example.money.voice.VoiceReportSettings
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -212,5 +219,75 @@ class FinanceSnapshotRepositoryImplTest {
         } finally {
             other.close()
         }
+    }
+
+    @Test
+    fun deleteGoal_removesLinkedMoneyAndTasksAndKeepsThemInTheSnapshot() = runBlocking {
+        val goals = GoalRepositoryImpl(
+            savingsGoalDao = database.savingsGoalDao(),
+            transferDao = database.transferDao(),
+            expenseDao = database.expenseDao(),
+            goalActionDao = database.goalActionDao(),
+            syncQueueRecorder = recorder,
+        )
+        val budget = BudgetRepositoryImpl(
+            database = database,
+            transferDao = database.transferDao(),
+            expenseDao = database.expenseDao(),
+            savingsGoalDao = database.savingsGoalDao(),
+            syncQueueRecorder = recorder,
+        )
+        val goalId = goals.addGoal("Trip", 50_000L, 0L, null, GoalKind.MONEY)
+        val goal = database.savingsGoalDao().getGoalById(goalId)!!
+        budget.addExpense(
+            Expense(amount = 4.0, category = "Food", date = 20L, goalId = goalId),
+        )
+        database.transferDao().insert(
+            TransferEntity(
+                syncId = "transfer-goal",
+                amount = 10.0,
+                date = 20L,
+                isConfirmed = true,
+                goalId = goalId,
+                goalSyncId = goal.syncId,
+            ),
+        )
+        goals.addAction(goalId, "Pack")
+        assertEquals(goal.syncId, database.expenseDao().getAllOnce().single().goalSyncId)
+
+        goals.deleteGoal(
+            SavingsGoal(
+                id = goalId,
+                name = "Trip",
+                targetAmountCents = 50_000L,
+                updatedAt = goal.updatedAt,
+            ),
+        )
+
+        assertTrue(database.savingsGoalDao().getAllGoalsOnce().isEmpty())
+        assertTrue(database.transferDao().getAllOnce().isEmpty())
+        assertTrue(database.expenseDao().getAllOnce().isEmpty())
+        assertTrue(database.goalActionDao().getAllOnce().isEmpty())
+        val snapshot = repository.buildSnapshot()
+        assertTrue(snapshot.goals.single { it.id == goal.syncId }.deleted)
+        assertTrue(snapshot.goalActions.orEmpty().single().deleted)
+        assertEquals("Pack", snapshot.goalActions.orEmpty().single().title)
+        assertEquals(2, snapshot.transactions.size)
+        assertTrue(snapshot.transactions.all { it.deleted })
+    }
+
+    @Test
+    fun deletedNote_staysInTheNextSnapshot() = runBlocking {
+        val notes = NoteRepositoryImpl(database.financeNoteDao(), recorder)
+        val id = notes.addNote("List", NoteKind.TEXT)
+        notes.addLine(id, "Flour", 2_000L)
+        notes.deleteNote(id)
+        assertTrue(database.financeNoteDao().getAllNotesOnce().isEmpty())
+        assertTrue(database.financeNoteDao().getAllLinesOnce().isEmpty())
+        val snapshot = repository.buildSnapshot()
+        assertEquals("List", snapshot.notes.orEmpty().single().title)
+        assertTrue(snapshot.notes.orEmpty().single().deleted)
+        assertEquals("Flour", snapshot.noteLines.orEmpty().single().label)
+        assertTrue(snapshot.noteLines.orEmpty().single().deleted)
     }
 }

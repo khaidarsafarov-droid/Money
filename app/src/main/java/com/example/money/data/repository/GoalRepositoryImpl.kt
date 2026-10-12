@@ -100,8 +100,20 @@ class GoalRepositoryImpl(
     override suspend fun deleteGoal(goal: SavingsGoal) {
         SyncWriteGuard.withWriteLock {
             val existing = savingsGoalDao.getGoalById(goal.id) ?: return@withWriteLock
-            val marked = existing.copy(updatedAt = System.currentTimeMillis())
+            val now = System.currentTimeMillis()
+            val transfers = transferDao.getByGoalId(existing.id)
+            val expenses = expenseDao.getByGoalId(existing.id)
+            val actions = goalActionDao.getByGoalId(existing.id)
+            transfers.forEach { transferDao.delete(it) }
+            expenses.forEach { expenseDao.delete(it) }
+            actions.forEach { goalActionDao.deleteById(it.id) }
+            val marked = existing.copy(updatedAt = now)
             savingsGoalDao.delete(existing)
+            transfers.forEach { syncQueueRecorder.recordTransfer(it, deleted = true) }
+            expenses.forEach { syncQueueRecorder.recordExpense(it, deleted = true) }
+            actions.forEach { action ->
+                syncQueueRecorder.recordGoalAction(action, existing.syncId, deleted = true)
+            }
             syncQueueRecorder.recordGoal(marked, deleted = true)
         }
     }
@@ -110,8 +122,9 @@ class GoalRepositoryImpl(
         SyncWriteGuard.withWriteLock {
             val trimmed = title.trim()
             if (trimmed.isEmpty()) return@withWriteLock 0L
+            val goalSyncId = savingsGoalDao.getGoalById(goalId)?.syncId ?: return@withWriteLock 0L
             val sortOrder = goalActionDao.maxSortOrder(goalId) + 1
-            goalActionDao.insert(
+            val id = goalActionDao.insert(
                 GoalActionEntity(
                     goalId = goalId,
                     title = trimmed,
@@ -119,20 +132,28 @@ class GoalRepositoryImpl(
                     sortOrder = sortOrder,
                 ),
             )
+            goalActionDao.getById(id)?.let { syncQueueRecorder.recordGoalAction(it, goalSyncId) }
+            id
         }
 
     override suspend fun setActionCompleted(actionId: Long, completed: Boolean) {
         SyncWriteGuard.withWriteLock {
             val existing = goalActionDao.getById(actionId) ?: return@withWriteLock
-            goalActionDao.update(
-                existing.copy(completed = completed, updatedAt = System.currentTimeMillis()),
-            )
+            val goalSyncId = savingsGoalDao.getGoalById(existing.goalId)?.syncId ?: return@withWriteLock
+            val updated = existing.copy(completed = completed, updatedAt = System.currentTimeMillis())
+            goalActionDao.update(updated)
+            syncQueueRecorder.recordGoalAction(updated, goalSyncId)
         }
     }
 
     override suspend fun deleteAction(actionId: Long) {
         SyncWriteGuard.withWriteLock {
+            val existing = goalActionDao.getById(actionId) ?: return@withWriteLock
+            val goalSyncId = savingsGoalDao.getGoalById(existing.goalId)?.syncId
             goalActionDao.deleteById(actionId)
+            if (goalSyncId != null) {
+                syncQueueRecorder.recordGoalAction(existing, goalSyncId, deleted = true)
+            }
         }
     }
 }

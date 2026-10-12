@@ -188,6 +188,32 @@ object FinanceSnapshotCodec {
     fun encodeTransaction(record: SnapshotTransaction): String =
         encodeTransactionRecord(record).toString()
 
+    fun encodeGoalAction(
+        entity: GoalActionEntity,
+        goalSyncId: String,
+        deleted: Boolean = false,
+    ): String = encodeGoalActionRecord(
+        toSnapshotGoalAction(entity, goalSyncId).copy(deleted = deleted),
+    ).toString()
+
+    fun encodeNote(entity: FinanceNoteEntity, deleted: Boolean = false): String =
+        encodeNoteRecord(toSnapshotNote(entity).copy(deleted = deleted)).toString()
+
+    fun encodeNoteLine(
+        entity: FinanceNoteLineEntity,
+        noteSyncId: String,
+        deleted: Boolean = false,
+    ): String = encodeNoteLineRecord(
+        toSnapshotNoteLine(entity, noteSyncId).copy(deleted = deleted),
+    ).toString()
+
+    fun encodeGoalAction(record: SnapshotGoalAction): String =
+        encodeGoalActionRecord(record).toString()
+
+    fun encodeNote(record: SnapshotNote): String = encodeNoteRecord(record).toString()
+
+    fun encodeNoteLine(record: SnapshotNoteLine): String = encodeNoteLineRecord(record).toString()
+
     fun decodeGoal(raw: String): SnapshotGoal =
         decodeGoals(JSONArray().put(JSONObject(raw))).single()
 
@@ -199,6 +225,15 @@ object FinanceSnapshotCodec {
 
     fun decodeTransaction(raw: String): SnapshotTransaction =
         decodeTransactions(JSONArray().put(JSONObject(raw))).single()
+
+    fun decodeGoalAction(raw: String): SnapshotGoalAction =
+        decodeGoalActions(JSONArray().put(JSONObject(raw))).single()
+
+    fun decodeNote(raw: String): SnapshotNote =
+        decodeNotes(JSONArray().put(JSONObject(raw))).single()
+
+    fun decodeNoteLine(raw: String): SnapshotNoteLine =
+        decodeNoteLines(JSONArray().put(JSONObject(raw))).single()
 
     fun encodeVoiceSettings(settings: VoiceReportSettings, syncUpdatedAt: Long): String =
         encodeVoiceSettings(

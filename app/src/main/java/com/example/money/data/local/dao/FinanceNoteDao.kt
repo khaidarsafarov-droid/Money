@@ -28,6 +28,9 @@ interface FinanceNoteDao {
     @Query("SELECT * FROM finance_note_lines WHERE id = :id LIMIT 1")
     suspend fun getLineById(id: Long): FinanceNoteLineEntity?
 
+    @Query("SELECT * FROM finance_note_lines WHERE note_id = :noteId")
+    suspend fun getLinesByNoteId(noteId: Long): List<FinanceNoteLineEntity>
+
     @Query("SELECT * FROM finance_notes WHERE sync_id = :syncId LIMIT 1")
     suspend fun getNoteBySyncId(syncId: String): FinanceNoteEntity?
 

@@ -3,6 +3,7 @@ package com.example.money.data.repository
 import com.example.money.data.local.dao.FinanceNoteDao
 import com.example.money.data.local.entity.FinanceNoteEntity
 import com.example.money.data.local.entity.FinanceNoteLineEntity
+import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.model.FinanceNote
 import com.example.money.domain.model.FinanceNoteLine
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.map
 
 class NoteRepositoryImpl(
     private val noteDao: FinanceNoteDao,
+    private val syncQueueRecorder: SyncQueueRecorder,
 ) : NoteRepository {
 
     override fun observeNotes(): Flow<List<FinanceNote>> =
@@ -25,7 +27,7 @@ class NoteRepositoryImpl(
     override suspend fun addNote(title: String, kind: NoteKind): Long =
         SyncWriteGuard.withWriteLock {
             val now = System.currentTimeMillis()
-            noteDao.insertNote(
+            val id = noteDao.insertNote(
                 FinanceNoteEntity(
                     title = title.trim(),
                     kind = kind.name,
@@ -33,34 +35,43 @@ class NoteRepositoryImpl(
                     updatedAt = now,
                 ),
             )
+            noteDao.getNoteById(id)?.let { syncQueueRecorder.recordNote(it) }
+            id
         }
 
     override suspend fun updateNote(note: FinanceNote) {
         SyncWriteGuard.withWriteLock {
             val existing = noteDao.getNoteById(note.id) ?: return@withWriteLock
-            noteDao.updateNote(
-                existing.copy(
-                    title = note.title.trim(),
-                    kind = note.kind.name,
-                    body = note.body,
-                    mark = note.mark.name,
-                    closed = note.closed,
-                    updatedAt = System.currentTimeMillis(),
-                ),
+            val updated = existing.copy(
+                title = note.title.trim(),
+                kind = note.kind.name,
+                body = note.body,
+                mark = note.mark.name,
+                closed = note.closed,
+                updatedAt = System.currentTimeMillis(),
             )
+            noteDao.updateNote(updated)
+            syncQueueRecorder.recordNote(updated)
         }
     }
 
     override suspend fun deleteNote(id: Long) {
         SyncWriteGuard.withWriteLock {
+            val existing = noteDao.getNoteById(id) ?: return@withWriteLock
+            val lines = noteDao.getLinesByNoteId(id)
             noteDao.deleteNote(id)
+            lines.forEach { line ->
+                syncQueueRecorder.recordNoteLine(line, existing.syncId, deleted = true)
+            }
+            syncQueueRecorder.recordNote(existing, deleted = true)
         }
     }
 
     override suspend fun addLine(noteId: Long, label: String, amountCents: Long) {
         SyncWriteGuard.withWriteLock {
+            val note = noteDao.getNoteById(noteId) ?: return@withWriteLock
             val order = noteDao.maxSortOrder(noteId) + 1
-            noteDao.insertLine(
+            val id = noteDao.insertLine(
                 FinanceNoteLineEntity(
                     noteId = noteId,
                     label = label.trim(),
@@ -68,29 +79,40 @@ class NoteRepositoryImpl(
                     sortOrder = order,
                 ),
             )
-            noteDao.touchNote(noteId, System.currentTimeMillis())
+            val now = System.currentTimeMillis()
+            noteDao.touchNote(noteId, now)
+            noteDao.getLineById(id)?.let { syncQueueRecorder.recordNoteLine(it, note.syncId) }
+            noteDao.getNoteById(noteId)?.let { syncQueueRecorder.recordNote(it) }
         }
     }
 
     override suspend fun updateLine(line: FinanceNoteLine) {
         SyncWriteGuard.withWriteLock {
             val existing = noteDao.getLineById(line.id) ?: return@withWriteLock
-            noteDao.updateLine(
-                existing.copy(
-                    label = line.label.trim(),
-                    amountCents = line.amountCents,
-                    sortOrder = line.sortOrder,
-                    updatedAt = System.currentTimeMillis(),
-                ),
+            val note = noteDao.getNoteById(line.noteId) ?: return@withWriteLock
+            val updated = existing.copy(
+                label = line.label.trim(),
+                amountCents = line.amountCents,
+                sortOrder = line.sortOrder,
+                updatedAt = System.currentTimeMillis(),
             )
-            noteDao.touchNote(line.noteId, System.currentTimeMillis())
+            noteDao.updateLine(updated)
+            val now = System.currentTimeMillis()
+            noteDao.touchNote(line.noteId, now)
+            syncQueueRecorder.recordNoteLine(updated, note.syncId)
+            noteDao.getNoteById(line.noteId)?.let { syncQueueRecorder.recordNote(it) }
         }
     }
 
     override suspend fun deleteLine(noteId: Long, lineId: Long) {
         SyncWriteGuard.withWriteLock {
+            val existing = noteDao.getLineById(lineId) ?: return@withWriteLock
+            val note = noteDao.getNoteById(noteId) ?: return@withWriteLock
             noteDao.deleteLine(lineId)
-            noteDao.touchNote(noteId, System.currentTimeMillis())
+            val now = System.currentTimeMillis()
+            noteDao.touchNote(noteId, now)
+            syncQueueRecorder.recordNoteLine(existing, note.syncId, deleted = true)
+            noteDao.getNoteById(noteId)?.let { syncQueueRecorder.recordNote(it) }
         }
     }
 }

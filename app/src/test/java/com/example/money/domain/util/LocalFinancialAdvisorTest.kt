@@ -38,6 +38,22 @@ class LocalFinancialAdvisorTest {
     }
 
     @Test
+    fun budget_usesGoalNetAndDebtRemainder() {
+        val debts = listOf(debtor(1, DebtType.DEBTOR, remaining = 8_000))
+        val reply = LocalFinancialAdvisor.buildReply(
+            LocalFinancialAdvisor.AdviceRequest(promptId = "budget"),
+            LocalFinancialAdvisor.AdviceContext(
+                debts = debts,
+                totalAccumulatedCents = 12_000L,
+                now = now,
+            ),
+        )
+        assertTrue(reply.contains("120") || reply.contains("$120"))
+        assertTrue(reply.contains("80") || reply.contains("$80"))
+        assertTrue(!reply.contains("Пополнения") && !reply.contains("Deposits"))
+    }
+
+    @Test
     fun whichDebtFirst_picksSnowballWhenNoInterest() {
         val debts = listOf(
             debtor(1, DebtType.DEBTOR, remaining = 20_000),

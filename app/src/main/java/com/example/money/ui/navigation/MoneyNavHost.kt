@@ -20,7 +20,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.money.MoneyApplication
+import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.UserProfile
+import com.example.money.ui.util.Formatters
 import com.example.money.ui.goal.GoalScreen
 import com.example.money.ui.home.HomeLaunchConfig
 import com.example.money.ui.home.HomeScreen
@@ -48,6 +50,10 @@ fun MoneyNavHost(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as MoneyApplication
+    val currencyRegion by app.preferencesStore.currencyRegion.collectAsStateWithLifecycle(
+        initialValue = CurrencyRegion.US,
+    )
+    SideEffect { Formatters.activeRegion = currencyRegion }
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
     val onboardingSession: OnboardingSessionViewModel = viewModel()

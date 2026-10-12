@@ -53,6 +53,9 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE sync_id = :syncId LIMIT 1")
     suspend fun getBySyncId(syncId: String): ExpenseEntity?
 
+    @Query("SELECT * FROM expenses WHERE goalId = :goalId")
+    suspend fun getByGoalId(goalId: Long): List<ExpenseEntity>
+
     @Query("SELECT * FROM expenses WHERE debt_id = :debtId")
     suspend fun getByDebtId(debtId: Long): List<ExpenseEntity>
 

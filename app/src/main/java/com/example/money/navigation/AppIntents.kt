@@ -37,7 +37,7 @@ object AppIntents {
         }
 
         return when (intent.getStringExtra(EXTRA_ACTION)) {
-            ACTION_ADD_EXPENSE -> HomeLaunchConfig(openExpenseDialog = true)
+            ACTION_ADD_EXPENSE -> HomeLaunchConfig(openQuickAddDialog = true)
             ACTION_QUICK_ADD -> HomeLaunchConfig(openQuickAddDialog = true)
             ACTION_OPEN_DEBTOR -> {
                 val debtorId = intent.getLongExtra(EXTRA_DEBTOR_ID, -1L)

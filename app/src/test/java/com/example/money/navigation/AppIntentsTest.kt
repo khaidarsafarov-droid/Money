@@ -53,6 +53,16 @@ class AppIntentsTest {
     }
 
     @Test
+    fun parseLaunchConfig_addExpenseOpensQuickAdd() {
+        val config = AppIntents.parseLaunchConfig(
+            Intent().putExtra(AppIntents.EXTRA_ACTION, AppIntents.ACTION_ADD_EXPENSE),
+        )
+
+        assertEquals(true, config.openQuickAddDialog)
+        assertEquals(false, config.openExpenseDialog)
+    }
+
+    @Test
     fun parseLaunchConfig_opensGoalsTab() {
         val config = AppIntents.parseLaunchConfig(
             Intent().putExtra(AppIntents.EXTRA_ACTION, AppIntents.ACTION_OPEN_GOALS),

@@ -13,7 +13,10 @@ import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
+import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
+import com.example.money.data.sync.FinanceSnapshotCodec
+import com.example.money.domain.sync.SyncEntityType
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupAuthenticationException
@@ -385,6 +388,55 @@ class BackupRepositoryIntegrationTest {
         assertEquals("restored", database.savingsGoalDao().getAllGoalsOnce().single().name)
         assertEquals(1, result.warnings.size)
         assertEquals("post_restore", result.warnings.single().subsystem)
+    }
+
+    @Test
+    fun import_tombstonesRowsMissingFromBundleAndKeepsPriorDeletions() = runBlocking {
+        database.savingsGoalDao().insert(
+            SavingsGoalEntity(syncId = "kept-goal", name = "Kept", targetAmountCents = 100, updatedAt = 1L),
+        )
+        database.savingsGoalDao().insert(
+            SavingsGoalEntity(syncId = "dropped-goal", name = "Dropped", targetAmountCents = 200, updatedAt = 2L),
+        )
+        val gone = SavingsGoalEntity(
+            syncId = "already-gone",
+            name = "Gone",
+            targetAmountCents = 1,
+            updatedAt = 5L,
+        )
+        database.syncTombstoneDao().upsert(
+            SyncTombstoneEntity(
+                entityType = SyncEntityType.GOAL.name,
+                entityId = "already-gone",
+                payloadJson = FinanceSnapshotCodec.encodeGoal(gone, deleted = true),
+                syncUpdatedAt = 5L,
+            ),
+        )
+        val exported = repository.exportBundle()
+        repository.importBundle(exported.copy(goals = exported.goals.filter { it.syncId == "kept-goal" }))
+
+        assertEquals("kept-goal", database.savingsGoalDao().getAllGoalsOnce().single().syncId)
+        val tombstones = database.syncTombstoneDao().getAll()
+        assertTrue(tombstones.any { it.entityId == "dropped-goal" && it.entityType == SyncEntityType.GOAL.name })
+        assertTrue(tombstones.any { it.entityId == "already-gone" && it.entityType == SyncEntityType.GOAL.name })
+        assertTrue(tombstones.none { it.entityId == "kept-goal" })
+        assertTrue(database.syncQueueDao().getAllPending().isEmpty())
+    }
+
+    @Test
+    fun export_keepsExpenseGoalSyncIdWhenLocalGoalIsGone() = runBlocking {
+        database.expenseDao().insert(
+            ExpenseEntity(
+                syncId = "expense-sync",
+                amount = 3.0,
+                category = "Food",
+                date = 1L,
+                isConfirmed = true,
+                goalId = null,
+                goalSyncId = "missing-goal",
+            ),
+        )
+        assertEquals("missing-goal", repository.exportBundle().expenses.single().goalSyncId)
     }
 
     private fun createRepository(

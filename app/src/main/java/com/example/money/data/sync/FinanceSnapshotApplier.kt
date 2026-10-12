@@ -267,6 +267,33 @@ class FinanceSnapshotApplier(
                 payloadJson = FinanceSnapshotCodec.encodeTransaction(transaction),
             )
         }
+        snapshot.goalActions?.forEach { action ->
+            reconcileTombstone(
+                entityType = SyncEntityType.GOAL_ACTION,
+                entityId = action.id,
+                syncUpdatedAt = action.syncUpdatedAt,
+                deleted = action.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeGoalAction(action),
+            )
+        }
+        snapshot.notes?.forEach { note ->
+            reconcileTombstone(
+                entityType = SyncEntityType.NOTE,
+                entityId = note.id,
+                syncUpdatedAt = note.syncUpdatedAt,
+                deleted = note.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeNote(note),
+            )
+        }
+        snapshot.noteLines?.forEach { line ->
+            reconcileTombstone(
+                entityType = SyncEntityType.NOTE_LINE,
+                entityId = line.id,
+                syncUpdatedAt = line.syncUpdatedAt,
+                deleted = line.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeNoteLine(line),
+            )
+        }
     }
 
     private suspend fun reconcileTombstone(

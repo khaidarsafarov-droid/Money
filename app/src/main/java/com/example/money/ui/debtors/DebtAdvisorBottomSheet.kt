@@ -48,10 +48,6 @@ fun DebtAdvisorBottomSheet(
     onFreeText: (String) -> Unit,
     onClearHistory: () -> Unit = {},
     onDismiss: () -> Unit,
-    totalAccumulatedCents: Long = 0L,
-    remainingToGoalCents: Long = 0L,
-    totalDepositsCents: Long = 0L,
-    totalExpensesCents: Long = 0L,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var draft by remember { mutableStateOf("") }
@@ -175,8 +171,6 @@ fun buildAdvisorMessages(
     rawText: String = "",
     totalAccumulatedCents: Long = 0L,
     remainingToGoalCents: Long = 0L,
-    totalDepositsCents: Long = 0L,
-    totalExpensesCents: Long = 0L,
     payoffStrategy: AutopilotStrategy = AutopilotStrategy.AVALANCHE,
     locale: Locale = Locale.getDefault(),
 ): List<AdvisorChatMessage> {
@@ -185,8 +179,6 @@ fun buildAdvisorMessages(
         debts = debts,
         totalAccumulatedCents = totalAccumulatedCents,
         remainingToGoalCents = remainingToGoalCents,
-        totalDepositsCents = totalDepositsCents,
-        totalExpensesCents = totalExpensesCents,
         payoffStrategy = payoffStrategy,
         locale = locale,
     )

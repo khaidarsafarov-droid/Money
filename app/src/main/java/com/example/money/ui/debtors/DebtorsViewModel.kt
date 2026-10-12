@@ -207,8 +207,6 @@ class DebtorsViewModel(
         rawText: String = "",
         totalAccumulatedCents: Long = 0L,
         remainingToGoalCents: Long = 0L,
-        totalDepositsCents: Long = 0L,
-        totalExpensesCents: Long = 0L,
     ) {
         viewModelScope.launch {
             val debts = allDebtorsList.value
@@ -222,8 +220,6 @@ class DebtorsViewModel(
                 rawText = rawText,
                 totalAccumulatedCents = totalAccumulatedCents,
                 remainingToGoalCents = remainingToGoalCents,
-                totalDepositsCents = totalDepositsCents,
-                totalExpensesCents = totalExpensesCents,
                 payoffStrategy = strategy,
             )
             _advisorMessages.value = updated
@@ -235,16 +231,12 @@ class DebtorsViewModel(
         text: String,
         totalAccumulatedCents: Long = 0L,
         remainingToGoalCents: Long = 0L,
-        totalDepositsCents: Long = 0L,
-        totalExpensesCents: Long = 0L,
     ) {
         askAdvisor(
             promptId = "",
             rawText = text,
             totalAccumulatedCents = totalAccumulatedCents,
             remainingToGoalCents = remainingToGoalCents,
-            totalDepositsCents = totalDepositsCents,
-            totalExpensesCents = totalExpensesCents,
         )
     }
 

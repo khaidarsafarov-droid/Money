@@ -10,10 +10,29 @@ import type {
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3001);
-const HOST = process.env.HOST ?? "127.0.0.1";
+const HOST = "127.0.0.1";
+const API_TOKEN = process.env.FINANCE_API_TOKEN ?? "";
 
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:5173" }));
 app.use(express.json({ limit: "1mb" }));
+
+function requireFinanceToken(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+): void {
+  if (!API_TOKEN) {
+    res.status(503).json({ error: "FINANCE_API_TOKEN is not configured" });
+    return;
+  }
+  const header = req.header("authorization") ?? "";
+  const provided = header.startsWith("Bearer ") ? header.slice("Bearer ".length) : "";
+  if (provided.length === 0 || provided !== API_TOKEN) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+}
 
 function asyncHandler(
   handler: (req: express.Request, res: express.Response) => unknown,
@@ -33,6 +52,8 @@ function asyncHandler(
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, syncedAt: new Date().toISOString() });
 });
+
+app.use("/api/finance", requireFinanceToken);
 
 app.get(
   "/api/finance/state",

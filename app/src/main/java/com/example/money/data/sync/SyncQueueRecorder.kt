@@ -7,6 +7,9 @@ import com.example.money.data.local.dao.SyncTombstoneDao
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.data.local.entity.FinanceNoteEntity
+import com.example.money.data.local.entity.FinanceNoteLineEntity
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
 import com.example.money.data.local.entity.SyncTombstoneEntity
@@ -30,6 +33,50 @@ class SyncQueueRecorder(
             payloadJson = payloadJson,
             tombstoneEntityId = entity.syncId,
             syncUpdatedAt = entity.updatedAt,
+            deleted = deleted,
+        )
+    }
+
+    suspend fun recordGoalAction(
+        entity: GoalActionEntity,
+        goalSyncId: String,
+        deleted: Boolean = false,
+    ) {
+        val marked = if (deleted) entity.copy(updatedAt = System.currentTimeMillis()) else entity
+        enqueue(
+            entityType = SyncEntityType.GOAL_ACTION,
+            entityId = marked.id,
+            payloadJson = FinanceSnapshotCodec.encodeGoalAction(marked, goalSyncId, deleted),
+            tombstoneEntityId = marked.syncId,
+            syncUpdatedAt = marked.updatedAt,
+            deleted = deleted,
+        )
+    }
+
+    suspend fun recordNote(entity: FinanceNoteEntity, deleted: Boolean = false) {
+        val marked = if (deleted) entity.copy(updatedAt = System.currentTimeMillis()) else entity
+        enqueue(
+            entityType = SyncEntityType.NOTE,
+            entityId = marked.id,
+            payloadJson = FinanceSnapshotCodec.encodeNote(marked, deleted),
+            tombstoneEntityId = marked.syncId,
+            syncUpdatedAt = marked.updatedAt,
+            deleted = deleted,
+        )
+    }
+
+    suspend fun recordNoteLine(
+        entity: FinanceNoteLineEntity,
+        noteSyncId: String,
+        deleted: Boolean = false,
+    ) {
+        val marked = if (deleted) entity.copy(updatedAt = System.currentTimeMillis()) else entity
+        enqueue(
+            entityType = SyncEntityType.NOTE_LINE,
+            entityId = marked.id,
+            payloadJson = FinanceSnapshotCodec.encodeNoteLine(marked, noteSyncId, deleted),
+            tombstoneEntityId = marked.syncId,
+            syncUpdatedAt = marked.updatedAt,
             deleted = deleted,
         )
     }

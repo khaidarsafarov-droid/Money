@@ -37,7 +37,6 @@ import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -59,7 +58,6 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -82,15 +80,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
-import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
-import com.example.money.domain.model.Expense
-import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
-import com.example.money.domain.model.Transfer
-import com.example.money.ui.budget.AddExpenseDialog
-import com.example.money.ui.budget.AddTransferDialog
-import com.example.money.ui.budget.BudgetActionResult
 import com.example.money.ui.budget.BudgetViewModel
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
@@ -101,26 +92,13 @@ import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
-import com.example.money.domain.util.MoneyMath
-import com.example.money.ui.debtors.ContactDebtHistorySheet
-import com.example.money.ui.debtors.DebtAdvisorBottomSheet
-import com.example.money.ui.debtors.DebtCelebrationDialog
 import com.example.money.ui.debtors.DebtListViewModel
-import com.example.money.ui.debtors.DebtMessageChannelSheet
-import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtTab
-import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorsViewModel
-import com.example.money.ui.debtors.IncomeIdeasDialog
-import com.example.money.ui.goal.GoalActionsDialog
-import com.example.money.ui.goal.GoalFormDialog
-import com.example.money.ui.goal.GoalProgressLogDialog
 import com.example.money.ui.goal.GoalViewModel
-import com.example.money.ui.notes.NoteFormDialog
 import com.example.money.ui.notes.NoteViewModel
 import com.example.money.settings.CurrencyRegion
-import com.example.money.ui.settings.CurrencyPickerDialog
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
@@ -206,31 +184,53 @@ fun HomeScreen(
     }
 
     var selectedTab by remember { mutableIntStateOf(launchConfig.initialTab.ordinal) }
-    var showAddDebtorDialog by remember { mutableStateOf(false) }
-    var editDebtor by remember { mutableStateOf<Debtor?>(null) }
-    var showDebtPaymentDialog by remember { mutableStateOf<Debtor?>(null) }
-    var debtPaymentPrefillCents by remember { mutableLongStateOf(0L) }
-    var showTransferDialog by remember { mutableStateOf(false) }
-    var showExpenseDialog by remember { mutableStateOf(false) }
-    var goalExpenseTarget by remember { mutableStateOf<SavingsGoal?>(null) }
-    var showGoalTransferDialog by remember { mutableStateOf<SavingsGoal?>(null) }
-    var showAddGoalDialog by remember { mutableStateOf(false) }
-    var progressLogGoal by remember { mutableStateOf<SavingsGoal?>(null) }
-    var editGoal by remember { mutableStateOf<SavingsGoal?>(null) }
-    var stepsGoalId by remember { mutableStateOf<Long?>(null) }
-    var showWelcomeDialog by remember { mutableStateOf(false) }
-    var showAddSheet by remember { mutableStateOf(false) }
-    var showNoteForm by remember { mutableStateOf(false) }
-    var openNoteId by remember { mutableStateOf<Long?>(null) }
-    var showCurrencyPicker by remember { mutableStateOf(false) }
+    val showAddDebtorDialogState = remember { mutableStateOf(false) }
+    var showAddDebtorDialog by showAddDebtorDialogState
+    val editDebtorState = remember { mutableStateOf<Debtor?>(null) }
+    var editDebtor by editDebtorState
+    val showDebtPaymentDialogState = remember { mutableStateOf<Debtor?>(null) }
+    var showDebtPaymentDialog by showDebtPaymentDialogState
+    val debtPaymentPrefillCentsState = remember { mutableLongStateOf(0L) }
+    var debtPaymentPrefillCents by debtPaymentPrefillCentsState
+    val showTransferDialogState = remember { mutableStateOf(false) }
+    var showTransferDialog by showTransferDialogState
+    val showExpenseDialogState = remember { mutableStateOf(false) }
+    var showExpenseDialog by showExpenseDialogState
+    val goalExpenseTargetState = remember { mutableStateOf<SavingsGoal?>(null) }
+    var goalExpenseTarget by goalExpenseTargetState
+    val showGoalTransferDialogState = remember { mutableStateOf<SavingsGoal?>(null) }
+    var showGoalTransferDialog by showGoalTransferDialogState
+    val showAddGoalDialogState = remember { mutableStateOf(false) }
+    var showAddGoalDialog by showAddGoalDialogState
+    val progressLogGoalState = remember { mutableStateOf<SavingsGoal?>(null) }
+    var progressLogGoal by progressLogGoalState
+    val editGoalState = remember { mutableStateOf<SavingsGoal?>(null) }
+    var editGoal by editGoalState
+    val stepsGoalIdState = remember { mutableStateOf<Long?>(null) }
+    var stepsGoalId by stepsGoalIdState
+    val showWelcomeDialogState = remember { mutableStateOf(false) }
+    var showWelcomeDialog by showWelcomeDialogState
+    val showAddSheetState = remember { mutableStateOf(false) }
+    var showAddSheet by showAddSheetState
+    val showNoteFormState = remember { mutableStateOf(false) }
+    var showNoteForm by showNoteFormState
+    val openNoteIdState = remember { mutableStateOf<Long?>(null) }
+    var openNoteId by openNoteIdState
+    val showCurrencyPickerState = remember { mutableStateOf(false) }
+    var showCurrencyPicker by showCurrencyPickerState
     var addHighlight by remember { mutableStateOf(AddAction.Expense) }
     var addSheetActions by remember { mutableStateOf(AddAction.entries.toList()) }
     var showTopMenu by remember { mutableStateOf(false) }
-    var showAdvisorSheet by remember { mutableStateOf(false) }
-    var showIncomeIdeas by remember { mutableStateOf(false) }
-    var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
-    var pendingMarkPaid by remember { mutableStateOf<Debtor?>(null) }
-    var remindDebtor by remember { mutableStateOf<Debtor?>(null) }
+    val showAdvisorSheetState = remember { mutableStateOf(false) }
+    var showAdvisorSheet by showAdvisorSheetState
+    val showIncomeIdeasState = remember { mutableStateOf(false) }
+    var showIncomeIdeas by showIncomeIdeasState
+    val pendingDeleteState = remember { mutableStateOf<PendingDelete?>(null) }
+    var pendingDelete by pendingDeleteState
+    val pendingMarkPaidState = remember { mutableStateOf<Debtor?>(null) }
+    var pendingMarkPaid by pendingMarkPaidState
+    val remindDebtorState = remember { mutableStateOf<Debtor?>(null) }
+    var remindDebtor by remindDebtorState
 
     val personalBranchSettings by debtorsViewModel.personalBranchSettings.collectAsStateWithLifecycle()
 
@@ -255,7 +255,8 @@ fun HomeScreen(
     }
     var tabletSelection by remember { mutableStateOf<HomeListSelection>(HomeListSelection.Overview) }
     var highlightedDebtorId by remember { mutableStateOf<Long?>(null) }
-    var contactHistoryTarget by remember { mutableStateOf<Pair<String, String>?>(null) }
+    val contactHistoryTargetState = remember { mutableStateOf<Pair<String, String>?>(null) }
+    var contactHistoryTarget by contactHistoryTargetState
 
     val openContactHistory: (String, String) -> Unit = { lookupKey, displayName ->
         contactHistoryTarget = lookupKey to displayName
@@ -287,10 +288,7 @@ fun HomeScreen(
         }
         debtListViewModel.setDebtTab(launchConfig.initialDebtTab)
 
-        if (launchConfig.openExpenseDialog) {
-            showExpenseDialog = true
-        }
-        if (launchConfig.openQuickAddDialog) {
+        if (launchConfig.openExpenseDialog || launchConfig.openQuickAddDialog) {
             addHighlight = plusHighlight(PagePlusAction.AddAnything)
             addSheetActions = plusSheetActions(PagePlusAction.AddAnything).orEmpty()
             showAddSheet = true
@@ -360,418 +358,54 @@ fun HomeScreen(
         }
     }
 
-    if (pendingCalendarClose != null) {
-        AlertDialog(
-            onDismissRequest = { debtorsViewModel.dismissCalendarClosePrompt() },
-            title = { Text(stringResource(R.string.calendar_close_title)) },
-            text = { Text(stringResource(R.string.calendar_close_body)) },
-            confirmButton = {
-                TextButton(onClick = { debtorsViewModel.confirmRemoveCalendarEvent(remove = true) }) {
-                    Text(stringResource(R.string.calendar_close_remove))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { debtorsViewModel.confirmRemoveCalendarEvent(remove = false) }) {
-                    Text(stringResource(R.string.calendar_close_keep_mark))
-                }
-            },
-        )
-    }
-
-    if (showWelcomeDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                WelcomePreferences.markWelcomeSeen(context)
-                showWelcomeDialog = false
-            },
-            title = { Text(stringResource(R.string.welcome_title)) },
-            text = { Text(stringResource(R.string.welcome_body)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        WelcomePreferences.markWelcomeSeen(context)
-                        showWelcomeDialog = false
-                    },
-                ) {
-                    Text(stringResource(R.string.action_got_it))
-                }
-            },
-        )
-    }
-
-    if (showAddDebtorDialog) {
-        DebtorFormDialog(
-            debtType = when (debtTab) {
-                DebtTab.OwesMe -> DebtType.CREDITOR
-                DebtTab.IOwe -> DebtType.DEBTOR
-                DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
-            },
-            availableBalance = availableBalanceUsd,
-            allDebtors = allDebtors,
-            onViewContactHistory = openContactHistory,
-            onDismiss = { showAddDebtorDialog = false },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri, phone, email ->
-                debtorsViewModel.addDebtor(
-                    name = name,
-                    amount = amount,
-                    dateGiven = dateGiven,
-                    dateDue = dateDue,
-                    debtType = when (debtTab) {
-                        DebtTab.OwesMe -> DebtType.CREDITOR
-                        DebtTab.IOwe -> DebtType.DEBTOR
-                        DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
-                    },
-                    affectsBalance = affectsBalance,
-                    note = note,
-                    loanCategory = loanCategory,
-                    interestRateBps = interestRateBps,
-                    contactLookupKey = contactLookupKey,
-                    contactUri = contactUri,
-                    contactPhotoUri = contactPhotoUri,
-                    phone = phone,
-                    email = email,
-                )
-                showAddDebtorDialog = false
-                scope.launch { showMessage(context.getString(R.string.msg_debtor_added)) }
-            },
-        )
-    }
-    editDebtor?.let { debtor ->
-        DebtorFormDialog(
-            debtType = debtor.debtType,
-            existingDebtor = debtor,
-            availableBalance = availableBalanceUsd,
-            allDebtors = allDebtors,
-            onViewContactHistory = openContactHistory,
-            onDismiss = { editDebtor = null },
-            onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri, phone, email ->
-                debtorsViewModel.updateDebtor(
-                    debtor = debtor,
-                    name = name,
-                    amount = amount,
-                    dateGiven = dateGiven,
-                    dateDue = dateDue,
-                    affectsBalance = affectsBalance,
-                    note = note,
-                    loanCategory = loanCategory,
-                    interestRateBps = interestRateBps,
-                    contactLookupKey = contactLookupKey,
-                    contactUri = contactUri,
-                    contactPhotoUri = contactPhotoUri,
-                    phone = phone,
-                    email = email,
-                )
-                editDebtor = null
-                scope.launch { showMessage(context.getString(R.string.msg_debtor_updated)) }
-            },
-        )
-    }
-    contactHistoryTarget?.let { (lookupKey, displayName) ->
-        ContactDebtHistorySheet(
-            lookupKey = lookupKey,
-            displayName = displayName,
-            allDebtors = allDebtors,
-            hideAmounts = privacySettings.hideAmounts,
-            onDismiss = { contactHistoryTarget = null },
-            onOpenDebt = { debtor ->
-                contactHistoryTarget = null
-                editDebtor = debtor
-            },
-        )
-    }
-    remindDebtor?.let { debtor ->
-        DebtMessageChannelSheet(
-            debtor = debtor,
-            settings = personalBranchSettings,
-            onDismiss = { remindDebtor = null },
-        )
-    }
-    showDebtPaymentDialog?.let { debtor ->
-        DebtPaymentDialog(
-            debtor = debtor,
-            availableBalance = availableBalanceUsd,
-            initialAmountCents = debtPaymentPrefillCents,
-            hideAmounts = privacySettings.hideAmounts,
-            onDismiss = {
-                showDebtPaymentDialog = null
-                debtPaymentPrefillCents = 0L
-            },
-            onConfirm = { amount, affectsBalance ->
-                scope.launch {
-                    val ok = debtorsViewModel.processPaymentSync(debtor.id, amount, affectsBalance)
-                    showDebtPaymentDialog = null
-                    debtPaymentPrefillCents = 0L
-                    if (ok) {
-                        val updated = debtorsViewModel.getDebtorById(debtor.id)
-                        val remaining = updated?.remainingAmountCents ?: 0L
-                        showMessage(
-                            context.getString(
-                                R.string.msg_payment_neutral,
-                                Formatters.currencyFromCents(
-                                    remaining,
-                                    debtor.currency,
-                                    hide = privacySettings.hideAmounts,
-                                ),
-                            ),
-                        )
-                    } else {
-                        showMessage(context.getString(R.string.error_payment_failed))
-                    }
-                }
-            },
-        )
-    }
-    celebrationDebtor?.let { debtor ->
-        DebtCelebrationDialog(
-            debtor = debtor,
-            onDismiss = debtorsViewModel::dismissCelebration,
-        )
-    }
-    if (showIncomeIdeas) {
-        IncomeIdeasDialog(
-            debtors = allDebtors,
-            hideAmounts = privacySettings.hideAmounts,
-            onDismiss = { showIncomeIdeas = false },
-        )
-    }
-    if (showTransferDialog) {
-        AddTransferDialog(
-            onDismiss = { showTransferDialog = false },
-            onConfirm = { amount, date ->
-                budgetViewModel.addDeposit(amount, date)
-                showTransferDialog = false
-                scope.launch { showMessage(context.getString(R.string.msg_transfer_added)) }
-            },
-        )
-    }
-    showGoalTransferDialog?.let { goal ->
-        AddTransferDialog(
-            onDismiss = { showGoalTransferDialog = null },
-            onConfirm = { amount, date ->
-                budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
-                    showGoalTransferDialog = null
-                    scope.launch {
-                        showMessage(
-                            context.getString(
-                                when (result) {
-                                    BudgetActionResult.Success -> R.string.msg_goal_transfer_added
-                                    BudgetActionResult.InsufficientFunds -> R.string.msg_insufficient_funds
-                                },
-                            ),
-                        )
-                    }
-                }
-            },
-        )
-    }
-    val expenseGoal = goalExpenseTarget
-    if (showExpenseDialog || expenseGoal != null) {
-        AddExpenseDialog(
-            titleRes = if (expenseGoal != null) {
-                R.string.goal_expense_title
-            } else {
-                R.string.budget_new_expense_title
-            },
-            spendLimit = expenseGoal?.let { it.currentAmountCents / 100.0 },
-            onDismiss = {
-                showExpenseDialog = false
-                goalExpenseTarget = null
-            },
-            onConfirm = { amount, category, date, note ->
-                val goalId = expenseGoal?.id
-                budgetViewModel.addExpense(amount, category, date, note, goalId) { result ->
-                    showExpenseDialog = false
-                    goalExpenseTarget = null
-                    scope.launch {
-                        showMessage(
-                            context.getString(
-                                when (result) {
-                                    BudgetActionResult.Success ->
-                                        if (goalId != null) {
-                                            R.string.msg_goal_expense_added
-                                        } else {
-                                            R.string.msg_expense_added
-                                        }
-                                    BudgetActionResult.InsufficientFunds ->
-                                        if (goalId != null) {
-                                            R.string.msg_goal_insufficient
-                                        } else {
-                                            R.string.msg_insufficient_funds
-                                        }
-                                },
-                            ),
-                        )
-                    }
-                }
-            },
-        )
-    }
-    if (showAddGoalDialog) {
-        GoalFormDialog(
-            onDismiss = { showAddGoalDialog = false },
-            onConfirm = { name, kind, target, current, deadline ->
-                goalViewModel.addGoal(name, target, current, deadline, kind)
-                showAddGoalDialog = false
-                scope.launch { showMessage(context.getString(R.string.msg_goal_added)) }
-            },
-        )
-    }
-    stepsGoalId?.let { goalId ->
-        val goal = goals.find { it.id == goalId }
-        if (goal != null) {
-            GoalActionsDialog(
-                goal = goal,
-                actions = goalActions.filter { it.goalId == goal.id },
-                hideAmounts = privacySettings.hideAmounts,
-                onDismiss = { stepsGoalId = null },
-                onAddAction = { title -> goalViewModel.addAction(goal.id, title) },
-                onToggleAction = { action, completed ->
-                    goalViewModel.setActionCompleted(action.id, completed)
-                },
-                onDeleteAction = { action -> goalViewModel.deleteAction(action.id) },
-            )
-        }
-    }
-    progressLogGoal?.let { goal ->
-        GoalProgressLogDialog(
-            goal = goal,
-            hideAmounts = privacySettings.hideAmounts,
-            onDismiss = { progressLogGoal = null },
-            onSave = { amount, note, date ->
-                fun saveNote() {
-                    if (note.isNotBlank()) {
-                        goalViewModel.addAction(goal.id, note, completed = true)
-                    }
-                    progressLogGoal = null
-                    scope.launch {
-                        showMessage(context.getString(R.string.goal_log_saved))
-                    }
-                }
-                if (amount != null && goal.kind == GoalKind.MONEY) {
-                    budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
-                        when (result) {
-                            BudgetActionResult.Success -> saveNote()
-                            BudgetActionResult.InsufficientFunds -> {
-                                scope.launch {
-                                    showMessage(context.getString(R.string.msg_insufficient_funds))
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    saveNote()
-                }
-            },
-        )
-    }
-    editGoal?.let { goal ->
-        GoalFormDialog(
-            existingGoal = goal,
-            onDismiss = { editGoal = null },
-            onConfirm = { name, kind, target, current, deadline ->
-                goalViewModel.updateGoal(goal, name, target, current, deadline, kind)
-                editGoal = null
-                scope.launch { showMessage(context.getString(R.string.msg_goal_saved)) }
-            },
-        )
-    }
-    if (showNoteForm) {
-        NoteFormDialog(
-            onDismiss = { showNoteForm = false },
-            onConfirm = { title, kind ->
-                showNoteForm = false
-                noteViewModel.addNote(title, kind) { id -> openNoteId = id }
-            },
-        )
-    }
-    if (showCurrencyPicker) {
-        CurrencyPickerDialog(
-            selected = currencyRegion,
-            onDismiss = { showCurrencyPicker = false },
-            onSelect = { region ->
-                showCurrencyPicker = false
-                scope.launch { app.preferencesStore.setCurrencyRegion(region) }
-            },
-        )
-    }
-    if (showAddSheet) {
-        AddActionSheet(
-            highlighted = addHighlight,
-            actions = addSheetActions,
-            onDismiss = { showAddSheet = false },
-            onExpense = { showExpenseDialog = true },
-            onDeposit = { showTransferDialog = true },
-            onDebt = { showAddDebtorDialog = true },
-            onGoalContribution = {
-                val goal = goals.firstOrNull { it.kind == GoalKind.MONEY && !it.isCompleted }
-                if (goal != null) {
-                    showGoalTransferDialog = goal
-                } else {
-                    showAddGoalDialog = true
-                }
-            },
-            onNewGoal = { showAddGoalDialog = true },
-        )
-    }
-
-    pendingDelete?.let { delete ->
-        PendingDeleteDialog(
-            pending = delete,
-            onDismiss = { pendingDelete = null },
-            onDeleteDebtor = { debtor ->
-                debtorsViewModel.deleteDebtor(debtor)
-                scope.launch { showMessage(context.getString(R.string.msg_debtor_deleted)) }
-            },
-            onDeleteGoal = { goal ->
-                goalViewModel.deleteGoal(goal)
-                scope.launch { showMessage(context.getString(R.string.msg_goal_deleted)) }
-            },
-            onDeleteTransfer = { transfer ->
-                budgetViewModel.deleteTransfer(transfer, app.debtorRepository)
-                scope.launch { showMessage(context.getString(R.string.msg_item_deleted)) }
-            },
-            onDeleteExpense = { expense ->
-                budgetViewModel.deleteExpense(expense, app.debtorRepository)
-                scope.launch { showMessage(context.getString(R.string.msg_item_deleted)) }
-            },
-        )
-    }
-
-    pendingMarkPaid?.let { debtor ->
-        AlertDialog(
-            onDismissRequest = { pendingMarkPaid = null },
-            title = { Text(stringResource(R.string.mark_debt_paid_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.mark_debt_paid_message,
-                        debtor.name,
-                        Formatters.currencyFromCents(
-                            debtor.remainingAmountCents,
-                            debtor.currency,
-                            hide = privacySettings.hideAmounts,
-                        ),
-                    ),
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        debtorsViewModel.markAsPaid(debtor.id)
-                        pendingMarkPaid = null
-                        scope.launch { showMessage(context.getString(R.string.msg_debtor_paid)) }
-                    },
-                ) {
-                    Text(stringResource(R.string.action_mark_paid))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingMarkPaid = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
-        )
-    }
+    HomeDialogs(
+        context = context,
+        app = app,
+        scope = scope,
+        showMessage = ::showMessage,
+        openContactHistory = openContactHistory,
+        debtorsViewModel = debtorsViewModel,
+        budgetViewModel = budgetViewModel,
+        goalViewModel = goalViewModel,
+        noteViewModel = noteViewModel,
+        debtTab = debtTab,
+        availableBalanceUsd = availableBalanceUsd,
+        allDebtors = allDebtors,
+        privacySettings = privacySettings,
+        personalBranchSettings = personalBranchSettings,
+        goals = goals,
+        goalActions = goalActions,
+        goalMetrics = goalMetrics,
+        advisorMessages = advisorMessages,
+        currencyRegion = currencyRegion,
+        celebrationDebtor = celebrationDebtor,
+        pendingCalendarClose = pendingCalendarClose,
+        addHighlight = addHighlight,
+        addSheetActions = addSheetActions,
+        showWelcomeDialogState = showWelcomeDialogState,
+        showAddDebtorDialogState = showAddDebtorDialogState,
+        editDebtorState = editDebtorState,
+        contactHistoryTargetState = contactHistoryTargetState,
+        remindDebtorState = remindDebtorState,
+        showDebtPaymentDialogState = showDebtPaymentDialogState,
+        debtPaymentPrefillCentsState = debtPaymentPrefillCentsState,
+        showIncomeIdeasState = showIncomeIdeasState,
+        showTransferDialogState = showTransferDialogState,
+        showGoalTransferDialogState = showGoalTransferDialogState,
+        showExpenseDialogState = showExpenseDialogState,
+        goalExpenseTargetState = goalExpenseTargetState,
+        showAddGoalDialogState = showAddGoalDialogState,
+        stepsGoalIdState = stepsGoalIdState,
+        progressLogGoalState = progressLogGoalState,
+        editGoalState = editGoalState,
+        showNoteFormState = showNoteFormState,
+        openNoteIdState = openNoteIdState,
+        showCurrencyPickerState = showCurrencyPickerState,
+        showAddSheetState = showAddSheetState,
+        pendingDeleteState = pendingDeleteState,
+        pendingMarkPaidState = pendingMarkPaidState,
+        showAdvisorSheetState = showAdvisorSheetState,
+    )
 
     BoxWithConstraints(modifier = modifier) {
         val isTablet = isTabletWidth(maxWidth)
@@ -1088,38 +722,4 @@ fun HomeScreen(
         }
     }
 
-    if (showAdvisorSheet) {
-        val accumulatedCents = MoneyMath.toCents(goalMetrics.totalAccumulated)
-        val remainingCents = MoneyMath.toCents(goalMetrics.totalRemainingToGoal)
-        val depositsCents = MoneyMath.toCents(budgetSummary.totalDeposits)
-        val expensesCents = MoneyMath.toCents(budgetSummary.totalExpenses)
-        DebtAdvisorBottomSheet(
-            debts = allDebtors,
-            messages = advisorMessages,
-            onPromptSelected = { promptId ->
-                debtorsViewModel.askAdvisor(
-                    promptId = promptId,
-                    totalAccumulatedCents = accumulatedCents,
-                    remainingToGoalCents = remainingCents,
-                    totalDepositsCents = depositsCents,
-                    totalExpensesCents = expensesCents,
-                )
-            },
-            onFreeText = { text ->
-                debtorsViewModel.askAdvisorFreeText(
-                    text = text,
-                    totalAccumulatedCents = accumulatedCents,
-                    remainingToGoalCents = remainingCents,
-                    totalDepositsCents = depositsCents,
-                    totalExpensesCents = expensesCents,
-                )
-            },
-            onClearHistory = debtorsViewModel::clearAdvisorHistory,
-            onDismiss = { showAdvisorSheet = false },
-            totalAccumulatedCents = accumulatedCents,
-            remainingToGoalCents = remainingCents,
-            totalDepositsCents = depositsCents,
-            totalExpensesCents = expensesCents,
-        )
-    }
 }

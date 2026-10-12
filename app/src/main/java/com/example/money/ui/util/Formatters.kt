@@ -30,9 +30,9 @@ object Formatters {
 
     fun currencyFromCents(
         cents: Long,
-        @Suppress("UNUSED_PARAMETER") currencyCode: String = activeRegion.currencyCode,
+        currencyCode: String = activeRegion.currencyCode,
         hide: Boolean = false,
-    ): String = currencyCompact(cents / 100.0, activeRegion, hide)
+    ): String = currencyCompact(cents / 100.0, CurrencyRegion.fromCode(currencyCode), hide)
 
     fun currencyFromCents(cents: Long, region: CurrencyRegion, hide: Boolean = false): String =
         currencyCompact(cents / 100.0, region, hide)

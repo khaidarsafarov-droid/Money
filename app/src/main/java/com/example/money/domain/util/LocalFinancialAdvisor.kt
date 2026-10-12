@@ -21,8 +21,6 @@ object LocalFinancialAdvisor {
         val debts: List<Debtor>,
         val totalAccumulatedCents: Long = 0L,
         val remainingToGoalCents: Long = 0L,
-        val totalDepositsCents: Long = 0L,
-        val totalExpensesCents: Long = 0L,
         val extraMonthlyCents: Long = 5_000L,
         val payoffStrategy: AutopilotStrategy = AutopilotStrategy.AVALANCHE,
         val now: Long = System.currentTimeMillis(),
@@ -128,13 +126,14 @@ object LocalFinancialAdvisor {
     }
 
     private fun budgetAdvice(context: AdviceContext, en: Boolean): String {
-        val deposits = context.totalDepositsCents / 100.0
-        val expenses = context.totalExpensesCents / 100.0
-        val ratio = if (deposits > 0) (expenses / deposits * 100).toInt() else 0
+        val goalNet = context.totalAccumulatedCents / 100.0
+        val debtRemainder = context.debts
+            .filter { !it.isPaid && it.remainingAmountCents > 0L }
+            .sumOf { it.remainingAmountCents } / 100.0
         return if (en) {
-            "Deposits $${deposits.toInt()} · expenses $${expenses.toInt()} ($ratio% of deposits). Keep expenses below income."
+            "Goal money $${goalNet.toInt()} · debt remaining $${debtRemainder.toInt()}. Put extra money on the nearest debt or goal."
         } else {
-            "Пополнения $${deposits.toInt()} · расходы $${expenses.toInt()} ($ratio% от пополнений). Держите расходы ниже доходов."
+            "В целях $${goalNet.toInt()} · остаток долгов $${debtRemainder.toInt()}. Лишние деньги направьте в ближайший долг или цель."
         }
     }
 

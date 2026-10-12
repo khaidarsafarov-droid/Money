@@ -77,17 +77,37 @@ class FinanceSnapshotRepositoryImpl(
         ) { it.id }
         val voiceSettings = buildVoiceSettings()
         val goalSyncIds = database.savingsGoalDao().getAllGoalsOnce().associate { it.id to it.syncId }
-        val goalActions = database.goalActionDao().getAllOnce().mapNotNull { action ->
+        val liveGoalActions = database.goalActionDao().getAllOnce().mapNotNull { action ->
             val goalSyncId = goalSyncIds[action.goalId] ?: return@mapNotNull null
             FinanceSnapshotCodec.toSnapshotGoalAction(action, goalSyncId)
         }
+        val goalActions = SyncEngine.mergeRecords(
+            liveGoalActions,
+            decodeTombstones(
+                tombstones,
+                SyncEntityType.GOAL_ACTION,
+                FinanceSnapshotCodec::decodeGoalAction,
+            ),
+        ) { it.id }
         val noteEntities = database.financeNoteDao().getAllNotesOnce()
-        val notes = noteEntities.map(FinanceSnapshotCodec::toSnapshotNote)
+        val liveNotes = noteEntities.map(FinanceSnapshotCodec::toSnapshotNote)
+        val notes = SyncEngine.mergeRecords(
+            liveNotes,
+            decodeTombstones(tombstones, SyncEntityType.NOTE, FinanceSnapshotCodec::decodeNote),
+        ) { it.id }
         val noteSyncIds = noteEntities.associate { it.id to it.syncId }
-        val noteLines = database.financeNoteDao().getAllLinesOnce().mapNotNull { line ->
+        val liveNoteLines = database.financeNoteDao().getAllLinesOnce().mapNotNull { line ->
             val noteSyncId = noteSyncIds[line.noteId] ?: return@mapNotNull null
             FinanceSnapshotCodec.toSnapshotNoteLine(line, noteSyncId)
         }
+        val noteLines = SyncEngine.mergeRecords(
+            liveNoteLines,
+            decodeTombstones(
+                tombstones,
+                SyncEntityType.NOTE_LINE,
+                FinanceSnapshotCodec::decodeNoteLine,
+            ),
+        ) { it.id }
 
         val updatedAt = listOfNotNull(
             goals.maxOfOrNull { it.syncUpdatedAt },

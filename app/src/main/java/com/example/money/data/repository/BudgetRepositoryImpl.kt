@@ -92,7 +92,10 @@ class BudgetRepositoryImpl(
 
     override suspend fun addExpense(expense: Expense): Long =
         SyncWriteGuard.withWriteLock {
-            val id = expenseDao.insert(expense.copy(isConfirmed = true).toEntity())
+            val goalSyncId = expense.goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
+            val id = expenseDao.insert(
+                expense.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
+            )
             expenseDao.getById(id)?.let { syncQueueRecorder.recordExpense(it) }
             id
         }

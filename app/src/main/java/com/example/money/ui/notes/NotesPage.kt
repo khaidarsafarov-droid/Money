@@ -24,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -337,30 +338,33 @@ private fun FinancialNoteBody(
     val totalColor = markColor(note.mark)
 
     lines.forEach { line ->
-        if (editing?.id == line.id) {
-            LineEditor(
-                initialLabel = line.label,
-                initialAmount = MoneyMath.fromCents(line.amountCents),
-                onCancel = { editing = null },
-                onSave = { nextLabel, cents ->
-                    onUpdateLine(line.copy(label = nextLabel, amountCents = cents))
-                    editing = null
-                },
-            )
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = line.label, fontWeight = FontWeight.Medium)
-                    Text(text = Formatters.currencyFromCents(line.amountCents))
-                }
-                IconButton(onClick = { editing = line }) {
-                    Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.note_edit_line))
-                }
-                IconButton(onClick = { onDeleteLine(line.id) }) {
-                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.note_delete))
+        key(line.id) {
+            if (editing?.id == line.id) {
+                LineEditor(
+                    lineId = line.id,
+                    initialLabel = line.label,
+                    initialAmount = MoneyMath.fromCents(line.amountCents),
+                    onCancel = { editing = null },
+                    onSave = { nextLabel, cents ->
+                        onUpdateLine(line.copy(label = nextLabel, amountCents = cents))
+                        editing = null
+                    },
+                )
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = line.label, fontWeight = FontWeight.Medium)
+                        Text(text = Formatters.currencyFromCents(line.amountCents))
+                    }
+                    IconButton(onClick = { editing = line }) {
+                        Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.note_edit_line))
+                    }
+                    IconButton(onClick = { onDeleteLine(line.id) }) {
+                        Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.note_delete))
+                    }
                 }
             }
         }
@@ -427,13 +431,14 @@ private fun FinancialNoteBody(
 
 @Composable
 private fun LineEditor(
+    lineId: Long,
     initialLabel: String,
     initialAmount: Double,
     onCancel: () -> Unit,
     onSave: (String, Long) -> Unit,
 ) {
-    var label by remember { mutableStateOf(initialLabel) }
-    var amountText by remember {
+    var label by remember(lineId) { mutableStateOf(initialLabel) }
+    var amountText by remember(lineId) {
         mutableStateOf(
             if (initialAmount % 1.0 == 0.0) initialAmount.toLong().toString() else initialAmount.toString(),
         )
