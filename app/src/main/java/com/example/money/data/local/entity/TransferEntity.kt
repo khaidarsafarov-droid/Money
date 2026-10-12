@@ -24,7 +24,7 @@ data class TransferEntity(
     val date: Long,
     /** Только подтверждённые транзакции учитываются в балансе. */
     val isConfirmed: Boolean = false,
-    /** null — пополнение общего остатка; иначе перевод в цель. */
+    /** null — пополнение свободного кошелька; иначе перевод на цель. */
     val goalId: Long? = null,
     /** UUID цели для P2P sync (локальный goalId может отличаться на другом устройстве). */
     @ColumnInfo(name = "goal_sync_id")

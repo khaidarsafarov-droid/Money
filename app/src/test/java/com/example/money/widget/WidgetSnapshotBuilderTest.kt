@@ -1,6 +1,5 @@
 package com.example.money.widget
 
-import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.GoalKind
@@ -17,7 +16,7 @@ class WidgetSnapshotBuilderTest {
     private val now = 1_700_000_000_000L
 
     @Test
-    fun availableBalanceMatchesBudgetAndActionGoalsStayOutOfMoneyTotals() {
+    fun actionGoalsStayOutOfMoneyTotals() {
         val snapshot = build(
             goals = listOf(
                 moneyGoal(id = 1, target = 10_000, current = 4_000),
@@ -33,15 +32,8 @@ class WidgetSnapshotBuilderTest {
                 ),
             ),
             debts = emptyList(),
-            budget = BudgetSummary(
-                totalDeposits = 500.0,
-                totalGoalAllocated = 200.0,
-                totalExpenses = 50.0,
-            ),
         )
 
-        assertEquals(450.0, snapshot.availableBalance, 0.001)
-        assertEquals(450.0, snapshot.globalBalance, 0.001)
         assertEquals(40.0, snapshot.totalAccumulated, 0.001)
         assertEquals(60.0, snapshot.totalRemainingToGoal, 0.001)
         assertFalse(snapshot.scoreUsesDebts)
@@ -58,7 +50,7 @@ class WidgetSnapshotBuilderTest {
             debt(id = 3, name = "Owes me", type = DebtType.CREDITOR, target = 8_000, current = 0, due = now + 86_400_000L),
         )
 
-        val snapshot = build(goals = emptyList(), debts = debts, budget = BudgetSummary(0.0, 0.0, 0.0))
+        val snapshot = build(goals = emptyList(), debts = debts)
 
         assertTrue(snapshot.scoreUsesDebts)
         assertEquals(GoalPsychologyEngines.totalDebtProgressPercent(debts), snapshot.progressPercent)
@@ -72,11 +64,9 @@ class WidgetSnapshotBuilderTest {
     private fun build(
         goals: List<SavingsGoal>,
         debts: List<Debtor>,
-        budget: BudgetSummary,
     ) = buildWidgetGoalSnapshot(
         goals = goals,
         debts = debts,
-        budget = budget,
         pendingCount = 0,
         region = CurrencyRegion.US,
         hideAmounts = false,

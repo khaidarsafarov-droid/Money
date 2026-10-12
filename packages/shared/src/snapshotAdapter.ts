@@ -31,6 +31,7 @@ export function financeStateToSnapshot(
       targetAmountCents: goal.target,
       currency: state.currency,
       dateDeadline: goal.dateDeadline,
+      ...(goal.goalKind ? { goalKind: goal.goalKind } : {}),
       syncUpdatedAt: goal.updatedAt ? Date.parse(goal.updatedAt) : updatedAt,
       deleted: goal.deleted,
     }));
@@ -119,6 +120,7 @@ export function snapshotToFinanceState(snapshot: FinanceSnapshot): FinanceState 
       target: goal.targetAmountCents,
       history: [],
       dateDeadline: goal.dateDeadline,
+      ...(goal.goalKind ? { goalKind: goal.goalKind } : {}),
       updatedAt: new Date(goal.syncUpdatedAt).toISOString(),
       deleted: goal.deleted,
     }));

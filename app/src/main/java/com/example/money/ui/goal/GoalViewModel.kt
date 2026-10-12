@@ -43,7 +43,6 @@ class GoalViewModel(
     fun addGoal(
         name: String,
         targetAmount: Double,
-        currentAmount: Double = 0.0,
         deadlineMillis: Long? = null,
         kind: GoalKind = GoalKind.MONEY,
     ) {
@@ -51,7 +50,6 @@ class GoalViewModel(
             goalRepository.addGoal(
                 name = name,
                 targetAmountCents = MoneyMath.toCents(targetAmount),
-                currentAmountCents = MoneyMath.toCents(currentAmount),
                 deadlineMillis = deadlineMillis,
                 kind = kind,
             )

@@ -237,7 +237,7 @@ class FinanceSnapshotRepositoryImplTest {
             savingsGoalDao = database.savingsGoalDao(),
             syncQueueRecorder = recorder,
         )
-        val goalId = goals.addGoal("Trip", 50_000L, 0L, null, GoalKind.MONEY)
+        val goalId = goals.addGoal("Trip", 50_000L, null, GoalKind.MONEY)
         val goal = database.savingsGoalDao().getGoalById(goalId)!!
         budget.addExpense(
             Expense(amount = 4.0, category = "Food", date = 20L, goalId = goalId),

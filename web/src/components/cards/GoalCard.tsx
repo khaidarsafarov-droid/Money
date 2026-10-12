@@ -12,19 +12,21 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ item, hideAmounts = false, onTransfer, onExpense, onDelete }: GoalCardProps) {
-  const canTransfer = item.status !== "COMPLETED" && onTransfer;
+  const taskGoal = item.goalKind === "ACTION";
+  const canTransfer = !taskGoal && item.status !== "COMPLETED" && onTransfer;
+  const expense = taskGoal ? undefined : onExpense;
 
   return (
     <FinanceCardShell
       item={item}
-      typeLabel="Цель"
+      typeLabel={taskGoal ? "Задачи" : "Цель"}
       typeIcon={Target}
       remainingLabel="До цели"
       paidLabel="Накоплено"
       hideAmounts={hideAmounts}
       onDelete={onDelete}
       action={
-        canTransfer || onExpense ? (
+        canTransfer || expense ? (
           <div className="flex w-full flex-col gap-2 sm:flex-row">
             {canTransfer ? (
               <button
@@ -36,10 +38,10 @@ export function GoalCard({ item, hideAmounts = false, onTransfer, onExpense, onD
                 Перевод
               </button>
             ) : null}
-            {onExpense ? (
+            {expense ? (
               <button
                 type="button"
-                onClick={onExpense}
+                onClick={expense}
                 className="pill-btn-ghost inline-flex flex-1 items-center justify-center gap-2 border border-milk-surface"
               >
                 <AppIcon icon={ArrowUpRight} size={14} />

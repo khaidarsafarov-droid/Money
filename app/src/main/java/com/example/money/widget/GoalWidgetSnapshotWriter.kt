@@ -3,10 +3,8 @@ package com.example.money.widget
 import android.content.Context
 import com.example.money.R
 import com.example.money.data.datastore.MoneyPreferencesStore
-import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.SavingsGoal
-import com.example.money.domain.repository.BudgetRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.settings.CurrencyRegion
@@ -18,7 +16,6 @@ class GoalWidgetSnapshotWriter(
     private val context: Context,
     private val goalRepository: GoalRepository,
     private val debtorRepository: DebtorRepository,
-    private val budgetRepository: BudgetRepository,
     private val pendingTransactionCount: kotlinx.coroutines.flow.Flow<Int>,
     private val preferencesStore: MoneyPreferencesStore,
     private val currencyRegion: kotlinx.coroutines.flow.Flow<CurrencyRegion>,
@@ -31,9 +28,8 @@ class GoalWidgetSnapshotWriter(
                 debtorRepository.getAllDebtors(),
                 pendingTransactionCount,
                 currencyRegion,
-                budgetRepository.observeBudgetSummary(),
-            ) { goals, debts, pendingCount, region, budget ->
-                SnapshotCoreInputs(goals, debts, pendingCount, region, budget)
+            ) { goals, debts, pendingCount, region ->
+                SnapshotCoreInputs(goals, debts, pendingCount, region)
             },
             preferencesStore.privacySettings,
             preferencesStore.gamificationState,
@@ -43,7 +39,6 @@ class GoalWidgetSnapshotWriter(
             buildWidgetGoalSnapshot(
                 goals = core.goals,
                 debts = core.debts,
-                budget = core.budget,
                 pendingCount = core.pendingCount,
                 region = region,
                 hideAmounts = hideWidget,
@@ -65,7 +60,6 @@ class GoalWidgetSnapshotWriter(
         val debts: List<Debtor>,
         val pendingCount: Int,
         val region: CurrencyRegion,
-        val budget: BudgetSummary,
     )
 
     suspend fun persist(snapshot: WidgetGoalSnapshot) {

@@ -30,7 +30,7 @@ interface DebtorRepository {
 
     suspend fun getDebtorById(id: Long): Debtor?
 
-    suspend fun markAsPaid(id: Long, affectsBalance: Boolean = true)
+    suspend fun markAsPaid(id: Long, affectsBalance: Boolean = false)
 
     suspend fun deleteDebtor(debtor: Debtor)
 

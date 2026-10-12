@@ -18,7 +18,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.model.Debtor
@@ -27,14 +26,9 @@ import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.debtors.DebtContactActions
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.util.Formatters
-
 @Composable
 fun HomeDetailPane(
     selection: HomeListSelection,
-    summary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics = DashboardDebtMetrics(0, 0, 0, 0),
     onEditGoal: (SavingsGoal) -> Unit,
@@ -65,7 +59,6 @@ fun HomeDetailPane(
         when (selection) {
             HomeListSelection.Overview -> {
                 GlobalBalanceHeader(
-                    summary = summary,
                     goalMetrics = goalMetrics,
                     debtMetrics = debtMetrics,
                     hideAmounts = hideAmounts,
@@ -145,48 +138,6 @@ fun HomeDetailPane(
                             )
                         }
                     },
-                )
-            }
-            is HomeListSelection.TransferItem -> {
-                Text(
-                    text = stringResource(R.string.tablet_detail_transfer),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                FinanceListItem(
-                    title = "+${Formatters.currencyCompact(selection.transfer.amount)}",
-                    subtitle = buildString {
-                        append(
-                            selection.goalName?.let {
-                                stringResource(R.string.operation_goal_transfer, it)
-                            } ?: stringResource(R.string.operation_deposit),
-                        )
-                        append(" · ")
-                        append(Formatters.shortDate(selection.transfer.date))
-                        if (!selection.transfer.isConfirmed) append(stringResource(R.string.operation_pending_suffix))
-                    },
-                    amountColor = FinancePositive,
-                    isPending = !selection.transfer.isConfirmed,
-                )
-            }
-            is HomeListSelection.ExpenseItem -> {
-                Text(
-                    text = stringResource(R.string.tablet_detail_expense),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                FinanceListItem(
-                    title = "−${Formatters.currencyCompact(selection.expense.amount)}",
-                    subtitle = buildString {
-                        append(stringResource(R.string.operation_expense))
-                        append(" · ")
-                        append(selection.expense.category)
-                        append(" · ")
-                        append(Formatters.shortDate(selection.expense.date))
-                        if (!selection.expense.isConfirmed) append(stringResource(R.string.operation_pending_suffix))
-                    },
-                    amountColor = FinanceNegative,
-                    isPending = !selection.expense.isConfirmed,
                 )
             }
         }

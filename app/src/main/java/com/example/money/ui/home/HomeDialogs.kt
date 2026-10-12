@@ -308,17 +308,10 @@ internal fun HomeDialogs(
         AddTransferDialog(
             onDismiss = { showGoalTransferDialog = null },
             onConfirm = { amount, date ->
-                budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
+                budgetViewModel.addGoalTransfer(goal.id, amount, date) {
                     showGoalTransferDialog = null
                     scope.launch {
-                        showMessage(
-                            context.getString(
-                                when (result) {
-                                    BudgetActionResult.Success -> R.string.msg_goal_transfer_added
-                                    BudgetActionResult.InsufficientFunds -> R.string.msg_insufficient_funds
-                                },
-                            ),
-                        )
+                        showMessage(context.getString(R.string.msg_goal_transfer_added))
                     }
                 }
             },
@@ -369,8 +362,8 @@ internal fun HomeDialogs(
     if (showAddGoalDialog) {
         GoalFormDialog(
             onDismiss = { showAddGoalDialog = false },
-            onConfirm = { name, kind, target, current, deadline ->
-                goalViewModel.addGoal(name, target, current, deadline, kind)
+            onConfirm = { name, kind, target, _, deadline ->
+                goalViewModel.addGoal(name, target, deadline, kind)
                 showAddGoalDialog = false
                 scope.launch { showMessage(context.getString(R.string.msg_goal_added)) }
             },
@@ -408,15 +401,8 @@ internal fun HomeDialogs(
                     }
                 }
                 if (amount != null && goal.kind == GoalKind.MONEY) {
-                    budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
-                        when (result) {
-                            BudgetActionResult.Success -> saveNote()
-                            BudgetActionResult.InsufficientFunds -> {
-                                scope.launch {
-                                    showMessage(context.getString(R.string.msg_insufficient_funds))
-                                }
-                            }
-                        }
+                    budgetViewModel.addGoalTransfer(goal.id, amount, date) {
+                        saveNote()
                     }
                 } else {
                     saveNote()
@@ -485,14 +471,6 @@ internal fun HomeDialogs(
             onDeleteGoal = { goal ->
                 goalViewModel.deleteGoal(goal)
                 scope.launch { showMessage(context.getString(R.string.msg_goal_deleted)) }
-            },
-            onDeleteTransfer = { transfer ->
-                budgetViewModel.deleteTransfer(transfer, app.debtorRepository)
-                scope.launch { showMessage(context.getString(R.string.msg_item_deleted)) }
-            },
-            onDeleteExpense = { expense ->
-                budgetViewModel.deleteExpense(expense, app.debtorRepository)
-                scope.launch { showMessage(context.getString(R.string.msg_item_deleted)) }
             },
         )
     }

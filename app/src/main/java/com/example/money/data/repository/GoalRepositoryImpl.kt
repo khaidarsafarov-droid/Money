@@ -60,7 +60,6 @@ class GoalRepositoryImpl(
     override suspend fun addGoal(
         name: String,
         targetAmountCents: Long,
-        currentAmountCents: Long,
         deadlineMillis: Long?,
         kind: GoalKind,
     ): Long = SyncWriteGuard.withWriteLock {

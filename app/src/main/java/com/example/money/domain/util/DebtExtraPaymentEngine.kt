@@ -6,6 +6,9 @@ import kotlin.math.max
 
 object DebtExtraPaymentEngine {
 
+    /** Suggested extra payment shown in the debt payment dialog: $10. */
+    const val SUGGESTED_EXTRA_CENTS = 1_000L
+
     private const val MS_PER_DAY = 86_400_000L
     private const val MS_PER_MONTH = 30L * MS_PER_DAY
 

@@ -179,18 +179,6 @@ class MoneyPreferencesStore(
                     prefs[MoneyPreferenceKeys.CURRENCY_REGION] ?: CurrencyRegion.US.name,
                 ),
                 activeItems = decodeActiveItems(prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON]),
-                globalBalance = prefs[MoneyPreferenceKeys.GLOBAL_BALANCE] ?: 0.0,
-                availableBalance = prefs[MoneyPreferenceKeys.AVAILABLE_BALANCE]
-                    ?: prefs[MoneyPreferenceKeys.GLOBAL_BALANCE]
-                    ?: run {
-                        val deposits = prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] ?: 0.0
-                        val goalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED] ?: 0.0
-                        val expenses = prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] ?: 0.0
-                        deposits - goalAllocated - expenses
-                    },
-                totalDeposits = prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] ?: 0.0,
-                totalGoalAllocated = prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED] ?: 0.0,
-                totalExpenses = prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] ?: 0.0,
                 totalAccumulated = prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0,
                 totalRemainingToGoal = prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] ?: 0.0,
                 owedToMeCents = prefs[MoneyPreferenceKeys.OWED_TO_ME_CENTS] ?: 0L,
@@ -224,11 +212,11 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.UPDATED_AT] = snapshot.updatedAt
             prefs[MoneyPreferenceKeys.CURRENCY_REGION] = snapshot.currencyRegion.name
             prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON] = encodeActiveItems(snapshot.activeItems)
-            prefs[MoneyPreferenceKeys.GLOBAL_BALANCE] = snapshot.globalBalance
-            prefs[MoneyPreferenceKeys.AVAILABLE_BALANCE] = snapshot.availableBalance
-            prefs[MoneyPreferenceKeys.TOTAL_DEPOSITS] = snapshot.totalDeposits
-            prefs[MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED] = snapshot.totalGoalAllocated
-            prefs[MoneyPreferenceKeys.TOTAL_EXPENSES] = snapshot.totalExpenses
+            prefs.remove(MoneyPreferenceKeys.GLOBAL_BALANCE)
+            prefs.remove(MoneyPreferenceKeys.AVAILABLE_BALANCE)
+            prefs.remove(MoneyPreferenceKeys.TOTAL_DEPOSITS)
+            prefs.remove(MoneyPreferenceKeys.TOTAL_GOAL_ALLOCATED)
+            prefs.remove(MoneyPreferenceKeys.TOTAL_EXPENSES)
             prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] = snapshot.totalAccumulated
             prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] = snapshot.totalRemainingToGoal
             prefs[MoneyPreferenceKeys.OWED_TO_ME_CENTS] = snapshot.owedToMeCents

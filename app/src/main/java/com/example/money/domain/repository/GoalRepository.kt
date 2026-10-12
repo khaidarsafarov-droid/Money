@@ -14,7 +14,6 @@ interface GoalRepository {
     suspend fun addGoal(
         name: String,
         targetAmountCents: Long,
-        currentAmountCents: Long,
         deadlineMillis: Long? = null,
         kind: GoalKind = GoalKind.MONEY,
     ): Long

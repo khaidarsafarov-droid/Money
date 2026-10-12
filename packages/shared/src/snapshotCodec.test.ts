@@ -52,6 +52,48 @@ describe("decodeFinanceSnapshot", () => {
     expect(decoded.debtPayments[0]?.affectsBalance).toBe(true);
   });
 
+  it("keeps a legacy expense goal and goal kind when they are present", () => {
+    const legacy = {
+      schemaVersion: 1,
+      deviceId: "device-1",
+      updatedAt: 1,
+      goals: [
+        {
+          id: 4,
+          name: "Steps",
+          targetAmountCents: 0,
+          currency: "USD",
+          syncUpdatedAt: 10,
+          goalKind: "ACTION",
+        },
+        {
+          id: 5,
+          name: "Trip",
+          targetAmountCents: 100,
+          currency: "USD",
+          syncUpdatedAt: 10,
+        },
+      ],
+      debts: [],
+      debtPayments: [],
+      expenses: [{
+        id: 9,
+        amount: 1.5,
+        category: "food",
+        date: 1_700_000_000_000,
+        isConfirmed: true,
+        syncUpdatedAt: 11,
+        goalId: "goal-sync",
+      }],
+    };
+
+    const decoded = decodeFinanceSnapshot(JSON.stringify(legacy));
+    expect(decoded.goals[0]?.goalKind).toBe("ACTION");
+    expect(decoded.goals[1]?.goalKind).toBeUndefined();
+    expect(decoded.transactions[0]?.goalId).toBe("goal-sync");
+    expect(decoded.notes).toBeUndefined();
+  });
+
   it("rejects invalid JSON", () => {
     expect(() => decodeFinanceSnapshot("{not json")).toThrow("Invalid snapshot JSON");
   });

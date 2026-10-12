@@ -87,10 +87,8 @@ import com.example.money.domain.model.FinanceNote
 import com.example.money.domain.model.FinanceNoteLine
 import com.example.money.domain.model.NoteMark
 import com.example.money.domain.model.Debtor
-import com.example.money.domain.model.Expense
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
-import com.example.money.domain.model.Transfer
 import com.example.money.ui.budget.AddExpenseDialog
 import com.example.money.ui.budget.AddTransferDialog
 import com.example.money.ui.budget.BudgetActionResult
@@ -155,9 +153,6 @@ internal fun PhoneHomeLayout(
     onDebtorFilterChange: (DebtorFilter) -> Unit,
     debtSearchQuery: String,
     onDebtSearchQueryChange: (String) -> Unit,
-    transfers: List<Transfer>,
-    expenses: List<Expense>,
-    budgetSummary: com.example.money.domain.model.BudgetSummary,
     goalMetrics: com.example.money.domain.model.DashboardGoalMetrics,
     debtMetrics: com.example.money.domain.model.DashboardDebtMetrics,
     greetingName: String,

@@ -18,7 +18,7 @@ enum class WidgetItemType {
     DEBT,
 }
 
-/** Снимок финансов для Glance-виджета. Только локальные данные телефона. */
+/** Снимок целей и долгов для Glance-виджета. Только локальные данные телефона. */
 data class WidgetGoalSnapshot(
     val currentAmount: Double,
     val targetAmount: Double,
@@ -29,12 +29,6 @@ data class WidgetGoalSnapshot(
     val updatedAt: Long,
     val currencyRegion: CurrencyRegion,
     val activeItems: List<WidgetFinanceItem> = emptyList(),
-    val globalBalance: Double = 0.0,
-    /** Deposits − goal transfers − expenses; matches in-app «Доступный остаток». */
-    val availableBalance: Double = 0.0,
-    val totalDeposits: Double = 0.0,
-    val totalGoalAllocated: Double = 0.0,
-    val totalExpenses: Double = 0.0,
     val totalAccumulated: Double = 0.0,
     val totalRemainingToGoal: Double = 0.0,
     val owedToMeCents: Long = 0L,

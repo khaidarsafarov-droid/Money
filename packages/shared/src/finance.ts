@@ -8,7 +8,7 @@ export type StatusFilter = "all" | "active" | "completed";
 
 export type TypeFilter = "all" | "goal" | "debt";
 
-/** Ledger entry — source of truth for goals and global balance. Amount in USD cents. */
+/** Ledger entry. A goal's saved amount is confirmed transfers to that goal minus its expenses. Amount in cents. */
 export type TransactionKind = "DEPOSIT" | "GOAL_TRANSFER" | "EXPENSE";
 
 export interface Transaction {
@@ -53,6 +53,8 @@ export interface FinancialItem {
   dateDue?: string;
   /** ISO date (YYYY-MM-DD) — goal deadline for daily savings hint */
   dateDeadline?: string;
+  /** MONEY is a savings target. ACTION is a task list. Older records omit this. */
+  goalKind?: string;
   updatedAt?: string;
   /** Tombstone for LWW sync — hidden from UI when true */
   deleted?: boolean;
@@ -72,9 +74,9 @@ export interface GlobalFinanceSummary {
   totalAccumulatedCents: number;
   /** Sum of (target − accumulated) for active goals. */
   totalRemainingToGoalCents: number;
-  /** Income − expenses (deposits minus expenses). */
+  /** Free wallet: deposits minus expenses that are not tied to a goal. */
   globalBalanceCents: number;
-  /** Unallocated pool for transfers and expenses. */
+  /** Free wallet available for expenses that are not tied to a goal. */
   availableBalanceCents: number;
 }
 

@@ -176,8 +176,6 @@ fun HomeScreen(
     val budgetSummary by budgetViewModel.budgetSummary.collectAsStateWithLifecycle()
     val availableBalanceUsd = budgetSummary.availableBalance
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
-    val transfers by budgetViewModel.transfers.collectAsStateWithLifecycle()
-    val expenses by budgetViewModel.expenses.collectAsStateWithLifecycle()
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
     val debtProgressPercent = remember(allDebtors) {
         GoalPsychologyEngines.totalDebtProgressPercent(allDebtors)
@@ -519,9 +517,6 @@ fun HomeScreen(
                 onDebtorFilterChange = debtListViewModel::setFilter,
                 debtSearchQuery = debtSearchQuery,
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
-                transfers = transfers,
-                expenses = expenses,
-                budgetSummary = budgetSummary,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
                 debtProgressPercent = debtProgressPercent,
@@ -625,9 +620,6 @@ fun HomeScreen(
                 onDebtorFilterChange = debtListViewModel::setFilter,
                 debtSearchQuery = debtSearchQuery,
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
-                transfers = transfers,
-                expenses = expenses,
-                budgetSummary = budgetSummary,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
                 greetingName = userProfile.resolvedDisplayName(

@@ -124,4 +124,30 @@ describe("snapshotAdapter", () => {
     expect(second.transactions[0]?.deleted).toBe(true);
     expect(second.transactions[0]?.syncUpdatedAt).toBe(200);
   });
+
+  it("carries goal kind and does not emit empty note lists", () => {
+    const state: FinanceState = {
+      currency: "USD",
+      items: [{
+        id: "goal-task",
+        type: "GOAL",
+        name: "Steps",
+        status: "ACTIVE",
+        amount: 0,
+        target: 0,
+        history: [],
+        goalKind: "ACTION",
+      }],
+      transactions: [],
+    };
+
+    const snapshot = financeStateToSnapshot(state, "web-device");
+    expect(snapshot.goals[0]?.goalKind).toBe("ACTION");
+    expect(snapshot.notes).toBeUndefined();
+    expect(snapshot.goalActions).toBeUndefined();
+    expect(snapshot.noteLines).toBeUndefined();
+
+    const restored = snapshotToFinanceState(snapshot);
+    expect(restored.items[0]?.goalKind).toBe("ACTION");
+  });
 });

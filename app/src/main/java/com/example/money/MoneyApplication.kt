@@ -90,7 +90,6 @@ class MoneyApplication : Application() {
             context = this,
             goalRepository = goalRepository,
             debtorRepository = debtorRepository,
-            budgetRepository = budgetRepository,
             pendingTransactionCount = budgetRepository.observePendingCount(),
             preferencesStore = preferencesStore,
             currencyRegion = preferencesStore.currencyRegion,

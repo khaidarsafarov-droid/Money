@@ -1,6 +1,5 @@
 package com.example.money.widget
 
-import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
@@ -19,7 +18,6 @@ import kotlin.math.roundToInt
 internal fun buildWidgetGoalSnapshot(
     goals: List<SavingsGoal>,
     debts: List<Debtor>,
-    budget: BudgetSummary,
     pendingCount: Int,
     region: CurrencyRegion,
     hideAmounts: Boolean,
@@ -66,11 +64,6 @@ internal fun buildWidgetGoalSnapshot(
             formatCents = formatCents,
             actionStepsLabel = actionStepsLabel,
         ),
-        globalBalance = budget.globalBalance,
-        availableBalance = budget.availableBalance,
-        totalDeposits = budget.totalDeposits,
-        totalGoalAllocated = budget.totalGoalAllocated,
-        totalExpenses = budget.totalExpenses,
         totalAccumulated = goalMetrics.totalAccumulated,
         totalRemainingToGoal = goalMetrics.totalRemainingToGoal,
         owedToMeCents = debtMetrics.owedToMeCents,

@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
-import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.ui.theme.MoneySpacing
@@ -48,14 +47,12 @@ private val InkMuted = Color(0xFF5C7D72)
 
 @Composable
 fun MintFinanceHeader(
-    @Suppress("UNUSED_PARAMETER") summary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
     hideAmounts: Boolean,
     onOwesMeClick: () -> Unit,
     onIOweClick: () -> Unit,
     progressPercent: Int?,
-    @Suppress("UNUSED_PARAMETER") compact: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val goalPool = goalMetrics.totalAccumulated + goalMetrics.totalRemainingToGoal

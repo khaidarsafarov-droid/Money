@@ -92,6 +92,33 @@ describe("computeActiveGoalMetrics", () => {
     expect(metrics.totalAccumulatedCents).toBe(40_000);
     expect(metrics.totalRemainingToGoalCents).toBe(110_000);
   });
+
+  it("leaves action goals out of money totals", () => {
+    const state: FinanceState = {
+      currency: "USD",
+      items: [{
+        id: "steps",
+        type: "GOAL",
+        name: "Steps",
+        status: "ACTIVE",
+        amount: 50_000,
+        target: 99_000,
+        history: [],
+        goalKind: "ACTION",
+      }],
+      transactions: [{
+        id: "move",
+        kind: "GOAL_TRANSFER",
+        amount: 50_000,
+        goalId: "steps",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }],
+    };
+
+    const enriched = enrichFinanceState(state);
+    expect(enriched.items[0]?.amount).toBe(0);
+    expect(computeActiveGoalMetrics(enriched.items).totalAccumulatedCents).toBe(0);
+  });
 });
 
 describe("migrateLegacyGoalHistory", () => {

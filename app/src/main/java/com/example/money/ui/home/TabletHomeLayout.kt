@@ -42,17 +42,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.FinanceNote
 import com.example.money.domain.model.FinanceNoteLine
 import com.example.money.domain.model.NoteMark
-import com.example.money.domain.model.Expense
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
-import com.example.money.domain.model.Transfer
 import com.example.money.domain.sync.SyncConnectionState
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
@@ -99,9 +96,6 @@ fun TabletHomeLayout(
     onDebtorFilterChange: (DebtorFilter) -> Unit,
     debtSearchQuery: String,
     onDebtSearchQueryChange: (String) -> Unit,
-    transfers: List<Transfer>,
-    expenses: List<Expense>,
-    budgetSummary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
     debtProgressPercent: Int = 0,
@@ -594,7 +588,6 @@ fun TabletHomeLayout(
 
             HomeDetailPane(
                 selection = selection,
-                summary = budgetSummary,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
                 onEditGoal = onEditGoal,

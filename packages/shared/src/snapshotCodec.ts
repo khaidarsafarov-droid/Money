@@ -112,6 +112,7 @@ interface LegacySnapshotGoal {
   currency: string;
   deadlineMillis?: number;
   dateDeadline?: string;
+  goalKind?: string;
   syncUpdatedAt: number;
   deleted?: boolean;
 }
@@ -155,6 +156,7 @@ interface LegacySnapshotExpense {
   date: number;
   note?: string;
   isConfirmed: boolean;
+  goalId?: number | string;
   syncUpdatedAt: number;
   deleted?: boolean;
 }
@@ -177,6 +179,7 @@ function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
       createdAt: new Date(expense.date).toISOString(),
       category: expense.category,
       note: expense.note,
+      ...(expense.goalId == null ? {} : { goalId: String(expense.goalId) }),
       syncUpdatedAt: expense.syncUpdatedAt,
       deleted: expense.deleted,
     })),
@@ -191,6 +194,7 @@ function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
       name: goal.name,
       targetAmountCents: goal.targetAmountCents,
       currency: goal.currency,
+      ...(goal.goalKind ? { goalKind: goal.goalKind } : {}),
       dateDeadline: goal.dateDeadline
         ?? (goal.deadlineMillis != null
           ? new Date(goal.deadlineMillis).toISOString().slice(0, 10)

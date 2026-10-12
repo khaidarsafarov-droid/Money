@@ -6,5 +6,5 @@ data class DebtPayment(
     val amountCents: Long,
     val currency: String,
     val paidAt: Long,
-    val affectsBalance: Boolean = true,
+    val affectsBalance: Boolean = false,
 )

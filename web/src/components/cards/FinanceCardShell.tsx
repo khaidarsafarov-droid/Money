@@ -54,12 +54,17 @@ export function FinanceCardShell({
   menu,
   primaryAmountCents,
 }: FinanceCardShellProps) {
+  const taskGoal = item.type === "GOAL" && item.goalKind === "ACTION";
   const remaining = remainingAmount(item);
   const displayAmount = primaryAmountCents ?? remaining;
-  const progress = item.type === "GOAL" ? displayProgressFraction(item) : progressFraction(item);
+  const progress = taskGoal
+    ? 0
+    : item.type === "GOAL"
+      ? displayProgressFraction(item)
+      : progressFraction(item);
   const progressPercent = progressPercentRaw(item);
-  const overAchieved = item.type === "GOAL" && isGoalOverAchieved(item);
-  const daily = item.type === "GOAL" ? dailyGoalCents(item) : null;
+  const overAchieved = !taskGoal && item.type === "GOAL" && isGoalOverAchieved(item);
+  const daily = !taskGoal && item.type === "GOAL" ? dailyGoalCents(item) : null;
   const locale = navigator.language;
   const english = locale.toLowerCase().startsWith("en");
   const daysLeft = item.type === "GOAL" && item.dateDeadline ? daysUntilDeadline(item.dateDeadline) : null;
@@ -87,14 +92,22 @@ export function FinanceCardShell({
             </span>
           </div>
           <h3 className="truncate text-heading">{item.name}</h3>
-          <p className="text-display tabular-nums">
-            {formatMoney(displayAmount, { hidden: hideAmounts })}
-          </p>
+          {taskGoal ? (
+            <p className="text-sm text-milk-muted">
+              {english ? "Tasks, no money target" : "Задачи без денежной цели"}
+            </p>
+          ) : (
+            <p className="text-display tabular-nums">
+              {formatMoney(displayAmount, { hidden: hideAmounts })}
+            </p>
+          )}
           {meta}
         </div>
 
         <div className="flex shrink-0 items-start gap-1">
-          <span className="text-sm font-semibold tabular-nums text-milk-muted">{progressPercent}%</span>
+          {taskGoal ? null : (
+            <span className="text-sm font-semibold tabular-nums text-milk-muted">{progressPercent}%</span>
+          )}
           {menu}
           {onDelete && (
             <button
@@ -109,10 +122,12 @@ export function FinanceCardShell({
         </div>
       </div>
 
-      <AnimatedProgressBar
-        value={progress}
-        variant={progressVariantForItem(item, overdue)}
-      />
+      {taskGoal ? null : (
+        <AnimatedProgressBar
+          value={progress}
+          variant={progressVariantForItem(item, overdue)}
+        />
+      )}
 
       {overAchieved && (
         <p className="text-sm text-milk-gold">
@@ -145,14 +160,18 @@ export function FinanceCardShell({
         </div>
       )}
 
-      <p className="text-sm text-milk-muted">
-        {remainingLabel}:{" "}
-        <span className="text-milk-text">{formatMoney(remaining, { hidden: hideAmounts })}</span>
-      </p>
+      {taskGoal ? null : (
+        <>
+          <p className="text-sm text-milk-muted">
+            {remainingLabel}:{" "}
+            <span className="text-milk-text">{formatMoney(remaining, { hidden: hideAmounts })}</span>
+          </p>
 
-      <p className="text-sm text-milk-muted">
-        {paidLabel} {formatMoney(item.amount, { hidden: hideAmounts })} из {formatMoney(item.target, { hidden: hideAmounts })}
-      </p>
+          <p className="text-sm text-milk-muted">
+            {paidLabel} {formatMoney(item.amount, { hidden: hideAmounts })} из {formatMoney(item.target, { hidden: hideAmounts })}
+          </p>
+        </>
+      )}
 
       {action}
 

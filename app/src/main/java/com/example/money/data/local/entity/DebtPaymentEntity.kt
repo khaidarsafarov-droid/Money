@@ -31,5 +31,5 @@ data class DebtPaymentEntity(
     @ColumnInfo(name = "paid_at")
     val paidAt: Long,
     @ColumnInfo(name = "affects_balance")
-    val affectsBalance: Boolean = true,
+    val affectsBalance: Boolean = false,
 )

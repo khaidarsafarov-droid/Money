@@ -53,7 +53,7 @@ fun DebtPaymentDialog(
     }
 
     val context = LocalContext.current
-    val extraHintCents = 1_000L
+    val extraHintCents = DebtExtraPaymentEngine.SUGGESTED_EXTRA_CENTS
     val extraImpact = remember(debtor.id, debtor.remainingAmountCents) {
         DebtExtraPaymentEngine.calculateImpact(debtor, extraHintCents)
     }

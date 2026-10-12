@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.ui.components.MintFinanceHeader
@@ -39,38 +38,32 @@ import com.example.money.ui.theme.moneyDisplayStyle
 
 @Composable
 fun GlobalBalanceHeader(
-    summary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
     onOwesMeClick: () -> Unit = {},
     onIOweClick: () -> Unit = {},
     hideAmounts: Boolean = false,
     progressPercent: Int? = null,
-    compact: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     MintFinanceHeader(
-        summary = summary,
         goalMetrics = goalMetrics,
         debtMetrics = debtMetrics,
         hideAmounts = hideAmounts,
         onOwesMeClick = onOwesMeClick,
         onIOweClick = onIOweClick,
         progressPercent = progressPercent,
-        compact = compact,
         modifier = modifier,
     )
 }
 
 @Composable
 fun BrotherFinancesHeader(
-    summary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics = DashboardDebtMetrics(0, 0, 0, 0),
     modifier: Modifier = Modifier,
 ) {
     GlobalBalanceHeader(
-        summary = summary,
         goalMetrics = goalMetrics,
         debtMetrics = debtMetrics,
         modifier = modifier,

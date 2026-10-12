@@ -28,7 +28,11 @@ export function goalNetCents(transactions: Transaction[], goalId: string): numbe
 
 export function computeActiveGoalMetrics(items: FinancialItem[]): ActiveGoalMetrics {
   const activeGoals = items.filter(
-    (item) => item.type === "GOAL" && !item.deleted && item.status !== "COMPLETED",
+    (item) =>
+      item.type === "GOAL" &&
+      item.goalKind !== "ACTION" &&
+      !item.deleted &&
+      item.status !== "COMPLETED",
   );
 
   return activeGoals.reduce(
@@ -72,6 +76,7 @@ export function computeGlobalFinanceSummary(state: FinanceState): GlobalFinanceS
 
 export function enrichGoalItem(item: FinancialItem, transactions: Transaction[]): FinancialItem {
   if (item.type !== "GOAL") return item;
+  if (item.goalKind === "ACTION") return { ...item, amount: 0 };
 
   const amount = goalNetCents(transactions, item.id);
   return {

@@ -9,7 +9,7 @@ data class Debtor(
     val currency: String = "USD",
     val status: DebtStatus = DebtStatus.ACTIVE,
     val debtType: DebtType = DebtType.CREDITOR,
-    val affectsBalance: Boolean = true,
+    val affectsBalance: Boolean = false,
     val note: String = "",
     val dateGiven: Long,
     val dateDue: Long,
