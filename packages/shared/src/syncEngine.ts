@@ -85,7 +85,10 @@ function optionalList<K extends "goalActions" | "notes" | "noteLines">(
   key: K,
   value: FinanceSnapshot[K],
 ): Partial<Pick<FinanceSnapshot, K>> {
-  return value === undefined ? {} : { [key]: value };
+  if (value === undefined) return {};
+  const listed: Partial<Pick<FinanceSnapshot, K>> = {};
+  listed[key] = value;
+  return listed;
 }
 
 /** Deterministic merge — both peers compute the same result. */

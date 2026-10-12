@@ -1,8 +1,8 @@
-import { ArrowLeftRight, Home, Plus, Sparkles, Target, X } from "lucide-react";
+import { HandCoins, Home, NotebookPen, Plus, Target, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AppIcon } from "@/components/ui/SurfaceCard";
 
-export type AppTab = "home" | "activity" | "records" | "advisor" | "more";
+export type AppTab = "home" | "goals" | "debts" | "notes" | "more";
 
 interface TabAction {
   label: string;
@@ -18,9 +18,9 @@ interface AppTabBarProps {
 
 const tabs: { id: Exclude<AppTab, "more">; label: string; icon: typeof Home }[] = [
   { id: "home", label: "Главная", icon: Home },
-  { id: "activity", label: "Операции", icon: ArrowLeftRight },
-  { id: "records", label: "Записи", icon: Target },
-  { id: "advisor", label: "Советник", icon: Sparkles },
+  { id: "goals", label: "Цели", icon: Target },
+  { id: "debts", label: "Долги", icon: HandCoins },
+  { id: "notes", label: "Заметки", icon: NotebookPen },
 ];
 
 export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {

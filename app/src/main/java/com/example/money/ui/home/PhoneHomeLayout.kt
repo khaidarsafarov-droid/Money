@@ -8,7 +8,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -461,73 +460,23 @@ internal fun PhoneHomeLayout(
                             ),
                         )
                     }
-                    val homeGoals = goals.filter { !it.isCompleted }.take(4)
-                    val homeDebts = allDebtors.filter { !it.isPaid }.take(4)
-                    if (homeGoals.isEmpty() && homeDebts.isEmpty()) {
-                        item {
-                            EmptyStateMessage(
-                                title = stringResource(R.string.home_only_goals_debts),
-                                hint = stringResource(R.string.empty_goals_hint),
-                                modifier = Modifier.padding(horizontal = MoneySpacing.lg),
-                            )
-                        }
-                    }
-                    if (homeGoals.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.section_goals),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier
-                                    .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm)
-                                    .clickable { onTabSelected(HomeTab.Goals.ordinal) },
-                            )
-                        }
-                        items(homeGoals, key = { "home-goal-${it.id}" }) { goal ->
-                            GoalListItem(
-                                goal = goal,
-                                onEdit = { onEditGoal(goal) },
-                                onOpen = {
-                                    onTabSelected(HomeTab.Goals.ordinal)
-                                    onOpenGoal(goal)
-                                },
-                                onDelete = { onDeleteGoal(goal) },
-                                onTransfer = if (!goal.isCompleted && goal.kind == GoalKind.MONEY) {
-                                    { onGoalTransfer(goal) }
-                                } else {
-                                    null
-                                },
-                                onExpense = { onExpense(goal) },
-                                onLog = { onLogGoal(goal) },
-                                hideAmounts = privacySettings.hideAmounts,
-                                modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = 4.dp),
-                            )
-                        }
-                    }
-                    if (homeDebts.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.tab_debts),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier
-                                    .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm)
-                                    .clickable { onTabSelected(HomeTab.Debts.ordinal) },
-                            )
-                        }
-                        items(homeDebts, key = { "home-debt-${it.id}" }) { debtor ->
-                            HomeListCompactRow(
-                                title = debtor.name,
-                                subtitle = Formatters.currencyFromCents(
-                                    debtor.remainingAmountCents,
-                                    hide = privacySettings.hideAmounts,
-                                ),
-                                selected = false,
-                                onClick = { onTabSelected(HomeTab.Debts.ordinal) },
-                                modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = 4.dp),
-                            )
-                        }
-                    }
+                    homeGoalAndDebtPreview(
+                        goals = goals,
+                        debtors = allDebtors,
+                        hideAmounts = privacySettings.hideAmounts,
+                        horizontalPadding = PaddingValues(horizontal = MoneySpacing.lg),
+                        onOpenGoals = { onTabSelected(HomeTab.Goals.ordinal) },
+                        onOpenGoal = { goal ->
+                            onTabSelected(HomeTab.Goals.ordinal)
+                            onOpenGoal(goal)
+                        },
+                        onEditGoal = onEditGoal,
+                        onDeleteGoal = onDeleteGoal,
+                        onGoalTransfer = onGoalTransfer,
+                        onExpense = onExpense,
+                        onLogGoal = onLogGoal,
+                        onOpenDebts = { onTabSelected(HomeTab.Debts.ordinal) },
+                    )
                 }
 
                 val orderedGoals = GoalProgress.orderedForSection(goals)
