@@ -428,7 +428,7 @@ class BackupRepositoryIntegrationTest {
 
     private fun portablePreferences(language: String, marker: String) = BackupPreferences(
         appLanguage = language,
-        currencyRegion = "US",
+        currencyRegion = "USD",
         welcomeSeen = marker != "target",
         voice = BackupVoicePreferences(true, 7, 45, "EN", "FEMALE", true),
         privacy = BackupPrivacyPreferences(true, false),

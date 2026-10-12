@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,7 +29,7 @@ import com.example.money.ui.util.InputValidators
 @Composable
 fun DebtPaymentDialog(
     debtor: Debtor,
-    availableBalance: Double,
+    @Suppress("UNUSED_PARAMETER") availableBalance: Double,
     initialAmountCents: Long = 0L,
     hideAmounts: Boolean = false,
     onDismiss: () -> Unit,
@@ -48,13 +47,6 @@ fun DebtPaymentDialog(
         )
     }
     var amountError by remember { mutableStateOf<String?>(null) }
-    val defaultAffectsBalance = debtor.debtType == DebtType.CREDITOR
-    var affectsBalance by remember(debtor.id) { mutableStateOf(defaultAffectsBalance) }
-
-    val balanceCheckboxRes = when (debtor.debtType) {
-        DebtType.CREDITOR -> R.string.debt_credit_to_budget
-        DebtType.DEBTOR -> R.string.debt_deduct_from_budget
-    }
     val paymentActionRes = when (debtor.debtType) {
         DebtType.CREDITOR -> R.string.action_add_payment
         DebtType.DEBTOR -> R.string.action_make_payment
@@ -104,25 +96,6 @@ fun DebtPaymentDialog(
                 ) {
                     Text(stringResource(R.string.debt_payment_max))
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Checkbox(
-                        checked = affectsBalance,
-                        onCheckedChange = { affectsBalance = it },
-                    )
-                    Column {
-                        Text(stringResource(balanceCheckboxRes))
-                        Text(
-                            text = stringResource(
-                                R.string.debt_balance_available,
-                                Formatters.currencyCompact(availableBalance, hide = hideAmounts),
-                            ),
-                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                }
             }
         },
         confirmButton = {
@@ -136,15 +109,7 @@ fun DebtPaymentDialog(
                         amountError = context.getString(R.string.error_payment_exceeds_remaining)
                         return@TextButton
                     }
-                    if (
-                        affectsBalance &&
-                        debtor.debtType == DebtType.DEBTOR &&
-                        amount > availableBalance + 0.000_001
-                    ) {
-                        amountError = context.getString(R.string.msg_insufficient_funds)
-                        return@TextButton
-                    }
-                    onConfirm(amount, affectsBalance)
+                    onConfirm(amount, false)
                 },
             ) {
                 Text(stringResource(paymentActionRes))

@@ -12,13 +12,17 @@ object Formatters {
 
     const val MASKED_AMOUNT = "•••"
 
+    /** Currency chosen in app settings. Defaults are read on each call. */
+    @Volatile
+    var activeRegion: CurrencyRegion = CurrencyRegion.US
+
     private val locale: Locale
         get() = Locale.getDefault()
 
-    fun currency(amount: Double, region: CurrencyRegion = CurrencyRegion.US, hide: Boolean = false): String =
+    fun currency(amount: Double, region: CurrencyRegion = activeRegion, hide: Boolean = false): String =
         if (hide) MASKED_AMOUNT else currencyFormat(region).format(amount)
 
-    fun currencyCompact(amount: Double, region: CurrencyRegion = CurrencyRegion.US, hide: Boolean = false): String {
+    fun currencyCompact(amount: Double, region: CurrencyRegion = activeRegion, hide: Boolean = false): String {
         if (hide) return MASKED_AMOUNT
         val formatted = currency(amount, region)
         return formatted.replace(".00", "")
@@ -26,9 +30,9 @@ object Formatters {
 
     fun currencyFromCents(
         cents: Long,
-        @Suppress("UNUSED_PARAMETER") currencyCode: String = "USD",
+        @Suppress("UNUSED_PARAMETER") currencyCode: String = activeRegion.currencyCode,
         hide: Boolean = false,
-    ): String = currencyCompact(cents / 100.0, CurrencyRegion.US, hide)
+    ): String = currencyCompact(cents / 100.0, activeRegion, hide)
 
     fun currencyFromCents(cents: Long, region: CurrencyRegion, hide: Boolean = false): String =
         currencyCompact(cents / 100.0, region, hide)

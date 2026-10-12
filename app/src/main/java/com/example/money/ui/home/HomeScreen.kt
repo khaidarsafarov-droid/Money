@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
@@ -69,6 +70,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -115,6 +117,10 @@ import com.example.money.ui.goal.GoalActionsDialog
 import com.example.money.ui.goal.GoalFormDialog
 import com.example.money.ui.goal.GoalProgressLogDialog
 import com.example.money.ui.goal.GoalViewModel
+import com.example.money.ui.notes.NoteFormDialog
+import com.example.money.ui.notes.NoteViewModel
+import com.example.money.settings.CurrencyRegion
+import com.example.money.ui.settings.CurrencyPickerDialog
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
@@ -156,6 +162,9 @@ fun HomeScreen(
     val debtListViewModel: DebtListViewModel = viewModel(
         factory = DebtListViewModel.Factory(app.debtorRepository),
     )
+    val noteViewModel: NoteViewModel = viewModel(
+        factory = NoteViewModel.Factory(app.noteRepository),
+    )
     val debtorsViewModel: DebtorsViewModel = viewModel(
         factory = DebtorsViewModel.Factory(
             app.debtorRepository,
@@ -167,6 +176,12 @@ fun HomeScreen(
     )
 
     val goals by goalViewModel.goals.collectAsStateWithLifecycle()
+    val notes by noteViewModel.notes.collectAsStateWithLifecycle()
+    val noteLines by noteViewModel.lines.collectAsStateWithLifecycle()
+    val currencyRegion by app.preferencesStore.currencyRegion.collectAsStateWithLifecycle(
+        initialValue = CurrencyRegion.US,
+    )
+    SideEffect { Formatters.activeRegion = currencyRegion }
     val goalActions by goalViewModel.actions.collectAsStateWithLifecycle()
     val allDebtors by debtorsViewModel.allDebtorsList.collectAsStateWithLifecycle()
     val debtors by debtListViewModel.debtors.collectAsStateWithLifecycle()
@@ -205,6 +220,9 @@ fun HomeScreen(
     var stepsGoalId by remember { mutableStateOf<Long?>(null) }
     var showWelcomeDialog by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
+    var showNoteForm by remember { mutableStateOf(false) }
+    var openNoteId by remember { mutableStateOf<Long?>(null) }
+    var showCurrencyPicker by remember { mutableStateOf(false) }
     var addHighlight by remember { mutableStateOf(AddAction.Expense) }
     var addSheetActions by remember { mutableStateOf(AddAction.entries.toList()) }
     var showTopMenu by remember { mutableStateOf(false) }
@@ -231,7 +249,7 @@ fun HomeScreen(
                 HomeTab.Home -> HomeSection.Home
                 HomeTab.Goals -> HomeSection.Goals
                 HomeTab.Debts -> HomeSection.Debts
-                HomeTab.BrotherFinances -> HomeSection.Operations
+                HomeTab.Notes -> HomeSection.Notes
             },
         )
     }
@@ -265,7 +283,7 @@ fun HomeScreen(
             HomeTab.Home -> HomeSection.Home
             HomeTab.Goals -> HomeSection.Goals
             HomeTab.Debts -> HomeSection.Debts
-            HomeTab.BrotherFinances -> HomeSection.Operations
+            HomeTab.Notes -> HomeSection.Notes
         }
         debtListViewModel.setDebtTab(launchConfig.initialDebtTab)
 
@@ -273,8 +291,8 @@ fun HomeScreen(
             showExpenseDialog = true
         }
         if (launchConfig.openQuickAddDialog) {
-            addHighlight = AddAction.Expense
-            addSheetActions = AddAction.entries.toList()
+            addHighlight = plusHighlight(PagePlusAction.AddAnything)
+            addSheetActions = plusSheetActions(PagePlusAction.AddAnything).orEmpty()
             showAddSheet = true
         }
 
@@ -657,6 +675,25 @@ fun HomeScreen(
             },
         )
     }
+    if (showNoteForm) {
+        NoteFormDialog(
+            onDismiss = { showNoteForm = false },
+            onConfirm = { title, kind ->
+                showNoteForm = false
+                noteViewModel.addNote(title, kind) { id -> openNoteId = id }
+            },
+        )
+    }
+    if (showCurrencyPicker) {
+        CurrencyPickerDialog(
+            selected = currencyRegion,
+            onDismiss = { showCurrencyPicker = false },
+            onSelect = { region ->
+                showCurrencyPicker = false
+                scope.launch { app.preferencesStore.setCurrencyRegion(region) }
+            },
+        )
+    }
     if (showAddSheet) {
         AddActionSheet(
             highlighted = addHighlight,
@@ -750,6 +787,12 @@ fun HomeScreen(
                 },
                 actions = {
                     if (!isTablet) {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(
+                                Icons.Outlined.Settings,
+                                contentDescription = stringResource(R.string.settings_open),
+                            )
+                        }
                         SyncStatusIndicator(
                             state = syncState,
                             modifier = Modifier.padding(end = 4.dp),
@@ -804,7 +847,8 @@ fun HomeScreen(
                     when (pagePlus) {
                         PagePlusAction.AddDebt -> showAddDebtorDialog = true
                         PagePlusAction.AddGoal -> showAddGoalDialog = true
-                        PagePlusAction.AddAnything, PagePlusAction.AddOperation -> {
+                        PagePlusAction.AddNote -> showNoteForm = true
+                        PagePlusAction.AddAnything -> {
                             addHighlight = plusHighlight(pagePlus)
                             addSheetActions = plusSheetActions(pagePlus).orEmpty()
                             showAddSheet = true
@@ -902,6 +946,19 @@ fun HomeScreen(
                 onOpenVoiceSettings = onOpenVoiceSettings,
                 calendarPermissionGranted = hasCalendarPermissions,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
+                onOpenCurrency = { showCurrencyPicker = true },
+                notes = notes,
+                noteLines = noteLines,
+                openNoteId = openNoteId,
+                onOpenNote = { openNoteId = it },
+                onCloseNote = { openNoteId = null },
+                onUpdateNote = noteViewModel::updateNote,
+                onSetMark = noteViewModel::setMark,
+                onSetClosed = noteViewModel::setClosed,
+                onDeleteNote = noteViewModel::deleteNote,
+                onAddLine = noteViewModel::addLine,
+                onUpdateLine = noteViewModel::updateLine,
+                onDeleteLine = noteViewModel::deleteLine,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onViewContactHistory = { debtor ->
@@ -981,6 +1038,19 @@ fun HomeScreen(
                 onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
                 onOpenBackupSettings = onOpenBackupSettings,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
+                onOpenCurrency = { showCurrencyPicker = true },
+                notes = notes,
+                noteLines = noteLines,
+                openNoteId = openNoteId,
+                onOpenNote = { openNoteId = it },
+                onCloseNote = { openNoteId = null },
+                onUpdateNote = noteViewModel::updateNote,
+                onSetMark = noteViewModel::setMark,
+                onSetClosed = noteViewModel::setClosed,
+                onDeleteNote = noteViewModel::deleteNote,
+                onAddLine = noteViewModel::addLine,
+                onUpdateLine = noteViewModel::updateLine,
+                onDeleteLine = noteViewModel::deleteLine,
                 calendarPermissionGranted = hasCalendarPermissions,
                 onOpenGoalHub = onOpenGoalHub,
                 onAddDebt = { showAddDebtorDialog = true },

@@ -65,7 +65,7 @@ fun GoalFormDialog(
     val context = LocalContext.current
 
     var kind by remember(existingGoal?.id) {
-        mutableStateOf(existingGoal?.kind ?: GoalKind.MONEY)
+        mutableStateOf(existingGoal?.kind ?: GoalKind.ACTION)
     }
     var name by remember(existingGoal?.id) {
         mutableStateOf(existingGoal?.name.orEmpty())
@@ -133,14 +133,14 @@ fun GoalFormDialog(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
-                    selected = kind == GoalKind.MONEY,
-                    onClick = { kind = GoalKind.MONEY },
-                    label = { Text(stringResource(R.string.goal_kind_money)) },
-                )
-                FilterChip(
                     selected = kind == GoalKind.ACTION,
                     onClick = { kind = GoalKind.ACTION },
                     label = { Text(stringResource(R.string.goal_kind_action)) },
+                )
+                FilterChip(
+                    selected = kind == GoalKind.MONEY,
+                    onClick = { kind = GoalKind.MONEY },
+                    label = { Text(stringResource(R.string.goal_kind_money)) },
                 )
             }
             OutlinedTextField(
@@ -170,6 +170,13 @@ fun GoalFormDialog(
             } else {
                 Text(
                     text = stringResource(R.string.goal_action_kind_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (kind == GoalKind.MONEY) {
+                Text(
+                    text = stringResource(R.string.goal_kind_money_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

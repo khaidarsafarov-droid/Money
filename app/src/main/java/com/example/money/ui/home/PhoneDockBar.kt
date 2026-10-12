@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.People
-import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,18 +33,18 @@ import com.example.money.ui.theme.GoldPrimary
 
 internal enum class PhoneDockTab {
     Home,
-    Operations,
+    Goals,
     Debts,
-    More,
+    Notes,
 }
 
 @Composable
 internal fun PhoneDockBar(
     selected: PhoneDockTab?,
     onHome: () -> Unit,
-    onOperations: () -> Unit,
+    onGoals: () -> Unit,
     onDebts: () -> Unit,
-    onMore: () -> Unit,
+    onNotes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -72,10 +72,10 @@ internal fun PhoneDockBar(
                     onClick = onHome,
                 )
                 DockItem(
-                    label = stringResource(R.string.tab_operations),
-                    icon = Icons.Outlined.SwapHoriz,
-                    selected = selected == PhoneDockTab.Operations,
-                    onClick = onOperations,
+                    label = stringResource(R.string.section_goals),
+                    icon = Icons.Outlined.Flag,
+                    selected = selected == PhoneDockTab.Goals,
+                    onClick = onGoals,
                 )
                 DockItem(
                     label = stringResource(R.string.tab_debts),
@@ -84,10 +84,10 @@ internal fun PhoneDockBar(
                     onClick = onDebts,
                 )
                 DockItem(
-                    label = stringResource(R.string.nav_more),
-                    icon = Icons.Outlined.MoreHoriz,
-                    selected = false,
-                    onClick = onMore,
+                    label = stringResource(R.string.tab_notes),
+                    icon = Icons.Outlined.EditNote,
+                    selected = selected == PhoneDockTab.Notes,
+                    onClick = onNotes,
                 )
             }
         }

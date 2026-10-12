@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.AutoMode
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
@@ -82,6 +83,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.domain.model.DebtType
+import com.example.money.domain.model.FinanceNote
+import com.example.money.domain.model.FinanceNoteLine
+import com.example.money.domain.model.NoteMark
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.GoalKind
@@ -117,6 +121,7 @@ import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.debtors.IncomeIdeasDialog
 import com.example.money.ui.goal.GoalFormDialog
+import com.example.money.ui.notes.NotesPage
 import com.example.money.ui.goal.GoalViewModel
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
@@ -185,6 +190,19 @@ internal fun PhoneHomeLayout(
     onOpenDebtNotificationSettings: () -> Unit,
     onOpenBackupSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
+    onOpenCurrency: () -> Unit = {},
+    notes: List<FinanceNote> = emptyList(),
+    noteLines: List<FinanceNoteLine> = emptyList(),
+    openNoteId: Long? = null,
+    onOpenNote: (Long) -> Unit = {},
+    onCloseNote: () -> Unit = {},
+    onUpdateNote: (FinanceNote) -> Unit = {},
+    onSetMark: (FinanceNote, NoteMark) -> Unit = { _, _ -> },
+    onSetClosed: (FinanceNote, Boolean) -> Unit = { _, _ -> },
+    onDeleteNote: (Long) -> Unit = {},
+    onAddLine: (Long, String, Long) -> Unit = { _, _, _ -> },
+    onUpdateLine: (FinanceNoteLine) -> Unit = {},
+    onDeleteLine: (Long, Long) -> Unit = { _, _ -> },
     calendarPermissionGranted: Boolean,
     onOpenGoalHub: () -> Unit,
     onAddDebt: () -> Unit,
@@ -285,6 +303,16 @@ internal fun PhoneHomeLayout(
                     }
                     item {
                         SettingsDrawerItem(
+                            label = stringResource(R.string.currency_settings_title),
+                            icon = Icons.Outlined.Payments,
+                            onClick = {
+                                onOpenCurrency()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
                             label = stringResource(R.string.app_language_menu),
                             icon = Icons.Outlined.Translate,
                             onClick = {
@@ -335,9 +363,9 @@ internal fun PhoneHomeLayout(
             bottomBar = {
                 val dockTab = when (HomeTab.entries[selectedTab]) {
                     HomeTab.Home -> PhoneDockTab.Home
-                    HomeTab.Goals -> null
+                    HomeTab.Goals -> PhoneDockTab.Goals
                     HomeTab.Debts -> PhoneDockTab.Debts
-                    HomeTab.BrotherFinances -> PhoneDockTab.Operations
+                    HomeTab.Notes -> PhoneDockTab.Notes
                 }
                 PhoneDockBar(
                     selected = dockTab,
@@ -345,17 +373,32 @@ internal fun PhoneHomeLayout(
                         onTabSelected(HomeTab.Home.ordinal)
                         scope.launch { listState.animateScrollToItem(0) }
                     },
-                    onOperations = {
-                        onTabSelected(HomeTab.BrotherFinances.ordinal)
-                    },
-                    onDebts = {
-                        onTabSelected(HomeTab.Debts.ordinal)
-                    },
-                    onMore = { scope.launch { drawerState.open() } },
+                    onGoals = { onTabSelected(HomeTab.Goals.ordinal) },
+                    onDebts = { onTabSelected(HomeTab.Debts.ordinal) },
+                    onNotes = { onTabSelected(HomeTab.Notes.ordinal) },
                 )
             },
         ) { innerPadding ->
-            LazyColumn(
+            val page = HomeTab.entries[selectedTab]
+            if (page == HomeTab.Notes) {
+                NotesPage(
+                    notes = notes,
+                    lines = noteLines,
+                    openNoteId = openNoteId,
+                    onOpenNote = onOpenNote,
+                    onCloseNote = onCloseNote,
+                    onUpdateNote = onUpdateNote,
+                    onSetMark = onSetMark,
+                    onSetClosed = onSetClosed,
+                    onDeleteNote = onDeleteNote,
+                    onAddLine = onAddLine,
+                    onUpdateLine = onUpdateLine,
+                    onDeleteLine = onDeleteLine,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                )
+            } else LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
@@ -393,20 +436,6 @@ internal fun PhoneHomeLayout(
                 }
                 val page = HomeTab.entries[selectedTab]
                 if (page == HomeTab.Home) {
-                    item {
-                        GlobalBalanceHeader(
-                            summary = budgetSummary,
-                            goalMetrics = goalMetrics,
-                            debtMetrics = debtMetrics,
-                            hideAmounts = privacySettings.hideAmounts,
-                            progressPercent = debtProgressPercent,
-                            compact = true,
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.lg,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
                     val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
                     item {
                         HomePreviewCards(
@@ -437,15 +466,73 @@ internal fun PhoneHomeLayout(
                             ),
                         )
                     }
-                    homeOperationsSection(
-                        transfers = transfers,
-                        expenses = expenses,
-                        goals = goals,
-                        debtors = allDebtors,
-                        goalActions = goalActions,
-                        limit = 5,
-                        onOpenAll = { onTabSelected(HomeTab.BrotherFinances.ordinal) },
-                    )
+                    val homeGoals = goals.filter { !it.isCompleted }.take(4)
+                    val homeDebts = allDebtors.filter { !it.isPaid }.take(4)
+                    if (homeGoals.isEmpty() && homeDebts.isEmpty()) {
+                        item {
+                            EmptyStateMessage(
+                                title = stringResource(R.string.home_only_goals_debts),
+                                hint = stringResource(R.string.empty_goals_hint),
+                                modifier = Modifier.padding(horizontal = MoneySpacing.lg),
+                            )
+                        }
+                    }
+                    if (homeGoals.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.section_goals),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm)
+                                    .clickable { onTabSelected(HomeTab.Goals.ordinal) },
+                            )
+                        }
+                        items(homeGoals, key = { "home-goal-${it.id}" }) { goal ->
+                            GoalListItem(
+                                goal = goal,
+                                onEdit = { onEditGoal(goal) },
+                                onOpen = {
+                                    onTabSelected(HomeTab.Goals.ordinal)
+                                    onOpenGoal(goal)
+                                },
+                                onDelete = { onDeleteGoal(goal) },
+                                onTransfer = if (!goal.isCompleted && goal.kind == GoalKind.MONEY) {
+                                    { onGoalTransfer(goal) }
+                                } else {
+                                    null
+                                },
+                                onExpense = { onExpense(goal) },
+                                onLog = { onLogGoal(goal) },
+                                hideAmounts = privacySettings.hideAmounts,
+                                modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = 4.dp),
+                            )
+                        }
+                    }
+                    if (homeDebts.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.tab_debts),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm)
+                                    .clickable { onTabSelected(HomeTab.Debts.ordinal) },
+                            )
+                        }
+                        items(homeDebts, key = { "home-debt-${it.id}" }) { debtor ->
+                            HomeListCompactRow(
+                                title = debtor.name,
+                                subtitle = Formatters.currencyFromCents(
+                                    debtor.remainingAmountCents,
+                                    hide = privacySettings.hideAmounts,
+                                ),
+                                selected = false,
+                                onClick = { onTabSelected(HomeTab.Debts.ordinal) },
+                                modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = 4.dp),
+                            )
+                        }
+                    }
                 }
 
                 val orderedGoals = GoalProgress.orderedForSection(goals)
@@ -553,15 +640,6 @@ internal fun PhoneHomeLayout(
                         onRemoveCalendar = onRemoveCalendar,
                         emptyDebtorsTitle = emptyDebtorsTitle,
                         emptyDebtorsHint = emptyDebtorsHint,
-                    )
-                }
-                if (HomeTab.entries[selectedTab] == HomeTab.BrotherFinances) {
-                    homeOperationsSection(
-                        transfers = transfers,
-                        expenses = expenses,
-                        goals = goals,
-                        debtors = allDebtors,
-                        goalActions = goalActions,
                     )
                 }
             }

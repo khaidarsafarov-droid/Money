@@ -38,7 +38,6 @@ import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 import kotlin.math.roundToInt
 
-private val HeroStart = Color(0xFF15967C)
 private val HeroEnd = Color(0xFF0B5346)
 private val PastelMint = Color(0xFFD9F6E6)
 private val PastelPeach = Color(0xFFFFE4CC)
@@ -49,14 +48,14 @@ private val InkMuted = Color(0xFF5C7D72)
 
 @Composable
 fun MintFinanceHeader(
-    summary: BudgetSummary,
+    @Suppress("UNUSED_PARAMETER") summary: BudgetSummary,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
     hideAmounts: Boolean,
     onOwesMeClick: () -> Unit,
     onIOweClick: () -> Unit,
     progressPercent: Int?,
-    compact: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") compact: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val goalPool = goalMetrics.totalAccumulated + goalMetrics.totalRemainingToGoal
@@ -74,8 +73,6 @@ fun MintFinanceHeader(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        BalanceHero(summary = summary, hideAmounts = hideAmounts)
-        if (compact) return@Column
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
                 label = stringResource(R.string.debt_dashboard_owes_me),
@@ -112,57 +109,6 @@ fun MintFinanceHeader(
                 if (usesDebtScore) R.string.home_score_debts else R.string.home_score_goals,
             ),
         )
-    }
-}
-
-@Composable
-private fun BalanceHero(
-    summary: BudgetSummary,
-    hideAmounts: Boolean,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(Brush.linearGradient(listOf(HeroStart, HeroEnd)))
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.global_balance_label),
-            color = Color.White.copy(alpha = 0.78f),
-            fontSize = 14.sp,
-        )
-        Text(
-            text = Formatters.currency(summary.availableBalance, hide = hideAmounts),
-            color = Color.White,
-            fontSize = 34.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = stringResource(R.string.global_balance_income_minus_expenses) +
-                ": " + Formatters.currency(summary.globalBalance, hide = hideAmounts),
-            color = Color.White.copy(alpha = 0.78f),
-            fontSize = 13.sp,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            HeroFigure(
-                label = stringResource(R.string.global_balance_deposits_label),
-                value = Formatters.currency(summary.totalDeposits, hide = hideAmounts),
-            )
-            HeroFigure(
-                label = stringResource(R.string.global_balance_expenses_label),
-                value = Formatters.currency(summary.totalExpenses, hide = hideAmounts),
-            )
-        }
-    }
-}
-
-@Composable
-private fun HeroFigure(label: String, value: String) {
-    Column {
-        Text(text = label, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
-        Text(text = value, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
     }
 }
 

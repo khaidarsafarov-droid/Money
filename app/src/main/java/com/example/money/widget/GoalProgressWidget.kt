@@ -197,11 +197,7 @@ private fun BalanceHero(
     showFormula: Boolean,
     onClick: androidx.glance.action.Action,
 ) {
-    val amountColor = if (!hide && snapshot.availableBalance < 0.0) {
-        ColorProvider(HeroAlert)
-    } else {
-        ColorProvider(HeroText)
-    }
+    val amountColor = ColorProvider(HeroText)
     val scoreLabel = context.getString(
         if (snapshot.scoreUsesDebts) R.string.widget_score_chip_debts else R.string.widget_score_chip_goals,
         snapshot.progressPercent,
@@ -220,7 +216,7 @@ private fun BalanceHero(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = context.getString(R.string.global_balance_label),
+                text = context.getString(R.string.widget_goals_debts_title),
                 modifier = GlanceModifier.defaultWeight(),
                 style = TextStyle(color = ColorProvider(HeroMuted), fontSize = 12.sp),
             )
@@ -235,7 +231,7 @@ private fun BalanceHero(
         }
         Spacer(modifier = GlanceModifier.height(2.dp))
         Text(
-            text = Formatters.currency(snapshot.availableBalance, region, hide),
+            text = Formatters.currency(snapshot.totalAccumulated, region, hide),
             style = TextStyle(
                 color = amountColor,
                 fontWeight = FontWeight.Bold,
@@ -246,10 +242,12 @@ private fun BalanceHero(
         if (showFormula) {
             Spacer(modifier = GlanceModifier.height(2.dp))
             Text(
-                text = context.getString(R.string.global_balance_income_minus_expenses) +
-                    ": " + Formatters.currency(snapshot.globalBalance, region, hide),
+                text = context.getString(R.string.debt_dashboard_owes_me) +
+                    " " + Formatters.currencyFromCents(snapshot.owedToMeCents, region, hide) +
+                    " · " + context.getString(R.string.debt_dashboard_i_owe) +
+                    " " + Formatters.currencyFromCents(snapshot.iOweCents, region, hide),
                 style = TextStyle(color = ColorProvider(HeroMuted), fontSize = 11.sp),
-                maxLines = 1,
+                maxLines = 2,
             )
         }
         if (snapshot.overdueDebtCount > 0 || snapshot.pendingCount > 0) {

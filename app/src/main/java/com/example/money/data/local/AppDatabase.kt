@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.money.data.local.dao.FinanceNoteDao
 import com.example.money.data.local.dao.GoalActionDao
 import com.example.money.data.local.dao.DebtorDao
 import com.example.money.data.local.dao.DebtPaymentDao
@@ -13,6 +14,8 @@ import com.example.money.data.local.dao.SavingsGoalDao
 import com.example.money.data.local.dao.SyncQueueDao
 import com.example.money.data.local.dao.SyncTombstoneDao
 import com.example.money.data.local.dao.TransferDao
+import com.example.money.data.local.entity.FinanceNoteEntity
+import com.example.money.data.local.entity.FinanceNoteLineEntity
 import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
@@ -44,6 +47,7 @@ import com.example.money.data.local.migration.MIGRATION_19_20
 import com.example.money.data.local.migration.MIGRATION_20_21
 import com.example.money.data.local.migration.MIGRATION_21_22
 import com.example.money.data.local.migration.MIGRATION_22_23
+import com.example.money.data.local.migration.MIGRATION_23_24
 
 @Database(
     entities = [
@@ -56,13 +60,16 @@ import com.example.money.data.local.migration.MIGRATION_22_23
         SyncQueueEntity::class,
         SyncTombstoneEntity::class,
         LuckDiaryEntryEntity::class,
+        FinanceNoteEntity::class,
+        FinanceNoteLineEntity::class,
     ],
-    version = 23,
+    version = 24,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun luckDiaryDao(): LuckDiaryDao
+    abstract fun financeNoteDao(): FinanceNoteDao
 
     abstract fun debtorDao(): DebtorDao
     abstract fun debtPaymentDao(): DebtPaymentDao
@@ -97,6 +104,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_20_21,
                     MIGRATION_21_22,
                     MIGRATION_22_23,
+                    MIGRATION_23_24,
                 ).build().also { instance = it }
             }
         }

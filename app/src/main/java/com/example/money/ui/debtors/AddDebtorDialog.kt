@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -59,7 +58,7 @@ private fun formatAmountForInput(amount: Double): String {
 fun DebtorFormDialog(
     debtType: DebtType,
     existingDebtor: Debtor? = null,
-    availableBalance: Double,
+    @Suppress("UNUSED_PARAMETER") availableBalance: Double,
     allDebtors: List<Debtor> = emptyList(),
     onDismiss: () -> Unit,
     onViewContactHistory: ((String, String) -> Unit)? = null,
@@ -95,7 +94,7 @@ fun DebtorFormDialog(
         mutableStateOf(existingDebtor?.note.orEmpty())
     }
     var affectsBalance by remember(existingDebtor?.id, debtType) {
-        mutableStateOf(existingDebtor?.affectsBalance ?: true)
+        mutableStateOf(false)
     }
     var dateGiven by remember(existingDebtor?.id, debtType) {
         mutableLongStateOf(existingDebtor?.dateGiven ?: System.currentTimeMillis())
@@ -210,11 +209,6 @@ fun DebtorFormDialog(
         DebtType.CREDITOR -> R.string.debtor_date_given_label
         DebtType.DEBTOR -> R.string.debt_date_received_label
     }
-    val balanceCheckboxRes = when (resolvedType) {
-        DebtType.CREDITOR -> R.string.debt_deduct_from_budget
-        DebtType.DEBTOR -> R.string.debt_credit_to_budget
-    }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -374,25 +368,6 @@ fun DebtorFormDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Checkbox(
-                        checked = affectsBalance,
-                        onCheckedChange = { affectsBalance = it },
-                    )
-                    Column {
-                        Text(stringResource(balanceCheckboxRes))
-                        Text(
-                            text = stringResource(
-                                R.string.debt_balance_available,
-                                Formatters.currencyCompact(availableBalance),
-                            ),
-                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                        )
-                    }
                 }
             }
         },

@@ -71,6 +71,8 @@ class MoneyApplication : Application() {
         get() = container.googleDriveAuthorizationManager
     val luckDiaryRepository: com.example.money.domain.repository.LuckDiaryRepository
         get() = container.luckDiaryRepository
+    val noteRepository: com.example.money.domain.repository.NoteRepository
+        get() = container.noteRepository
     val debtReminderScheduler: DebtReminderScheduler get() = container.debtReminderScheduler
     val debtCalendarSyncService: DebtCalendarSyncService get() = container.debtCalendarSyncService
     val personalDebtMessageScheduler: PersonalDebtMessageScheduler

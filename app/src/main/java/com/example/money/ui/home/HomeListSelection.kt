@@ -18,5 +18,5 @@ enum class HomeSection(val titleRes: Int) {
     Home(R.string.nav_home),
     Goals(R.string.section_goals),
     Debts(R.string.tab_debts),
-    Operations(R.string.tab_operations),
+    Notes(R.string.tab_notes),
 }

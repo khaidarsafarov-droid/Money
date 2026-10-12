@@ -36,6 +36,7 @@ import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.repository.BudgetRepositoryImpl
 import com.example.money.data.repository.DebtorRepositoryImpl
 import com.example.money.data.repository.GoalRepositoryImpl
+import com.example.money.data.repository.NoteRepositoryImpl
 import com.example.money.data.repository.LuckDiaryRepositoryImpl
 import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.FinanceSnapshotApplier
@@ -47,6 +48,7 @@ import com.example.money.domain.repository.BackupRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.FinanceSnapshotRepository
 import com.example.money.domain.repository.GoalRepository
+import com.example.money.domain.repository.NoteRepository
 import com.example.money.domain.repository.LuckDiaryRepository
 import com.example.money.notification.DebtReminderScheduler
 import com.example.money.notification.DebtReminderSchedulerImpl
@@ -140,6 +142,10 @@ class AppContainer(
 
     val luckDiaryRepository: LuckDiaryRepository by lazy {
         LuckDiaryRepositoryImpl(database.luckDiaryDao())
+    }
+
+    val noteRepository: NoteRepository by lazy {
+        NoteRepositoryImpl(database.financeNoteDao())
     }
 
     val debtReminderScheduler: DebtReminderScheduler by lazy {
