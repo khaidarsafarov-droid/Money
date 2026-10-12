@@ -37,7 +37,17 @@ class NoteRepositoryImpl(
 
     override suspend fun updateNote(note: FinanceNote) {
         SyncWriteGuard.withWriteLock {
-            noteDao.updateNote(note.toEntity(updatedAt = System.currentTimeMillis()))
+            val existing = noteDao.getNoteById(note.id) ?: return@withWriteLock
+            noteDao.updateNote(
+                existing.copy(
+                    title = note.title.trim(),
+                    kind = note.kind.name,
+                    body = note.body,
+                    mark = note.mark.name,
+                    closed = note.closed,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
         }
     }
 
@@ -64,7 +74,15 @@ class NoteRepositoryImpl(
 
     override suspend fun updateLine(line: FinanceNoteLine) {
         SyncWriteGuard.withWriteLock {
-            noteDao.updateLine(line.toEntity())
+            val existing = noteDao.getLineById(line.id) ?: return@withWriteLock
+            noteDao.updateLine(
+                existing.copy(
+                    label = line.label.trim(),
+                    amountCents = line.amountCents,
+                    sortOrder = line.sortOrder,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
             noteDao.touchNote(line.noteId, System.currentTimeMillis())
         }
     }
@@ -88,29 +106,10 @@ private fun FinanceNoteEntity.toDomain() = FinanceNote(
     updatedAt = updatedAt,
 )
 
-private fun FinanceNote.toEntity(updatedAt: Long = this.updatedAt) = FinanceNoteEntity(
-    id = id,
-    title = title.trim(),
-    kind = kind.name,
-    body = body,
-    mark = mark.name,
-    closed = closed,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
-
 private fun FinanceNoteLineEntity.toDomain() = FinanceNoteLine(
     id = id,
     noteId = noteId,
     label = label,
-    amountCents = amountCents,
-    sortOrder = sortOrder,
-)
-
-private fun FinanceNoteLine.toEntity() = FinanceNoteLineEntity(
-    id = id,
-    noteId = noteId,
-    label = label.trim(),
     amountCents = amountCents,
     sortOrder = sortOrder,
 )

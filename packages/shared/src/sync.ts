@@ -13,6 +13,33 @@ export interface SnapshotGoal extends LwwRecord {
   targetAmountCents: number;
   currency: string;
   dateDeadline?: string;
+  goalKind?: string;
+}
+
+export interface SnapshotGoalAction extends LwwRecord {
+  id: string;
+  goalId: string;
+  title: string;
+  completed: boolean;
+  sortOrder: number;
+}
+
+export interface SnapshotNote extends LwwRecord {
+  id: string;
+  title: string;
+  kind: string;
+  body: string;
+  mark: string;
+  closed: boolean;
+  createdAt: number;
+}
+
+export interface SnapshotNoteLine extends LwwRecord {
+  id: string;
+  noteId: string;
+  label: string;
+  amountCents: number;
+  sortOrder: number;
 }
 
 export interface SnapshotDebt extends LwwRecord {
@@ -74,6 +101,9 @@ export interface FinanceSnapshot {
   debtPayments: SnapshotDebtPayment[];
   transactions: SnapshotTransaction[];
   voiceSettings?: SnapshotVoiceSettings;
+  goalActions?: SnapshotGoalAction[];
+  notes?: SnapshotNote[];
+  noteLines?: SnapshotNoteLine[];
 }
 
 export type SyncEntityType =

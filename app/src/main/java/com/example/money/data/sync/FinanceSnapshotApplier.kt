@@ -6,10 +6,16 @@ import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.data.local.entity.FinanceNoteEntity
+import com.example.money.data.local.entity.FinanceNoteLineEntity
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
+import com.example.money.domain.sync.SnapshotGoalAction
+import com.example.money.domain.sync.SnapshotNote
+import com.example.money.domain.sync.SnapshotNoteLine
 import com.example.money.domain.sync.SnapshotTransaction
 import com.example.money.domain.sync.SnapshotTransactionBucket
 import com.example.money.domain.sync.SyncEntityType
@@ -33,6 +39,11 @@ class FinanceSnapshotApplier(
                 applyDebtPayments(snapshot, debtorLocalIds)
                 val paymentLocalIds = buildDebtPaymentSyncIdMap(snapshot, debtorLocalIds)
                 applyTransactions(snapshot, goalLocalIds, debtorLocalIds, paymentLocalIds)
+                snapshot.goalActions?.let { applyGoalActions(it, goalLocalIds) }
+                val noteLocalIds = snapshot.notes?.let { applyNotes(it) }
+                if (noteLocalIds != null && snapshot.noteLines != null) {
+                    applyNoteLines(snapshot.noteLines, noteLocalIds)
+                }
                 applyTombstones(snapshot)
             }
             snapshot.voiceSettings?.let { preferencesStore.applySyncedVoiceSettings(it) }
@@ -340,6 +351,99 @@ class FinanceSnapshotApplier(
             expenseDao.insert(entity)
         } else {
             expenseDao.upsert(entity)
+        }
+    }
+
+    private suspend fun applyGoalActions(
+        actions: List<SnapshotGoalAction>,
+        goalLocalIds: Map<String, Long>,
+    ) {
+        val dao = database.goalActionDao()
+        val live = actions.filter { !it.deleted && goalLocalIds.containsKey(it.goalId) }
+        val keepIds = live.map { it.id }.toSet()
+        dao.getAllOnce()
+            .filter { it.syncId !in keepIds }
+            .forEach { dao.deleteById(it.id) }
+        live.forEach { action ->
+            val goalId = goalLocalIds.getValue(action.goalId)
+            val existing = dao.getBySyncId(action.id)
+            val entity = GoalActionEntity(
+                id = existing?.id ?: 0L,
+                goalId = goalId,
+                title = action.title,
+                completed = action.completed,
+                sortOrder = action.sortOrder,
+                syncId = action.id,
+                updatedAt = action.syncUpdatedAt,
+            )
+            if (existing == null) {
+                dao.insert(entity)
+            } else {
+                dao.update(entity)
+            }
+        }
+    }
+
+    private suspend fun applyNotes(notes: List<SnapshotNote>): Map<String, Long> {
+        val dao = database.financeNoteDao()
+        val live = notes.filterNot { it.deleted }
+        val keepIds = live.map { it.id }.toSet()
+        dao.getAllNotesOnce()
+            .filter { it.syncId !in keepIds }
+            .forEach { dao.deleteNote(it.id) }
+        live.forEach { note ->
+            val existing = dao.getNoteBySyncId(note.id)
+            val entity = FinanceNoteEntity(
+                id = existing?.id ?: 0L,
+                title = note.title,
+                kind = note.kind,
+                body = note.body,
+                mark = note.mark,
+                closed = note.closed,
+                createdAt = note.createdAt,
+                updatedAt = note.syncUpdatedAt,
+                syncId = note.id,
+            )
+            if (existing == null) {
+                dao.insertNote(entity)
+            } else {
+                dao.updateNote(entity)
+            }
+        }
+        return live.associate { note ->
+            val localId = dao.getNoteBySyncId(note.id)?.id
+                ?: error("Missing local note for sync id ${note.id}")
+            note.id to localId
+        }
+    }
+
+    private suspend fun applyNoteLines(
+        lines: List<SnapshotNoteLine>,
+        noteLocalIds: Map<String, Long>,
+    ) {
+        val dao = database.financeNoteDao()
+        val live = lines.filter { !it.deleted && noteLocalIds.containsKey(it.noteId) }
+        val keepIds = live.map { it.id }.toSet()
+        dao.getAllLinesOnce()
+            .filter { it.syncId !in keepIds }
+            .forEach { dao.deleteLine(it.id) }
+        live.forEach { line ->
+            val noteId = noteLocalIds.getValue(line.noteId)
+            val existing = dao.getLineBySyncId(line.id)
+            val entity = FinanceNoteLineEntity(
+                id = existing?.id ?: 0L,
+                noteId = noteId,
+                label = line.label,
+                amountCents = line.amountCents,
+                sortOrder = line.sortOrder,
+                syncId = line.id,
+                updatedAt = line.syncUpdatedAt,
+            )
+            if (existing == null) {
+                dao.insertLine(entity)
+            } else {
+                dao.updateLine(entity)
+            }
         }
     }
 }

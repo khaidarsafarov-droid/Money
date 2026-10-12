@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.money.data.sync.SyncIds
 
 @Entity(
     tableName = "finance_note_lines",
@@ -16,7 +17,10 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index(value = ["note_id"])],
+    indices = [
+        Index(value = ["note_id"]),
+        Index(value = ["sync_id"], unique = true),
+    ],
 )
 data class FinanceNoteLineEntity(
     @PrimaryKey(autoGenerate = true)
@@ -28,4 +32,8 @@ data class FinanceNoteLineEntity(
     val amountCents: Long,
     @ColumnInfo(name = "sort_order")
     val sortOrder: Int = 0,
+    @ColumnInfo(name = "sync_id")
+    val syncId: String = SyncIds.newId(),
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
 )

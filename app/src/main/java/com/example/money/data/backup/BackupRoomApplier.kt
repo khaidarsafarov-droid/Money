@@ -5,6 +5,9 @@ import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.data.local.entity.FinanceNoteEntity
+import com.example.money.data.local.entity.FinanceNoteLineEntity
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
@@ -32,6 +35,9 @@ class BackupRoomApplier(
                 insertTransfers(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
                 insertExpenses(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
                 insertLuckDiaryEntries(bundle)
+                insertGoalActions(bundle, goalLocalIds)
+                val noteLocalIds = insertNotes(bundle)
+                insertNoteLines(bundle, noteLocalIds)
                 database.syncQueueDao().clearAll()
                 database.syncTombstoneDao().clearAll()
             }
@@ -46,6 +52,9 @@ class BackupRoomApplier(
             transfers = database.transferDao().getAllOnce(),
             expenses = database.expenseDao().getAllOnce(),
             luckDiaryEntries = database.luckDiaryDao().getAllOnce(),
+            goalActions = database.goalActionDao().getAllOnce(),
+            notes = database.financeNoteDao().getAllNotesOnce(),
+            noteLines = database.financeNoteDao().getAllLinesOnce(),
             syncQueue = database.syncQueueDao().getAllPending(),
             syncTombstones = database.syncTombstoneDao().getAll(),
         )
@@ -60,6 +69,9 @@ class BackupRoomApplier(
                 snapshot.transfers.forEach { database.transferDao().insert(it) }
                 snapshot.expenses.forEach { database.expenseDao().insert(it) }
                 snapshot.luckDiaryEntries.forEach { database.luckDiaryDao().insert(it) }
+                snapshot.goalActions.forEach { database.goalActionDao().insert(it) }
+                snapshot.notes.forEach { database.financeNoteDao().insertNote(it) }
+                snapshot.noteLines.forEach { database.financeNoteDao().insertLine(it) }
                 database.syncQueueDao().clearAll()
                 snapshot.syncQueue.forEach { database.syncQueueDao().insert(it) }
                 database.syncTombstoneDao().clearAll()
@@ -69,6 +81,9 @@ class BackupRoomApplier(
     }
 
     private suspend fun clearBusinessTables() {
+        database.financeNoteDao().clearLines()
+        database.financeNoteDao().clearNotes()
+        database.goalActionDao().clearAll()
         database.transferDao().clearAll()
         database.expenseDao().clearAll()
         database.debtPaymentDao().clearAll()
@@ -89,11 +104,75 @@ class BackupRoomApplier(
                         currency = goal.currency,
                         updatedAt = goal.updatedAtEpochMillis,
                         deadlineMillis = goal.deadlineEpochMillis,
+                        kind = goal.kind.ifBlank { "MONEY" },
                     ),
                 )
                 put(goal.syncId, localId)
             }
         }
+
+    private suspend fun insertGoalActions(
+        bundle: BackupBundle,
+        goalLocalIds: Map<String, Long>,
+    ) {
+        bundle.goalActions.forEach { action ->
+            database.goalActionDao().insert(
+                GoalActionEntity(
+                    goalId = goalLocalIds.requireReference(
+                        action.goalSyncId,
+                        "Goal action ${action.syncId}",
+                        "goal",
+                    ),
+                    title = action.title,
+                    completed = action.completed,
+                    sortOrder = action.sortOrder,
+                    syncId = action.syncId,
+                    updatedAt = action.updatedAtEpochMillis,
+                ),
+            )
+        }
+    }
+
+    private suspend fun insertNotes(bundle: BackupBundle): Map<String, Long> =
+        buildMap {
+            bundle.notes.forEach { note ->
+                val localId = database.financeNoteDao().insertNote(
+                    FinanceNoteEntity(
+                        syncId = note.syncId,
+                        title = note.title,
+                        kind = note.kind,
+                        body = note.body,
+                        mark = note.mark,
+                        closed = note.closed,
+                        createdAt = note.createdAtEpochMillis,
+                        updatedAt = note.updatedAtEpochMillis,
+                    ),
+                )
+                put(note.syncId, localId)
+            }
+        }
+
+    private suspend fun insertNoteLines(
+        bundle: BackupBundle,
+        noteLocalIds: Map<String, Long>,
+    ) {
+        bundle.noteLines.forEach { line ->
+            database.financeNoteDao().insertLine(
+                FinanceNoteLineEntity(
+                    noteId = noteLocalIds.requireReference(
+                        line.noteSyncId,
+                        "Note line ${line.syncId}",
+                        "note",
+                    ),
+                    label = line.label,
+                    amountCents = line.amountCents,
+                    sortOrder = line.sortOrder,
+                    syncId = line.syncId,
+                    updatedAt = line.updatedAtEpochMillis,
+                ),
+            )
+        }
+    }
 
     private suspend fun insertDebtors(bundle: BackupBundle): Map<String, Long> =
         buildMap {
@@ -253,6 +332,9 @@ class BackupRoomApplier(
         val transfers: List<TransferEntity>,
         val expenses: List<ExpenseEntity>,
         val luckDiaryEntries: List<LuckDiaryEntryEntity>,
+        val goalActions: List<GoalActionEntity>,
+        val notes: List<FinanceNoteEntity>,
+        val noteLines: List<FinanceNoteLineEntity>,
         val syncQueue: List<SyncQueueEntity>,
         val syncTombstones: List<SyncTombstoneEntity>,
     )

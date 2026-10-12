@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.money.data.sync.SyncIds
 
 @Entity(
     tableName = "goal_action",
@@ -16,7 +17,10 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index(value = ["goal_id"])],
+    indices = [
+        Index(value = ["goal_id"]),
+        Index(value = ["sync_id"], unique = true),
+    ],
 )
 data class GoalActionEntity(
     @PrimaryKey(autoGenerate = true)
@@ -27,4 +31,8 @@ data class GoalActionEntity(
     val completed: Boolean = false,
     @ColumnInfo(name = "sort_order")
     val sortOrder: Int = 0,
+    @ColumnInfo(name = "sync_id")
+    val syncId: String = SyncIds.newId(),
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
 )

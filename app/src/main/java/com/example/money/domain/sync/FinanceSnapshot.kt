@@ -57,6 +57,38 @@ data class SnapshotTransaction(
     override val deleted: Boolean = false,
 ) : LwwRecord
 
+data class SnapshotGoalAction(
+    val id: String,
+    val goalId: String,
+    val title: String,
+    val completed: Boolean,
+    val sortOrder: Int,
+    override val syncUpdatedAt: Long,
+    override val deleted: Boolean = false,
+) : LwwRecord
+
+data class SnapshotNote(
+    val id: String,
+    val title: String,
+    val kind: String,
+    val body: String,
+    val mark: String,
+    val closed: Boolean,
+    val createdAt: Long,
+    override val syncUpdatedAt: Long,
+    override val deleted: Boolean = false,
+) : LwwRecord
+
+data class SnapshotNoteLine(
+    val id: String,
+    val noteId: String,
+    val label: String,
+    val amountCents: Long,
+    val sortOrder: Int,
+    override val syncUpdatedAt: Long,
+    override val deleted: Boolean = false,
+) : LwwRecord
+
 data class SnapshotVoiceSettings(
     val enabled: Boolean,
     val reportHour: Int,
@@ -83,6 +115,11 @@ data class FinanceSnapshot(
     val debtPayments: List<SnapshotDebtPayment>,
     val transactions: List<SnapshotTransaction>,
     val voiceSettings: SnapshotVoiceSettings?,
+    /** Null means an older snapshot that did not carry tasks. Apply must leave local tasks alone. */
+    val goalActions: List<SnapshotGoalAction>? = null,
+    /** Null means an older snapshot that did not carry notes. */
+    val notes: List<SnapshotNote>? = null,
+    val noteLines: List<SnapshotNoteLine>? = null,
 ) {
     companion object {
         const val CURRENT_SCHEMA_VERSION = 3

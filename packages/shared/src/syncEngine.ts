@@ -66,7 +66,26 @@ export function mergeFinanceSnapshots(
     debtPayments: mergeRecords(local.debtPayments, remote.debtPayments),
     transactions: mergeRecords(local.transactions, remote.transactions),
     voiceSettings: mergeVoiceSettings(local.voiceSettings, remote.voiceSettings),
+    ...optionalList("goalActions", mergeOptional(local.goalActions, remote.goalActions)),
+    ...optionalList("notes", mergeOptional(local.notes, remote.notes)),
+    ...optionalList("noteLines", mergeOptional(local.noteLines, remote.noteLines)),
   };
+}
+
+function mergeOptional<T extends LwwRecord & { id: string }>(
+  local: T[] | undefined,
+  remote: T[] | undefined,
+): T[] | undefined {
+  if (local === undefined) return remote;
+  if (remote === undefined) return local;
+  return mergeRecords(local, remote);
+}
+
+function optionalList<K extends "goalActions" | "notes" | "noteLines">(
+  key: K,
+  value: FinanceSnapshot[K],
+): Partial<Pick<FinanceSnapshot, K>> {
+  return value === undefined ? {} : { [key]: value };
 }
 
 /** Deterministic merge — both peers compute the same result. */

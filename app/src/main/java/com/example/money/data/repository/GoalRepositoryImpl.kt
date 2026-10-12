@@ -124,7 +124,9 @@ class GoalRepositoryImpl(
     override suspend fun setActionCompleted(actionId: Long, completed: Boolean) {
         SyncWriteGuard.withWriteLock {
             val existing = goalActionDao.getById(actionId) ?: return@withWriteLock
-            goalActionDao.update(existing.copy(completed = completed))
+            goalActionDao.update(
+                existing.copy(completed = completed, updatedAt = System.currentTimeMillis()),
+            )
         }
     }
 

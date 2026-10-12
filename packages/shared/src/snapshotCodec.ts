@@ -63,6 +63,16 @@ function validateSnapshotArrays(snapshot: FinanceSnapshot): void {
       throw new Error(`Snapshot field "${key}" exceeds maximum record count`);
     }
   }
+  for (const key of ["goalActions", "notes", "noteLines"] as const) {
+    const value = snapshot[key];
+    if (value === undefined) continue;
+    if (!Array.isArray(value)) {
+      throw new Error(`Snapshot field "${key}" must be an array`);
+    }
+    if (value.length > 10_000) {
+      throw new Error(`Snapshot field "${key}" exceeds maximum record count`);
+    }
+  }
 }
 
 function migrateVersion2Snapshot(snapshot: FinanceSnapshot): FinanceSnapshot {

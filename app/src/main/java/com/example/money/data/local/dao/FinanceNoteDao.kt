@@ -16,6 +16,30 @@ interface FinanceNoteDao {
     @Query("SELECT * FROM finance_note_lines ORDER BY sort_order ASC, id ASC")
     fun observeLines(): Flow<List<FinanceNoteLineEntity>>
 
+    @Query("SELECT * FROM finance_notes")
+    suspend fun getAllNotesOnce(): List<FinanceNoteEntity>
+
+    @Query("SELECT * FROM finance_note_lines ORDER BY sort_order ASC, id ASC")
+    suspend fun getAllLinesOnce(): List<FinanceNoteLineEntity>
+
+    @Query("SELECT * FROM finance_notes WHERE id = :id LIMIT 1")
+    suspend fun getNoteById(id: Long): FinanceNoteEntity?
+
+    @Query("SELECT * FROM finance_note_lines WHERE id = :id LIMIT 1")
+    suspend fun getLineById(id: Long): FinanceNoteLineEntity?
+
+    @Query("SELECT * FROM finance_notes WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getNoteBySyncId(syncId: String): FinanceNoteEntity?
+
+    @Query("SELECT * FROM finance_note_lines WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getLineBySyncId(syncId: String): FinanceNoteLineEntity?
+
+    @Query("DELETE FROM finance_note_lines")
+    suspend fun clearLines()
+
+    @Query("DELETE FROM finance_notes")
+    suspend fun clearNotes()
+
     @Insert
     suspend fun insertNote(note: FinanceNoteEntity): Long
 

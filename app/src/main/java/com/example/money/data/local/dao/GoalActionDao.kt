@@ -13,8 +13,17 @@ interface GoalActionDao {
     @Query("SELECT * FROM goal_action ORDER BY sort_order ASC, id ASC")
     fun observeAll(): Flow<List<GoalActionEntity>>
 
+    @Query("SELECT * FROM goal_action ORDER BY sort_order ASC, id ASC")
+    suspend fun getAllOnce(): List<GoalActionEntity>
+
     @Query("SELECT * FROM goal_action WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): GoalActionEntity?
+
+    @Query("SELECT * FROM goal_action WHERE sync_id = :syncId LIMIT 1")
+    suspend fun getBySyncId(syncId: String): GoalActionEntity?
+
+    @Query("DELETE FROM goal_action")
+    suspend fun clearAll()
 
     @Insert
     suspend fun insert(action: GoalActionEntity): Long

@@ -76,12 +76,27 @@ class FinanceSnapshotRepositoryImpl(
             ),
         ) { it.id }
         val voiceSettings = buildVoiceSettings()
+        val goalSyncIds = database.savingsGoalDao().getAllGoalsOnce().associate { it.id to it.syncId }
+        val goalActions = database.goalActionDao().getAllOnce().mapNotNull { action ->
+            val goalSyncId = goalSyncIds[action.goalId] ?: return@mapNotNull null
+            FinanceSnapshotCodec.toSnapshotGoalAction(action, goalSyncId)
+        }
+        val noteEntities = database.financeNoteDao().getAllNotesOnce()
+        val notes = noteEntities.map(FinanceSnapshotCodec::toSnapshotNote)
+        val noteSyncIds = noteEntities.associate { it.id to it.syncId }
+        val noteLines = database.financeNoteDao().getAllLinesOnce().mapNotNull { line ->
+            val noteSyncId = noteSyncIds[line.noteId] ?: return@mapNotNull null
+            FinanceSnapshotCodec.toSnapshotNoteLine(line, noteSyncId)
+        }
 
         val updatedAt = listOfNotNull(
             goals.maxOfOrNull { it.syncUpdatedAt },
             debts.maxOfOrNull { it.syncUpdatedAt },
             debtPayments.maxOfOrNull { it.syncUpdatedAt },
             transactions.maxOfOrNull { it.syncUpdatedAt },
+            goalActions.maxOfOrNull { it.syncUpdatedAt },
+            notes.maxOfOrNull { it.syncUpdatedAt },
+            noteLines.maxOfOrNull { it.syncUpdatedAt },
             voiceSettings?.syncUpdatedAt,
         ).maxOrNull() ?: System.currentTimeMillis()
 
@@ -94,6 +109,9 @@ class FinanceSnapshotRepositoryImpl(
             debtPayments = debtPayments,
             transactions = transactions,
             voiceSettings = voiceSettings,
+            goalActions = goalActions,
+            notes = notes,
+            noteLines = noteLines,
         )
     }
 

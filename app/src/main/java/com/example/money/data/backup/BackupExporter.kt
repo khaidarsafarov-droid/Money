@@ -8,7 +8,10 @@ import com.example.money.domain.backup.BackupDebtPayment
 import com.example.money.domain.backup.BackupDebtor
 import com.example.money.domain.backup.BackupExpense
 import com.example.money.domain.backup.BackupGoal
+import com.example.money.domain.backup.BackupGoalAction
 import com.example.money.domain.backup.BackupLuckDiaryEntry
+import com.example.money.domain.backup.BackupNote
+import com.example.money.domain.backup.BackupNoteLine
 import com.example.money.domain.backup.BackupManifest
 import com.example.money.domain.backup.BackupRecordCounts
 import com.example.money.domain.backup.BackupTransfer
@@ -39,7 +42,11 @@ class BackupExporter(
         val transfers = database.transferDao().getAllOnce()
         val expenses = database.expenseDao().getAllOnce()
         val luckEntries = database.luckDiaryDao().getAllOnce()
+        val goalActions = database.goalActionDao().getAllOnce()
+        val notes = database.financeNoteDao().getAllNotesOnce()
+        val noteLines = database.financeNoteDao().getAllLinesOnce()
         val goalSyncIds = goals.associate { it.id to it.syncId }
+        val noteSyncIds = notes.associate { it.id to it.syncId }
         val debtorSyncIds = debtors.associate { it.id to it.syncId }
         val paymentSyncIds = debtPayments.associate { it.id to it.syncId }
 
@@ -61,6 +68,47 @@ class BackupExporter(
                         currency = goal.currency,
                         updatedAtEpochMillis = goal.updatedAt,
                         deadlineEpochMillis = goal.deadlineMillis,
+                        kind = goal.kind,
+                    )
+                },
+                goalActions = goalActions.map { action ->
+                    BackupGoalAction(
+                        syncId = action.syncId,
+                        goalSyncId = goalSyncIds.requireReference(
+                            action.goalId,
+                            "Goal action ${action.syncId}",
+                            "goal",
+                        ),
+                        title = action.title,
+                        completed = action.completed,
+                        sortOrder = action.sortOrder,
+                        updatedAtEpochMillis = action.updatedAt,
+                    )
+                },
+                notes = notes.map { note ->
+                    BackupNote(
+                        syncId = note.syncId,
+                        title = note.title,
+                        kind = note.kind,
+                        body = note.body,
+                        mark = note.mark,
+                        closed = note.closed,
+                        createdAtEpochMillis = note.createdAt,
+                        updatedAtEpochMillis = note.updatedAt,
+                    )
+                },
+                noteLines = noteLines.map { line ->
+                    BackupNoteLine(
+                        syncId = line.syncId,
+                        noteSyncId = noteSyncIds.requireReference(
+                            line.noteId,
+                            "Note line ${line.syncId}",
+                            "note",
+                        ),
+                        label = line.label,
+                        amountCents = line.amountCents,
+                        sortOrder = line.sortOrder,
+                        updatedAtEpochMillis = line.updatedAt,
                     )
                 },
                 debtors = debtors.map { debtor ->

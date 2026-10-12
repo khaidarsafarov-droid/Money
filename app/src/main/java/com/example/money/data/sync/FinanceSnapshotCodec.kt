@@ -3,12 +3,18 @@ package com.example.money.data.sync
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.data.local.entity.FinanceNoteEntity
+import com.example.money.data.local.entity.FinanceNoteLineEntity
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
 import com.example.money.domain.sync.SnapshotDebt
 import com.example.money.domain.sync.SnapshotDebtPayment
 import com.example.money.domain.sync.SnapshotGoal
+import com.example.money.domain.sync.SnapshotGoalAction
+import com.example.money.domain.sync.SnapshotNote
+import com.example.money.domain.sync.SnapshotNoteLine
 import com.example.money.domain.sync.SnapshotTransaction
 import com.example.money.domain.sync.SnapshotVoiceSettings
 import com.example.money.domain.util.MoneyMath
@@ -34,6 +40,9 @@ object FinanceSnapshotCodec {
         put("debtPayments", encodeDebtPayments(snapshot.debtPayments))
         put("transactions", encodeTransactions(snapshot.transactions))
         snapshot.voiceSettings?.let { put("voiceSettings", encodeVoiceSettingsObject(it)) }
+        snapshot.goalActions?.let { put("goalActions", encodeGoalActions(it)) }
+        snapshot.notes?.let { put("notes", encodeNotes(it)) }
+        snapshot.noteLines?.let { put("noteLines", encodeNoteLines(it)) }
     }.toString()
 
     fun decode(raw: String): FinanceSnapshot {
@@ -68,6 +77,12 @@ object FinanceSnapshotCodec {
     private fun validateArraySizes(json: JSONObject) {
         listOf("goals", "debts", "debtPayments", "transactions").forEach { key ->
             val array = json.optJSONArray(key) ?: throw IllegalArgumentException("Snapshot field \"$key\" must be an array")
+            if (array.length() > MAX_RECORD_COUNT) {
+                throw IllegalArgumentException("Snapshot field \"$key\" exceeds maximum record count")
+            }
+        }
+        listOf("goalActions", "notes", "noteLines").forEach { key ->
+            val array = json.optJSONArray(key) ?: return@forEach
             if (array.length() > MAX_RECORD_COUNT) {
                 throw IllegalArgumentException("Snapshot field \"$key\" exceeds maximum record count")
             }
@@ -265,7 +280,7 @@ object FinanceSnapshotCodec {
             id = entity.syncId,
             kind = KIND_EXPENSE,
             amountCents = MoneyMath.toCents(entity.amount),
-            goalId = null,
+            goalId = entity.goalSyncId,
             debtId = debtSyncId,
             debtPaymentId = debtPaymentSyncId,
             createdAt = SyncDates.formatDateTime(entity.date),
@@ -287,6 +302,9 @@ object FinanceSnapshotCodec {
             debtPayments = decodeDebtPayments(json.getJSONArray("debtPayments")),
             transactions = decodeTransactions(json.getJSONArray("transactions")),
             voiceSettings = json.optJSONObject("voiceSettings")?.let(::decodeVoiceSettings),
+            goalActions = json.optJSONArray("goalActions")?.let(::decodeGoalActions),
+            notes = json.optJSONArray("notes")?.let(::decodeNotes),
+            noteLines = json.optJSONArray("noteLines")?.let(::decodeNoteLines),
         )
 
     /** Accepts legacy Android v1 snapshots (Long ids, transfers/expenses). */
@@ -576,4 +594,136 @@ object FinanceSnapshotCodec {
             lastAppOpenDate = json.optString("lastAppOpenDate").takeIf { json.has("lastAppOpenDate") },
             syncUpdatedAt = json.getLong("syncUpdatedAt"),
         )
+
+    fun toSnapshotGoalAction(entity: GoalActionEntity, goalSyncId: String): SnapshotGoalAction =
+        SnapshotGoalAction(
+            id = entity.syncId,
+            goalId = goalSyncId,
+            title = entity.title,
+            completed = entity.completed,
+            sortOrder = entity.sortOrder,
+            syncUpdatedAt = entity.updatedAt,
+        )
+
+    fun toSnapshotNote(entity: FinanceNoteEntity): SnapshotNote =
+        SnapshotNote(
+            id = entity.syncId,
+            title = entity.title,
+            kind = entity.kind,
+            body = entity.body,
+            mark = entity.mark,
+            closed = entity.closed,
+            createdAt = entity.createdAt,
+            syncUpdatedAt = entity.updatedAt,
+        )
+
+    fun toSnapshotNoteLine(entity: FinanceNoteLineEntity, noteSyncId: String): SnapshotNoteLine =
+        SnapshotNoteLine(
+            id = entity.syncId,
+            noteId = noteSyncId,
+            label = entity.label,
+            amountCents = entity.amountCents,
+            sortOrder = entity.sortOrder,
+            syncUpdatedAt = entity.updatedAt,
+        )
+
+    private fun encodeGoalActions(actions: List<SnapshotGoalAction>): JSONArray =
+        JSONArray().apply { actions.forEach { put(encodeGoalActionRecord(it)) } }
+
+    private fun encodeNotes(notes: List<SnapshotNote>): JSONArray =
+        JSONArray().apply { notes.forEach { put(encodeNoteRecord(it)) } }
+
+    private fun encodeNoteLines(lines: List<SnapshotNoteLine>): JSONArray =
+        JSONArray().apply { lines.forEach { put(encodeNoteLineRecord(it)) } }
+
+    private fun encodeGoalActionRecord(action: SnapshotGoalAction): JSONObject =
+        JSONObject().apply {
+            put("id", action.id)
+            put("goalId", action.goalId)
+            put("title", action.title)
+            put("completed", action.completed)
+            put("sortOrder", action.sortOrder)
+            put("syncUpdatedAt", action.syncUpdatedAt)
+            put("deleted", action.deleted)
+        }
+
+    private fun encodeNoteRecord(note: SnapshotNote): JSONObject =
+        JSONObject().apply {
+            put("id", note.id)
+            put("title", note.title)
+            put("kind", note.kind)
+            put("body", note.body)
+            put("mark", note.mark)
+            put("closed", note.closed)
+            put("createdAt", note.createdAt)
+            put("syncUpdatedAt", note.syncUpdatedAt)
+            put("deleted", note.deleted)
+        }
+
+    private fun encodeNoteLineRecord(line: SnapshotNoteLine): JSONObject =
+        JSONObject().apply {
+            put("id", line.id)
+            put("noteId", line.noteId)
+            put("label", line.label)
+            put("amountCents", line.amountCents)
+            put("sortOrder", line.sortOrder)
+            put("syncUpdatedAt", line.syncUpdatedAt)
+            put("deleted", line.deleted)
+        }
+
+    private fun decodeGoalActions(array: JSONArray): List<SnapshotGoalAction> =
+        buildList {
+            for (index in 0 until array.length()) {
+                val item = array.getJSONObject(index)
+                add(
+                    SnapshotGoalAction(
+                        id = item.getString("id"),
+                        goalId = item.getString("goalId"),
+                        title = item.getString("title"),
+                        completed = item.optBoolean("completed", false),
+                        sortOrder = item.optInt("sortOrder", 0),
+                        syncUpdatedAt = item.getLong("syncUpdatedAt"),
+                        deleted = item.optBoolean("deleted", false),
+                    ),
+                )
+            }
+        }
+
+    private fun decodeNotes(array: JSONArray): List<SnapshotNote> =
+        buildList {
+            for (index in 0 until array.length()) {
+                val item = array.getJSONObject(index)
+                add(
+                    SnapshotNote(
+                        id = item.getString("id"),
+                        title = item.getString("title"),
+                        kind = item.optString("kind", "TEXT"),
+                        body = item.optString("body", ""),
+                        mark = item.optString("mark", "NONE"),
+                        closed = item.optBoolean("closed", false),
+                        createdAt = item.optLong("createdAt", item.getLong("syncUpdatedAt")),
+                        syncUpdatedAt = item.getLong("syncUpdatedAt"),
+                        deleted = item.optBoolean("deleted", false),
+                    ),
+                )
+            }
+        }
+
+    private fun decodeNoteLines(array: JSONArray): List<SnapshotNoteLine> =
+        buildList {
+            for (index in 0 until array.length()) {
+                val item = array.getJSONObject(index)
+                add(
+                    SnapshotNoteLine(
+                        id = item.getString("id"),
+                        noteId = item.getString("noteId"),
+                        label = item.getString("label"),
+                        amountCents = item.getLong("amountCents"),
+                        sortOrder = item.optInt("sortOrder", 0),
+                        syncUpdatedAt = item.getLong("syncUpdatedAt"),
+                        deleted = item.optBoolean("deleted", false),
+                    ),
+                )
+            }
+        }
 }

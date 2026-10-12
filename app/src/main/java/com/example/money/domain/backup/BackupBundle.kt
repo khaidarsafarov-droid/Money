@@ -12,6 +12,36 @@ data class BackupGoal(
     val currency: String,
     val updatedAtEpochMillis: Long,
     val deadlineEpochMillis: Long?,
+    val kind: String = "MONEY",
+)
+
+data class BackupGoalAction(
+    val syncId: String,
+    val goalSyncId: String,
+    val title: String,
+    val completed: Boolean,
+    val sortOrder: Int,
+    val updatedAtEpochMillis: Long,
+)
+
+data class BackupNote(
+    val syncId: String,
+    val title: String,
+    val kind: String,
+    val body: String,
+    val mark: String,
+    val closed: Boolean,
+    val createdAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long,
+)
+
+data class BackupNoteLine(
+    val syncId: String,
+    val noteSyncId: String,
+    val label: String,
+    val amountCents: Long,
+    val sortOrder: Int,
+    val updatedAtEpochMillis: Long,
 )
 
 data class BackupDebtor(
@@ -188,9 +218,13 @@ data class BackupRecordCounts(
     val transfers: Int,
     val expenses: Int,
     val luckDiaryEntries: Int,
+    val goalActions: Int = 0,
+    val notes: Int = 0,
+    val noteLines: Int = 0,
 ) {
     val total: Int
-        get() = goals + debtors + debtPayments + transfers + expenses + luckDiaryEntries
+        get() = goals + debtors + debtPayments + transfers + expenses + luckDiaryEntries +
+            goalActions + notes + noteLines
 
     companion object {
         val EMPTY = BackupRecordCounts(
@@ -210,6 +244,9 @@ data class BackupRecordCounts(
                 transfers = bundle.transfers.size,
                 expenses = bundle.expenses.size,
                 luckDiaryEntries = bundle.luckDiaryEntries.size,
+                goalActions = bundle.goalActions.size,
+                notes = bundle.notes.size,
+                noteLines = bundle.noteLines.size,
             )
     }
 }
@@ -241,6 +278,9 @@ data class BackupBundle(
     val luckDiaryEntries: List<BackupLuckDiaryEntry>,
     val preferences: BackupPreferences,
     val visionImage: BackupVisionImage?,
+    val goalActions: List<BackupGoalAction> = emptyList(),
+    val notes: List<BackupNote> = emptyList(),
+    val noteLines: List<BackupNoteLine> = emptyList(),
 ) {
     companion object {
         const val CURRENT_FORMAT_VERSION = 1

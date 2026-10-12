@@ -30,7 +30,20 @@ object SyncEngine {
             debtPayments = mergeRecords(local.debtPayments, remote.debtPayments) { it.id },
             transactions = mergeRecords(local.transactions, remote.transactions) { it.id },
             voiceSettings = mergeVoiceSettings(local.voiceSettings, remote.voiceSettings),
+            goalActions = mergeOptional(local.goalActions, remote.goalActions) { it.id },
+            notes = mergeOptional(local.notes, remote.notes) { it.id },
+            noteLines = mergeOptional(local.noteLines, remote.noteLines) { it.id },
         )
+    }
+
+    fun <T> mergeOptional(
+        local: List<T>?,
+        remote: List<T>?,
+        idSelector: (T) -> String,
+    ): List<T>? where T : LwwRecord {
+        if (local == null) return remote
+        if (remote == null) return local
+        return mergeRecords(local, remote, idSelector)
     }
 
     fun mergeVoiceSettings(

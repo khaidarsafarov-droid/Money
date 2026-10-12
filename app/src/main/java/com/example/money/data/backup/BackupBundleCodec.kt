@@ -10,7 +10,10 @@ import com.example.money.domain.backup.BackupExpense
 import com.example.money.domain.backup.BackupFormatException
 import com.example.money.domain.backup.BackupGamificationPreferences
 import com.example.money.domain.backup.BackupGoal
+import com.example.money.domain.backup.BackupGoalAction
 import com.example.money.domain.backup.BackupGoalPsychologyPreferences
+import com.example.money.domain.backup.BackupNote
+import com.example.money.domain.backup.BackupNoteLine
 import com.example.money.domain.backup.BackupIntegrityException
 import com.example.money.domain.backup.BackupLuckDiaryEntry
 import com.example.money.domain.backup.BackupManifest
@@ -89,6 +92,9 @@ class BackupBundleCodec(
                 luckDiaryEntries = decodeArray(data, KEY_LUCK_DIARY_ENTRIES, ::decodeLuckDiaryEntry),
                 preferences = decodePreferences(data.requiredObject(KEY_PREFERENCES)),
                 visionImage = root.optionalObject(KEY_VISION_IMAGE)?.let(::decodeVisionImage),
+                goalActions = decodeOptionalArray(data, KEY_GOAL_ACTIONS, ::decodeGoalAction),
+                notes = decodeOptionalArray(data, KEY_NOTES, ::decodeNote),
+                noteLines = decodeOptionalArray(data, KEY_NOTE_LINES, ::decodeNoteLine),
             )
 
             val actualCounts = BackupRecordCounts.from(decoded)
@@ -133,6 +139,9 @@ class BackupBundleCodec(
             transfers = bundle.transfers.sortedBy { it.syncId },
             expenses = bundle.expenses.sortedBy { it.syncId },
             luckDiaryEntries = bundle.luckDiaryEntries.sortedBy { it.syncId },
+            goalActions = bundle.goalActions.sortedBy { it.syncId },
+            notes = bundle.notes.sortedBy { it.syncId },
+            noteLines = bundle.noteLines.sortedBy { it.syncId },
         )
         validateBundle(sorted)
         val hash = sha256(
@@ -171,6 +180,9 @@ class BackupBundleCodec(
         validateUniqueSyncIds(KEY_TRANSFERS, bundle.transfers.map { it.syncId })
         validateUniqueSyncIds(KEY_EXPENSES, bundle.expenses.map { it.syncId })
         validateUniqueSyncIds(KEY_LUCK_DIARY_ENTRIES, bundle.luckDiaryEntries.map { it.syncId })
+        validateUniqueSyncIds(KEY_GOAL_ACTIONS, bundle.goalActions.map { it.syncId })
+        validateUniqueSyncIds(KEY_NOTES, bundle.notes.map { it.syncId })
+        validateUniqueSyncIds(KEY_NOTE_LINES, bundle.noteLines.map { it.syncId })
         validateRelations(bundle)
 
         bundle.transfers.forEach {
@@ -221,6 +233,13 @@ class BackupBundleCodec(
                 expense.debtPaymentSyncId,
                 paymentIds,
             )
+        }
+        val noteIds = bundle.notes.mapTo(mutableSetOf()) { it.syncId }
+        bundle.goalActions.forEach { action ->
+            validateReference("Goal action ${action.syncId}", "goal", action.goalSyncId, goalIds)
+        }
+        bundle.noteLines.forEach { line ->
+            validateReference("Note line ${line.syncId}", "note", line.noteSyncId, noteIds)
         }
     }
 
@@ -346,6 +365,9 @@ class BackupBundleCodec(
             put(KEY_TRANSFERS, counts.transfers)
             put(KEY_EXPENSES, counts.expenses)
             put(KEY_LUCK_DIARY_ENTRIES, counts.luckDiaryEntries)
+            if (counts.goalActions > 0) put(KEY_GOAL_ACTIONS, counts.goalActions)
+            if (counts.notes > 0) put(KEY_NOTES, counts.notes)
+            if (counts.noteLines > 0) put(KEY_NOTE_LINES, counts.noteLines)
             put(KEY_TOTAL, counts.total)
         }
 
@@ -357,6 +379,15 @@ class BackupBundleCodec(
             put(KEY_TRANSFERS, encodeArray(bundle.transfers, ::encodeTransfer))
             put(KEY_EXPENSES, encodeArray(bundle.expenses, ::encodeExpense))
             put(KEY_LUCK_DIARY_ENTRIES, encodeArray(bundle.luckDiaryEntries, ::encodeLuckDiaryEntry))
+            if (bundle.goalActions.isNotEmpty()) {
+                put(KEY_GOAL_ACTIONS, encodeArray(bundle.goalActions, ::encodeGoalAction))
+            }
+            if (bundle.notes.isNotEmpty()) {
+                put(KEY_NOTES, encodeArray(bundle.notes, ::encodeNote))
+            }
+            if (bundle.noteLines.isNotEmpty()) {
+                put(KEY_NOTE_LINES, encodeArray(bundle.noteLines, ::encodeNoteLine))
+            }
             put(KEY_PREFERENCES, encodePreferences(bundle.preferences))
         }
 
@@ -369,6 +400,41 @@ class BackupBundleCodec(
             put(KEY_CURRENCY, goal.currency)
             put(KEY_UPDATED_AT, goal.updatedAtEpochMillis)
             putOptional(KEY_DEADLINE, goal.deadlineEpochMillis)
+            if (goal.kind.isNotBlank() && goal.kind != DEFAULT_GOAL_KIND) {
+                put(KEY_KIND, goal.kind)
+            }
+        }
+
+    private fun encodeGoalAction(action: BackupGoalAction): JSONObject =
+        JSONObject().apply {
+            put(KEY_SYNC_ID, action.syncId)
+            put(KEY_GOAL_SYNC_ID, action.goalSyncId)
+            put(KEY_TITLE, action.title)
+            put(KEY_COMPLETED, action.completed)
+            put(KEY_SORT_ORDER, action.sortOrder)
+            put(KEY_UPDATED_AT, action.updatedAtEpochMillis)
+        }
+
+    private fun encodeNote(note: BackupNote): JSONObject =
+        JSONObject().apply {
+            put(KEY_SYNC_ID, note.syncId)
+            put(KEY_TITLE, note.title)
+            put(KEY_KIND, note.kind)
+            put(KEY_BODY, note.body)
+            put(KEY_MARK, note.mark)
+            put(KEY_CLOSED, note.closed)
+            put(KEY_CREATED_AT, note.createdAtEpochMillis)
+            put(KEY_UPDATED_AT, note.updatedAtEpochMillis)
+        }
+
+    private fun encodeNoteLine(line: BackupNoteLine): JSONObject =
+        JSONObject().apply {
+            put(KEY_SYNC_ID, line.syncId)
+            put(KEY_NOTE_SYNC_ID, line.noteSyncId)
+            put(KEY_LABEL, line.label)
+            put(KEY_AMOUNT_CENTS, line.amountCents)
+            put(KEY_SORT_ORDER, line.sortOrder)
+            put(KEY_UPDATED_AT, line.updatedAtEpochMillis)
         }
 
     private fun encodeDebtor(debtor: BackupDebtor): JSONObject =
@@ -558,6 +624,9 @@ class BackupBundleCodec(
             transfers = json.getInt(KEY_TRANSFERS),
             expenses = json.getInt(KEY_EXPENSES),
             luckDiaryEntries = json.getInt(KEY_LUCK_DIARY_ENTRIES),
+            goalActions = json.optInt(KEY_GOAL_ACTIONS, 0),
+            notes = json.optInt(KEY_NOTES, 0),
+            noteLines = json.optInt(KEY_NOTE_LINES, 0),
         )
         if (json.getInt(KEY_TOTAL) != counts.total) {
             throw BackupIntegrityException("Backup manifest total record count is invalid")
@@ -574,6 +643,39 @@ class BackupBundleCodec(
             currency = json.getString(KEY_CURRENCY),
             updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
             deadlineEpochMillis = json.optionalLong(KEY_DEADLINE),
+            kind = json.optionalString(KEY_KIND) ?: DEFAULT_GOAL_KIND,
+        )
+
+    private fun decodeGoalAction(json: JSONObject): BackupGoalAction =
+        BackupGoalAction(
+            syncId = json.getString(KEY_SYNC_ID),
+            goalSyncId = json.getString(KEY_GOAL_SYNC_ID),
+            title = json.getString(KEY_TITLE),
+            completed = json.getBoolean(KEY_COMPLETED),
+            sortOrder = json.getInt(KEY_SORT_ORDER),
+            updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
+        )
+
+    private fun decodeNote(json: JSONObject): BackupNote =
+        BackupNote(
+            syncId = json.getString(KEY_SYNC_ID),
+            title = json.getString(KEY_TITLE),
+            kind = json.getString(KEY_KIND),
+            body = json.optString(KEY_BODY, ""),
+            mark = json.optString(KEY_MARK, "NONE"),
+            closed = json.optBoolean(KEY_CLOSED, false),
+            createdAtEpochMillis = json.getLong(KEY_CREATED_AT),
+            updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
+        )
+
+    private fun decodeNoteLine(json: JSONObject): BackupNoteLine =
+        BackupNoteLine(
+            syncId = json.getString(KEY_SYNC_ID),
+            noteSyncId = json.getString(KEY_NOTE_SYNC_ID),
+            label = json.getString(KEY_LABEL),
+            amountCents = json.getLong(KEY_AMOUNT_CENTS),
+            sortOrder = json.getInt(KEY_SORT_ORDER),
+            updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
         )
 
     private fun decodeDebtor(json: JSONObject): BackupDebtor =
@@ -788,6 +890,16 @@ class BackupBundleCodec(
         }
     }
 
+    private fun <T> decodeOptionalArray(
+        parent: JSONObject,
+        key: String,
+        decode: (JSONObject) -> T,
+    ): List<T> = if (parent.has(key) && !parent.isNull(key)) {
+        decodeArray(parent, key, decode)
+    } else {
+        emptyList()
+    }
+
     private fun sha256(bytes: ByteArray): String =
         MessageDigest.getInstance(SHA_256)
             .digest(bytes)
@@ -831,6 +943,7 @@ class BackupBundleCodec(
         const val DEFAULT_MAX_VISION_IMAGE_BYTES = 10 * 1024 * 1024
 
         private const val SHA_256 = "SHA-256"
+        private const val DEFAULT_GOAL_KIND = "MONEY"
 
         private const val KEY_MANIFEST = "manifest"
         private const val KEY_DATA = "data"
@@ -847,6 +960,9 @@ class BackupBundleCodec(
         private const val KEY_TRANSFERS = "transfers"
         private const val KEY_EXPENSES = "expenses"
         private const val KEY_LUCK_DIARY_ENTRIES = "luckDiaryEntries"
+        private const val KEY_GOAL_ACTIONS = "goalActions"
+        private const val KEY_NOTES = "notes"
+        private const val KEY_NOTE_LINES = "noteLines"
         private const val KEY_PREFERENCES = "preferences"
         private const val KEY_SYNC_ID = "syncId"
         private const val KEY_NAME = "name"
@@ -872,6 +988,15 @@ class BackupBundleCodec(
         private const val KEY_DATE = "dateEpochMillis"
         private const val KEY_IS_CONFIRMED = "isConfirmed"
         private const val KEY_GOAL_SYNC_ID = "goalSyncId"
+        private const val KEY_NOTE_SYNC_ID = "noteSyncId"
+        private const val KEY_KIND = "kind"
+        private const val KEY_TITLE = "title"
+        private const val KEY_BODY = "body"
+        private const val KEY_MARK = "mark"
+        private const val KEY_CLOSED = "closed"
+        private const val KEY_COMPLETED = "completed"
+        private const val KEY_SORT_ORDER = "sortOrder"
+        private const val KEY_LABEL = "label"
         private const val KEY_DEBT_PAYMENT_SYNC_ID = "debtPaymentSyncId"
         private const val KEY_CATEGORY = "category"
         private const val KEY_ENTRY_DATE = "entryDateEpochMillis"

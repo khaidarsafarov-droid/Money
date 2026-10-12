@@ -48,6 +48,7 @@ import com.example.money.data.local.migration.MIGRATION_20_21
 import com.example.money.data.local.migration.MIGRATION_21_22
 import com.example.money.data.local.migration.MIGRATION_22_23
 import com.example.money.data.local.migration.MIGRATION_23_24
+import com.example.money.data.local.migration.MIGRATION_24_25
 
 @Database(
     entities = [
@@ -63,7 +64,7 @@ import com.example.money.data.local.migration.MIGRATION_23_24
         FinanceNoteEntity::class,
         FinanceNoteLineEntity::class,
     ],
-    version = 24,
+    version = 25,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -105,6 +106,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_21_22,
                     MIGRATION_22_23,
                     MIGRATION_23_24,
+                    MIGRATION_24_25,
                 ).build().also { instance = it }
             }
         }

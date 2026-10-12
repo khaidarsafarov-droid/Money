@@ -7,6 +7,9 @@ import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.data.local.entity.FinanceNoteEntity
+import com.example.money.data.local.entity.FinanceNoteLineEntity
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.voice.VoiceReportSettings
@@ -123,5 +126,91 @@ class FinanceSnapshotRepositoryImplTest {
         assertEquals(2, snapshot.transactions.size)
         assertTrue(snapshot.transactions.all { it.deleted })
         assertTrue(snapshot.transactions.all { it.syncUpdatedAt > 100L })
+    }
+
+    @Test
+    fun goalExpenseTasksAndNotesSurviveFullSnapshotOnAnotherDevice() = runBlocking {
+        val goalId = database.savingsGoalDao().insert(
+            SavingsGoalEntity(
+                syncId = "goal-sync",
+                name = "Home",
+                targetAmountCents = 50_000L,
+                updatedAt = 10L,
+                kind = "ACTION",
+            ),
+        )
+        database.goalActionDao().insert(
+            GoalActionEntity(
+                goalId = goalId,
+                title = "Buy flour",
+                completed = false,
+                sortOrder = 0,
+                syncId = "action-sync",
+                updatedAt = 11L,
+            ),
+        )
+        database.expenseDao().insert(
+            ExpenseEntity(
+                syncId = "expense-sync",
+                amount = 12.0,
+                category = "food",
+                date = 20L,
+                isConfirmed = true,
+                goalId = goalId,
+                goalSyncId = "goal-sync",
+            ),
+        )
+        val noteId = database.financeNoteDao().insertNote(
+            FinanceNoteEntity(
+                syncId = "note-sync",
+                title = "House",
+                kind = "FINANCIAL",
+                body = "",
+                mark = "OWED",
+                closed = false,
+                createdAt = 30L,
+                updatedAt = 31L,
+            ),
+        )
+        database.financeNoteDao().insertLine(
+            FinanceNoteLineEntity(
+                noteId = noteId,
+                label = "Flour",
+                amountCents = 20_000L,
+                sortOrder = 0,
+                syncId = "line-sync",
+                updatedAt = 32L,
+            ),
+        )
+
+        val decoded = repository.decodeSnapshot(repository.encodeSnapshot(repository.buildSnapshot()))
+        val expense = decoded.transactions.single { it.kind == "EXPENSE" }
+        assertEquals("goal-sync", expense.goalId)
+        assertEquals("ACTION", decoded.goals.single().goalKind)
+        assertEquals("Buy flour", decoded.goalActions?.single()?.title)
+        assertEquals("House", decoded.notes?.single()?.title)
+        assertEquals(20_000L, decoded.noteLines?.single()?.amountCents)
+
+        val other = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
+        try {
+            FinanceSnapshotApplier(other, MoneyPreferencesStore(context)).apply(decoded)
+            val restoredGoal = other.savingsGoalDao().getAllGoalsOnce().single()
+            val restoredExpense = other.expenseDao().getAllOnce().single()
+            assertEquals("ACTION", restoredGoal.kind)
+            assertEquals(restoredGoal.id, restoredExpense.goalId)
+            assertEquals("goal-sync", restoredExpense.goalSyncId)
+            assertEquals("Buy flour", other.goalActionDao().getAllOnce().single().title)
+            assertEquals(restoredGoal.id, other.goalActionDao().getAllOnce().single().goalId)
+            val restoredNote = other.financeNoteDao().getAllNotesOnce().single()
+            assertEquals("FINANCIAL", restoredNote.kind)
+            assertEquals("OWED", restoredNote.mark)
+            val restoredLine = other.financeNoteDao().getAllLinesOnce().single()
+            assertEquals("Flour", restoredLine.label)
+            assertEquals(restoredNote.id, restoredLine.noteId)
+        } finally {
+            other.close()
+        }
     }
 }

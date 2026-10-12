@@ -7,6 +7,9 @@ import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.data.local.entity.FinanceNoteEntity
+import com.example.money.data.local.entity.FinanceNoteLineEntity
+import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.LuckDiaryEntryEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
@@ -166,6 +169,77 @@ class BackupRepositoryIntegrationTest {
             ),
         )
         assertPayloadEquals(sourceBundle, repository.exportBundle())
+    }
+
+    @Test
+    fun encryptedRoundTrip_restoresGoalKindTasksAndNotesAndClearsStaleNotes() = runBlocking {
+        val goalId = database.savingsGoalDao().insert(
+            SavingsGoalEntity(
+                syncId = "goal-sync",
+                name = "Any goal",
+                targetAmountCents = 0L,
+                updatedAt = 10L,
+                kind = "ACTION",
+            ),
+        )
+        database.goalActionDao().insert(
+            GoalActionEntity(
+                goalId = goalId,
+                title = "Call the bank",
+                completed = true,
+                sortOrder = 1,
+                syncId = "action-sync",
+                updatedAt = 11L,
+            ),
+        )
+        val noteId = database.financeNoteDao().insertNote(
+            FinanceNoteEntity(
+                syncId = "note-sync",
+                title = "House expenses",
+                kind = "FINANCIAL",
+                mark = "PAID",
+                createdAt = 20L,
+                updatedAt = 21L,
+            ),
+        )
+        database.financeNoteDao().insertLine(
+            FinanceNoteLineEntity(
+                noteId = noteId,
+                label = "Oil",
+                amountCents = 30_000L,
+                sortOrder = 0,
+                syncId = "line-sync",
+                updatedAt = 22L,
+            ),
+        )
+        preferencesStore.importPortable(portablePreferences("RU", "source"))
+        val encrypted = repository.exportEncrypted(PASSWORD)
+
+        database.financeNoteDao().insertNote(
+            FinanceNoteEntity(
+                syncId = "stale-note",
+                title = "Stale",
+                kind = "TEXT",
+                createdAt = 1L,
+                updatedAt = 1L,
+            ),
+        )
+        repository.importEncrypted(encrypted, PASSWORD)
+
+        val goal = database.savingsGoalDao().getAllGoalsOnce().single()
+        assertEquals("ACTION", goal.kind)
+        val action = database.goalActionDao().getAllOnce().single()
+        assertEquals("Call the bank", action.title)
+        assertTrue(action.completed)
+        assertEquals(goal.id, action.goalId)
+        assertEquals("action-sync", action.syncId)
+        val note = database.financeNoteDao().getAllNotesOnce().single()
+        assertEquals("House expenses", note.title)
+        assertEquals("PAID", note.mark)
+        val line = database.financeNoteDao().getAllLinesOnce().single()
+        assertEquals("Oil", line.label)
+        assertEquals(30_000L, line.amountCents)
+        assertEquals(note.id, line.noteId)
     }
 
     @Test
