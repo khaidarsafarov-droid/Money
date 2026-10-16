@@ -261,18 +261,7 @@ internal fun HomeDialogs(
                     showDebtPaymentDialog = null
                     debtPaymentPrefillCents = 0L
                     if (ok) {
-                        val updated = debtorsViewModel.getDebtorById(debtor.id)
-                        val remaining = updated?.remainingAmountCents ?: 0L
-                        showMessage(
-                            context.getString(
-                                R.string.msg_payment_neutral,
-                                Formatters.currencyFromCents(
-                                    remaining,
-                                    debtor.currency,
-                                    hide = privacySettings.hideAmounts,
-                                ),
-                            ),
-                        )
+                        showMessage(context.getString(R.string.msg_payment_neutral))
                     } else {
                         showMessage(context.getString(R.string.error_payment_failed))
                     }

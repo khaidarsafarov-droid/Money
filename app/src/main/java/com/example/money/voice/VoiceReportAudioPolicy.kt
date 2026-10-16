@@ -82,6 +82,7 @@ class VoiceReportAudioPolicy(private val context: Context) {
     }
 
     fun requestSpeechFocus(onFocusChange: (Int) -> Unit): AudioFocusRequest? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return null
         val manager = audioManager ?: return null
         val attributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_ALARM)
@@ -106,6 +107,7 @@ class VoiceReportAudioPolicy(private val context: Context) {
     }
 
     fun abandonSpeechFocus(request: AudioFocusRequest?) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         if (request == null) return
         audioManager?.abandonAudioFocusRequest(request)
     }

@@ -3,6 +3,7 @@ package com.example.money.notification
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.money.R
@@ -162,7 +163,8 @@ object DebtNotificationHelper {
             manager.activeNotifications
                 .filter { notification ->
                     notification.tag == NOTIFICATION_TAG ||
-                        notification.notification.channelId == NotificationChannels.DEBT_REMINDERS
+                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                            notification.notification.channelId == NotificationChannels.DEBT_REMINDERS)
                 }
                 .forEach { notification ->
                     manager.cancel(notification.tag, notification.id)

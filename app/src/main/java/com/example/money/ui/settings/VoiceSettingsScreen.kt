@@ -58,6 +58,12 @@ fun VoiceSettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val voiceTestSuccess = stringResource(R.string.voice_settings_test_success)
+    val voiceTestSilent = stringResource(R.string.voice_settings_test_silent)
+    val voiceTestDnd = stringResource(R.string.voice_settings_test_dnd)
+    val voiceTestFocusDenied = stringResource(R.string.voice_settings_test_focus_denied)
+    val voiceTestUnavailable = stringResource(R.string.voice_settings_test_unavailable)
+    val voiceTestError = stringResource(R.string.voice_settings_test_error)
     val app = context.applicationContext as MoneyApplication
     val viewModel: VoiceSettingsViewModel = viewModel(
         factory = VoiceSettingsViewModel.Factory(app, app.preferencesStore),
@@ -242,18 +248,12 @@ fun VoiceSettingsScreen(
                         onClick = {
                             viewModel.testVoiceReport { result ->
                                 feedbackMessage = when (result) {
-                                    VoiceReportSpeaker.SpeakResult.Success ->
-                                        context.getString(R.string.voice_settings_test_success)
-                                    VoiceReportSpeaker.SpeakResult.BlockedSilent ->
-                                        context.getString(R.string.voice_settings_test_silent)
-                                    VoiceReportSpeaker.SpeakResult.BlockedDnd ->
-                                        context.getString(R.string.voice_settings_test_dnd)
-                                    VoiceReportSpeaker.SpeakResult.AudioFocusDenied ->
-                                        context.getString(R.string.voice_settings_test_focus_denied)
-                                    VoiceReportSpeaker.SpeakResult.TtsUnavailable ->
-                                        context.getString(R.string.voice_settings_test_unavailable)
-                                    VoiceReportSpeaker.SpeakResult.TtsError ->
-                                        context.getString(R.string.voice_settings_test_error)
+                                    VoiceReportSpeaker.SpeakResult.Success -> voiceTestSuccess
+                                    VoiceReportSpeaker.SpeakResult.BlockedSilent -> voiceTestSilent
+                                    VoiceReportSpeaker.SpeakResult.BlockedDnd -> voiceTestDnd
+                                    VoiceReportSpeaker.SpeakResult.AudioFocusDenied -> voiceTestFocusDenied
+                                    VoiceReportSpeaker.SpeakResult.TtsUnavailable -> voiceTestUnavailable
+                                    VoiceReportSpeaker.SpeakResult.TtsError -> voiceTestError
                                 }
                             }
                         },

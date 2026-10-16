@@ -134,6 +134,8 @@ fun DebtorFormDialog(
 
     var nameError by remember { mutableStateOf<String?>(null) }
     var amountError by remember { mutableStateOf<String?>(null) }
+    val amountPositiveError = stringResource(R.string.error_amount_positive)
+    val amountBelowPaidError = stringResource(R.string.error_amount_below_paid)
     var dateError by remember { mutableStateOf<String?>(null) }
 
     val canSubmit = remember(name, amountText, dateGiven, dateDue, isEdit, existingDebtor) {
@@ -380,7 +382,7 @@ fun DebtorFormDialog(
                     if (amountError == null) {
                         val parsedAmount = InputValidators.parseAmount(amountText)
                         if (parsedAmount != null && parsedAmount <= 0L) {
-                            amountError = context.getString(R.string.error_amount_positive)
+                            amountError = amountPositiveError
                         }
                     }
                     dateError = InputValidators.validateDueDate(dateGiven, dateDue)?.let(context::getString)
@@ -390,7 +392,7 @@ fun DebtorFormDialog(
                         if (amount != null) {
                             val targetCents = amount
                             if (targetCents < existingDebtor.currentAmountCents) {
-                                amountError = context.getString(R.string.error_amount_below_paid)
+                                amountError = amountBelowPaidError
                             }
                         }
                     }

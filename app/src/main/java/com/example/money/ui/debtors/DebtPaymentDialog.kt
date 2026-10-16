@@ -53,6 +53,7 @@ fun DebtPaymentDialog(
     }
 
     val context = LocalContext.current
+    val paymentExceedsRemaining = stringResource(R.string.error_payment_exceeds_remaining)
     val extraHintCents = DebtExtraPaymentEngine.SUGGESTED_EXTRA_CENTS
     val extraImpact = remember(debtor.id, debtor.remainingAmountCents) {
         DebtExtraPaymentEngine.calculateImpact(debtor, extraHintCents)
@@ -105,7 +106,7 @@ fun DebtPaymentDialog(
                     if (amountError != null) return@TextButton
                     val amountCents = InputValidators.parseAmount(amountText) ?: return@TextButton
                     if (amountCents > debtor.remainingAmountCents) {
-                        amountError = context.getString(R.string.error_payment_exceeds_remaining)
+                        amountError = paymentExceedsRemaining
                         return@TextButton
                     }
                     onConfirm(amountCents, false)

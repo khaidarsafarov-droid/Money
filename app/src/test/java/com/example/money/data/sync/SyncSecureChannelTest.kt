@@ -100,7 +100,7 @@ class SyncSecureChannelTest {
         val joinerKey = SyncPairing.finishJoiner(joiner, reply!!.message)
         assertNotNull(joinerKey)
         assertTrue(reply.sharedKey.contentEquals(joinerKey))
-        assertNull(SyncPairing.hostReply(offer, flipLastChar(message)))
+        assertNull(SyncPairing.hostReply(offer, tamperMac(message)))
     }
 
     @Test
@@ -143,6 +143,14 @@ class SyncSecureChannelTest {
     private fun flipLastChar(value: String): String {
         val chars = value.toCharArray()
         chars[chars.lastIndex] = if (chars[chars.lastIndex] == 'A') 'B' else 'A'
+        return String(chars)
+    }
+
+    private fun tamperMac(message: String): String {
+        val macStart = message.lastIndexOf(':') + 1
+        val chars = message.toCharArray()
+        val index = macStart + (chars.size - macStart) / 2
+        chars[index] = if (chars[index] == 'A') 'B' else 'A'
         return String(chars)
     }
 

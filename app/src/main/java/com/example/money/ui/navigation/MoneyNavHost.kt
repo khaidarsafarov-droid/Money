@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -58,9 +59,9 @@ fun MoneyNavHost(
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
     val onboardingSession: OnboardingSessionViewModel = viewModel()
-    val storedProfile by app.preferencesStore.userProfile
-        .map<UserProfile, UserProfile?> { it }
-        .collectAsStateWithLifecycle(initialValue = null)
+    val storedProfile by remember(app) {
+        app.preferencesStore.userProfile.map<UserProfile, UserProfile?> { profile -> profile }
+    }.collectAsStateWithLifecycle(initialValue = null)
     val userProfile = storedProfile ?: UserProfile()
     val calendarSettings by app.preferencesStore.calendarSettings.collectAsStateWithLifecycle(
         initialValue = com.example.money.settings.CalendarSettings(),

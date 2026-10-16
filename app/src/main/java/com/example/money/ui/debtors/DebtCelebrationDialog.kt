@@ -42,6 +42,7 @@ fun DebtCelebrationDialog(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
+    val shareText = stringResource(R.string.celebration_share_text)
     var selectedReward by remember { mutableStateOf<CelebrationReward?>(null) }
 
     AlertDialog(
@@ -117,7 +118,6 @@ fun DebtCelebrationDialog(
             TextButton(
                 enabled = selectedReward != null,
                 onClick = {
-                    val shareText = context.getString(R.string.celebration_share_text)
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, shareText)

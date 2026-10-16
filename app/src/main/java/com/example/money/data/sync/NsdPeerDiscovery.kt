@@ -170,11 +170,11 @@ class NsdPeerDiscovery(
     }
 
     private fun unregisterServiceInfo(serviceName: String) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
         unregisterResolvedServiceInfo(serviceName)
     }
 
     private fun unregisterResolvedServiceInfo(serviceName: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
         val callback = serviceInfoCallbacks.remove(serviceName) as? NsdManager.ServiceInfoCallback ?: return
         try {
             nsdManager.unregisterServiceInfoCallback(callback)

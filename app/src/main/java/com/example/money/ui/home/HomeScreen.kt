@@ -130,6 +130,12 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val debtorNotFoundMessage = stringResource(R.string.debtor_not_found)
+    val calendarSyncFailedMessage = stringResource(R.string.calendar_sync_failed)
+    val calendarRemovedMessage = stringResource(R.string.calendar_removed)
+    val syncUrlCopiedMessage = stringResource(R.string.sync_web_url_copied)
+    val autopilotAppliedTemplate = stringResource(R.string.autopilot_applied)
+    val autopilotFailedMessage = stringResource(R.string.autopilot_apply_failed)
     val app = context.applicationContext as MoneyApplication
 
     val goalViewModel: GoalViewModel = viewModel(
@@ -307,7 +313,7 @@ fun HomeScreen(
                     showDebtPaymentDialog = debtor
                 }
             } else if (launchConfig.highlightDebtorId != null) {
-                showMessage(context.getString(R.string.debtor_not_found))
+                showMessage(debtorNotFoundMessage)
             }
         }
 
@@ -329,8 +335,8 @@ fun HomeScreen(
 
     LaunchedEffect(calendarMessage) {
         when (calendarMessage?.substringBefore('#')) {
-            "calendar_failed" -> showMessage(context.getString(R.string.calendar_sync_failed))
-            "calendar_removed" -> showMessage(context.getString(R.string.calendar_removed))
+            "calendar_failed" -> showMessage(calendarSyncFailedMessage)
+            "calendar_removed" -> showMessage(calendarRemovedMessage)
         }
         if (calendarMessage != null) {
             debtorsViewModel.dismissCalendarMessage()
@@ -458,7 +464,7 @@ fun HomeScreen(
                                     )
                                     showTopMenu = false
                                     scope.launch {
-                                        showMessage(context.getString(R.string.sync_web_url_copied))
+                                        showMessage(syncUrlCopiedMessage)
                                     }
                                 },
                             )
@@ -552,8 +558,7 @@ fun HomeScreen(
                         val plan = debtorsViewModel.applyMicroPaymentSync()
                         if (plan != null) {
                             showMessage(
-                                context.getString(
-                                    R.string.autopilot_applied,
+                                autopilotAppliedTemplate.format(
                                     Formatters.currencyFromCents(
                                         plan.amountCents,
                                         hide = privacySettings.hideAmounts,
@@ -562,7 +567,7 @@ fun HomeScreen(
                                 ),
                             )
                         } else {
-                            showMessage(context.getString(R.string.autopilot_apply_failed))
+                            showMessage(autopilotFailedMessage)
                         }
                     }
                 },
@@ -696,8 +701,7 @@ fun HomeScreen(
                         val plan = debtorsViewModel.applyMicroPaymentSync()
                         if (plan != null) {
                             showMessage(
-                                context.getString(
-                                    R.string.autopilot_applied,
+                                autopilotAppliedTemplate.format(
                                     Formatters.currencyFromCents(
                                         plan.amountCents,
                                         hide = privacySettings.hideAmounts,
@@ -706,7 +710,7 @@ fun HomeScreen(
                                 ),
                             )
                         } else {
-                            showMessage(context.getString(R.string.autopilot_apply_failed))
+                            showMessage(autopilotFailedMessage)
                         }
                     }
                 },
