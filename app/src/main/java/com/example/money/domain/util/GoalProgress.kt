@@ -2,6 +2,9 @@ package com.example.money.domain.util
 
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
+import java.time.Instant
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -17,8 +20,6 @@ data class GoalSectionSummary(
 }
 
 object GoalProgress {
-
-    private const val DAY_MS = 86_400_000L
 
     fun progressFractionRaw(targetCents: Long, currentCents: Long): Float {
         if (targetCents <= 0L) return 0f
@@ -52,16 +53,27 @@ object GoalProgress {
         return ceil(remainingCents.toDouble() / daysLeft.toDouble()).toLong()
     }
 
-    fun daysUntilDeadline(deadlineMillis: Long, now: Long = System.currentTimeMillis()): Int? {
-        val endOfDeadlineDay = endOfDayMillis(deadlineMillis)
-        val diff = endOfDeadlineDay - startOfDayMillis(now)
-        if (diff < 0L) return null
-        return max(1, ceil(diff.toDouble() / DAY_MS.toDouble()).toInt())
+    fun daysUntilDeadline(
+        deadlineMillis: Long,
+        now: Long = System.currentTimeMillis(),
+        zone: ZoneId = ZoneId.systemDefault(),
+    ): Int? {
+        val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+        val deadline = Instant.ofEpochMilli(deadlineMillis).atZone(zone).toLocalDate()
+        val days = ChronoUnit.DAYS.between(today, deadline)
+        if (days < 0L) return null
+        return (days + 1L).toInt()
     }
 
-    fun isDeadlinePassed(deadlineMillis: Long?, now: Long = System.currentTimeMillis()): Boolean {
+    fun isDeadlinePassed(
+        deadlineMillis: Long?,
+        now: Long = System.currentTimeMillis(),
+        zone: ZoneId = ZoneId.systemDefault(),
+    ): Boolean {
         if (deadlineMillis == null) return false
-        return endOfDayMillis(deadlineMillis) < now
+        val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+        val deadline = Instant.ofEpochMilli(deadlineMillis).atZone(zone).toLocalDate()
+        return deadline.isBefore(today)
     }
 
     fun orderedForSection(
@@ -102,25 +114,4 @@ object GoalProgress {
         return 1
     }
 
-    private fun startOfDayMillis(millis: Long): Long {
-        val cal = java.util.Calendar.getInstance().apply {
-            timeInMillis = millis
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }
-        return cal.timeInMillis
-    }
-
-    private fun endOfDayMillis(millis: Long): Long {
-        val cal = java.util.Calendar.getInstance().apply {
-            timeInMillis = millis
-            set(java.util.Calendar.HOUR_OF_DAY, 23)
-            set(java.util.Calendar.MINUTE, 59)
-            set(java.util.Calendar.SECOND, 59)
-            set(java.util.Calendar.MILLISECOND, 999)
-        }
-        return cal.timeInMillis
-    }
 }

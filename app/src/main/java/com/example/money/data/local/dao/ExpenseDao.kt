@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.domain.model.CategorySpend
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -37,6 +38,17 @@ interface ExpenseDao {
         """,
     )
     suspend fun getGoalExpenseTotalOnce(goalId: Long): Long
+
+    @Query(
+        """
+        SELECT category, COALESCE(SUM(amount_cents), 0) AS totalCents
+        FROM expenses
+        WHERE isConfirmed = 1 AND date >= :start AND date < :end
+        GROUP BY category
+        ORDER BY totalCents DESC
+        """,
+    )
+    fun observeCategorySpend(start: Long, end: Long): Flow<List<CategorySpend>>
 
     @Query("SELECT COUNT(*) FROM expenses WHERE isConfirmed = 0")
     fun observePendingCount(): Flow<Int>

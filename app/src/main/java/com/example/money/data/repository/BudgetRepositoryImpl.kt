@@ -10,6 +10,7 @@ import com.example.money.data.mapper.toEntity
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.model.BudgetSummary
+import com.example.money.domain.model.CategorySpend
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
@@ -49,6 +50,9 @@ class BudgetRepositoryImpl(
                 totalExpensesCents = summary.totalExpensesCents,
             )
         }
+
+    override fun observeCategorySpend(startMillis: Long, endMillisExclusive: Long): Flow<List<CategorySpend>> =
+        expenseDao.observeCategorySpend(startMillis, endMillisExclusive)
 
     override fun observePendingCount(): Flow<Int> =
         combine(

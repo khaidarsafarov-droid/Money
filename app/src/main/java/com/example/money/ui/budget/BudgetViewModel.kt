@@ -4,11 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.money.domain.model.BudgetSummary
+import com.example.money.domain.model.CategorySpend
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
+import com.example.money.domain.util.BudgetPeriod
+import com.example.money.domain.util.BudgetPeriods
+import java.time.Instant
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -34,6 +40,21 @@ class BudgetViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList(),
         )
+
+    val currentMonth: BudgetPeriod = BudgetPeriods.monthContaining(Instant.now())
+
+    val monthCategorySpend: StateFlow<List<CategorySpend>> = flow {
+        emitAll(
+            budgetRepository.observeCategorySpend(
+                startMillis = currentMonth.startMillis,
+                endMillisExclusive = currentMonth.endMillis,
+            ),
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList(),
+    )
 
     val budgetSummary: StateFlow<BudgetSummary> = budgetRepository.observeBudgetSummary()
         .stateIn(

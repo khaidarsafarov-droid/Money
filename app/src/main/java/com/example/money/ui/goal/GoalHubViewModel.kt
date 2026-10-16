@@ -339,11 +339,14 @@ class GoalHubViewModel(
             .toString()
 
     companion object {
-        fun currentIsoWeekKey(now: Long = System.currentTimeMillis()): String {
-            val calendar = java.util.Calendar.getInstance().apply { timeInMillis = now }
-            val year = calendar.get(java.util.Calendar.YEAR)
-            val week = calendar.get(java.util.Calendar.WEEK_OF_YEAR)
-            return "$year-W$week"
+        fun currentIsoWeekKey(
+            now: Long = System.currentTimeMillis(),
+            zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
+        ): String {
+            val date = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+            val weekYear = date.get(java.time.temporal.IsoFields.WEEK_BASED_YEAR)
+            val week = date.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
+            return "$weekYear-W$week"
         }
 
         fun decodeChecklistForUi(

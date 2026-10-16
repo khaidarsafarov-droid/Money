@@ -7,6 +7,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Calendar
 
 class GoalProgressTest {
@@ -40,6 +42,23 @@ class GoalProgressTest {
         val days = GoalProgress.daysUntilDeadline(deadline, now)!!
 
         assertEquals(kotlin.math.ceil(10_000.0 / days).toLong(), daily)
+    }
+
+    @Test
+    fun daysUntilDeadline_countsCalendarDaysAcrossTheFallBack() {
+        val zone = ZoneId.of("America/New_York")
+        val now = Instant.parse("2026-11-01T04:30:00Z").toEpochMilli()
+        val deadline = Instant.parse("2026-11-02T03:00:00Z").toEpochMilli()
+
+        assertEquals(1, GoalProgress.daysUntilDeadline(deadline, now, zone))
+        assertEquals(
+            null,
+            GoalProgress.daysUntilDeadline(
+                Instant.parse("2026-10-31T16:00:00Z").toEpochMilli(),
+                Instant.parse("2026-11-01T16:00:00Z").toEpochMilli(),
+                zone,
+            ),
+        )
     }
 
     @Test

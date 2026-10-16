@@ -1,6 +1,7 @@
 package com.example.money.domain.repository
 
 import com.example.money.domain.model.BudgetSummary
+import com.example.money.domain.model.CategorySpend
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +13,8 @@ interface BudgetRepository {
     fun getExpenses(): Flow<List<Expense>>
 
     fun observeBudgetSummary(): Flow<BudgetSummary>
+
+    fun observeCategorySpend(startMillis: Long, endMillisExclusive: Long): Flow<List<CategorySpend>>
 
     fun observePendingCount(): Flow<Int>
 
