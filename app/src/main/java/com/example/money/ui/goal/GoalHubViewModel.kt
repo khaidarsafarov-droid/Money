@@ -41,8 +41,11 @@ class GoalHubViewModel(
     private val luckDiaryRepository: LuckDiaryRepository,
 ) : ViewModel() {
 
-    private val _extraMonthlyCents = MutableStateFlow(0L)
-    val extraMonthlyCents: StateFlow<Long> = _extraMonthlyCents.asStateFlow()
+    val extraMonthlyCents: StateFlow<Long> = preferencesStore.extraMonthlyCents.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0L,
+    )
 
     val profile: StateFlow<GoalPsychologyProfile> = preferencesStore.goalPsychologyProfile.stateIn(
         scope = viewModelScope,
@@ -74,7 +77,7 @@ class GoalHubViewModel(
 
     val freedomProjection: StateFlow<DebtFreedomEngine.FreedomProjection> = combine(
         debtors,
-        _extraMonthlyCents,
+        extraMonthlyCents,
     ) { list, extra ->
         GoalPsychologyEngines.freedomSummary(list, extra)
     }.stateIn(
@@ -146,10 +149,6 @@ class GoalHubViewModel(
                     }
                 }
         }
-    }
-
-    fun setExtraMonthlyCents(cents: Long) {
-        _extraMonthlyCents.value = cents.coerceAtLeast(0L)
     }
 
     fun submitPsychotypeTest(answers: List<Char>) {

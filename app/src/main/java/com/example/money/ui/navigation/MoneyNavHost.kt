@@ -157,7 +157,10 @@ fun MoneyNavHost(
             )
         }
         composable(AppRoutes.GOAL_HUB) {
-            GoalScreen(onBack = { navController.popBackStack() })
+            GoalScreen(
+                onBack = { navController.popBackStack() },
+                onOpenDebts = { navController.popBackStack() },
+            )
         }
         composable(AppRoutes.APP_LANGUAGE) {
             AppLanguageScreen(onBack = { navController.popBackStack() })

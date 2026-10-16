@@ -162,7 +162,7 @@ fun HomeScreen(
         factory = BudgetViewModel.Factory(app.budgetRepository),
     )
     val debtListViewModel: DebtListViewModel = viewModel(
-        factory = DebtListViewModel.Factory(app.debtorRepository),
+        factory = DebtListViewModel.Factory(app.debtorRepository, app.preferencesStore),
     )
     val noteViewModel: NoteViewModel = viewModel(
         factory = NoteViewModel.Factory(app.noteRepository),

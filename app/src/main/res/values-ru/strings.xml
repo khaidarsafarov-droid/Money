@@ -510,6 +510,7 @@
     <string name="debt_freedom_remaining_total">Осталось погасить: %1$s</string>
     <string name="debt_freedom_monthly_pace">При темпе %1$s/мес · ~%2$d мес.</string>
     <string name="debt_freedom_extra_slider_label">Дополнительный платёж в месяц</string>
+    <string name="debt_freedom_extra_change">Изменить во вкладке «Долги»</string>
     <string name="debt_freedom_extra_amount">+ %1$s к ежемесячному темпу</string>
     <string name="debt_freedom_months_saved">Станете свободны на %1$d мес. раньше</string>
     <string name="debt_freedom_hint">Прогноз по вашим платежам — только на устройстве.</string>

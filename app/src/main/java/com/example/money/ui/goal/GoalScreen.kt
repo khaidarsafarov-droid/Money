@@ -30,7 +30,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,6 +71,7 @@ import java.io.File
 @Composable
 fun GoalScreen(
     onBack: () -> Unit,
+    onOpenDebts: () -> Unit = onBack,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -261,10 +261,10 @@ fun GoalScreen(
                 }
             }
 
-            ExtraMonthlySlider(
+            ExtraMonthlySummary(
                 extraMonthly = extraMonthly,
                 freedom = freedom,
-                onChange = viewModel::setExtraMonthlyCents,
+                onOpenDebts = onOpenDebts,
                 hideAmounts = hideAmounts,
             )
 
@@ -399,26 +399,28 @@ private fun FreedomHeroCard(
 }
 
 @Composable
-private fun ExtraMonthlySlider(
+private fun ExtraMonthlySummary(
     extraMonthly: Long,
     freedom: DebtFreedomEngine.FreedomProjection,
-    onChange: (Long) -> Unit,
+    onOpenDebts: () -> Unit,
     hideAmounts: Boolean = false,
 ) {
     HubCard {
         Text(stringResource(R.string.debt_freedom_extra_slider_label), fontWeight = FontWeight.SemiBold)
-        Slider(
-            value = extraMonthly.toFloat(),
-            onValueChange = { onChange((it / 500f).toLong() * 500L) },
-            valueRange = 0f..50_000f,
-            steps = 20,
+        Text(
+            stringResource(
+                R.string.debt_freedom_extra_amount,
+                Formatters.currencyFromCents(extraMonthly, hide = hideAmounts),
+            ),
         )
-        Text(stringResource(R.string.debt_freedom_extra_amount, Formatters.currencyFromCents(extraMonthly, hide = hideAmounts)))
         freedom.freedomDateMillis?.let { date ->
             Text(
                 stringResource(R.string.goal_hub_new_date, Formatters.shortDate(date)),
                 color = FinancePositive,
             )
+        }
+        TextButton(onClick = onOpenDebts) {
+            Text(stringResource(R.string.debt_freedom_extra_change))
         }
     }
 }

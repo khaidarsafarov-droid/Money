@@ -126,6 +126,7 @@ object MoneyPreferenceKeys {
     val GOAL_VISION_PHOTO_PATH = stringPreferencesKey("goal_vision_photo_path")
     val GOAL_PAYDAY_DAY = intPreferencesKey("goal_payday_day")
     val GOAL_PAYOFF_STRATEGY = stringPreferencesKey("goal_payoff_strategy")
+    val EXTRA_MONTHLY_CENTS = longPreferencesKey("extra_monthly_cents")
     val GOAL_WEEKLY_CHECKLIST_JSON = stringPreferencesKey("goal_weekly_checklist_json")
     val GOAL_ACTIVE_CHALLENGES_JSON = stringPreferencesKey("goal_active_challenges_json")
     val GOAL_BADGES_JSON = stringPreferencesKey("goal_badges_json")
@@ -595,6 +596,17 @@ class MoneyPreferencesStore(
      * autopilot value was stored, that choice is kept. If neither was stored,
      * both become the engine default (snowball).
      */
+    val extraMonthlyCents: Flow<Long> =
+        context.moneyPreferencesDataStore.data.map { prefs ->
+            prefs[MoneyPreferenceKeys.EXTRA_MONTHLY_CENTS] ?: 0L
+        }
+
+    suspend fun setExtraMonthlyCents(cents: Long) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs[MoneyPreferenceKeys.EXTRA_MONTHLY_CENTS] = cents.coerceAtLeast(0L)
+        }
+    }
+
     suspend fun alignPayoffStrategy() {
         context.moneyPreferencesDataStore.edit { prefs ->
             val goal = prefs[MoneyPreferenceKeys.GOAL_PAYOFF_STRATEGY]

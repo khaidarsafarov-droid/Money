@@ -3,6 +3,7 @@ package com.example.money.ui.debtors
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtFreedomEngine
@@ -15,11 +16,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /** List presentation state — tab, filter, search, and SQL-backed debtor list. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DebtListViewModel(
     private val debtorRepository: DebtorRepository,
+    private val preferencesStore: MoneyPreferencesStore,
 ) : ViewModel() {
 
     private val _debtTab = MutableStateFlow(DebtTab.OwesMe)
@@ -31,8 +34,11 @@ class DebtListViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _extraMonthlyCents = MutableStateFlow(0L)
-    val extraMonthlyCents: StateFlow<Long> = _extraMonthlyCents.asStateFlow()
+    val extraMonthlyCents: StateFlow<Long> = preferencesStore.extraMonthlyCents.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0L,
+    )
 
     val allDebtorsList: StateFlow<List<Debtor>> = debtorRepository.getAllDebtors().stateIn(
         scope = viewModelScope,
@@ -52,7 +58,7 @@ class DebtListViewModel(
 
     val freedomProjection: StateFlow<DebtFreedomEngine.FreedomProjection> = combine(
         allDebtorsList,
-        _extraMonthlyCents,
+        extraMonthlyCents,
     ) { debtors, extra ->
         DebtFreedomEngine.calculateFreedomProjection(
             debts = debtors,
@@ -85,16 +91,19 @@ class DebtListViewModel(
     }
 
     fun setExtraMonthlyCents(cents: Long) {
-        _extraMonthlyCents.value = cents.coerceAtLeast(0L)
+        viewModelScope.launch {
+            preferencesStore.setExtraMonthlyCents(cents)
+        }
     }
 
     class Factory(
         private val debtorRepository: DebtorRepository,
+        private val preferencesStore: MoneyPreferencesStore,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(DebtListViewModel::class.java)) {
-                return DebtListViewModel(debtorRepository) as T
+                return DebtListViewModel(debtorRepository, preferencesStore) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

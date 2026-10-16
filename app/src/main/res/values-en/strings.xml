@@ -150,6 +150,7 @@
     <string name="debt_freedom_remaining_total">Remaining: %1$s</string>
     <string name="debt_freedom_monthly_pace">At %1$s/mo · ~%2$d mo.</string>
     <string name="debt_freedom_extra_slider_label">Extra monthly payment</string>
+    <string name="debt_freedom_extra_change">Change on the Debts tab</string>
     <string name="debt_freedom_extra_amount">+ %1$s to monthly pace</string>
     <string name="debt_freedom_months_saved">Become debt-free %1$d mo. sooner</string>
     <string name="debt_freedom_hint">Forecast from your payments — on-device only.</string>
