@@ -144,16 +144,25 @@ class DebtorRepositoryImpl(
     }
 
     override suspend fun processDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Boolean =
+        recordDebtPayment(debtId, paymentCents, affectsBalance) != null
+
+    override suspend fun recordDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Long? =
         SyncWriteGuard.withWriteLock {
             processDebtPaymentInternal(debtId, paymentCents, affectsBalance)
         }
+
+    override suspend fun undoDebtPayment(debtId: Long, paymentId: Long) {
+        SyncWriteGuard.withWriteLock {
+            reversePaymentInternal(debtId, paymentId)
+        }
+    }
 
     private suspend fun processDebtPaymentInternal(
         debtId: Long,
         paymentCents: Long,
         affectsBalance: Boolean,
-    ): Boolean {
-        if (paymentCents <= 0L) return false
+    ): Long? {
+        if (paymentCents <= 0L) return null
 
         var applied = false
         var paymentId: Long? = null
@@ -208,7 +217,7 @@ class DebtorRepositoryImpl(
                 syncQueueRecorder.recordDebt(debtor, syncAt)
             }
         }
-        return applied
+        return if (applied) paymentId else null
     }
 
     override suspend fun deleteDebtor(debtor: com.example.money.domain.model.Debtor) {

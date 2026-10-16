@@ -54,6 +54,7 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -89,6 +90,7 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.ui.budget.BudgetViewModel
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
+import com.example.money.ui.components.QuickPaymentSheet
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.SyncStatusIndicator
@@ -112,6 +114,7 @@ import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
+import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
@@ -211,6 +214,7 @@ fun HomeScreen(
     var showDebtPaymentDialog by showDebtPaymentDialogState
     val debtPaymentPrefillCentsState = remember { mutableLongStateOf(0L) }
     var debtPaymentPrefillCents by debtPaymentPrefillCentsState
+    var quickPayDebtorId by remember { mutableLongStateOf(0L) }
     val showTransferDialogState = remember { mutableStateOf(false) }
     var showTransferDialog by showTransferDialogState
     val showExpenseDialogState = remember { mutableStateOf(false) }
@@ -590,6 +594,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
                 },
+                onQuickPayment = { debtor -> quickPayDebtorId = debtor.id },
                 onAccelerateDebtPayment = { debtor, prefillCents ->
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
@@ -699,6 +704,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
                 },
+                onQuickPayment = { debtor -> quickPayDebtorId = debtor.id },
                 onAccelerateDebtPayment = { debtor, prefillCents ->
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
@@ -772,6 +778,36 @@ fun HomeScreen(
                 emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
                 appMode = appMode,
                 onOpenClients = onOpenClients,
+            )
+        }
+        val quickDebtor = allDebtors.firstOrNull { it.id == quickPayDebtorId && !it.isPaid }
+        val paymentSavedMessage = stringResource(R.string.msg_payment_saved)
+        val undoLabel = stringResource(R.string.action_undo)
+        val paymentFailedMessage = stringResource(R.string.error_payment_failed)
+        if (quickDebtor != null) {
+            QuickPaymentSheet(
+                remainingCents = quickDebtor.remainingAmountCents,
+                currencyRegion = currencyRegion,
+                onDismiss = { quickPayDebtorId = 0L },
+                onSave = { cents ->
+                    val debtorId = quickDebtor.id
+                    scope.launch {
+                        val paymentId = debtorsViewModel.recordPaymentSync(debtorId, cents, false)
+                        quickPayDebtorId = 0L
+                        if (paymentId != null) {
+                            vibrateShort(context)
+                            val result = snackbarHostState.showSnackbar(
+                                message = paymentSavedMessage,
+                                actionLabel = undoLabel,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                debtorsViewModel.undoPaymentSync(debtorId, paymentId)
+                            }
+                        } else {
+                            showMessage(paymentFailedMessage)
+                        }
+                    }
+                },
             )
         }
     }

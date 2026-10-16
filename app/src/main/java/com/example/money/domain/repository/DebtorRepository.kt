@@ -28,6 +28,11 @@ interface DebtorRepository {
 
     suspend fun processDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Boolean
 
+    /** Same write as [processDebtPayment]. Returns the stored payment id so the caller can undo it. */
+    suspend fun recordDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Long?
+
+    suspend fun undoDebtPayment(debtId: Long, paymentId: Long)
+
     suspend fun getDebtorById(id: Long): Debtor?
 
     suspend fun markAsPaid(id: Long, affectsBalance: Boolean = false)

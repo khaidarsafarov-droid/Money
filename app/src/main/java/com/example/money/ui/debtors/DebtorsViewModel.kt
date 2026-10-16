@@ -369,9 +369,11 @@ class DebtorsViewModel(
         debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
     }
 
-    suspend fun processPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Boolean {
-        val paymentCents = amountCents
-        val success = debtorRepository.processDebtPayment(debtorId, paymentCents, affectsBalance)
+    suspend fun processPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Boolean =
+        recordPaymentSync(debtorId, amountCents, affectsBalance) != null
+
+    suspend fun recordPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Long? {
+        val paymentId = debtorRepository.recordDebtPayment(debtorId, amountCents, affectsBalance)
         val debtor = debtorRepository.getDebtorById(debtorId)
         if (debtor?.isPaid == true) {
             debtReminderScheduler.cancel(debtorId)
@@ -380,13 +382,26 @@ class DebtorsViewModel(
                 _pendingCalendarClose.value = debtor
             }
         }
-        if (success && debtor != null) {
+        if (paymentId != null && debtor != null) {
             recordPaymentGamification(debtor)
             if (!debtor.isPaid) {
                 syncDebtToCalendar(debtor, force = true)
             }
         }
-        return success
+        return paymentId
+    }
+
+    suspend fun undoPaymentSync(debtorId: Long, paymentId: Long) {
+        debtorRepository.undoDebtPayment(debtorId, paymentId)
+        val debtor = debtorRepository.getDebtorById(debtorId) ?: return
+        if (debtor.isPaid) {
+            debtReminderScheduler.cancel(debtorId)
+        } else {
+            scheduleDebtReminders(debtor)
+            if (_celebrationDebtor.value?.id == debtorId) {
+                _celebrationDebtor.value = null
+            }
+        }
     }
 
     suspend fun applyMicroPaymentSync(): DebtAutopilotEngine.MicroPaymentPlan? {

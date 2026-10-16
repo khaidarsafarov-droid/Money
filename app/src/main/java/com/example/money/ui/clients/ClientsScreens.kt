@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -29,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,10 +53,14 @@ import com.example.money.messaging.SmsPermissions
 import com.example.money.settings.CurrencyRegion
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.QuickPaymentSheet
+import com.example.money.ui.debtors.DebtorsViewModel
+import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,15 +69,36 @@ fun ClientListScreen(
     onOpenClient: (Long) -> Unit,
     onCreateClient: () -> Unit,
 ) {
-    val app = LocalContext.current.applicationContext as MoneyApplication
+    val context = LocalContext.current
+    val app = context.applicationContext as MoneyApplication
     val viewModel: ClientsViewModel = viewModel(
         factory = ClientsViewModel.factory(app.clientRepository, app.debtorRepository),
+    )
+    val debtorsViewModel: DebtorsViewModel = viewModel(
+        factory = DebtorsViewModel.Factory(
+            app.debtorRepository,
+            app.debtReminderScheduler,
+            app.preferencesStore,
+            app.debtCalendarSyncService,
+            app.personalDebtMessageScheduler,
+        ),
     )
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val sort by viewModel.clientSort.collectAsStateWithLifecycle()
+    val currencyRegion by app.preferencesStore.currencyRegion.collectAsStateWithLifecycle(CurrencyRegion.US)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var quickClientId by remember { mutableStateOf<Long?>(null) }
+    val clientDebts by (
+        quickClientId?.let(viewModel::observeDebts) ?: flowOf(emptyList())
+        ).collectAsStateWithLifecycle(emptyList())
+    val quickDebt = clientDebts
+        .filter { !it.isPaid && it.remainingAmountCents > 0L }
+        .maxByOrNull { it.remainingAmountCents }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.clients_title)) },
@@ -120,16 +150,54 @@ fun ClientListScreen(
             )
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(clients, key = { it.id }) { client ->
-                    ClientRow(client = client, onClick = { onOpenClient(client.id) })
+                    ClientRow(
+                        client = client,
+                        onClick = { onOpenClient(client.id) },
+                        onQuickPayment = if (client.debtCents > 0L) {
+                            { quickClientId = client.id }
+                        } else {
+                            null
+                        },
+                    )
                 }
             }
             MoneyButton(text = stringResource(R.string.clients_add), onClick = onCreateClient)
         }
     }
+    val paymentSavedMessage = stringResource(R.string.msg_payment_saved)
+    val undoLabel = stringResource(R.string.action_undo)
+    if (quickDebt != null) {
+        QuickPaymentSheet(
+            remainingCents = quickDebt.remainingAmountCents,
+            currencyRegion = currencyRegion,
+            onDismiss = { quickClientId = null },
+            onSave = { cents ->
+                val debtorId = quickDebt.id
+                scope.launch {
+                    val paymentId = debtorsViewModel.recordPaymentSync(debtorId, cents, false)
+                    quickClientId = null
+                    if (paymentId != null) {
+                        vibrateShort(context)
+                        val result = snackbarHostState.showSnackbar(
+                            message = paymentSavedMessage,
+                            actionLabel = undoLabel,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            debtorsViewModel.undoPaymentSync(debtorId, paymentId)
+                        }
+                    }
+                }
+            },
+        )
+    }
 }
 
 @Composable
-private fun ClientRow(client: Client, onClick: () -> Unit) {
+private fun ClientRow(
+    client: Client,
+    onClick: () -> Unit,
+    onQuickPayment: (() -> Unit)?,
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -138,6 +206,14 @@ private fun ClientRow(client: Client, onClick: () -> Unit) {
                     Text(client.company, style = MaterialTheme.typography.bodyMedium)
                 }
                 Text(Formatters.currencyFromCents(client.debtCents))
+            }
+        }
+        if (onQuickPayment != null) {
+            TextButton(
+                onClick = onQuickPayment,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) {
+                Text(stringResource(R.string.quick_payment_add))
             }
         }
     }

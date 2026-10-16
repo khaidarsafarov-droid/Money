@@ -876,6 +876,11 @@
     <string name="notification_confirm_paid_body">Отметить долг «%1$s» оплаченным? Нужно подтверждение устройства.</string>
     <string name="debt_notification_personal">Напоминания о личных долгах</string>
     <string name="debt_notification_clients">Напоминания по клиентам</string>
+    <string name="quick_payment_add">+ Платёж</string>
+    <string name="quick_payment_title">Платёж</string>
+    <string name="quick_payment_remainder">Весь остаток</string>
+    <string name="msg_payment_saved">Платёж сохранён</string>
+    <string name="action_undo">Отменить</string>
     <plurals name="client_debts_count">
         <item quantity="one">%d долг</item>
         <item quantity="few">%d долга</item>

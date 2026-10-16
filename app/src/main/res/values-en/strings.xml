@@ -851,6 +851,11 @@
     <string name="notification_confirm_paid_body">Mark “%1$s” as paid? Device confirmation is required.</string>
     <string name="debt_notification_personal">Reminders for personal debts</string>
     <string name="debt_notification_clients">Reminders for clients</string>
+    <string name="quick_payment_add">+ Payment</string>
+    <string name="quick_payment_title">Payment</string>
+    <string name="quick_payment_remainder">Entire remainder</string>
+    <string name="msg_payment_saved">Payment saved</string>
+    <string name="action_undo">Undo</string>
     <plurals name="client_debts_count">
         <item quantity="one">%d debt</item>
         <item quantity="other">%d debts</item>

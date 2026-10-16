@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,6 +40,7 @@ fun HomeDetailPane(
     onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
+    onQuickPayment: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit = { _, _ -> },
     onMarkDebtPaid: (Debtor) -> Unit = {},
     hideAmounts: Boolean = false,
@@ -106,6 +108,7 @@ fun HomeDetailPane(
                     debtor = selection.debtor,
                     onRemind = { onRemindDebtor(selection.debtor) },
                     onAddPayment = { onAddDebtPayment(selection.debtor) },
+                    onQuickPayment = { onQuickPayment(selection.debtor) },
                     onAccelerate = { onAccelerateDebtPayment(selection.debtor, accelerateCents) },
                     onMarkPaid = if (!selection.debtor.isPaid) {
                         { onMarkDebtPaid(selection.debtor) }
@@ -152,6 +155,7 @@ fun HomeListCompactRow(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onQuickPayment: (() -> Unit)? = null,
 ) {
     val containerColor = if (selected) {
         MaterialTheme.colorScheme.primaryContainer
@@ -171,6 +175,14 @@ fun HomeListCompactRow(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (onQuickPayment != null) {
+                androidx.compose.material3.TextButton(
+                    onClick = onQuickPayment,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
+                    Text(stringResource(R.string.quick_payment_add))
+                }
+            }
         }
     }
 }
