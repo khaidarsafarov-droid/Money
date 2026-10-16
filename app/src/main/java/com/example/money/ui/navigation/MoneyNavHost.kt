@@ -7,6 +7,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -96,18 +98,22 @@ fun MoneyNavHost(
         }
     }
 
-    val onboardingSaved = OnboardingPreferences.isCompleted(context)
-    LaunchedEffect(storedProfile?.onboardingCompleted) {
-        if (storedProfile?.onboardingCompleted == true) {
-            OnboardingPreferences.markCompleted(context)
-        }
-    }
-    if (storedProfile == null && !onboardingSaved) {
-        Box(modifier.fillMaxSize().background(CreamBackground))
+    val legacyOnboardingCompleted = remember { OnboardingPreferences.isCompleted(context) }
+    val profile = storedProfile
+    if (profile == null) {
+        StartupLoading(modifier)
         return
     }
-    val onboardingCompleted = onboardingSaved || storedProfile?.onboardingCompleted == true
-    if (onboardingSession.active || !onboardingCompleted) {
+    if (!profile.onboardingCompleted && legacyOnboardingCompleted) {
+        LaunchedEffect(legacyOnboardingCompleted) {
+            app.preferencesStore.updateUserProfile { current ->
+                current.copy(onboardingCompleted = true)
+            }
+        }
+        StartupLoading(modifier)
+        return
+    }
+    if (onboardingSession.active || !profile.onboardingCompleted) {
         SideEffect { onboardingSession.active = true }
         OnboardingScreen(
             onComplete = { onboardingSession.active = false },
@@ -217,5 +223,15 @@ fun MoneyNavHost(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun StartupLoading(modifier: Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize().background(CreamBackground),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
     }
 }
