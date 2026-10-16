@@ -93,6 +93,7 @@ object MoneyPreferenceKeys {
     val VOICE_GENDER = stringPreferencesKey("voice_gender")
     val VOICE_FORCE_SILENT = booleanPreferencesKey("voice_force_silent")
     val VOICE_SETTINGS_SYNC_AT = longPreferencesKey("voice_settings_sync_at")
+    val PEER_SYNC_ENABLED = booleanPreferencesKey("peer_sync_enabled")
 
     val PRIVACY_HIDE_AMOUNTS = booleanPreferencesKey("privacy_hide_amounts")
     val PRIVACY_HIDE_ON_WIDGET = booleanPreferencesKey("privacy_hide_on_widget")
@@ -488,6 +489,17 @@ class MoneyPreferencesStore(
     suspend fun markAppOpenedToday(isoDate: String) {
         context.moneyPreferencesDataStore.edit { prefs ->
             prefs[MoneyPreferenceKeys.LAST_APP_OPEN_DATE] = isoDate
+        }
+    }
+
+    val peerSyncEnabled: Flow<Boolean> =
+        context.moneyPreferencesDataStore.data.map { prefs ->
+            prefs[MoneyPreferenceKeys.PEER_SYNC_ENABLED] == true
+        }
+
+    suspend fun setPeerSyncEnabled(enabled: Boolean) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs[MoneyPreferenceKeys.PEER_SYNC_ENABLED] = enabled
         }
     }
 

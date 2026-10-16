@@ -36,6 +36,7 @@ import com.example.money.ui.settings.BackupSettingsScreen
 import com.example.money.ui.settings.CalendarSettingsScreen
 import com.example.money.ui.settings.DebtNotificationSettingsScreen
 import com.example.money.ui.settings.PrivacySettingsScreen
+import com.example.money.ui.settings.SyncPairingScreen
 import com.example.money.ui.settings.VoiceSettingsScreen
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -148,6 +149,7 @@ fun MoneyNavHost(
                 onOpenCalendarSettings = { navController.navigate(AppRoutes.CALENDAR_SETTINGS) },
                 onOpenDebtNotificationSettings = { navController.navigate(AppRoutes.DEBT_NOTIFICATION_SETTINGS) },
                 onOpenBackupSettings = { navController.navigate(AppRoutes.BACKUP_SETTINGS) },
+                onOpenSyncSettings = { navController.navigate(AppRoutes.SYNC_SETTINGS) },
                 onOpenGoalHub = { navController.navigate(AppRoutes.GOAL_HUB) },
             )
         }
@@ -181,6 +183,9 @@ fun MoneyNavHost(
         }
         composable(AppRoutes.BACKUP_SETTINGS) {
             BackupSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.SYNC_SETTINGS) {
+            SyncPairingScreen(onBack = { navController.popBackStack() })
         }
     }
 }

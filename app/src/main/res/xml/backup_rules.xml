@@ -5,4 +5,5 @@
     <exclude domain="database" path="money.db-wal" />
     <exclude domain="file" path="datastore/" />
     <exclude domain="sharedpref" path="backup_credentials.xml" />
+    <exclude domain="file" path="sync-peer-keys.bin" />
 </full-backup-content>

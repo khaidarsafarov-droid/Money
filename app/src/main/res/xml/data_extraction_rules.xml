@@ -4,10 +4,12 @@
         <exclude domain="database" path="." />
         <exclude domain="file" path="datastore/" />
         <exclude domain="sharedpref" path="backup_credentials.xml" />
+        <exclude domain="file" path="sync-peer-keys.bin" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="database" path="." />
         <exclude domain="file" path="datastore/" />
         <exclude domain="sharedpref" path="backup_credentials.xml" />
+        <exclude domain="file" path="sync-peer-keys.bin" />
     </device-transfer>
 </data-extraction-rules>

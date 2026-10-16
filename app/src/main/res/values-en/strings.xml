@@ -796,4 +796,13 @@
     <string name="backup_error_local_reset">Not all local data could be deleted.</string>
     <string name="backup_message_local_data_deleted">All local data was deleted.</string>
     <string name="backup_message_local_data_deleted_with_warnings">Local data was deleted, but some system cleanup could not finish.</string>
+    <string name="sync_settings_title">Sync</string>
+    <string name="sync_settings_hint">The server starts only while this is on. Devices agree a key with a QR code or PIN, then encrypt every session.</string>
+    <string name="sync_show_qr">Show QR and PIN</string>
+    <string name="sync_pin_label">PIN: %1$s</string>
+    <string name="sync_qr_content_description">Pairing QR code</string>
+    <string name="sync_pair_input_label">Other device QR text or PIN</string>
+    <string name="sync_pair_action">Pair device</string>
+    <string name="sync_pair_saved">Code accepted. Sync starts when that device is on the network.</string>
+    <string name="sync_pair_rejected">That code was not recognized.</string>
 </resources>

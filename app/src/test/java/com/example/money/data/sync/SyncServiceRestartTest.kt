@@ -31,12 +31,19 @@ class SyncServiceRestartTest {
 
     @Test
     fun stopThenStartThenSyncUsesAFreshClient() = runBlocking {
+        val sharedKey = ByteArray(32) { index -> index.toByte() }
         val remote = snapshot(deviceId = "peer-device", goalName = "From peer")
+        val hostVault = MemorySyncKeyVault().apply {
+            save(PairedPeer("local-device", sharedKey, SyncPeerRole.HOST))
+        }
         val peer = embeddedServer(CIO, host = "127.0.0.1", port = 0) {
             install(WebSockets)
             routing {
                 webSocket("/sync") {
-                    SyncPeerSession.runAsAcceptor(
+                    SyncSecureChannel.runAcceptor(
+                        localDeviceId = "peer-device",
+                        vault = hostVault,
+                        hostOffer = null,
                         local = remote,
                         encode = FinanceSnapshotCodec::encode,
                         decode = FinanceSnapshotCodec::decode,
@@ -62,6 +69,9 @@ class SyncServiceRestartTest {
             applySnapshot = { applied += it },
             syncQueueDao = FakeSyncQueueDao(),
             scope = scope,
+            keyVault = MemorySyncKeyVault().apply {
+                save(PairedPeer("peer-device", sharedKey, SyncPeerRole.JOINER))
+            },
             httpClients = SyncHttpClients {
                 clientsCreated += 1
                 SyncHttpClients.create()
@@ -73,7 +83,7 @@ class SyncServiceRestartTest {
             service.start()
             service.stop()
             service.start()
-            service.syncWith("127.0.0.1", port)
+            service.syncWith("127.0.0.1", port, "peer-device")
             assertEquals(2, clientsCreated)
             assertEquals("From peer", applied.single().goals.single { it.name == "From peer" }.name)
         } finally {

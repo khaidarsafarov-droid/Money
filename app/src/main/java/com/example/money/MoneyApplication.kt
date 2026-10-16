@@ -34,6 +34,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -116,10 +117,18 @@ class MoneyApplication : Application() {
 
     private fun startPeerSync() {
         applicationScope.launch {
-            try {
-                syncService.start()
-            } catch (exception: Exception) {
-                Log.w(TAG, "Failed to start P2P sync", exception)
+            preferencesStore.peerSyncEnabled.collect { enabled ->
+                try {
+                    if (enabled) {
+                        syncService.start()
+                    } else {
+                        syncService.stop()
+                    }
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    Log.w(TAG, "Failed to update P2P sync", exception)
+                }
             }
         }
     }

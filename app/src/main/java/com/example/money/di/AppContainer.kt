@@ -38,6 +38,7 @@ import com.example.money.data.repository.DebtorRepositoryImpl
 import com.example.money.data.repository.GoalRepositoryImpl
 import com.example.money.data.repository.NoteRepositoryImpl
 import com.example.money.data.repository.LuckDiaryRepositoryImpl
+import com.example.money.data.sync.AndroidKeystoreSyncKeyVault
 import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.FinanceSnapshotApplier
 import com.example.money.data.sync.FinanceSnapshotRepositoryImpl
@@ -107,6 +108,8 @@ class AppContainer(
             applySnapshot = { snapshot -> financeSnapshotApplier.apply(snapshot) },
             syncQueueDao = database.syncQueueDao(),
             scope = applicationScope,
+            keyVault = AndroidKeystoreSyncKeyVault(application),
+            syncEnabled = { preferencesStore.peerSyncEnabled.first() },
             discoveryFactory = PeerDiscoveryFactory { serviceName, onPeerResolved, onPeerLost ->
                 NsdPeerDiscovery(
                     context = application,

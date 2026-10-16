@@ -34,6 +34,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
@@ -183,6 +184,7 @@ internal fun PhoneHomeLayout(
     onOpenCalendarSettings: () -> Unit,
     onOpenDebtNotificationSettings: () -> Unit,
     onOpenBackupSettings: () -> Unit,
+    onOpenSyncSettings: () -> Unit,
     onOpenIncomeIdeas: () -> Unit,
     onOpenCurrency: () -> Unit = {},
     notes: List<FinanceNote> = emptyList(),
@@ -311,6 +313,16 @@ internal fun PhoneHomeLayout(
                             icon = Icons.Outlined.Translate,
                             onClick = {
                                 onOpenAppLanguage()
+                                scope.launch { drawerState.close() }
+                            },
+                        )
+                    }
+                    item {
+                        SettingsDrawerItem(
+                            label = stringResource(R.string.sync_settings_title),
+                            icon = Icons.Outlined.Sync,
+                            onClick = {
+                                onOpenSyncSettings()
                                 scope.launch { drawerState.close() }
                             },
                         )

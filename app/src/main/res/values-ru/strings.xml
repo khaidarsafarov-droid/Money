@@ -463,4 +463,13 @@
     <string name="backup_error_local_reset">Не удалось удалить все локальные данные.</string>
     <string name="backup_message_local_data_deleted">Все локальные данные удалены.</string>
     <string name="backup_message_local_data_deleted_with_warnings">Локальные данные удалены, но часть системной очистки не завершена.</string>
+    <string name="sync_settings_title">Синхронизация</string>
+    <string name="sync_settings_hint">Сервер включается только здесь. Устройства согласуют ключ по QR или PIN и дальше шифруют обмен.</string>
+    <string name="sync_show_qr">Показать QR и PIN</string>
+    <string name="sync_pin_label">PIN: %1$s</string>
+    <string name="sync_qr_content_description">QR-код привязки</string>
+    <string name="sync_pair_input_label">QR-текст или PIN другого устройства</string>
+    <string name="sync_pair_action">Привязать устройство</string>
+    <string name="sync_pair_saved">Код принят. Обмен начнётся, когда устройство будет в сети.</string>
+    <string name="sync_pair_rejected">Код не распознан.</string>
 </resources>

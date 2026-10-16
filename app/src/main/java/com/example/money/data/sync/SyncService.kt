@@ -34,6 +34,8 @@ class SyncService(
     private val applySnapshot: suspend (FinanceSnapshot) -> Unit,
     private val syncQueueDao: SyncQueueDao,
     private val scope: CoroutineScope,
+    private val keyVault: SyncKeyVault,
+    private val syncEnabled: suspend () -> Boolean = { true },
     private val httpClients: SyncHttpClients = SyncHttpClients(),
     private val discoveryFactory: PeerDiscoveryFactory,
 ) {
@@ -45,11 +47,35 @@ class SyncService(
     private var localDeviceId: String = ""
     private var localServiceName: String = ""
     private val discoveredPeers = ConcurrentHashMap<String, NsdPeerDiscovery.PeerEndpoint>()
+    private var hostOffer: PairingOffer? = null
+    private var joinerAttempt: OutgoingPairing? = null
 
     private val _connectionState = MutableStateFlow(SyncConnectionState())
     val connectionState: StateFlow<SyncConnectionState> = _connectionState.asStateFlow()
 
+    fun createPairingOffer(): PairingOffer {
+        val offer = SyncPairing.createOffer()
+        hostOffer = offer
+        joinerAttempt = null
+        return offer
+    }
+
+    fun pairWithQr(payload: String): Boolean {
+        val pairing = SyncPairing.parseQr(payload) ?: return false
+        joinerAttempt = pairing
+        hostOffer = null
+        return true
+    }
+
+    fun pairWithPin(pin: String): Boolean {
+        val pairing = SyncPairing.fromPin(pin) ?: return false
+        joinerAttempt = pairing
+        hostOffer = null
+        return true
+    }
+
     suspend fun start() {
+        if (!syncEnabled()) return
         if (server != null) return
         httpClients.open()
         localDeviceId = readDeviceId()
@@ -146,21 +172,27 @@ class SyncService(
 
     private suspend fun trySyncWithPeer(peer: NsdPeerDiscovery.PeerEndpoint) {
         val peerDeviceId = NsdPeerDiscovery.peerDeviceId(peer.serviceName) ?: return
-        if (peerDeviceId <= localDeviceId) return
-        runInitiatorSession(peer.host, peer.port)
+        val paired = keyVault.find(peerDeviceId)
+        if (joinerAttempt == null && paired?.role != SyncPeerRole.JOINER) return
+        runInitiatorSession(peer.host, peer.port, peerDeviceId)
     }
 
-    internal suspend fun syncWith(host: String, port: Int) {
-        runInitiatorSession(host, port)
+    internal suspend fun syncWith(host: String, port: Int, peerId: String) {
+        runInitiatorSession(host, port, peerId)
     }
 
-    private suspend fun runInitiatorSession(host: String, port: Int) {
+    private suspend fun runInitiatorSession(host: String, port: Int, peerId: String) {
         SyncWriteGuard.withWriteLock {
             updateStatus(SyncStatus.Syncing)
             try {
                 httpClients.require().webSocket(host = host, port = port, path = "/sync") {
                     val local = financeSnapshotRepository.buildSnapshot()
-                    val merged = SyncPeerSession.runAsInitiator(
+                    val pairing = joinerAttempt
+                    val merged = SyncSecureChannel.runInitiator(
+                        localDeviceId = localDeviceId,
+                        expectedPeerId = peerId,
+                        vault = keyVault,
+                        pairing = pairing,
                         local = local,
                         encode = financeSnapshotRepository::encodeSnapshot,
                         decode = financeSnapshotRepository::decodeSnapshot,
@@ -172,6 +204,7 @@ class SyncService(
                             }
                         },
                     )
+                    if (pairing != null) joinerAttempt = null
                     SyncWriteGuard.runWithoutRecording {
                         applySnapshot(merged)
                     }
@@ -193,18 +226,22 @@ class SyncService(
             updateStatus(SyncStatus.Syncing)
             try {
                 val local = financeSnapshotRepository.buildSnapshot()
-                val merged = SyncPeerSession.runAsAcceptor(
+                val offer = hostOffer
+                val merged = SyncSecureChannel.runAcceptor(
+                    localDeviceId = localDeviceId,
+                    vault = keyVault,
+                    hostOffer = offer,
                     local = local,
                     encode = financeSnapshotRepository::encodeSnapshot,
                     decode = financeSnapshotRepository::decodeSnapshot,
                     sendText = sendText,
                     receiveText = receiveText,
                 )
+                if (offer != null) hostOffer = null
                 SyncWriteGuard.runWithoutRecording {
                     applySnapshot(merged)
                 }
                 syncQueueDao.clearAll()
-                sendText(SyncPeerSession.ACK)
                 markSynced()
             } catch (exception: Exception) {
                 Log.w(TAG, "Acceptor sync failed", exception)

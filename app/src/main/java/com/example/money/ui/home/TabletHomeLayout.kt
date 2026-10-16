@@ -125,6 +125,7 @@ fun TabletHomeLayout(
     onOpenCalendarSettings: () -> Unit = {},
     onOpenDebtNotificationSettings: () -> Unit = {},
     onOpenBackupSettings: () -> Unit = {},
+    onOpenSyncSettings: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenIncomeIdeas: () -> Unit = {},
     onOpenCurrency: () -> Unit = {},
@@ -268,6 +269,13 @@ fun TabletHomeLayout(
                         onClick = {
                             showSettingsMenu = false
                             onOpenAppLanguage()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.sync_settings_title)) },
+                        onClick = {
+                            showSettingsMenu = false
+                            onOpenSyncSettings()
                         },
                     )
                     DropdownMenuItem(
