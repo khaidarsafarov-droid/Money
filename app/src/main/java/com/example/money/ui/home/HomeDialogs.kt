@@ -315,6 +315,7 @@ internal fun HomeDialogs(
                                 when (result) {
                                     BudgetActionResult.Success -> R.string.msg_goal_transfer_added
                                     BudgetActionResult.InsufficientFunds -> R.string.msg_insufficient_funds
+                                    BudgetActionResult.Error -> R.string.msg_save_failed
                                 },
                             ),
                         )
@@ -357,6 +358,7 @@ internal fun HomeDialogs(
                                         } else {
                                             R.string.msg_insufficient_funds
                                         }
+                                    BudgetActionResult.Error -> R.string.msg_save_failed
                                 },
                             ),
                         )
@@ -414,6 +416,12 @@ internal fun HomeDialogs(
                                 progressLogGoal = null
                                 scope.launch {
                                     showMessage(context.getString(R.string.msg_insufficient_funds))
+                                }
+                            }
+                            BudgetActionResult.Error -> {
+                                progressLogGoal = null
+                                scope.launch {
+                                    showMessage(context.getString(R.string.msg_save_failed))
                                 }
                             }
                         }

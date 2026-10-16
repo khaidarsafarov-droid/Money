@@ -11,6 +11,7 @@ import com.example.money.domain.repository.BudgetRepository
 import com.example.money.domain.util.BudgetPeriod
 import com.example.money.domain.util.BudgetPeriods
 import java.time.Instant
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 sealed class BudgetActionResult {
     data object Success : BudgetActionResult()
     data object InsufficientFunds : BudgetActionResult()
+    data object Error : BudgetActionResult()
 }
 
 class BudgetViewModel(
@@ -64,11 +66,11 @@ class BudgetViewModel(
         )
 
     fun addDeposit(amountCents: Long, date: Long, onResult: (BudgetActionResult) -> Unit = {}) {
-        viewModelScope.launch {
+        runBudgetAction(onResult) {
             budgetRepository.addDeposit(
                 Transfer(amountCents = amountCents, date = date),
             )
-            onResult(BudgetActionResult.Success)
+            BudgetActionResult.Success
         }
     }
 
@@ -78,7 +80,7 @@ class BudgetViewModel(
         date: Long,
         onResult: (BudgetActionResult) -> Unit = {},
     ) {
-        viewModelScope.launch {
+        runBudgetAction(onResult) {
             val added = budgetRepository.addGoalTransferIfAffordable(
                 Transfer(
                     amountCents = amountCents,
@@ -86,7 +88,7 @@ class BudgetViewModel(
                     goalId = goalId,
                 ),
             )
-            onResult(if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds)
+            if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds
         }
     }
 
@@ -102,7 +104,7 @@ class BudgetViewModel(
         goalId: Long? = null,
         onResult: (BudgetActionResult) -> Unit = {},
     ) {
-        viewModelScope.launch {
+        runBudgetAction(onResult) {
             val added = budgetRepository.addExpenseIfAffordable(
                 Expense(
                     amountCents = amountCents,
@@ -112,7 +114,23 @@ class BudgetViewModel(
                     goalId = goalId,
                 ),
             )
-            onResult(if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds)
+            if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds
+        }
+    }
+
+    private fun runBudgetAction(
+        onResult: (BudgetActionResult) -> Unit,
+        block: suspend () -> BudgetActionResult,
+    ) {
+        viewModelScope.launch {
+            val result = try {
+                block()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                BudgetActionResult.Error
+            }
+            onResult(result)
         }
     }
 

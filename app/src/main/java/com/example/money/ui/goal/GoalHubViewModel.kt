@@ -208,40 +208,47 @@ class GoalHubViewModel(
         debtName: String? = null,
     ) {
         viewModelScope.launch {
-            val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)
-            val challenge = GoalChallengeEngines.createChallenge(templateId, debtId, debtName)
-            val encoded = GoalChallengeEngines.encodeChallenges(current + challenge)
-            preferencesStore.updateGoalPsychologyProfile { it.copy(activeChallengesJson = encoded) }
+            preferencesStore.updateGoalPsychologyProfile { currentProfile ->
+                val current = GoalChallengeEngines.parseChallenges(currentProfile.activeChallengesJson)
+                val challenge = GoalChallengeEngines.createChallenge(templateId, debtId, debtName)
+                currentProfile.copy(
+                    activeChallengesJson = GoalChallengeEngines.encodeChallenges(current + challenge),
+                )
+            }
         }
     }
 
     fun incrementChallengeDay(challengeId: String) {
         viewModelScope.launch {
-            val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)
-            val updated = current.map { challenge ->
-                if (challenge.id != challengeId || challenge.completed) {
-                    challenge
-                } else {
-                    val next = challenge.progressDays + 1
-                    val target = challenge.targetDays
-                    challenge.copy(
-                        progressDays = next,
-                        completed = target != null && next >= target,
-                    )
+            preferencesStore.updateGoalPsychologyProfile { currentProfile ->
+                val current = GoalChallengeEngines.parseChallenges(currentProfile.activeChallengesJson)
+                val updated = current.map { challenge ->
+                    if (challenge.id != challengeId || challenge.completed) {
+                        challenge
+                    } else {
+                        val next = challenge.progressDays + 1
+                        val target = challenge.targetDays
+                        challenge.copy(
+                            progressDays = next,
+                            completed = target != null && next >= target,
+                        )
+                    }
                 }
-            }
-            preferencesStore.updateGoalPsychologyProfile {
-                it.copy(activeChallengesJson = GoalChallengeEngines.encodeChallenges(updated))
+                currentProfile.copy(
+                    activeChallengesJson = GoalChallengeEngines.encodeChallenges(updated),
+                )
             }
         }
     }
 
     fun removeChallenge(challengeId: String) {
         viewModelScope.launch {
-            val current = GoalChallengeEngines.parseChallenges(profile.value.activeChallengesJson)
-            val updated = current.filterNot { it.id == challengeId }
-            preferencesStore.updateGoalPsychologyProfile {
-                it.copy(activeChallengesJson = GoalChallengeEngines.encodeChallenges(updated))
+            preferencesStore.updateGoalPsychologyProfile { currentProfile ->
+                val current = GoalChallengeEngines.parseChallenges(currentProfile.activeChallengesJson)
+                val updated = current.filterNot { it.id == challengeId }
+                currentProfile.copy(
+                    activeChallengesJson = GoalChallengeEngines.encodeChallenges(updated),
+                )
             }
         }
     }
@@ -278,10 +285,10 @@ class GoalHubViewModel(
 
     fun updateChecklist(transform: (WeeklyChecklistUiState) -> WeeklyChecklistUiState) {
         viewModelScope.launch {
-            val current = decodeChecklist(profile.value.weeklyChecklistJson)
-            val updated = transform(current)
-            preferencesStore.updateGoalPsychologyProfile {
-                it.copy(weeklyChecklistJson = encodeChecklist(updated))
+            preferencesStore.updateGoalPsychologyProfile { currentProfile ->
+                val current = decodeChecklist(currentProfile.weeklyChecklistJson)
+                val updated = transform(current)
+                currentProfile.copy(weeklyChecklistJson = encodeChecklist(updated))
             }
         }
     }

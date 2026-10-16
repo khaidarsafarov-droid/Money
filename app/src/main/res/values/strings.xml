@@ -256,6 +256,7 @@
     <string name="msg_transfer_added">Перевод сохранён и учтён в балансе.</string>
     <string name="msg_expense_added">Расход сохранён и учтён в балансе.</string>
     <string name="msg_insufficient_funds">Недостаточно средств на общем остатке.</string>
+    <string name="msg_save_failed">Не удалось сохранить операцию.</string>
     <string name="msg_goal_insufficient">Недостаточно средств на цели.</string>
     <string name="msg_goal_expense_added">Расход из цели сохранён.</string>
     <string name="msg_goal_transfer_added">Перевод в цель выполнен.</string>

@@ -26,6 +26,7 @@ import com.example.money.settings.GamificationState
 import com.example.money.settings.PersonalBranchSettings
 import com.example.money.settings.PrivacySettings
 import com.example.money.settings.UserProfile
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +35,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -115,10 +118,18 @@ class DebtorsViewModel(
         preferencesStore.updateWeeklyCheckInSettings(transform)
     }
 
+    private val _debtorsLoadFailed = MutableStateFlow(false)
+    val debtorsLoadFailed: StateFlow<Boolean> = _debtorsLoadFailed.asStateFlow()
+
     private val allDebtors = debtorRepository.getAllDebtors()
+        .retryWhen { cause, attempt ->
+            if (cause is CancellationException) false else attempt < 3
+        }
+        .onEach { _debtorsLoadFailed.value = false }
         .catch { exception ->
+            if (exception is CancellationException) throw exception
             Log.e(TAG, "Failed to load debtors", exception)
-            emit(emptyList())
+            _debtorsLoadFailed.value = true
         }
 
     val allDebtorsList: StateFlow<List<Debtor>> = allDebtors.stateIn(
