@@ -21,6 +21,7 @@ import com.example.money.domain.model.GoalAction
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.ui.components.EmptyStateMessage
+import com.example.money.ui.components.FinanceListItem
 import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive

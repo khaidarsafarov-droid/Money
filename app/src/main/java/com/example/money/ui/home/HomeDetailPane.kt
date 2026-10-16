@@ -25,6 +25,7 @@ import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.ui.components.DebtorListItem
+import com.example.money.ui.components.GlobalBalanceHeader
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.debtors.DebtContactActions
 @Composable
