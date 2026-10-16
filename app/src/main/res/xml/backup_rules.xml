@@ -6,4 +6,5 @@
     <exclude domain="file" path="datastore/" />
     <exclude domain="sharedpref" path="backup_credentials.xml" />
     <exclude domain="file" path="sync-peer-keys.bin" />
+    <exclude domain="file" path="room-passphrase.bin" />
 </full-backup-content>

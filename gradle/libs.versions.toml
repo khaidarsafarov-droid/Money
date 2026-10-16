@@ -21,6 +21,7 @@ appcompat = "1.7.0"
 playServicesAuth = "21.6.0"
 json = "20260719"
 zxing = "3.5.3"
+sqlcipher = "4.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -60,6 +61,7 @@ ktor-client-websockets = { group = "io.ktor", name = "ktor-client-websockets", v
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 json = { group = "org.json", name = "json", version.ref = "json" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+sqlcipher = { group = "net.zetetic", name = "sqlcipher-android", version.ref = "sqlcipher" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

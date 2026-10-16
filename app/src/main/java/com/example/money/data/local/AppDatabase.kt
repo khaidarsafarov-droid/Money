@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import com.example.money.data.local.dao.FinanceNoteDao
 import com.example.money.data.local.dao.GoalActionDao
 import com.example.money.data.local.dao.DebtorDao
@@ -91,11 +95,19 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
+                val appContext = context.applicationContext
+                val passphrase = DatabasePassphrase(appContext).getOrCreate()
+                checkpointPlaintextWal(appContext)
+                val databaseFile = appContext.getDatabasePath(DATABASE_NAME)
+                SqlCipherPlaintextMigrator.migrate(databaseFile) { plainCopy, encryptedFile ->
+                    SqlCipherExporter.export(plainCopy, encryptedFile, passphrase)
+                }
                 instance ?: Room.databaseBuilder(
-                    context.applicationContext,
+                    appContext,
                     AppDatabase::class.java,
                     DATABASE_NAME,
-                ).addMigrations(
+                ).openHelperFactory(SupportOpenHelperFactory(passphrase))
+                    .addMigrations(
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
                     MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
                     MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15,
@@ -112,6 +124,37 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_25_26,
                     MIGRATION_26_27,
                 ).build().also { instance = it }
+            }
+        }
+
+        private fun checkpointPlaintextWal(context: Context) {
+            val databaseFile = context.getDatabasePath(DATABASE_NAME)
+            if (!SqlCipherPlaintextMigrator.isPlainSqlite(databaseFile)) return
+            val version = SqlCipherPlaintextMigrator.userVersion(databaseFile).coerceAtLeast(1)
+            val helper = FrameworkSQLiteOpenHelperFactory().create(
+                SupportSQLiteOpenHelper.Configuration.builder(context)
+                    .name(DATABASE_NAME)
+                    .callback(
+                        object : SupportSQLiteOpenHelper.Callback(version) {
+                            override fun onCreate(db: SupportSQLiteDatabase) = Unit
+
+                            override fun onUpgrade(
+                                db: SupportSQLiteDatabase,
+                                oldVersion: Int,
+                                newVersion: Int,
+                            ) = Unit
+
+                            override fun onOpen(db: SupportSQLiteDatabase) {
+                                db.query("PRAGMA wal_checkpoint(FULL)").close()
+                            }
+                        },
+                    )
+                    .build(),
+            )
+            try {
+                helper.writableDatabase.close()
+            } finally {
+                helper.close()
             }
         }
     }

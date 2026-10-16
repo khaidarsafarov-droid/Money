@@ -103,6 +103,7 @@ dependencies {
     implementation(libs.ktor.client.websockets)
     implementation(libs.play.services.auth)
     implementation(libs.zxing.core)
+    implementation(libs.sqlcipher)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.json)
