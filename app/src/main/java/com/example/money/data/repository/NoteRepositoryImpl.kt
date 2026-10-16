@@ -59,6 +59,11 @@ class NoteRepositoryImpl(
                 mark = note.mark.name,
                 closed = note.closed,
                 updatedAt = System.currentTimeMillis(),
+                pinned = note.pinned,
+                archived = note.archived,
+                deletedAt = note.deletedAt,
+                linkedType = note.linkedType,
+                linkedSyncId = note.linkedSyncId,
             )
             noteDao.updateNote(updated)
             syncQueueRecorder.recordNote(updated)
@@ -137,6 +142,11 @@ private fun FinanceNoteEntity.toDomain() = FinanceNote(
     createdAt = createdAt,
     updatedAt = updatedAt,
     mode = com.example.money.settings.AppMode.fromStored(mode),
+    pinned = pinned,
+    archived = archived,
+    deletedAt = deletedAt,
+    linkedType = linkedType,
+    linkedSyncId = linkedSyncId,
 )
 
 private fun FinanceNoteLineEntity.toDomain() = FinanceNoteLine(

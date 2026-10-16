@@ -34,6 +34,11 @@ data class FinanceNote(
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
     val mode: com.example.money.settings.AppMode = com.example.money.settings.AppMode.PERSONAL,
+    val pinned: Boolean = false,
+    val archived: Boolean = false,
+    val deletedAt: Long? = null,
+    val linkedType: String? = null,
+    val linkedSyncId: String? = null,
 )
 
 data class FinanceNoteLine(

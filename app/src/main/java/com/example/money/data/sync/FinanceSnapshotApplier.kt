@@ -496,6 +496,11 @@ class FinanceSnapshotApplier(
                 updatedAt = note.syncUpdatedAt,
                 syncId = note.id,
                 mode = note.mode,
+                pinned = existing?.pinned ?: false,
+                archived = existing?.archived ?: false,
+                deletedAt = existing?.deletedAt,
+                linkedType = existing?.linkedType,
+                linkedSyncId = existing?.linkedSyncId,
             )
             if (existing == null) {
                 dao.insertNote(entity)

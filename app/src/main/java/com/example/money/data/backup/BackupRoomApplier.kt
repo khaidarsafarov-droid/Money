@@ -335,6 +335,7 @@ class BackupRoomApplier(
                         createdAt = note.createdAtEpochMillis,
                         updatedAt = note.updatedAtEpochMillis,
                         mode = note.mode,
+                        archived = note.closed,
                     ),
                 )
                 put(note.syncId, localId)
