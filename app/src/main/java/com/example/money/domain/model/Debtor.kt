@@ -1,5 +1,7 @@
 package com.example.money.domain.model
 
+import com.example.money.settings.AppMode
+
 data class Debtor(
     val id: Long = 0,
     val syncId: String = "",
@@ -23,6 +25,8 @@ data class Debtor(
     val contactPhotoUri: String? = null,
     val phone: String = "",
     val email: String = "",
+    val mode: AppMode = AppMode.PERSONAL,
+    val clientId: Long? = null,
 ) {
     val remainingAmountCents: Long
         get() = com.example.money.domain.util.MoneyMath.remainingCents(

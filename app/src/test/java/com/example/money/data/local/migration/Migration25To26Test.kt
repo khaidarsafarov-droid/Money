@@ -63,7 +63,7 @@ class Migration25To26Test {
                     TransferEntity(amountCents = 10L, date = 1L, isConfirmed = true),
                 )
             }
-            assertEquals(10_000L, database.transferDao().getDepositTotalOnce())
+            assertEquals(10_000L, database.transferDao().getDepositTotalOnce("PERSONAL"))
         } finally {
             database.close()
         }

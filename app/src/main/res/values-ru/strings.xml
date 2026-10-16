@@ -808,4 +808,42 @@
     <string name="notification_debt_auto_message_title">Напомнить %1$s</string>
     <string name="notification_debt_auto_message_body">Нажмите, чтобы отправить через %1$s — %2$s</string>
     <string name="notification_action_send_now">Отправить (%1$s)</string>
+    <string name="action_back">Назад</string>
+    <string name="mode_personal">Личный</string>
+    <string name="mode_professional">Профессиональный</string>
+    <string name="mode_personal_short">Личный</string>
+    <string name="mode_professional_short">Работа</string>
+    <string name="clients_title">Клиенты</string>
+    <string name="clients_search">Поиск по имени, компании, телефону или почте</string>
+    <string name="clients_sort_name">Имя</string>
+    <string name="clients_sort_debt">Сумма долга</string>
+    <string name="clients_sort_meeting">Последняя встреча</string>
+    <string name="clients_add">Новый клиент</string>
+    <string name="clients_edit">Изменить клиента</string>
+    <string name="clients_name">Имя</string>
+    <string name="clients_name_required">Введите имя</string>
+    <string name="clients_phone">Телефон</string>
+    <string name="clients_email">Эл. почта</string>
+    <string name="clients_company">Компания</string>
+    <string name="clients_note">Заметка</string>
+    <string name="clients_pick_contact">Выбрать из контактов</string>
+    <string name="clients_missing">Клиент не найден</string>
+    <string name="clients_debt_total">Итого: %1$s</string>
+    <string name="clients_mark_meeting">Отметить встречу</string>
+    <string name="clients_last_meeting">Последняя встреча: %1$s</string>
+    <string name="clients_new_debt_amount">Сумма нового долга</string>
+    <string name="clients_add_debt">Добавить долг</string>
+    <string name="clients_debt_amount_invalid">Сумма должна быть больше нуля</string>
+    <plurals name="clients_count">
+        <item quantity="one">%d клиент</item>
+        <item quantity="few">%d клиента</item>
+        <item quantity="many">%d клиентов</item>
+        <item quantity="other">%d клиента</item>
+    </plurals>
+    <plurals name="client_debts_count">
+        <item quantity="one">%d долг</item>
+        <item quantity="few">%d долга</item>
+        <item quantity="many">%d долгов</item>
+        <item quantity="other">%d долга</item>
+    </plurals>
 </resources>

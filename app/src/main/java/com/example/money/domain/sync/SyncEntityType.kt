@@ -8,6 +8,7 @@ enum class SyncEntityType {
     TRANSACTION,
     NOTE,
     NOTE_LINE,
+    CLIENT,
     VOICE_SETTINGS,
     FULL_SNAPSHOT,
 }

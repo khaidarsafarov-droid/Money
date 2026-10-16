@@ -15,8 +15,12 @@ import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
 import com.example.money.domain.util.GlobalFinanceEngine
+import com.example.money.settings.AppMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class BudgetRepositoryImpl(
@@ -25,19 +29,26 @@ class BudgetRepositoryImpl(
     private val expenseDao: ExpenseDao,
     private val savingsGoalDao: SavingsGoalDao,
     private val syncQueueRecorder: SyncQueueRecorder,
+    private val appMode: Flow<AppMode>,
 ) : BudgetRepository {
 
+    private fun <T> scoped(query: (String) -> Flow<T>): Flow<T> =
+        appMode.map { it.name }.distinctUntilChanged().flatMapLatest(query)
+
     override fun getTransfers(): Flow<List<Transfer>> =
-        transferDao.getAllTransfers().map { transfers -> transfers.map { it.toDomain() } }
+        scoped { mode -> transferDao.getAllTransfers(mode) }
+            .map { transfers -> transfers.map { it.toDomain() } }
 
     override fun getExpenses(): Flow<List<Expense>> =
-        expenseDao.getAllExpenses().map { expenses -> expenses.map { it.toDomain() } }
+        scoped { mode -> expenseDao.getAllExpenses(mode) }
+            .map { expenses -> expenses.map { it.toDomain() } }
 
     override fun observeBudgetSummary(): Flow<BudgetSummary> =
+        appMode.flatMapLatest { mode ->
         combine(
-            transferDao.observeDepositTotal(),
-            transferDao.observeGoalAllocatedTotal(),
-            expenseDao.observeConfirmedTotalAmount(),
+            transferDao.observeDepositTotal(mode.name),
+            transferDao.observeGoalAllocatedTotal(mode.name),
+            expenseDao.observeConfirmedTotalAmount(mode.name),
         ) { totalDeposits, totalGoalAllocated, totalExpenses ->
             val summary = GlobalFinanceEngine.computeSummary(
                 totalDepositsCents = totalDeposits,
@@ -50,20 +61,23 @@ class BudgetRepositoryImpl(
                 totalExpensesCents = summary.totalExpensesCents,
             )
         }
+        }
 
     override fun observeCategorySpend(startMillis: Long, endMillisExclusive: Long): Flow<List<CategorySpend>> =
-        expenseDao.observeCategorySpend(startMillis, endMillisExclusive)
+        scoped { mode -> expenseDao.observeCategorySpend(mode, startMillis, endMillisExclusive) }
 
     override fun observePendingCount(): Flow<Int> =
+        appMode.flatMapLatest { mode ->
         combine(
-            transferDao.observePendingCount(),
-            expenseDao.observePendingCount(),
+            transferDao.observePendingCount(mode.name),
+            expenseDao.observePendingCount(mode.name),
         ) { transfers, expenses -> transfers + expenses }
+        }
 
     override suspend fun addDeposit(transfer: Transfer): Long =
         SyncWriteGuard.withWriteLock {
             val id = transferDao.insert(
-                transfer.copy(isConfirmed = true, goalId = null).toEntity(),
+                transfer.copy(isConfirmed = true, goalId = null, mode = appMode.first()).toEntity(),
             )
             transferDao.getById(id)?.let { syncQueueRecorder.recordTransfer(it) }
             id
@@ -73,7 +87,7 @@ class BudgetRepositoryImpl(
         SyncWriteGuard.withWriteLock {
             val goalSyncId = transfer.goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
             val id = transferDao.insert(
-                transfer.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
+                transfer.copy(isConfirmed = true, mode = appMode.first()).toEntity().copy(goalSyncId = goalSyncId),
             )
             transferDao.getById(id)?.let { syncQueueRecorder.recordTransfer(it) }
             id
@@ -85,7 +99,7 @@ class BudgetRepositoryImpl(
                 if (!canAffordCurrentBalance(transfer.amountCents)) return@withTransaction false
                 val goalSyncId = transfer.goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
                 val id = transferDao.insert(
-                    transfer.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
+                    transfer.copy(isConfirmed = true, mode = appMode.first()).toEntity().copy(goalSyncId = goalSyncId),
                 )
                 transferDao.getById(id)?.let { syncQueueRecorder.recordTransfer(it) }
                 true
@@ -98,7 +112,7 @@ class BudgetRepositoryImpl(
         SyncWriteGuard.withWriteLock {
             val goalSyncId = expense.goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
             val id = expenseDao.insert(
-                expense.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
+                expense.copy(isConfirmed = true, mode = appMode.first()).toEntity().copy(goalSyncId = goalSyncId),
             )
             expenseDao.getById(id)?.let { syncQueueRecorder.recordExpense(it) }
             id
@@ -115,7 +129,7 @@ class BudgetRepositoryImpl(
                 }
                 val goalSyncId = goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
                 val id = expenseDao.insert(
-                    expense.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
+                    expense.copy(isConfirmed = true, mode = appMode.first()).toEntity().copy(goalSyncId = goalSyncId),
                 )
                 expenseDao.getById(id)?.let { syncQueueRecorder.recordExpense(it) }
                 true
@@ -154,9 +168,9 @@ class BudgetRepositoryImpl(
 
     private suspend fun canAffordCurrentBalance(amountCents: Long): Boolean {
         val summary = GlobalFinanceEngine.computeSummary(
-            totalDepositsCents = transferDao.getDepositTotalOnce(),
-            totalGoalAllocatedCents = transferDao.getGoalAllocatedTotalOnce(),
-            totalExpensesCents = expenseDao.getConfirmedTotalOnce(),
+            totalDepositsCents = transferDao.getDepositTotalOnce(appMode.first().name),
+            totalGoalAllocatedCents = transferDao.getGoalAllocatedTotalOnce(appMode.first().name),
+            totalExpensesCents = expenseDao.getConfirmedTotalOnce(appMode.first().name),
         )
         return GlobalFinanceEngine.canAfford(summary, amountCents)
     }

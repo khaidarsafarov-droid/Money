@@ -12,6 +12,7 @@ data class SavingsGoal(
     val kind: GoalKind = GoalKind.MONEY,
     val actionDone: Int = 0,
     val actionTotal: Int = 0,
+    val mode: com.example.money.settings.AppMode = com.example.money.settings.AppMode.PERSONAL,
 ) {
     val targetAmount: Double
         get() = targetAmountCents / 100.0

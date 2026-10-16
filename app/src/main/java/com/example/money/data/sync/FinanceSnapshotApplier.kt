@@ -3,6 +3,7 @@ package com.example.money.data.sync
 import androidx.room.withTransaction
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
+import com.example.money.data.local.entity.ClientEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
@@ -13,6 +14,7 @@ import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
+import com.example.money.domain.sync.SnapshotClient
 import com.example.money.domain.sync.SnapshotGoalAction
 import com.example.money.domain.sync.SnapshotNote
 import com.example.money.domain.sync.SnapshotNoteLine
@@ -32,7 +34,8 @@ class FinanceSnapshotApplier(
             database.withTransaction {
                 applyGoals(snapshot)
                 val goalLocalIds = buildGoalSyncIdMap(snapshot)
-                applyDebts(snapshot)
+                val clientLocalIds = snapshot.clients?.let { applyClients(it) }
+                applyDebts(snapshot, clientLocalIds)
                 val debtorLocalIds = buildDebtorSyncIdMap(snapshot)
                 applyDebtPayments(snapshot, debtorLocalIds)
                 val paymentLocalIds = buildDebtPaymentSyncIdMap(snapshot, debtorLocalIds)
@@ -67,6 +70,7 @@ class FinanceSnapshotApplier(
                 updatedAt = goal.syncUpdatedAt,
                 deadlineMillis = goal.dateDeadline?.let(SyncDates::parseDate),
                 kind = goal.goalKind ?: existing?.kind ?: GoalKind.MONEY.name,
+                mode = goal.mode,
             )
             if (existing == null) {
                 dao.insert(entity)
@@ -85,7 +89,56 @@ class FinanceSnapshotApplier(
         }
     }
 
-    private suspend fun applyDebts(snapshot: FinanceSnapshot) {
+    private suspend fun applyClients(clients: List<SnapshotClient>): Map<String, Long> {
+        val dao = database.clientDao()
+        val live = clients.filterNot { it.deleted }
+        val keepIds = live.map { it.id }.toSet()
+        dao.getAllOnce()
+            .filter { it.syncId !in keepIds }
+            .forEach { dao.deleteBySyncId(it.syncId) }
+        live.forEach { client ->
+            val existing = dao.getBySyncId(client.id)
+            val entity = ClientEntity(
+                id = existing?.id ?: 0L,
+                syncId = client.id,
+                name = client.name,
+                phone = client.phone,
+                company = client.company,
+                email = client.email,
+                lastMeetingAt = client.lastMeetingAt,
+                note = client.note,
+                createdAt = client.createdAt,
+                syncUpdatedAt = client.syncUpdatedAt,
+                deleted = false,
+                mode = client.mode,
+            )
+            if (existing == null) {
+                dao.insert(entity)
+            } else {
+                dao.update(entity)
+            }
+        }
+        return live.associate { client ->
+            val localId = dao.getBySyncId(client.id)?.id
+                ?: error("Missing local client for sync id ${client.id}")
+            client.id to localId
+        }
+    }
+
+    private fun resolveClientId(
+        clientSyncId: String?,
+        clientLocalIds: Map<String, Long>?,
+        existingClientId: Long?,
+    ): Long? {
+        if (clientLocalIds == null) return existingClientId
+        if (clientSyncId == null) return null
+        return clientLocalIds[clientSyncId]
+    }
+
+    private suspend fun applyDebts(
+        snapshot: FinanceSnapshot,
+        clientLocalIds: Map<String, Long>?,
+    ) {
         val dao = database.debtorDao()
         val liveDebts = snapshot.debts.filterNot { it.deleted }
         val keepIds = liveDebts.map { it.id }.toSet()
@@ -117,6 +170,8 @@ class FinanceSnapshotApplier(
                 contactPhotoUri = existing?.contactPhotoUri,
                 phone = existing?.phone.orEmpty(),
                 email = existing?.email.orEmpty(),
+                mode = debt.mode,
+                clientId = resolveClientId(debt.clientSyncId, clientLocalIds, existing?.clientId),
             )
             if (existing == null) {
                 dao.insert(entity)
@@ -159,6 +214,7 @@ class FinanceSnapshotApplier(
                 currency = payment.currency ?: existing?.currency ?: "USD",
                 paidAt = SyncDates.parseDateTime(payment.paidAt),
                 affectsBalance = payment.affectsBalance,
+                mode = payment.mode,
             )
             if (existing == null) {
                 dao.insert(entity)
@@ -283,6 +339,15 @@ class FinanceSnapshotApplier(
                 payloadJson = FinanceSnapshotCodec.encodeNote(note),
             )
         }
+        snapshot.clients?.forEach { client ->
+            reconcileTombstone(
+                entityType = SyncEntityType.CLIENT,
+                entityId = client.id,
+                syncUpdatedAt = client.syncUpdatedAt,
+                deleted = client.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeClient(client),
+            )
+        }
         snapshot.noteLines?.forEach { line ->
             reconcileTombstone(
                 entityType = SyncEntityType.NOTE_LINE,
@@ -339,6 +404,7 @@ class FinanceSnapshotApplier(
             debtId = debtId,
             debtPaymentId = debtPaymentId,
             note = transaction.note.orEmpty(),
+            mode = transaction.mode,
         )
         if (existing == null) {
             transferDao.insert(entity)
@@ -371,6 +437,7 @@ class FinanceSnapshotApplier(
             debtPaymentId = debtPaymentId,
             goalId = goalId,
             goalSyncId = goalSyncId,
+            mode = transaction.mode,
         )
         if (existing == null) {
             expenseDao.insert(entity)
@@ -428,6 +495,7 @@ class FinanceSnapshotApplier(
                 createdAt = note.createdAt,
                 updatedAt = note.syncUpdatedAt,
                 syncId = note.id,
+                mode = note.mode,
             )
             if (existing == null) {
                 dao.insertNote(entity)

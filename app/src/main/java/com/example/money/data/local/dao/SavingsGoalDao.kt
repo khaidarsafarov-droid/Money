@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SavingsGoalDao {
 
-    @Query("SELECT * FROM savings_goal ORDER BY updated_at DESC")
-    fun observeAllGoals(): Flow<List<SavingsGoalEntity>>
+    @Query("SELECT * FROM savings_goal WHERE mode = :mode ORDER BY updated_at DESC")
+    fun observeAllGoals(mode: String): Flow<List<SavingsGoalEntity>>
 
     @Query("SELECT * FROM savings_goal WHERE id = :id LIMIT 1")
     suspend fun getGoalById(id: Long): SavingsGoalEntity?

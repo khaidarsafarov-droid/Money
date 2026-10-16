@@ -25,6 +25,7 @@ class FinanceSnapshotRepositoryImpl(
             liveGoals,
             decodeTombstones(tombstones, SyncEntityType.GOAL, FinanceSnapshotCodec::decodeGoal),
         ) { it.id }
+        val clientsById = database.clientDao().getAllOnce().associateBy { it.id }
         val debtors = database.debtorDao().getAllDebtorsOnce()
         val payments = database.debtPaymentDao().getAllPaymentsOnce()
         val debtorSyncIds = debtors.associate { it.id to it.syncId }
@@ -33,7 +34,11 @@ class FinanceSnapshotRepositoryImpl(
         val liveDebts = debtors.map { debtor ->
             val latestPayment = paymentsByDebtor[debtor.id]?.maxOfOrNull { it.paidAt }
             val syncUpdatedAt = maxOf(debtor.dateGiven, latestPayment ?: debtor.dateGiven)
-            FinanceSnapshotCodec.toSnapshotDebt(debtor, syncUpdatedAt)
+            FinanceSnapshotCodec.toSnapshotDebt(
+                debtor,
+                syncUpdatedAt,
+                clientSyncId = debtor.clientId?.let { clientsById[it]?.syncId },
+            )
         }
         val debts = SyncEngine.mergeRecords(
             liveDebts,
@@ -100,6 +105,11 @@ class FinanceSnapshotRepositoryImpl(
             val noteSyncId = noteSyncIds[line.noteId] ?: return@mapNotNull null
             FinanceSnapshotCodec.toSnapshotNoteLine(line, noteSyncId)
         }
+        val liveClients = clientsById.values.map(FinanceSnapshotCodec::toSnapshotClient)
+        val clients = SyncEngine.mergeRecords(
+            liveClients,
+            decodeTombstones(tombstones, SyncEntityType.CLIENT, FinanceSnapshotCodec::decodeClient),
+        ) { it.id }
         val noteLines = SyncEngine.mergeRecords(
             liveNoteLines,
             decodeTombstones(
@@ -117,6 +127,7 @@ class FinanceSnapshotRepositoryImpl(
             goalActions.maxOfOrNull { it.syncUpdatedAt },
             notes.maxOfOrNull { it.syncUpdatedAt },
             noteLines.maxOfOrNull { it.syncUpdatedAt },
+            clients.maxOfOrNull { it.syncUpdatedAt },
             voiceSettings?.syncUpdatedAt,
         ).maxOrNull() ?: System.currentTimeMillis()
 
@@ -132,6 +143,7 @@ class FinanceSnapshotRepositoryImpl(
             goalActions = goalActions,
             notes = notes,
             noteLines = noteLines,
+            clients = clients,
         )
     }
 

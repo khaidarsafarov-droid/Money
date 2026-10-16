@@ -16,16 +16,16 @@ import kotlinx.coroutines.flow.Flow
 interface DebtorDao {
 
     @Transaction
-    @Query("SELECT * FROM debtor ORDER BY date_due ASC")
-    fun getAllDebtorsWithPayments(): Flow<List<DebtorWithPayments>>
+    @Query("SELECT * FROM debtor WHERE mode = :mode ORDER BY date_due ASC")
+    fun getAllDebtorsWithPayments(mode: String): Flow<List<DebtorWithPayments>>
 
     @Transaction
-    @Query("SELECT * FROM debtor WHERE status != 'COMPLETED' ORDER BY date_due ASC")
-    fun getActiveDebtorsWithPayments(): Flow<List<DebtorWithPayments>>
+    @Query("SELECT * FROM debtor WHERE mode = :mode AND status != 'COMPLETED' ORDER BY date_due ASC")
+    fun getActiveDebtorsWithPayments(mode: String): Flow<List<DebtorWithPayments>>
 
     @Transaction
-    @Query("SELECT * FROM debtor WHERE contact_lookup_key = :lookupKey ORDER BY date_given DESC")
-    fun getDebtorsByContactLookupKey(lookupKey: String): Flow<List<DebtorWithPayments>>
+    @Query("SELECT * FROM debtor WHERE mode = :mode AND contact_lookup_key = :lookupKey ORDER BY date_given DESC")
+    fun getDebtorsByContactLookupKey(mode: String, lookupKey: String): Flow<List<DebtorWithPayments>>
 
     @Query("SELECT * FROM debtor WHERE id = :id")
     suspend fun getDebtorById(id: Long): DebtorEntity?
@@ -40,7 +40,8 @@ interface DebtorDao {
     @Query(
         """
         SELECT * FROM debtor
-        WHERE debt_type = :debtType
+        WHERE mode = :mode
+        AND debt_type = :debtType
         AND (
             :filter = 'ALL'
             OR (:filter = 'ACTIVE' AND status != 'COMPLETED')
@@ -58,6 +59,7 @@ interface DebtorDao {
         """,
     )
     fun observeFilteredWithPayments(
+        mode: String,
         debtType: String,
         filter: String,
         searchPattern: String,
@@ -110,8 +112,8 @@ interface DebtPaymentDao {
     @Query("SELECT * FROM debt_payment ORDER BY paid_at DESC")
     suspend fun getAllPaymentsOnce(): List<DebtPaymentEntity>
 
-    @Query("SELECT * FROM debt_payment WHERE debtor_id = :debtorId ORDER BY paid_at DESC")
-    suspend fun getPaymentsForDebtor(debtorId: Long): List<DebtPaymentEntity>
+    @Query("SELECT * FROM debt_payment WHERE mode = :mode AND debtor_id = :debtorId ORDER BY paid_at DESC")
+    suspend fun getPaymentsForDebtor(mode: String, debtorId: Long): List<DebtPaymentEntity>
 
     @Query("DELETE FROM debt_payment")
     suspend fun clearAll()

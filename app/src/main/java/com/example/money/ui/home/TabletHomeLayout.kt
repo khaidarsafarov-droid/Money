@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +59,7 @@ import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalProgress
+import com.example.money.settings.AppMode
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
@@ -150,6 +152,8 @@ fun TabletHomeLayout(
     onRemoveCalendar: (Debtor) -> Unit = {},
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
+    appMode: AppMode = AppMode.PERSONAL,
+    onOpenClients: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -196,6 +200,20 @@ fun TabletHomeLayout(
                             )
                         },
                         label = { Text(stringResource(item.titleRes)) },
+                        colors = railColors,
+                    )
+                }
+                if (appMode == AppMode.PROFESSIONAL) {
+                    NavigationRailItem(
+                        selected = false,
+                        onClick = onOpenClients,
+                        icon = {
+                            Icon(
+                                Icons.Outlined.Work,
+                                contentDescription = stringResource(R.string.clients_title),
+                            )
+                        },
+                        label = { Text(stringResource(R.string.clients_title)) },
                         colors = railColors,
                     )
                 }

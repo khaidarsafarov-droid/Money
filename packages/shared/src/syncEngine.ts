@@ -72,6 +72,7 @@ export function mergeFinanceSnapshots(
     ...optionalList("goalActions", mergeOptional(local.goalActions, remote.goalActions)),
     ...optionalList("notes", mergeOptional(local.notes, remote.notes)),
     ...optionalList("noteLines", mergeOptional(local.noteLines, remote.noteLines)),
+    ...optionalList("clients", mergeOptional(local.clients, remote.clients)),
   };
 }
 
@@ -84,7 +85,7 @@ function mergeOptional<T extends LwwRecord & { id: string }>(
   return mergeRecords(local, remote);
 }
 
-function optionalList<K extends "goalActions" | "notes" | "noteLines">(
+function optionalList<K extends "goalActions" | "notes" | "noteLines" | "clients">(
   key: K,
   value: FinanceSnapshot[K],
 ): Partial<Pick<FinanceSnapshot, K>> {

@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
@@ -121,6 +122,7 @@ import com.example.money.ui.debtors.IncomeIdeasDialog
 import com.example.money.ui.goal.GoalFormDialog
 import com.example.money.ui.notes.NotesPage
 import com.example.money.ui.goal.GoalViewModel
+import com.example.money.settings.AppMode
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
@@ -214,6 +216,8 @@ internal fun PhoneHomeLayout(
     scope: kotlinx.coroutines.CoroutineScope,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     emptyDebtorsHint: @Composable (DebtorFilter) -> String,
+    appMode: AppMode = AppMode.PERSONAL,
+    onOpenClients: () -> Unit = {},
 ) {
     val contactContext = LocalContext.current
 
@@ -225,6 +229,18 @@ internal fun PhoneHomeLayout(
                     modifier = Modifier.padding(vertical = MoneySpacing.lg),
                     contentPadding = PaddingValues(bottom = MoneySpacing.xl),
                 ) {
+                    if (appMode == AppMode.PROFESSIONAL) {
+                        item {
+                            SettingsDrawerItem(
+                                label = stringResource(R.string.clients_title),
+                                icon = Icons.Outlined.Work,
+                                onClick = {
+                                    onOpenClients()
+                                    scope.launch { drawerState.close() }
+                                },
+                            )
+                        }
+                    }
                     item {
                         SettingsDrawerItem(
                             label = stringResource(R.string.advisor_open),

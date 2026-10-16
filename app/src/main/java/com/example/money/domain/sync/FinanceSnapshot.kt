@@ -15,6 +15,7 @@ data class SnapshotGoal(
     val goalKind: String? = null,
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
+    val mode: String = "PERSONAL",
 ) : LwwRecord
 
 data class SnapshotDebt(
@@ -31,6 +32,8 @@ data class SnapshotDebt(
     val note: String = "",
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
+    val mode: String = "PERSONAL",
+    val clientSyncId: String? = null,
 ) : LwwRecord
 
 data class SnapshotDebtPayment(
@@ -43,6 +46,7 @@ data class SnapshotDebtPayment(
     override val deleted: Boolean = false,
     /** Null when an older snapshot did not carry a payment currency. */
     val currency: String? = null,
+    val mode: String = "PERSONAL",
 ) : LwwRecord
 
 data class SnapshotTransaction(
@@ -57,6 +61,7 @@ data class SnapshotTransaction(
     val category: String?,
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
+    val mode: String = "PERSONAL",
 ) : LwwRecord
 
 data class SnapshotGoalAction(
@@ -77,6 +82,21 @@ data class SnapshotNote(
     val mark: String,
     val closed: Boolean,
     val createdAt: Long,
+    override val syncUpdatedAt: Long,
+    override val deleted: Boolean = false,
+    val mode: String = "PERSONAL",
+) : LwwRecord
+
+data class SnapshotClient(
+    val id: String,
+    val name: String,
+    val phone: String = "",
+    val company: String = "",
+    val email: String? = null,
+    val lastMeetingAt: Long? = null,
+    val note: String = "",
+    val createdAt: Long,
+    val mode: String = "PROFESSIONAL",
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
 ) : LwwRecord
@@ -122,8 +142,10 @@ data class FinanceSnapshot(
     /** Null means an older snapshot that did not carry notes. */
     val notes: List<SnapshotNote>? = null,
     val noteLines: List<SnapshotNoteLine>? = null,
+    /** Null means an older snapshot that did not carry clients. */
+    val clients: List<SnapshotClient>? = null,
 ) {
     companion object {
-        const val CURRENT_SCHEMA_VERSION = 3
+        const val CURRENT_SCHEMA_VERSION = 4
     }
 }

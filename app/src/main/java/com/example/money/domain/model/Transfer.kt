@@ -1,5 +1,7 @@
 package com.example.money.domain.model
 
+import com.example.money.settings.AppMode
+
 data class Transfer(
     val id: Long = 0,
     val syncId: String = "",
@@ -10,4 +12,5 @@ data class Transfer(
     val debtId: Long? = null,
     val debtPaymentId: Long? = null,
     val note: String = "",
+    val mode: AppMode = AppMode.PERSONAL,
 )

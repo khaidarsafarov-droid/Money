@@ -16,8 +16,12 @@ import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.domain.util.GlobalFinanceEngine
+import com.example.money.settings.AppMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class GoalRepositoryImpl(
@@ -27,14 +31,16 @@ class GoalRepositoryImpl(
     private val expenseDao: ExpenseDao,
     private val goalActionDao: GoalActionDao,
     private val syncQueueRecorder: SyncQueueRecorder,
+    private val appMode: Flow<AppMode>,
 ) : GoalRepository {
 
     override fun observeAllGoals(): Flow<List<SavingsGoal>> =
+        appMode.map { it.name }.distinctUntilChanged().flatMapLatest { mode ->
         combine(
-            savingsGoalDao.observeAllGoals(),
-            transferDao.observeGoalTransferTotals(),
-            expenseDao.observeGoalExpenseTotals(),
-            goalActionDao.observeAll(),
+            savingsGoalDao.observeAllGoals(mode),
+            transferDao.observeGoalTransferTotals(mode),
+            expenseDao.observeGoalExpenseTotals(mode),
+            goalActionDao.observeAll(mode),
         ) { goals, totals, spent, actions ->
             val allocatedByGoal = totals.associate { row -> row.goalId to row.totalAmount }
             val spentByGoal = spent.associate { row -> row.goalId to row.totalAmount }
@@ -51,9 +57,12 @@ class GoalRepositoryImpl(
                 )
             }
         }
+        }
 
     override fun observeActions(): Flow<List<GoalAction>> =
-        goalActionDao.observeAll().map { rows -> rows.map { it.toDomain() } }
+        appMode.map { it.name }.distinctUntilChanged().flatMapLatest { mode ->
+            goalActionDao.observeAll(mode)
+        }.map { rows -> rows.map { it.toDomain() } }
 
     override suspend fun addGoal(
         name: String,
@@ -65,6 +74,7 @@ class GoalRepositoryImpl(
         val id = savingsGoalDao.insert(
             SavingsGoalEntity(
                 name = name.trim(),
+                mode = appMode.first().name,
                 targetAmountCents = targetAmountCents,
                 currentAmountCents = 0L,
                 deadlineMillis = deadlineMillis,

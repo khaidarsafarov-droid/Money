@@ -63,7 +63,7 @@ function validateSnapshotArrays(snapshot: FinanceSnapshot): void {
       throw new Error(`Snapshot field "${key}" exceeds maximum record count`);
     }
   }
-  for (const key of ["goalActions", "notes", "noteLines"] as const) {
+  for (const key of ["goalActions", "notes", "noteLines", "clients"] as const) {
     const value = snapshot[key];
     if (value === undefined) continue;
     if (!Array.isArray(value)) {
@@ -79,15 +79,29 @@ function migrateVersion2Snapshot(snapshot: FinanceSnapshot): FinanceSnapshot {
   return {
     ...snapshot,
     schemaVersion: SYNC_SCHEMA_VERSION,
+    goals: snapshot.goals.map((goal) => ({
+      ...goal,
+      mode: goal.mode ?? "PERSONAL",
+    })),
     debts: snapshot.debts.map((debt) => ({
       ...debt,
       debtType: debt.debtType ?? "CREDITOR",
       affectsBalance: debt.affectsBalance ?? false,
       note: debt.note ?? "",
+      mode: debt.mode ?? "PERSONAL",
     })),
     debtPayments: snapshot.debtPayments.map((payment) => ({
       ...payment,
       affectsBalance: payment.affectsBalance ?? true,
+      mode: payment.mode ?? "PERSONAL",
+    })),
+    transactions: snapshot.transactions.map((transaction) => ({
+      ...transaction,
+      mode: transaction.mode ?? "PERSONAL",
+    })),
+    notes: snapshot.notes?.map((note) => ({
+      ...note,
+      mode: note.mode ?? "PERSONAL",
     })),
   };
 }

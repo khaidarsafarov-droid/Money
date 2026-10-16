@@ -10,19 +10,28 @@ import com.example.money.domain.model.FinanceNoteLine
 import com.example.money.domain.model.NoteKind
 import com.example.money.domain.model.NoteMark
 import com.example.money.domain.repository.NoteRepository
+import com.example.money.settings.AppMode
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class NoteRepositoryImpl(
     private val noteDao: FinanceNoteDao,
     private val syncQueueRecorder: SyncQueueRecorder,
+    private val appMode: Flow<AppMode>,
 ) : NoteRepository {
 
     override fun observeNotes(): Flow<List<FinanceNote>> =
-        noteDao.observeNotes().map { notes -> notes.map { it.toDomain() } }
+        appMode.map { it.name }.distinctUntilChanged().flatMapLatest { mode ->
+            noteDao.observeNotes(mode)
+        }.map { notes -> notes.map { it.toDomain() } }
 
     override fun observeLines(): Flow<List<FinanceNoteLine>> =
-        noteDao.observeLines().map { lines -> lines.map { it.toDomain() } }
+        appMode.map { it.name }.distinctUntilChanged().flatMapLatest { mode ->
+            noteDao.observeLines(mode)
+        }.map { lines -> lines.map { it.toDomain() } }
 
     override suspend fun addNote(title: String, kind: NoteKind): Long =
         SyncWriteGuard.withWriteLock {
@@ -33,6 +42,7 @@ class NoteRepositoryImpl(
                     kind = kind.name,
                     createdAt = now,
                     updatedAt = now,
+                    mode = appMode.first().name,
                 ),
             )
             noteDao.getNoteById(id)?.let { syncQueueRecorder.recordNote(it) }
@@ -126,6 +136,7 @@ private fun FinanceNoteEntity.toDomain() = FinanceNote(
     closed = closed,
     createdAt = createdAt,
     updatedAt = updatedAt,
+    mode = com.example.money.settings.AppMode.fromStored(mode),
 )
 
 private fun FinanceNoteLineEntity.toDomain() = FinanceNoteLine(

@@ -230,6 +230,7 @@ class FinanceSnapshotRepositoryImplTest {
             expenseDao = database.expenseDao(),
             goalActionDao = database.goalActionDao(),
             syncQueueRecorder = recorder,
+            appMode = kotlinx.coroutines.flow.flowOf(com.example.money.settings.AppMode.PERSONAL),
         )
         val budget = BudgetRepositoryImpl(
             database = database,
@@ -237,6 +238,7 @@ class FinanceSnapshotRepositoryImplTest {
             expenseDao = database.expenseDao(),
             savingsGoalDao = database.savingsGoalDao(),
             syncQueueRecorder = recorder,
+            appMode = kotlinx.coroutines.flow.flowOf(com.example.money.settings.AppMode.PERSONAL),
         )
         val goalId = goals.addGoal("Trip", 50_000L, null, GoalKind.MONEY)
         val goal = database.savingsGoalDao().getGoalById(goalId)!!
@@ -279,7 +281,11 @@ class FinanceSnapshotRepositoryImplTest {
 
     @Test
     fun deletedNote_staysInTheNextSnapshot() = runBlocking {
-        val notes = NoteRepositoryImpl(database.financeNoteDao(), recorder)
+        val notes = NoteRepositoryImpl(
+            database.financeNoteDao(),
+            recorder,
+            kotlinx.coroutines.flow.flowOf(com.example.money.settings.AppMode.PERSONAL),
+        )
         val id = notes.addNote("List", NoteKind.TEXT)
         notes.addLine(id, "Flour", 2_000L)
         notes.deleteNote(id)

@@ -12,24 +12,24 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ExpenseDao {
 
-    @Query("SELECT * FROM expenses ORDER BY date DESC")
-    fun getAllExpenses(): Flow<List<ExpenseEntity>>
+    @Query("SELECT * FROM expenses WHERE mode = :mode ORDER BY date DESC")
+    fun getAllExpenses(mode: String): Flow<List<ExpenseEntity>>
 
-    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM expenses WHERE isConfirmed = 1 AND goalId IS NULL")
-    fun observeConfirmedTotalAmount(): Flow<Long>
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM expenses WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NULL")
+    fun observeConfirmedTotalAmount(mode: String): Flow<Long>
 
-    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM expenses WHERE isConfirmed = 1 AND goalId IS NULL")
-    suspend fun getConfirmedTotalOnce(): Long
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM expenses WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NULL")
+    suspend fun getConfirmedTotalOnce(mode: String): Long
 
     @Query(
         """
         SELECT goalId, COALESCE(SUM(amount_cents), 0) AS totalAmount
         FROM expenses
-        WHERE isConfirmed = 1 AND goalId IS NOT NULL
+        WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NOT NULL
         GROUP BY goalId
         """,
     )
-    fun observeGoalExpenseTotals(): Flow<List<GoalTransferTotal>>
+    fun observeGoalExpenseTotals(mode: String): Flow<List<GoalTransferTotal>>
 
     @Query(
         """
@@ -43,15 +43,15 @@ interface ExpenseDao {
         """
         SELECT category, COALESCE(SUM(amount_cents), 0) AS totalCents
         FROM expenses
-        WHERE isConfirmed = 1 AND date >= :start AND date < :end
+        WHERE mode = :mode AND isConfirmed = 1 AND date >= :start AND date < :end
         GROUP BY category
         ORDER BY totalCents DESC
         """,
     )
-    fun observeCategorySpend(start: Long, end: Long): Flow<List<CategorySpend>>
+    fun observeCategorySpend(mode: String, start: Long, end: Long): Flow<List<CategorySpend>>
 
-    @Query("SELECT COUNT(*) FROM expenses WHERE isConfirmed = 0")
-    fun observePendingCount(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM expenses WHERE mode = :mode AND isConfirmed = 0")
+    fun observePendingCount(mode: String): Flow<Int>
 
     @Query("UPDATE expenses SET isConfirmed = 1 WHERE id = :id")
     suspend fun confirm(id: Long)

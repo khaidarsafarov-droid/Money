@@ -13,6 +13,7 @@ data class BackupGoal(
     val updatedAtEpochMillis: Long,
     val deadlineEpochMillis: Long?,
     val kind: String = "MONEY",
+    val mode: String = "PERSONAL",
 )
 
 data class BackupGoalAction(
@@ -33,6 +34,7 @@ data class BackupNote(
     val closed: Boolean,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
+    val mode: String = "PERSONAL",
 )
 
 data class BackupNoteLine(
@@ -60,6 +62,22 @@ data class BackupDebtor(
     val interestRateBps: Int,
     val phone: String,
     val email: String,
+    val mode: String = "PERSONAL",
+    val clientSyncId: String? = null,
+)
+
+data class BackupClient(
+    val syncId: String,
+    val name: String,
+    val phone: String = "",
+    val company: String = "",
+    val email: String? = null,
+    val lastMeetingAtEpochMillis: Long? = null,
+    val note: String = "",
+    val createdAtEpochMillis: Long,
+    val syncUpdatedAtEpochMillis: Long,
+    val deleted: Boolean = false,
+    val mode: String = "PROFESSIONAL",
 )
 
 data class BackupDebtPayment(
@@ -69,6 +87,7 @@ data class BackupDebtPayment(
     val currency: String,
     val paidAtEpochMillis: Long,
     val affectsBalance: Boolean,
+    val mode: String = "PERSONAL",
 )
 
 data class BackupTransfer(
@@ -80,6 +99,7 @@ data class BackupTransfer(
     val debtorSyncId: String?,
     val debtPaymentSyncId: String?,
     val note: String,
+    val mode: String = "PERSONAL",
 )
 
 data class BackupExpense(
@@ -92,6 +112,7 @@ data class BackupExpense(
     val debtorSyncId: String?,
     val debtPaymentSyncId: String?,
     val goalSyncId: String? = null,
+    val mode: String = "PERSONAL",
 )
 
 data class BackupLuckDiaryEntry(
@@ -221,10 +242,11 @@ data class BackupRecordCounts(
     val goalActions: Int = 0,
     val notes: Int = 0,
     val noteLines: Int = 0,
+    val clients: Int = 0,
 ) {
     val total: Int
         get() = goals + debtors + debtPayments + transfers + expenses + luckDiaryEntries +
-            goalActions + notes + noteLines
+            goalActions + notes + noteLines + clients
 
     companion object {
         val EMPTY = BackupRecordCounts(
@@ -247,6 +269,7 @@ data class BackupRecordCounts(
                 goalActions = bundle.goalActions.size,
                 notes = bundle.notes.size,
                 noteLines = bundle.noteLines.size,
+                clients = bundle.clients.size,
             )
     }
 }
@@ -281,6 +304,7 @@ data class BackupBundle(
     val goalActions: List<BackupGoalAction> = emptyList(),
     val notes: List<BackupNote> = emptyList(),
     val noteLines: List<BackupNoteLine> = emptyList(),
+    val clients: List<BackupClient> = emptyList(),
 ) {
     companion object {
         const val CURRENT_FORMAT_VERSION = 1

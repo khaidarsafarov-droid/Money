@@ -25,6 +25,7 @@ import com.example.money.domain.backup.BackupVoicePreferences
 import com.example.money.domain.backup.BackupWeeklyCheckInPreferences
 import com.example.money.domain.sync.SnapshotVoiceSettings
 import com.example.money.settings.AppLanguage
+import com.example.money.settings.AppMode
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.CurrencyRegion
@@ -94,6 +95,7 @@ object MoneyPreferenceKeys {
     val VOICE_FORCE_SILENT = booleanPreferencesKey("voice_force_silent")
     val VOICE_SETTINGS_SYNC_AT = longPreferencesKey("voice_settings_sync_at")
     val PEER_SYNC_ENABLED = booleanPreferencesKey("peer_sync_enabled")
+    val APP_MODE = stringPreferencesKey("app_mode")
 
     val PRIVACY_HIDE_AMOUNTS = booleanPreferencesKey("privacy_hide_amounts")
     val PRIVACY_HIDE_ON_WIDGET = booleanPreferencesKey("privacy_hide_on_widget")
@@ -500,6 +502,17 @@ class MoneyPreferencesStore(
     suspend fun setPeerSyncEnabled(enabled: Boolean) {
         context.moneyPreferencesDataStore.edit { prefs ->
             prefs[MoneyPreferenceKeys.PEER_SYNC_ENABLED] = enabled
+        }
+    }
+
+    val appMode: Flow<AppMode> =
+        context.moneyPreferencesDataStore.data.map { prefs ->
+            AppMode.fromStored(prefs[MoneyPreferenceKeys.APP_MODE])
+        }
+
+    suspend fun setAppMode(mode: AppMode) {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            prefs[MoneyPreferenceKeys.APP_MODE] = mode.name
         }
     }
 

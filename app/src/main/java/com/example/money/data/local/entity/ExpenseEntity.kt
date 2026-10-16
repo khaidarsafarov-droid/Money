@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.money.data.sync.SyncIds
+import com.example.money.settings.AppMode
 
 @Entity(
     tableName = "expenses",
@@ -13,6 +14,7 @@ import com.example.money.data.sync.SyncIds
         Index(value = ["isConfirmed"]),
         Index(value = ["debt_id"]),
         Index(value = ["goalId"]),
+        Index(value = ["mode"]),
     ],
 )
 data class ExpenseEntity(
@@ -35,4 +37,6 @@ data class ExpenseEntity(
     val goalId: Long? = null,
     @ColumnInfo(name = "goal_sync_id")
     val goalSyncId: String? = null,
+    @ColumnInfo(name = "mode", defaultValue = "PERSONAL")
+    val mode: String = AppMode.PERSONAL.name,
 )

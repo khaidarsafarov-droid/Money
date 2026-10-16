@@ -806,4 +806,38 @@
     <string name="sync_pair_action">Pair device</string>
     <string name="sync_pair_saved">Code accepted. Sync starts when that device is on the network.</string>
     <string name="sync_pair_rejected">That code was not recognized.</string>
+    <string name="action_back">Back</string>
+    <string name="mode_personal">Personal</string>
+    <string name="mode_professional">Professional</string>
+    <string name="mode_personal_short">Personal</string>
+    <string name="mode_professional_short">Work</string>
+    <string name="clients_title">Clients</string>
+    <string name="clients_search">Search by name, company, phone, or email</string>
+    <string name="clients_sort_name">Name</string>
+    <string name="clients_sort_debt">Debt total</string>
+    <string name="clients_sort_meeting">Last meeting</string>
+    <string name="clients_add">New client</string>
+    <string name="clients_edit">Edit client</string>
+    <string name="clients_name">Name</string>
+    <string name="clients_name_required">Enter a name</string>
+    <string name="clients_phone">Phone</string>
+    <string name="clients_email">Email</string>
+    <string name="clients_company">Company</string>
+    <string name="clients_note">Note</string>
+    <string name="clients_pick_contact">Choose from contacts</string>
+    <string name="clients_missing">Client not found</string>
+    <string name="clients_debt_total">Total: %1$s</string>
+    <string name="clients_mark_meeting">Mark meeting</string>
+    <string name="clients_last_meeting">Last meeting: %1$s</string>
+    <string name="clients_new_debt_amount">New debt amount</string>
+    <string name="clients_add_debt">Add debt</string>
+    <string name="clients_debt_amount_invalid">Amount must be greater than zero</string>
+    <plurals name="clients_count">
+        <item quantity="one">%d client</item>
+        <item quantity="other">%d clients</item>
+    </plurals>
+    <plurals name="client_debts_count">
+        <item quantity="one">%d debt</item>
+        <item quantity="other">%d debts</item>
+    </plurals>
 </resources>

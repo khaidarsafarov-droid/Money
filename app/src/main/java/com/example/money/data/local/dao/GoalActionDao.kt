@@ -10,8 +10,15 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface GoalActionDao {
 
-    @Query("SELECT * FROM goal_action ORDER BY sort_order ASC, id ASC")
-    fun observeAll(): Flow<List<GoalActionEntity>>
+    @Query(
+        """
+        SELECT goal_action.* FROM goal_action
+        INNER JOIN savings_goal ON savings_goal.id = goal_action.goal_id
+        WHERE savings_goal.mode = :mode
+        ORDER BY goal_action.sort_order ASC, goal_action.id ASC
+        """,
+    )
+    fun observeAll(mode: String): Flow<List<GoalActionEntity>>
 
     @Query("SELECT * FROM goal_action ORDER BY sort_order ASC, id ASC")
     suspend fun getAllOnce(): List<GoalActionEntity>

@@ -4,6 +4,7 @@ import com.example.money.data.datastore.PortablePreferencesStorage
 import com.example.money.data.local.AppDatabase
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupBundle
+import com.example.money.domain.backup.BackupClient
 import com.example.money.domain.backup.BackupDebtPayment
 import com.example.money.domain.backup.BackupDebtor
 import com.example.money.domain.backup.BackupExpense
@@ -46,6 +47,8 @@ class BackupExporter(
         val goalActions = database.goalActionDao().getAllOnce()
         val notes = database.financeNoteDao().getAllNotesOnce()
         val noteLines = database.financeNoteDao().getAllLinesOnce()
+        val clients = database.clientDao().getAllOnce()
+        val clientSyncIds = clients.associate { it.id to it.syncId }
         val goalSyncIds = goals.associate { it.id to it.syncId }
         val noteSyncIds = notes.associate { it.id to it.syncId }
         val debtorSyncIds = debtors.associate { it.id to it.syncId }
@@ -70,6 +73,7 @@ class BackupExporter(
                         updatedAtEpochMillis = goal.updatedAt,
                         deadlineEpochMillis = goal.deadlineMillis,
                         kind = goal.kind,
+                        mode = goal.mode,
                     )
                 },
                 goalActions = goalActions.map { action ->
@@ -96,6 +100,7 @@ class BackupExporter(
                         closed = note.closed,
                         createdAtEpochMillis = note.createdAt,
                         updatedAtEpochMillis = note.updatedAt,
+                        mode = note.mode,
                     )
                 },
                 noteLines = noteLines.map { line ->
@@ -129,6 +134,8 @@ class BackupExporter(
                         interestRateBps = debtor.interestRateBps,
                         phone = debtor.phone,
                         email = debtor.email,
+                        mode = debtor.mode,
+                        clientSyncId = debtor.clientId?.let { clientSyncIds[it] },
                     )
                 },
                 debtPayments = debtPayments.map { payment ->
@@ -143,6 +150,7 @@ class BackupExporter(
                         currency = payment.currency,
                         paidAtEpochMillis = payment.paidAt,
                         affectsBalance = payment.affectsBalance,
+                        mode = payment.mode,
                     )
                 },
                 transfers = transfers.map { transfer ->
@@ -169,6 +177,7 @@ class BackupExporter(
                             )
                         },
                         note = transfer.note,
+                        mode = transfer.mode,
                     )
                 },
                 expenses = expenses.map { expense ->
@@ -196,6 +205,7 @@ class BackupExporter(
                         goalSyncId = expense.goalId?.let { goalId ->
                             goalSyncIds.requireReference(goalId, "Expense ${expense.syncId}", "goal")
                         } ?: expense.goalSyncId,
+                        mode = expense.mode,
                     )
                 },
                 luckDiaryEntries = luckEntries.map { entry ->
@@ -206,6 +216,21 @@ class BackupExporter(
                         amountCents = entry.amountCents,
                         category = entry.category,
                         createdAtEpochMillis = entry.createdAt,
+                    )
+                },
+                clients = clients.map { client ->
+                    BackupClient(
+                        syncId = client.syncId,
+                        name = client.name,
+                        phone = client.phone,
+                        company = client.company,
+                        email = client.email,
+                        lastMeetingAtEpochMillis = client.lastMeetingAt,
+                        note = client.note,
+                        createdAtEpochMillis = client.createdAt,
+                        syncUpdatedAtEpochMillis = client.syncUpdatedAt,
+                        deleted = client.deleted,
+                        mode = client.mode,
                     )
                 },
                 preferences = preferencesStore.exportPortable(),

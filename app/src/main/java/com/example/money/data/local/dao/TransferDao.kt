@@ -11,20 +11,20 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TransferDao {
 
-    @Query("SELECT * FROM transfers ORDER BY date DESC")
-    fun getAllTransfers(): Flow<List<TransferEntity>>
+    @Query("SELECT * FROM transfers WHERE mode = :mode ORDER BY date DESC")
+    fun getAllTransfers(mode: String): Flow<List<TransferEntity>>
 
-    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
-    fun observeDepositTotal(): Flow<Long>
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NULL")
+    fun observeDepositTotal(mode: String): Flow<Long>
 
-    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
-    suspend fun getDepositTotalOnce(): Long
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NULL")
+    suspend fun getDepositTotalOnce(mode: String): Long
 
-    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
-    fun observeGoalAllocatedTotal(): Flow<Long>
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NOT NULL")
+    fun observeGoalAllocatedTotal(mode: String): Flow<Long>
 
-    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
-    suspend fun getGoalAllocatedTotalOnce(): Long
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NOT NULL")
+    suspend fun getGoalAllocatedTotalOnce(mode: String): Long
 
     @Query(
         """
@@ -38,14 +38,14 @@ interface TransferDao {
         """
         SELECT goalId, COALESCE(SUM(amount_cents), 0) AS totalAmount
         FROM transfers
-        WHERE isConfirmed = 1 AND goalId IS NOT NULL
+        WHERE mode = :mode AND isConfirmed = 1 AND goalId IS NOT NULL
         GROUP BY goalId
         """,
     )
-    fun observeGoalTransferTotals(): Flow<List<GoalTransferTotal>>
+    fun observeGoalTransferTotals(mode: String): Flow<List<GoalTransferTotal>>
 
-    @Query("SELECT COUNT(*) FROM transfers WHERE isConfirmed = 0")
-    fun observePendingCount(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM transfers WHERE mode = :mode AND isConfirmed = 0")
+    fun observePendingCount(mode: String): Flow<Int>
 
     @Query("UPDATE transfers SET isConfirmed = 1 WHERE id = :id")
     suspend fun confirm(id: Long)

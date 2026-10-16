@@ -48,6 +48,7 @@ class GoalBalanceTest {
             expenseDao = database.expenseDao(),
             savingsGoalDao = database.savingsGoalDao(),
             syncQueueRecorder = recorder,
+            appMode = kotlinx.coroutines.flow.flowOf(com.example.money.settings.AppMode.PERSONAL),
         )
         goals = GoalRepositoryImpl(
             database = database,
@@ -56,6 +57,7 @@ class GoalBalanceTest {
             expenseDao = database.expenseDao(),
             goalActionDao = database.goalActionDao(),
             syncQueueRecorder = recorder,
+            appMode = kotlinx.coroutines.flow.flowOf(com.example.money.settings.AppMode.PERSONAL),
         )
     }
 

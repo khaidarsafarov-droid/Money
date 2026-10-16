@@ -19,7 +19,7 @@ describe("decodeFinanceSnapshot", () => {
     expect(decoded.deviceId).toBe("device-1");
   });
 
-  it("migrates schema v2 debt fields to schema v3 defaults", () => {
+  it("migrates schema v2 debt fields to the current schema defaults", () => {
     const version2 = {
       ...validSnapshot,
       schemaVersion: 2,
@@ -44,11 +44,12 @@ describe("decodeFinanceSnapshot", () => {
 
     const decoded = decodeFinanceSnapshot(JSON.stringify(version2));
 
-    expect(decoded.schemaVersion).toBe(3);
+    expect(decoded.schemaVersion).toBe(SYNC_SCHEMA_VERSION);
     expect(decoded.debts[0]).toMatchObject({
       debtType: "CREDITOR",
       affectsBalance: false,
       note: "",
+      mode: "PERSONAL",
     });
     expect(decoded.debtPayments[0]?.affectsBalance).toBe(true);
   });

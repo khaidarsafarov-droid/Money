@@ -8,6 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
+import com.example.money.data.local.dao.ClientDao
 import com.example.money.data.local.dao.FinanceNoteDao
 import com.example.money.data.local.dao.GoalActionDao
 import com.example.money.data.local.dao.DebtorDao
@@ -18,6 +19,7 @@ import com.example.money.data.local.dao.SavingsGoalDao
 import com.example.money.data.local.dao.SyncQueueDao
 import com.example.money.data.local.dao.SyncTombstoneDao
 import com.example.money.data.local.dao.TransferDao
+import com.example.money.data.local.entity.ClientEntity
 import com.example.money.data.local.entity.FinanceNoteEntity
 import com.example.money.data.local.entity.FinanceNoteLineEntity
 import com.example.money.data.local.entity.GoalActionEntity
@@ -55,9 +57,11 @@ import com.example.money.data.local.migration.MIGRATION_23_24
 import com.example.money.data.local.migration.MIGRATION_24_25
 import com.example.money.data.local.migration.MIGRATION_25_26
 import com.example.money.data.local.migration.MIGRATION_26_27
+import com.example.money.data.local.migration.MIGRATION_27_28
 
 @Database(
     entities = [
+        ClientEntity::class,
         DebtorEntity::class,
         DebtPaymentEntity::class,
         TransferEntity::class,
@@ -70,7 +74,7 @@ import com.example.money.data.local.migration.MIGRATION_26_27
         FinanceNoteEntity::class,
         FinanceNoteLineEntity::class,
     ],
-    version = 27,
+    version = 28,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -78,6 +82,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun luckDiaryDao(): LuckDiaryDao
     abstract fun financeNoteDao(): FinanceNoteDao
 
+    abstract fun clientDao(): ClientDao
     abstract fun debtorDao(): DebtorDao
     abstract fun debtPaymentDao(): DebtPaymentDao
     abstract fun transferDao(): TransferDao
@@ -123,6 +128,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_24_25,
                     MIGRATION_25_26,
                     MIGRATION_26_27,
+                    MIGRATION_27_28,
                 ).build().also { instance = it }
             }
         }

@@ -34,6 +34,7 @@ import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.repository.BudgetRepositoryImpl
+import com.example.money.data.repository.ClientRepositoryImpl
 import com.example.money.data.repository.DebtorRepositoryImpl
 import com.example.money.data.repository.GoalRepositoryImpl
 import com.example.money.data.repository.NoteRepositoryImpl
@@ -47,6 +48,7 @@ import com.example.money.data.sync.PeerDiscoveryFactory
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncService
 import com.example.money.domain.repository.BudgetRepository
+import com.example.money.domain.repository.ClientRepository
 import com.example.money.domain.repository.BackupRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.FinanceSnapshotRepository
@@ -129,6 +131,7 @@ class AppContainer(
             transferDao = database.transferDao(),
             expenseDao = database.expenseDao(),
             syncQueueRecorder = syncQueueRecorder,
+            appMode = preferencesStore.appMode,
         )
     }
 
@@ -139,6 +142,7 @@ class AppContainer(
             expenseDao = database.expenseDao(),
             savingsGoalDao = database.savingsGoalDao(),
             syncQueueRecorder = syncQueueRecorder,
+            appMode = preferencesStore.appMode,
         )
     }
 
@@ -150,6 +154,7 @@ class AppContainer(
             expenseDao = database.expenseDao(),
             goalActionDao = database.goalActionDao(),
             syncQueueRecorder = syncQueueRecorder,
+            appMode = preferencesStore.appMode,
         )
     }
 
@@ -157,10 +162,18 @@ class AppContainer(
         LuckDiaryRepositoryImpl(database.luckDiaryDao())
     }
 
+    val clientRepository: ClientRepository by lazy {
+        ClientRepositoryImpl(
+            clientDao = database.clientDao(),
+            appMode = preferencesStore.appMode,
+        )
+    }
+
     val noteRepository: NoteRepository by lazy {
         NoteRepositoryImpl(
             noteDao = database.financeNoteDao(),
             syncQueueRecorder = syncQueueRecorder,
+            appMode = preferencesStore.appMode,
         )
     }
 

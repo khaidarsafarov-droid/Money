@@ -2,6 +2,7 @@ package com.example.money.data.backup
 
 import androidx.room.withTransaction
 import com.example.money.data.local.AppDatabase
+import com.example.money.data.local.entity.ClientEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
@@ -34,7 +35,8 @@ class BackupRoomApplier(
                 val prior = capturePriorSyncState()
                 clearBusinessTables()
                 val goalLocalIds = insertGoals(bundle)
-                val debtorLocalIds = insertDebtors(bundle)
+                val clientLocalIds = insertClients(bundle)
+                val debtorLocalIds = insertDebtors(bundle, clientLocalIds)
                 val paymentLocalIds = insertDebtPayments(bundle, debtorLocalIds)
                 insertTransfers(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
                 insertExpenses(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
@@ -59,6 +61,7 @@ class BackupRoomApplier(
             goalActions = database.goalActionDao().getAllOnce(),
             notes = database.financeNoteDao().getAllNotesOnce(),
             noteLines = database.financeNoteDao().getAllLinesOnce(),
+            clients = database.clientDao().getAllOnce(),
             tombstones = database.syncTombstoneDao().getAll(),
         )
 
@@ -72,6 +75,7 @@ class BackupRoomApplier(
         val actionIds = bundle.goalActions.map { it.syncId }.toSet()
         val noteIds = bundle.notes.map { it.syncId }.toSet()
         val lineIds = bundle.noteLines.map { it.syncId }.toSet()
+        val clientIds = bundle.clients.map { it.syncId }.toSet()
         val goalSyncByLocal = prior.goals.associate { it.id to it.syncId }
         val debtorSyncByLocal = prior.debtors.associate { it.id to it.syncId }
         val paymentSyncByLocal = prior.debtPayments.associate { it.id to it.syncId }
@@ -156,6 +160,14 @@ class BackupRoomApplier(
                 now,
             )
         }
+        prior.clients.filter { it.syncId !in clientIds }.forEach { client ->
+            upsertDeleted(
+                SyncEntityType.CLIENT,
+                client.syncId,
+                FinanceSnapshotCodec.encodeClient(client.copy(syncUpdatedAt = now), deleted = true),
+                now,
+            )
+        }
         prior.noteLines.filter { it.syncId !in lineIds }.forEach { line ->
             val noteSyncId = noteSyncByLocal[line.noteId] ?: return@forEach
             upsertDeleted(
@@ -178,6 +190,7 @@ class BackupRoomApplier(
                 SyncEntityType.GOAL_ACTION.name -> tombstone.entityId !in actionIds
                 SyncEntityType.NOTE.name -> tombstone.entityId !in noteIds
                 SyncEntityType.NOTE_LINE.name -> tombstone.entityId !in lineIds
+                SyncEntityType.CLIENT.name -> tombstone.entityId !in clientIds
                 else -> true
             }
             if (absent) {
@@ -211,6 +224,7 @@ class BackupRoomApplier(
         val goalActions: List<GoalActionEntity>,
         val notes: List<FinanceNoteEntity>,
         val noteLines: List<FinanceNoteLineEntity>,
+        val clients: List<ClientEntity>,
         val tombstones: List<SyncTombstoneEntity>,
     )
 
@@ -225,6 +239,7 @@ class BackupRoomApplier(
             goalActions = database.goalActionDao().getAllOnce(),
             notes = database.financeNoteDao().getAllNotesOnce(),
             noteLines = database.financeNoteDao().getAllLinesOnce(),
+            clients = database.clientDao().getAllOnce(),
             syncQueue = database.syncQueueDao().getAllPending(),
             syncTombstones = database.syncTombstoneDao().getAll(),
         )
@@ -233,6 +248,7 @@ class BackupRoomApplier(
         SyncWriteGuard.runWithoutRecording {
             database.withTransaction {
                 clearBusinessTables()
+                snapshot.clients.forEach { database.clientDao().insert(it) }
                 snapshot.goals.forEach { database.savingsGoalDao().insert(it) }
                 snapshot.debtors.forEach { database.debtorDao().insert(it) }
                 snapshot.debtPayments.forEach { database.debtPaymentDao().insert(it) }
@@ -260,6 +276,7 @@ class BackupRoomApplier(
         database.luckDiaryDao().clearAll()
         database.savingsGoalDao().clearAll()
         database.debtorDao().clearAll()
+        database.clientDao().clearAll()
     }
 
     private suspend fun insertGoals(bundle: BackupBundle): Map<String, Long> =
@@ -275,6 +292,7 @@ class BackupRoomApplier(
                         updatedAt = goal.updatedAtEpochMillis,
                         deadlineMillis = goal.deadlineEpochMillis,
                         kind = goal.kind.ifBlank { "MONEY" },
+                        mode = goal.mode,
                     ),
                 )
                 put(goal.syncId, localId)
@@ -316,6 +334,7 @@ class BackupRoomApplier(
                         closed = note.closed,
                         createdAt = note.createdAtEpochMillis,
                         updatedAt = note.updatedAtEpochMillis,
+                        mode = note.mode,
                     ),
                 )
                 put(note.syncId, localId)
@@ -344,7 +363,32 @@ class BackupRoomApplier(
         }
     }
 
-    private suspend fun insertDebtors(bundle: BackupBundle): Map<String, Long> =
+    private suspend fun insertClients(bundle: BackupBundle): Map<String, Long> =
+        buildMap {
+            bundle.clients.filterNot { it.deleted }.forEach { client ->
+                val localId = database.clientDao().insert(
+                    ClientEntity(
+                        syncId = client.syncId,
+                        name = client.name,
+                        phone = client.phone,
+                        company = client.company,
+                        email = client.email,
+                        lastMeetingAt = client.lastMeetingAtEpochMillis,
+                        note = client.note,
+                        createdAt = client.createdAtEpochMillis,
+                        syncUpdatedAt = client.syncUpdatedAtEpochMillis,
+                        deleted = false,
+                        mode = client.mode,
+                    ),
+                )
+                put(client.syncId, localId)
+            }
+        }
+
+    private suspend fun insertDebtors(
+        bundle: BackupBundle,
+        clientLocalIds: Map<String, Long>,
+    ): Map<String, Long> =
         buildMap {
             bundle.debtors.forEach { debtor ->
                 val localId = database.debtorDao().insert(
@@ -369,6 +413,14 @@ class BackupRoomApplier(
                         contactPhotoUri = null,
                         phone = debtor.phone,
                         email = debtor.email,
+                        mode = debtor.mode,
+                        clientId = debtor.clientSyncId?.let { syncId ->
+                            clientLocalIds.requireReference(
+                                syncId,
+                                "Debtor ${debtor.syncId}",
+                                "client",
+                            )
+                        },
                     ),
                 )
                 put(debtor.syncId, localId)
@@ -392,6 +444,7 @@ class BackupRoomApplier(
                     currency = payment.currency,
                     paidAt = payment.paidAtEpochMillis,
                     affectsBalance = payment.affectsBalance,
+                    mode = payment.mode,
                 ),
             )
             put(payment.syncId, localId)
@@ -430,6 +483,7 @@ class BackupRoomApplier(
                         )
                     },
                     note = transfer.note,
+                    mode = transfer.mode,
                 ),
             )
         }
@@ -468,6 +522,7 @@ class BackupRoomApplier(
                         goalLocalIds.requireReference(syncId, "Expense ${expense.syncId}", "goal")
                     },
                     goalSyncId = expense.goalSyncId,
+                    mode = expense.mode,
                 ),
             )
         }
@@ -507,5 +562,6 @@ class BackupRoomApplier(
         val noteLines: List<FinanceNoteLineEntity>,
         val syncQueue: List<SyncQueueEntity>,
         val syncTombstones: List<SyncTombstoneEntity>,
+        val clients: List<ClientEntity> = emptyList(),
     )
 }

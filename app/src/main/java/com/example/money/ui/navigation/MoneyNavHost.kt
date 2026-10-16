@@ -24,6 +24,9 @@ import com.example.money.MoneyApplication
 import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.UserProfile
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.clients.ClientDetailScreen
+import com.example.money.ui.clients.ClientEditorScreen
+import com.example.money.ui.clients.ClientListScreen
 import com.example.money.ui.goal.GoalScreen
 import com.example.money.ui.home.HomeLaunchConfig
 import com.example.money.ui.home.HomeScreen
@@ -152,6 +155,7 @@ fun MoneyNavHost(
                 onOpenBackupSettings = { navController.navigate(AppRoutes.BACKUP_SETTINGS) },
                 onOpenSyncSettings = { navController.navigate(AppRoutes.SYNC_SETTINGS) },
                 onOpenGoalHub = { navController.navigate(AppRoutes.GOAL_HUB) },
+                onOpenClients = { navController.navigate(AppRoutes.CLIENTS) },
             )
         }
         composable(AppRoutes.GOAL_HUB) {
@@ -187,6 +191,36 @@ fun MoneyNavHost(
         }
         composable(AppRoutes.SYNC_SETTINGS) {
             SyncPairingScreen(onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.CLIENTS) {
+            ClientListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenClient = { id -> navController.navigate(AppRoutes.clientDetail(id)) },
+                onCreateClient = { navController.navigate(AppRoutes.CLIENT_NEW) },
+            )
+        }
+        composable(AppRoutes.CLIENT_NEW) {
+            ClientEditorScreen(clientId = null, onBack = { navController.popBackStack() })
+        }
+        composable(AppRoutes.CLIENT_EDIT) { entry ->
+            val clientId = entry.arguments?.getString("clientId")?.toLongOrNull()
+            if (clientId == null) {
+                navController.popBackStack()
+            } else {
+                ClientEditorScreen(clientId = clientId, onBack = { navController.popBackStack() })
+            }
+        }
+        composable(AppRoutes.CLIENT_DETAIL) { entry ->
+            val clientId = entry.arguments?.getString("clientId")?.toLongOrNull()
+            if (clientId == null) {
+                navController.popBackStack()
+            } else {
+                ClientDetailScreen(
+                    clientId = clientId,
+                    onBack = { navController.popBackStack() },
+                    onEdit = { id -> navController.navigate(AppRoutes.clientEdit(id)) },
+                )
+            }
         }
     }
 }

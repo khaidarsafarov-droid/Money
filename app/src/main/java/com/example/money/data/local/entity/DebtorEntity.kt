@@ -2,18 +2,30 @@ package com.example.money.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.money.data.sync.SyncIds
+import com.example.money.settings.AppMode
 
 @Entity(
     tableName = "debtor",
+    foreignKeys = [
+        ForeignKey(
+            entity = ClientEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["client_id"],
+            onDelete = ForeignKey.SET_NULL,
+        ),
+    ],
     indices = [
         Index(value = ["sync_id"], unique = true),
         Index(value = ["contact_lookup_key"]),
         Index(value = ["status"]),
         Index(value = ["date_due"]),
         Index(value = ["debt_type"]),
+        Index(value = ["mode"]),
+        Index(value = ["client_id"]),
     ],
 )
 data class DebtorEntity(
@@ -53,4 +65,8 @@ data class DebtorEntity(
     val contactPhotoUri: String? = null,
     val phone: String = "",
     val email: String = "",
+    @ColumnInfo(name = "mode", defaultValue = "PERSONAL")
+    val mode: String = AppMode.PERSONAL.name,
+    @ColumnInfo(name = "client_id")
+    val clientId: Long? = null,
 )

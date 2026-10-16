@@ -20,7 +20,7 @@ class DebtCalendarReconciler(
             .filter { debtor -> debtor.status != DebtStatus.COMPLETED.name }
             .filter { debtor -> debtor.calendarEventId.isNullOrBlank() || debtor.calendarSyncFailed }
             .forEach { entity ->
-                val payments = database.debtPaymentDao().getPaymentsForDebtor(entity.id)
+                val payments = database.debtPaymentDao().getPaymentsForDebtor(entity.mode, entity.id)
                 val result = gateway.upsertDebtEvent(
                     debtor = entity.toDomain(payments),
                     settings = settings,

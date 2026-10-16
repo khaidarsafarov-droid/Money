@@ -2,6 +2,7 @@ package com.example.money.data.backup
 
 import com.example.money.domain.backup.BackupAutopilotPreferences
 import com.example.money.domain.backup.BackupBundle
+import com.example.money.domain.backup.BackupClient
 import com.example.money.domain.backup.BackupCalendarPreferences
 import com.example.money.domain.backup.BackupDebtPayment
 import com.example.money.domain.backup.BackupDebtor
@@ -95,6 +96,7 @@ class BackupBundleCodec(
                 goalActions = decodeOptionalArray(data, KEY_GOAL_ACTIONS, ::decodeGoalAction),
                 notes = decodeOptionalArray(data, KEY_NOTES, ::decodeNote),
                 noteLines = decodeOptionalArray(data, KEY_NOTE_LINES, ::decodeNoteLine),
+                clients = decodeOptionalArray(data, KEY_CLIENTS, ::decodeClient),
             )
 
             val actualCounts = BackupRecordCounts.from(decoded)
@@ -183,6 +185,7 @@ class BackupBundleCodec(
         validateUniqueSyncIds(KEY_GOAL_ACTIONS, bundle.goalActions.map { it.syncId })
         validateUniqueSyncIds(KEY_NOTES, bundle.notes.map { it.syncId })
         validateUniqueSyncIds(KEY_NOTE_LINES, bundle.noteLines.map { it.syncId })
+        validateUniqueSyncIds(KEY_CLIENTS, bundle.clients.map { it.syncId })
         validateRelations(bundle)
 
         bundle.transfers.forEach {
@@ -210,6 +213,10 @@ class BackupBundleCodec(
     private fun validateRelations(bundle: BackupBundle) {
         val goalIds = bundle.goals.mapTo(mutableSetOf()) { it.syncId }
         val debtorIds = bundle.debtors.mapTo(mutableSetOf()) { it.syncId }
+        val clientIds = bundle.clients.mapTo(mutableSetOf()) { it.syncId }
+        bundle.debtors.forEach { debtor ->
+            validateOptionalReference("Debtor ${debtor.syncId}", "client", debtor.clientSyncId, clientIds)
+        }
         val paymentIds = bundle.debtPayments.mapTo(mutableSetOf()) { it.syncId }
 
         bundle.debtPayments.forEach { payment ->
@@ -368,6 +375,7 @@ class BackupBundleCodec(
             if (counts.goalActions > 0) put(KEY_GOAL_ACTIONS, counts.goalActions)
             if (counts.notes > 0) put(KEY_NOTES, counts.notes)
             if (counts.noteLines > 0) put(KEY_NOTE_LINES, counts.noteLines)
+            if (counts.clients > 0) put(KEY_CLIENTS, counts.clients)
             put(KEY_TOTAL, counts.total)
         }
 
@@ -388,6 +396,9 @@ class BackupBundleCodec(
             if (bundle.noteLines.isNotEmpty()) {
                 put(KEY_NOTE_LINES, encodeArray(bundle.noteLines, ::encodeNoteLine))
             }
+            if (bundle.clients.isNotEmpty()) {
+                put(KEY_CLIENTS, encodeArray(bundle.clients, ::encodeClient))
+            }
             put(KEY_PREFERENCES, encodePreferences(bundle.preferences))
         }
 
@@ -403,6 +414,7 @@ class BackupBundleCodec(
             if (goal.kind.isNotBlank() && goal.kind != DEFAULT_GOAL_KIND) {
                 put(KEY_KIND, goal.kind)
             }
+            putMode(goal.mode)
         }
 
     private fun encodeGoalAction(action: BackupGoalAction): JSONObject =
@@ -425,6 +437,7 @@ class BackupBundleCodec(
             put(KEY_CLOSED, note.closed)
             put(KEY_CREATED_AT, note.createdAtEpochMillis)
             put(KEY_UPDATED_AT, note.updatedAtEpochMillis)
+            putMode(note.mode)
         }
 
     private fun encodeNoteLine(line: BackupNoteLine): JSONObject =
@@ -454,6 +467,8 @@ class BackupBundleCodec(
             put(KEY_INTEREST_RATE_BPS, debtor.interestRateBps)
             put(KEY_PHONE, debtor.phone)
             put(KEY_EMAIL, debtor.email)
+            putMode(debtor.mode)
+            putOptional(KEY_CLIENT_SYNC_ID, debtor.clientSyncId)
         }
 
     private fun encodeDebtPayment(payment: BackupDebtPayment): JSONObject =
@@ -464,6 +479,7 @@ class BackupBundleCodec(
             put(KEY_CURRENCY, payment.currency)
             put(KEY_PAID_AT, payment.paidAtEpochMillis)
             put(KEY_AFFECTS_BALANCE, payment.affectsBalance)
+            putMode(payment.mode)
         }
 
     private fun encodeTransfer(transfer: BackupTransfer): JSONObject =
@@ -476,6 +492,7 @@ class BackupBundleCodec(
             putOptional(KEY_DEBTOR_SYNC_ID, transfer.debtorSyncId)
             putOptional(KEY_DEBT_PAYMENT_SYNC_ID, transfer.debtPaymentSyncId)
             put(KEY_NOTE, transfer.note)
+            putMode(transfer.mode)
         }
 
     private fun encodeExpense(expense: BackupExpense): JSONObject =
@@ -489,6 +506,7 @@ class BackupBundleCodec(
             putOptional(KEY_DEBTOR_SYNC_ID, expense.debtorSyncId)
             putOptional(KEY_DEBT_PAYMENT_SYNC_ID, expense.debtPaymentSyncId)
             putOptional(KEY_GOAL_SYNC_ID, expense.goalSyncId)
+            putMode(expense.mode)
         }
 
     private fun encodeLuckDiaryEntry(entry: BackupLuckDiaryEntry): JSONObject =
@@ -627,6 +645,7 @@ class BackupBundleCodec(
             goalActions = json.optInt(KEY_GOAL_ACTIONS, 0),
             notes = json.optInt(KEY_NOTES, 0),
             noteLines = json.optInt(KEY_NOTE_LINES, 0),
+            clients = json.optInt(KEY_CLIENTS, 0),
         )
         if (json.getInt(KEY_TOTAL) != counts.total) {
             throw BackupIntegrityException("Backup manifest total record count is invalid")
@@ -644,6 +663,7 @@ class BackupBundleCodec(
             updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
             deadlineEpochMillis = json.optionalLong(KEY_DEADLINE),
             kind = json.optionalString(KEY_KIND) ?: DEFAULT_GOAL_KIND,
+            mode = json.optMode(),
         )
 
     private fun decodeGoalAction(json: JSONObject): BackupGoalAction =
@@ -666,6 +686,7 @@ class BackupBundleCodec(
             closed = json.optBoolean(KEY_CLOSED, false),
             createdAtEpochMillis = json.getLong(KEY_CREATED_AT),
             updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
+            mode = json.optMode(),
         )
 
     private fun decodeNoteLine(json: JSONObject): BackupNoteLine =
@@ -695,6 +716,8 @@ class BackupBundleCodec(
             interestRateBps = json.getInt(KEY_INTEREST_RATE_BPS),
             phone = json.getString(KEY_PHONE),
             email = json.getString(KEY_EMAIL),
+            mode = json.optMode(),
+            clientSyncId = json.optionalString(KEY_CLIENT_SYNC_ID),
         )
 
     private fun decodeDebtPayment(json: JSONObject): BackupDebtPayment =
@@ -705,6 +728,7 @@ class BackupBundleCodec(
             currency = json.getString(KEY_CURRENCY),
             paidAtEpochMillis = json.getLong(KEY_PAID_AT),
             affectsBalance = json.getBoolean(KEY_AFFECTS_BALANCE),
+            mode = json.optMode(),
         )
 
     private fun decodeTransfer(json: JSONObject): BackupTransfer =
@@ -717,6 +741,7 @@ class BackupBundleCodec(
             debtorSyncId = json.optionalString(KEY_DEBTOR_SYNC_ID),
             debtPaymentSyncId = json.optionalString(KEY_DEBT_PAYMENT_SYNC_ID),
             note = json.getString(KEY_NOTE),
+            mode = json.optMode(),
         )
 
     private fun decodeExpense(json: JSONObject): BackupExpense =
@@ -730,6 +755,7 @@ class BackupBundleCodec(
             debtorSyncId = json.optionalString(KEY_DEBTOR_SYNC_ID),
             debtPaymentSyncId = json.optionalString(KEY_DEBT_PAYMENT_SYNC_ID),
             goalSyncId = json.optionalString(KEY_GOAL_SYNC_ID),
+            mode = json.optMode(),
         )
 
     private fun decodeLuckDiaryEntry(json: JSONObject): BackupLuckDiaryEntry =
@@ -931,6 +957,47 @@ class BackupBundleCodec(
     private fun JSONObject.optionalInt(key: String): Int? =
         if (has(key) && !isNull(key)) getInt(key) else null
 
+    private fun encodeClient(client: BackupClient): JSONObject =
+        JSONObject().apply {
+            put(KEY_SYNC_ID, client.syncId)
+            put(KEY_NAME, client.name)
+            put(KEY_PHONE, client.phone)
+            put(KEY_COMPANY, client.company)
+            putOptional(KEY_EMAIL, client.email)
+            putOptional(KEY_LAST_MEETING_AT, client.lastMeetingAtEpochMillis)
+            put(KEY_NOTE, client.note)
+            put(KEY_CREATED_AT, client.createdAtEpochMillis)
+            put(KEY_SYNC_UPDATED_AT, client.syncUpdatedAtEpochMillis)
+            put(KEY_DELETED, client.deleted)
+            put(KEY_MODE, client.mode)
+        }
+
+    private fun decodeClient(json: JSONObject): BackupClient =
+        BackupClient(
+            syncId = json.getString(KEY_SYNC_ID),
+            name = json.getString(KEY_NAME),
+            phone = json.optString(KEY_PHONE, ""),
+            company = json.optString(KEY_COMPANY, ""),
+            email = json.optionalString(KEY_EMAIL),
+            lastMeetingAtEpochMillis = json.optionalLong(KEY_LAST_MEETING_AT),
+            note = json.optString(KEY_NOTE, ""),
+            createdAtEpochMillis = json.getLong(KEY_CREATED_AT),
+            syncUpdatedAtEpochMillis = json.getLong(KEY_SYNC_UPDATED_AT),
+            deleted = json.optBoolean(KEY_DELETED, false),
+            mode = json.optMode(default = MODE_PROFESSIONAL),
+        )
+
+    private fun JSONObject.putMode(mode: String) {
+        if (mode.isNotBlank() && mode != MODE_PERSONAL) {
+            put(KEY_MODE, mode)
+        }
+    }
+
+    private fun JSONObject.optMode(default: String = MODE_PERSONAL): String {
+        if (!has(KEY_MODE)) return default
+        return if (optString(KEY_MODE) == MODE_PROFESSIONAL) MODE_PROFESSIONAL else MODE_PERSONAL
+    }
+
     private fun JSONObject.putOptional(key: String, value: Any?) {
         if (value != null) {
             put(key, value)
@@ -944,6 +1011,8 @@ class BackupBundleCodec(
 
         private const val SHA_256 = "SHA-256"
         private const val DEFAULT_GOAL_KIND = "MONEY"
+        private const val MODE_PERSONAL = "PERSONAL"
+        private const val MODE_PROFESSIONAL = "PROFESSIONAL"
 
         private const val KEY_MANIFEST = "manifest"
         private const val KEY_DATA = "data"
@@ -963,6 +1032,13 @@ class BackupBundleCodec(
         private const val KEY_GOAL_ACTIONS = "goalActions"
         private const val KEY_NOTES = "notes"
         private const val KEY_NOTE_LINES = "noteLines"
+        private const val KEY_CLIENTS = "clients"
+        private const val KEY_MODE = "mode"
+        private const val KEY_CLIENT_SYNC_ID = "clientSyncId"
+        private const val KEY_COMPANY = "company"
+        private const val KEY_LAST_MEETING_AT = "lastMeetingAtEpochMillis"
+        private const val KEY_SYNC_UPDATED_AT = "syncUpdatedAtEpochMillis"
+        private const val KEY_DELETED = "deleted"
         private const val KEY_PREFERENCES = "preferences"
         private const val KEY_SYNC_ID = "syncId"
         private const val KEY_NAME = "name"

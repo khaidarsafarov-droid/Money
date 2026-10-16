@@ -12,4 +12,12 @@ object AppRoutes {
     const val DEBT_NOTIFICATION_SETTINGS = "debt_notification_settings"
     const val BACKUP_SETTINGS = "backup_settings"
     const val SYNC_SETTINGS = "sync_settings"
+    const val CLIENTS = "clients"
+    const val CLIENT_NEW = "clients/new"
+    const val CLIENT_EDIT = "clients/{clientId}/edit"
+    const val CLIENT_DETAIL = "clients/{clientId}"
+
+    fun clientDetail(id: Long): String = "clients/$id"
+
+    fun clientEdit(id: Long): String = "clients/$id/edit"
 }

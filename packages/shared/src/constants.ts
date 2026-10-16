@@ -1,6 +1,6 @@
 /** Cross-platform Project Money constants (Master Blueprint). */
 
-export const SYNC_SCHEMA_VERSION = 3;
+export const SYNC_SCHEMA_VERSION = 4;
 
 export const CURRENCY_CODE = "USD" as const;
 

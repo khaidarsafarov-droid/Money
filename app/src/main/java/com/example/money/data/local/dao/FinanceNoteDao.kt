@@ -10,11 +10,18 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FinanceNoteDao {
-    @Query("SELECT * FROM finance_notes ORDER BY closed ASC, updated_at DESC")
-    fun observeNotes(): Flow<List<FinanceNoteEntity>>
+    @Query("SELECT * FROM finance_notes WHERE mode = :mode ORDER BY closed ASC, updated_at DESC")
+    fun observeNotes(mode: String): Flow<List<FinanceNoteEntity>>
 
-    @Query("SELECT * FROM finance_note_lines ORDER BY sort_order ASC, id ASC")
-    fun observeLines(): Flow<List<FinanceNoteLineEntity>>
+    @Query(
+        """
+        SELECT finance_note_lines.* FROM finance_note_lines
+        INNER JOIN finance_notes ON finance_notes.id = finance_note_lines.note_id
+        WHERE finance_notes.mode = :mode
+        ORDER BY finance_note_lines.sort_order ASC, finance_note_lines.id ASC
+        """,
+    )
+    fun observeLines(mode: String): Flow<List<FinanceNoteLineEntity>>
 
     @Query("SELECT * FROM finance_notes")
     suspend fun getAllNotesOnce(): List<FinanceNoteEntity>

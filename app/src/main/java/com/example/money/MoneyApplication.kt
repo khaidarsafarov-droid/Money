@@ -14,6 +14,7 @@ import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncService
 import com.example.money.domain.repository.BudgetRepository
+import com.example.money.domain.repository.ClientRepository
 import com.example.money.domain.repository.BackupRepository
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.FinanceSnapshotRepository
@@ -74,6 +75,8 @@ class MoneyApplication : Application() {
         get() = container.luckDiaryRepository
     val noteRepository: com.example.money.domain.repository.NoteRepository
         get() = container.noteRepository
+    val clientRepository: ClientRepository
+        get() = container.clientRepository
     val debtReminderScheduler: DebtReminderScheduler get() = container.debtReminderScheduler
     val debtCalendarSyncService: DebtCalendarSyncService get() = container.debtCalendarSyncService
     val personalDebtMessageScheduler: PersonalDebtMessageScheduler

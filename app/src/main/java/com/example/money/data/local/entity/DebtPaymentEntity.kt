@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.money.settings.AppMode
 
 @Entity(
     tableName = "debt_payment",
@@ -16,7 +17,11 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("debtor_id"), Index(value = ["sync_id"], unique = true)],
+    indices = [
+        Index("debtor_id"),
+        Index(value = ["sync_id"], unique = true),
+        Index(value = ["mode"]),
+    ],
 )
 data class DebtPaymentEntity(
     @PrimaryKey(autoGenerate = true)
@@ -32,4 +37,6 @@ data class DebtPaymentEntity(
     val paidAt: Long,
     @ColumnInfo(name = "affects_balance")
     val affectsBalance: Boolean = false,
+    @ColumnInfo(name = "mode", defaultValue = "PERSONAL")
+    val mode: String = AppMode.PERSONAL.name,
 )

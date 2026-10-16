@@ -54,6 +54,9 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
@@ -72,6 +75,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -98,6 +102,7 @@ import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.goal.GoalViewModel
 import com.example.money.ui.notes.NoteViewModel
+import com.example.money.settings.AppMode
 import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
@@ -107,6 +112,7 @@ import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
+import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.launch
@@ -126,6 +132,7 @@ fun HomeScreen(
     onOpenBackupSettings: () -> Unit = {},
     onOpenSyncSettings: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
+    onOpenClients: () -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -165,6 +172,13 @@ fun HomeScreen(
     val noteLines by noteViewModel.lines.collectAsStateWithLifecycle()
     val currencyRegion by app.preferencesStore.currencyRegion.collectAsStateWithLifecycle(
         initialValue = CurrencyRegion.US,
+    )
+    val appMode by app.preferencesStore.appMode.collectAsStateWithLifecycle(
+        initialValue = AppMode.PERSONAL,
+    )
+    val modeAccent = if (appMode == AppMode.PROFESSIONAL) FinanceInfo else GoldPrimary
+    val modeLabel = stringResource(
+        if (appMode == AppMode.PROFESSIONAL) R.string.mode_professional else R.string.mode_personal,
     )
     SideEffect { Formatters.activeRegion = currencyRegion }
     val goalActions by goalViewModel.actions.collectAsStateWithLifecycle()
@@ -419,12 +433,46 @@ fun HomeScreen(
         val topBar: @Composable () -> Unit = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = modeLabel,
+                            color = modeAccent,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 },
                 actions = {
+                    SingleChoiceSegmentedButtonRow {
+                        AppMode.entries.forEachIndexed { index, mode ->
+                            SegmentedButton(
+                                selected = appMode == mode,
+                                onClick = {
+                                    scope.launch { app.preferencesStore.setAppMode(mode) }
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index, AppMode.entries.size),
+                                colors = SegmentedButtonDefaults.colors(
+                                    activeContainerColor = modeAccent,
+                                    activeContentColor = Color.White,
+                                ),
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            if (mode == AppMode.PROFESSIONAL) {
+                                                R.string.mode_professional_short
+                                            } else {
+                                                R.string.mode_personal_short
+                                            },
+                                        ),
+                                    )
+                                },
+                            )
+                        }
+                    }
                     if (!isTablet) {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(
@@ -607,6 +655,8 @@ fun HomeScreen(
                 onAddDebt = { showAddDebtorDialog = true },
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
                 emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
+                appMode = appMode,
+                onOpenClients = onOpenClients,
             )
         } else {
             PhoneHomeLayout(
@@ -717,6 +767,8 @@ fun HomeScreen(
                 scope = scope,
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
                 emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
+                appMode = appMode,
+                onOpenClients = onOpenClients,
             )
         }
     }

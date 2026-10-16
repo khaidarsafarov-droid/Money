@@ -5,10 +5,14 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.money.data.sync.SyncIds
+import com.example.money.settings.AppMode
 
 @Entity(
     tableName = "finance_notes",
-    indices = [Index(value = ["sync_id"], unique = true)],
+    indices = [
+        Index(value = ["sync_id"], unique = true),
+        Index(value = ["mode"]),
+    ],
 )
 data class FinanceNoteEntity(
     @PrimaryKey(autoGenerate = true)
@@ -24,4 +28,6 @@ data class FinanceNoteEntity(
     val updatedAt: Long,
     @ColumnInfo(name = "sync_id")
     val syncId: String = SyncIds.newId(),
+    @ColumnInfo(name = "mode", defaultValue = "PERSONAL")
+    val mode: String = AppMode.PERSONAL.name,
 )

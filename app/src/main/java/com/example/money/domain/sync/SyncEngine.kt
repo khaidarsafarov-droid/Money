@@ -34,6 +34,7 @@ object SyncEngine {
             goalActions = mergeOptional(local.goalActions, remote.goalActions) { it.id },
             notes = mergeOptional(local.notes, remote.notes) { it.id },
             noteLines = mergeOptional(local.noteLines, remote.noteLines) { it.id },
+            clients = mergeOptional(local.clients, remote.clients) { it.id },
         )
     }
 

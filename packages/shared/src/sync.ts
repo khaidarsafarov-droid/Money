@@ -14,6 +14,7 @@ export interface SnapshotGoal extends LwwRecord {
   currency: string;
   dateDeadline?: string;
   goalKind?: string;
+  mode?: string;
 }
 
 export interface SnapshotGoalAction extends LwwRecord {
@@ -32,6 +33,19 @@ export interface SnapshotNote extends LwwRecord {
   mark: string;
   closed: boolean;
   createdAt: number;
+  mode?: string;
+}
+
+export interface SnapshotClient extends LwwRecord {
+  id: string;
+  name: string;
+  phone?: string;
+  company?: string;
+  email?: string;
+  lastMeetingAt?: number;
+  note?: string;
+  createdAt: number;
+  mode?: string;
 }
 
 export interface SnapshotNoteLine extends LwwRecord {
@@ -54,6 +68,8 @@ export interface SnapshotDebt extends LwwRecord {
   debtType: string;
   affectsBalance: boolean;
   note: string;
+  mode?: string;
+  clientSyncId?: string;
 }
 
 export interface SnapshotDebtPayment extends LwwRecord {
@@ -63,6 +79,7 @@ export interface SnapshotDebtPayment extends LwwRecord {
   paidAt: string;
   affectsBalance: boolean;
   currency?: string;
+  mode?: string;
 }
 
 export interface SnapshotTransaction extends LwwRecord {
@@ -75,6 +92,7 @@ export interface SnapshotTransaction extends LwwRecord {
   createdAt: string;
   note?: string;
   category?: string;
+  mode?: string;
 }
 
 export interface SnapshotVoiceSettings {
@@ -105,6 +123,8 @@ export interface FinanceSnapshot {
   goalActions?: SnapshotGoalAction[];
   notes?: SnapshotNote[];
   noteLines?: SnapshotNoteLine[];
+  /** Absent on snapshots written before clients existed. */
+  clients?: SnapshotClient[];
 }
 
 export type SyncEntityType =
@@ -115,6 +135,7 @@ export type SyncEntityType =
   | "TRANSACTION"
   | "NOTE"
   | "NOTE_LINE"
+  | "CLIENT"
   | "VOICE_SETTINGS"
   | "FULL_SNAPSHOT";
 

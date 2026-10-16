@@ -5,10 +5,14 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.money.data.sync.SyncIds
+import com.example.money.settings.AppMode
 
 @Entity(
     tableName = "savings_goal",
-    indices = [Index(value = ["sync_id"], unique = true)],
+    indices = [
+        Index(value = ["sync_id"], unique = true),
+        Index(value = ["mode"]),
+    ],
 )
 data class SavingsGoalEntity(
     @PrimaryKey(autoGenerate = true)
@@ -27,6 +31,8 @@ data class SavingsGoalEntity(
     val deadlineMillis: Long? = null,
     @ColumnInfo(name = "kind", defaultValue = "MONEY")
     val kind: String = "MONEY",
+    @ColumnInfo(name = "mode", defaultValue = "PERSONAL")
+    val mode: String = AppMode.PERSONAL.name,
 ) {
     /** Для обратной совместимости с логикой бюджета (double). */
     val targetAmount: Double

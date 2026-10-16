@@ -75,7 +75,7 @@ class CategorySpendTest {
             ),
         )
 
-        val totals = database.expenseDao().observeCategorySpend(march.startMillis, march.endMillis).first()
+        val totals = database.expenseDao().observeCategorySpend("PERSONAL", march.startMillis, march.endMillis).first()
 
         assertEquals(listOf("Food" to 350L, "Rent" to 40L), totals.map { it.category to it.totalCents })
     }

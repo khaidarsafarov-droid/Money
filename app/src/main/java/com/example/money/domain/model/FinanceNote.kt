@@ -33,6 +33,7 @@ data class FinanceNote(
     val closed: Boolean = false,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
+    val mode: com.example.money.settings.AppMode = com.example.money.settings.AppMode.PERSONAL,
 )
 
 data class FinanceNoteLine(

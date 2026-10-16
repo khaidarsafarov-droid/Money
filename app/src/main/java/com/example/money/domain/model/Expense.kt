@@ -1,5 +1,7 @@
 package com.example.money.domain.model
 
+import com.example.money.settings.AppMode
+
 data class Expense(
     val id: Long = 0,
     val syncId: String = "",
@@ -12,4 +14,5 @@ data class Expense(
     val debtPaymentId: Long? = null,
     /** Set when the expense is taken from a goal. Free-wallet expenses leave this empty. */
     val goalId: Long? = null,
+    val mode: AppMode = AppMode.PERSONAL,
 )

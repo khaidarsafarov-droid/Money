@@ -9,6 +9,8 @@ import com.example.money.data.local.entity.GoalActionEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
+import com.example.money.data.local.entity.ClientEntity
+import com.example.money.domain.sync.SnapshotClient
 import com.example.money.domain.sync.SnapshotDebt
 import com.example.money.domain.sync.SnapshotDebtPayment
 import com.example.money.domain.sync.SnapshotGoal
@@ -43,6 +45,7 @@ object FinanceSnapshotCodec {
         snapshot.goalActions?.let { put("goalActions", encodeGoalActions(it)) }
         snapshot.notes?.let { put("notes", encodeNotes(it)) }
         snapshot.noteLines?.let { put("noteLines", encodeNoteLines(it)) }
+        snapshot.clients?.let { put("clients", encodeClients(it)) }
     }.toString()
 
     fun decode(raw: String): FinanceSnapshot {
@@ -81,7 +84,7 @@ object FinanceSnapshotCodec {
                 throw IllegalArgumentException("Snapshot field \"$key\" exceeds maximum record count")
             }
         }
-        listOf("goalActions", "notes", "noteLines").forEach { key ->
+        listOf("goalActions", "notes", "noteLines", "clients").forEach { key ->
             val array = json.optJSONArray(key) ?: return@forEach
             if (array.length() > MAX_RECORD_COUNT) {
                 throw IllegalArgumentException("Snapshot field \"$key\" exceeds maximum record count")
@@ -99,6 +102,7 @@ object FinanceSnapshotCodec {
             put("goalKind", entity.kind)
             put("syncUpdatedAt", entity.updatedAt)
             put("deleted", deleted)
+            put("mode", entity.mode)
         }.toString()
 
     fun encodeDebt(entity: DebtorEntity, syncUpdatedAt: Long, deleted: Boolean = false): String =
@@ -116,6 +120,7 @@ object FinanceSnapshotCodec {
             put("note", entity.note)
             put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
+            put("mode", entity.mode)
         }.toString()
 
     fun encodeDebtPayment(
@@ -133,6 +138,7 @@ object FinanceSnapshotCodec {
             put("currency", entity.currency)
             put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
+            put("mode", entity.mode)
         }.toString()
 
     fun encodeTransactionFromTransfer(
@@ -154,6 +160,7 @@ object FinanceSnapshotCodec {
             entity.note.takeIf { it.isNotBlank() }?.let { put("note", it) }
             put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
+            put("mode", entity.mode)
         }.toString()
     }
 
@@ -176,6 +183,7 @@ object FinanceSnapshotCodec {
             debtPaymentSyncId?.let { put("debtPaymentId", it) }
             put("syncUpdatedAt", syncUpdatedAt)
             put("deleted", deleted)
+            put("mode", entity.mode)
         }.toString()
 
     fun encodeGoal(record: SnapshotGoal): String = encodeGoalRecord(record).toString()
@@ -259,9 +267,14 @@ object FinanceSnapshotCodec {
             dateDeadline = entity.deadlineMillis?.let(SyncDates::formatDate),
             goalKind = entity.kind,
             syncUpdatedAt = entity.updatedAt,
+            mode = entity.mode,
         )
 
-    fun toSnapshotDebt(entity: DebtorEntity, syncUpdatedAt: Long): SnapshotDebt =
+    fun toSnapshotDebt(
+        entity: DebtorEntity,
+        syncUpdatedAt: Long,
+        clientSyncId: String? = null,
+    ): SnapshotDebt =
         SnapshotDebt(
             id = entity.syncId,
             name = entity.name,
@@ -275,6 +288,8 @@ object FinanceSnapshotCodec {
             affectsBalance = entity.affectsBalance,
             note = entity.note,
             syncUpdatedAt = syncUpdatedAt,
+            mode = entity.mode,
+            clientSyncId = clientSyncId,
         )
 
     fun toSnapshotDebtPayment(entity: DebtPaymentEntity, debtorSyncId: String): SnapshotDebtPayment =
@@ -286,6 +301,7 @@ object FinanceSnapshotCodec {
             affectsBalance = entity.affectsBalance,
             syncUpdatedAt = entity.paidAt,
             currency = entity.currency,
+            mode = entity.mode,
         )
 
     fun toSnapshotTransactionFromTransfer(
@@ -305,6 +321,7 @@ object FinanceSnapshotCodec {
             note = entity.note.ifBlank { null },
             category = null,
             syncUpdatedAt = entity.date,
+            mode = entity.mode,
         )
     }
 
@@ -324,6 +341,7 @@ object FinanceSnapshotCodec {
             note = entity.note.ifBlank { null },
             category = entity.category,
             syncUpdatedAt = entity.date,
+            mode = entity.mode,
         )
 
     private fun decodeV2(json: JSONObject): FinanceSnapshot =
@@ -342,6 +360,7 @@ object FinanceSnapshotCodec {
             goalActions = json.optJSONArray("goalActions")?.let(::decodeGoalActions),
             notes = json.optJSONArray("notes")?.let(::decodeNotes),
             noteLines = json.optJSONArray("noteLines")?.let(::decodeNoteLines),
+            clients = json.optJSONArray("clients")?.let(::decodeClients),
         )
 
     /** Accepts legacy Android v1 snapshots (Long ids, transfers/expenses). */
@@ -475,6 +494,7 @@ object FinanceSnapshotCodec {
             goal.goalKind?.let { put("goalKind", it) }
             put("syncUpdatedAt", goal.syncUpdatedAt)
             put("deleted", goal.deleted)
+            put("mode", goal.mode)
         }
 
     private fun encodeDebtRecord(debt: SnapshotDebt): JSONObject =
@@ -492,6 +512,8 @@ object FinanceSnapshotCodec {
             put("note", debt.note)
             put("syncUpdatedAt", debt.syncUpdatedAt)
             put("deleted", debt.deleted)
+            put("mode", debt.mode)
+            debt.clientSyncId?.let { put("clientSyncId", it) }
         }
 
     private fun encodeDebtPaymentRecord(payment: SnapshotDebtPayment): JSONObject =
@@ -504,6 +526,7 @@ object FinanceSnapshotCodec {
             payment.currency?.let { put("currency", it) }
             put("syncUpdatedAt", payment.syncUpdatedAt)
             put("deleted", payment.deleted)
+            put("mode", payment.mode)
         }
 
     private fun encodeTransactionRecord(transaction: SnapshotTransaction): JSONObject =
@@ -519,6 +542,7 @@ object FinanceSnapshotCodec {
             transaction.category?.let { put("category", it) }
             put("syncUpdatedAt", transaction.syncUpdatedAt)
             put("deleted", transaction.deleted)
+            put("mode", transaction.mode)
         }
 
     private fun encodeVoiceSettings(settings: SnapshotVoiceSettings): String =
@@ -551,6 +575,7 @@ object FinanceSnapshotCodec {
                         goalKind = item.optString("goalKind").takeIf { item.has("goalKind") && it.isNotBlank() },
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
+                        mode = item.optMode(),
                     ),
                 )
             }
@@ -575,6 +600,8 @@ object FinanceSnapshotCodec {
                         note = item.optString("note", ""),
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
+                        mode = item.optMode(),
+                        clientSyncId = item.optString("clientSyncId").takeIf { item.has("clientSyncId") && it.isNotBlank() },
                     ),
                 )
             }
@@ -594,6 +621,7 @@ object FinanceSnapshotCodec {
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
                         currency = item.optString("currency").takeIf { item.has("currency") && it.isNotBlank() },
+                        mode = item.optMode(),
                     ),
                 )
             }
@@ -616,6 +644,7 @@ object FinanceSnapshotCodec {
                         category = item.optString("category").takeIf { item.has("category") },
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
+                        mode = item.optMode(),
                     ),
                 )
             }
@@ -654,6 +683,22 @@ object FinanceSnapshotCodec {
             closed = entity.closed,
             createdAt = entity.createdAt,
             syncUpdatedAt = entity.updatedAt,
+            mode = entity.mode,
+        )
+
+    fun toSnapshotClient(entity: ClientEntity): SnapshotClient =
+        SnapshotClient(
+            id = entity.syncId,
+            name = entity.name,
+            phone = entity.phone,
+            company = entity.company,
+            email = entity.email,
+            lastMeetingAt = entity.lastMeetingAt,
+            note = entity.note,
+            createdAt = entity.createdAt,
+            mode = entity.mode,
+            syncUpdatedAt = entity.syncUpdatedAt,
+            deleted = entity.deleted,
         )
 
     fun toSnapshotNoteLine(entity: FinanceNoteLineEntity, noteSyncId: String): SnapshotNoteLine =
@@ -697,6 +742,7 @@ object FinanceSnapshotCodec {
             put("createdAt", note.createdAt)
             put("syncUpdatedAt", note.syncUpdatedAt)
             put("deleted", note.deleted)
+            put("mode", note.mode)
         }
 
     private fun encodeNoteLineRecord(line: SnapshotNoteLine): JSONObject =
@@ -743,6 +789,7 @@ object FinanceSnapshotCodec {
                         createdAt = item.optLong("createdAt", item.getLong("syncUpdatedAt")),
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
+                        mode = item.optMode(),
                     ),
                 )
             }
@@ -765,4 +812,64 @@ object FinanceSnapshotCodec {
                 )
             }
         }
+
+    private fun encodeClients(clients: List<SnapshotClient>): JSONArray =
+        JSONArray().apply { clients.forEach { put(encodeClientRecord(it)) } }
+
+    fun encodeClient(record: SnapshotClient): String = encodeClientRecord(record).toString()
+
+    fun encodeClient(entity: ClientEntity, deleted: Boolean = false): String =
+        encodeClientRecord(toSnapshotClient(entity).copy(deleted = deleted)).toString()
+
+    fun decodeClient(raw: String): SnapshotClient =
+        decodeClients(JSONArray().put(JSONObject(raw))).single()
+
+    private fun encodeClientRecord(client: SnapshotClient): JSONObject =
+        JSONObject().apply {
+            put("id", client.id)
+            put("name", client.name)
+            put("phone", client.phone)
+            put("company", client.company)
+            client.email?.let { put("email", it) }
+            client.lastMeetingAt?.let { put("lastMeetingAt", it) }
+            put("note", client.note)
+            put("createdAt", client.createdAt)
+            put("mode", client.mode)
+            put("syncUpdatedAt", client.syncUpdatedAt)
+            put("deleted", client.deleted)
+        }
+
+    private fun decodeClients(array: JSONArray): List<SnapshotClient> =
+        buildList {
+            for (index in 0 until array.length()) {
+                val item = array.getJSONObject(index)
+                add(
+                    SnapshotClient(
+                        id = item.getString("id"),
+                        name = item.getString("name"),
+                        phone = item.optString("phone", ""),
+                        company = item.optString("company", ""),
+                        email = item.optString("email").takeIf { item.has("email") && it.isNotBlank() },
+                        lastMeetingAt = if (item.has("lastMeetingAt") && !item.isNull("lastMeetingAt")) {
+                            item.getLong("lastMeetingAt")
+                        } else {
+                            null
+                        },
+                        note = item.optString("note", ""),
+                        createdAt = item.optLong("createdAt", item.getLong("syncUpdatedAt")),
+                        mode = item.optMode(default = MODE_PROFESSIONAL),
+                        syncUpdatedAt = item.getLong("syncUpdatedAt"),
+                        deleted = item.optBoolean("deleted", false),
+                    ),
+                )
+            }
+        }
+
+    private fun JSONObject.optMode(default: String = MODE_PERSONAL): String {
+        if (!has("mode")) return default
+        return if (optString("mode") == MODE_PROFESSIONAL) MODE_PROFESSIONAL else MODE_PERSONAL
+    }
+
+    private const val MODE_PERSONAL = "PERSONAL"
+    private const val MODE_PROFESSIONAL = "PROFESSIONAL"
 }

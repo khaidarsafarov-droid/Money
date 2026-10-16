@@ -23,8 +23,12 @@ import com.example.money.domain.util.DebtOperationLabels
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtorFilter
+import com.example.money.settings.AppMode
 import com.example.money.ui.debtors.DebtorSort
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class DebtorRepositoryImpl(
@@ -34,13 +38,19 @@ class DebtorRepositoryImpl(
     private val transferDao: TransferDao,
     private val expenseDao: ExpenseDao,
     private val syncQueueRecorder: SyncQueueRecorder,
+    private val appMode: Flow<AppMode>,
 ) : DebtorRepository {
 
+    private fun <T> scoped(query: (String) -> Flow<T>): Flow<T> =
+        appMode.map { it.name }.distinctUntilChanged().flatMapLatest(query)
+
     override fun getAllDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
-        debtorDao.getAllDebtorsWithPayments().map { rows -> rows.map { it.toDomain() } }
+        scoped { mode -> debtorDao.getAllDebtorsWithPayments(mode) }
+            .map { rows -> rows.map { it.toDomain() } }
 
     override fun getActiveDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
-        debtorDao.getActiveDebtorsWithPayments().map { rows -> rows.map { it.toDomain() } }
+        scoped { mode -> debtorDao.getActiveDebtorsWithPayments(mode) }
+            .map { rows -> rows.map { it.toDomain() } }
 
     override fun observeFilteredDebtors(
         tab: DebtTab,
@@ -59,12 +69,15 @@ class DebtorRepositoryImpl(
         val searchPattern = searchQuery.trim().let { query ->
             if (query.isBlank()) "%" else "%$query%"
         }
-        return debtorDao.observeFilteredWithPayments(
+        return scoped { mode ->
+            debtorDao.observeFilteredWithPayments(
+            mode = mode,
             debtType = debtType.name,
             filter = filter.name,
             searchPattern = searchPattern,
             overdueBefore = DebtDueDateUtils.overdueBeforeMillis(now),
-        ).map { rows ->
+        )
+        }.map { rows ->
             DebtorSort.sort(rows.map { it.toDomain() }, now)
         }
     }
@@ -74,9 +87,10 @@ class DebtorRepositoryImpl(
             val syncAt = System.currentTimeMillis()
             var newId = 0L
             database.withTransaction {
-                newId = debtorDao.insert(debtor.toEntity())
-                if (debtor.affectsBalance) {
-                    recordCreationOperation(debtor.copy(id = newId), syncAt)
+                val stamped = debtor.copy(mode = appMode.first())
+                newId = debtorDao.insert(stamped.toEntity())
+                if (stamped.affectsBalance) {
+                    recordCreationOperation(stamped.copy(id = newId), syncAt)
                 }
             }
             debtorDao.getDebtorById(newId)?.let { syncQueueRecorder.recordDebt(it, syncAt) }
@@ -115,7 +129,7 @@ class DebtorRepositoryImpl(
 
     override suspend fun getDebtorById(id: Long): com.example.money.domain.model.Debtor? {
         val entity = debtorDao.getDebtorById(id) ?: return null
-        val payments = debtPaymentDao.getPaymentsForDebtor(id)
+        val payments = debtPaymentDao.getPaymentsForDebtor(entity.mode, id)
         return entity.toDomain(payments)
     }
 
@@ -162,6 +176,7 @@ class DebtorRepositoryImpl(
                     currency = debtor.currency,
                     paidAt = syncAt,
                     affectsBalance = affectsBalance,
+                    mode = debtor.mode,
                 ),
             )
             paymentId = insertedPaymentId
@@ -188,7 +203,7 @@ class DebtorRepositoryImpl(
                 debtPaymentDao.getById(id)?.let { syncQueueRecorder.recordDebtPayment(it) }
             }
             debtorDao.getDebtorById(debtId)?.let { debtor ->
-                val syncAt = debtPaymentDao.getPaymentsForDebtor(debtId)
+                val syncAt = debtPaymentDao.getPaymentsForDebtor(debtor.mode, debtId)
                     .maxOfOrNull { it.paidAt } ?: System.currentTimeMillis()
                 syncQueueRecorder.recordDebt(debtor, syncAt)
             }
@@ -200,7 +215,7 @@ class DebtorRepositoryImpl(
         SyncWriteGuard.withWriteLock {
             val syncAt = System.currentTimeMillis()
             val existing = debtorDao.getDebtorById(debtor.id) ?: return@withWriteLock
-            val deletedPayments = debtPaymentDao.getPaymentsForDebtor(debtor.id)
+            val deletedPayments = debtPaymentDao.getPaymentsForDebtor(existing.mode, debtor.id)
             database.withTransaction {
                 removeAllLinkedOperations(debtor.id)
                 debtorDao.delete(existing)
@@ -284,6 +299,7 @@ class DebtorRepositoryImpl(
                         note = DebtOperationLabels.creationNote(debtor.name),
                         isConfirmed = true,
                         debtId = debtor.id,
+                        mode = debtor.mode.name,
                     ),
                 )
                 expenseDao.getById(id)?.let { syncQueueRecorder.recordExpense(it) }
@@ -297,6 +313,7 @@ class DebtorRepositoryImpl(
                         goalId = null,
                         debtId = debtor.id,
                         note = DebtOperationLabels.creationNote(debtor.name),
+                        mode = debtor.mode.name,
                     ),
                 )
                 transferDao.getById(id)?.let { syncQueueRecorder.recordTransfer(it) }
@@ -353,6 +370,7 @@ class DebtorRepositoryImpl(
                         debtId = debtor.id,
                         debtPaymentId = paymentId,
                         note = DebtOperationLabels.returnNote(debtor.name),
+                        mode = debtor.mode,
                     ),
                 )
                 transferDao.getById(id)?.let { syncQueueRecorder.recordTransfer(it) }
@@ -367,6 +385,7 @@ class DebtorRepositoryImpl(
                         isConfirmed = true,
                         debtId = debtor.id,
                         debtPaymentId = paymentId,
+                        mode = debtor.mode,
                     ),
                 )
                 expenseDao.getById(id)?.let { syncQueueRecorder.recordExpense(it) }

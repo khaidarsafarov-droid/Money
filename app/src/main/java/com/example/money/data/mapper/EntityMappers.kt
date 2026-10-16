@@ -18,6 +18,7 @@ import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.util.MoneyMath
+import com.example.money.settings.AppMode
 
 fun DebtorWithPayments.toDomain(): Debtor = debtor.toDomain(payments)
 
@@ -44,6 +45,8 @@ fun DebtorEntity.toDomain(payments: List<DebtPaymentEntity> = emptyList()): Debt
     contactPhotoUri = contactPhotoUri,
     phone = phone,
     email = email,
+    mode = AppMode.fromStored(mode),
+    clientId = clientId,
 )
 
 fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
@@ -68,6 +71,8 @@ fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
     contactPhotoUri = contactPhotoUri,
     phone = phone,
     email = email,
+    mode = mode.name,
+    clientId = clientId,
 )
 
 fun DebtPaymentEntity.toDomain(): DebtPayment = DebtPayment(
@@ -77,6 +82,7 @@ fun DebtPaymentEntity.toDomain(): DebtPayment = DebtPayment(
     currency = currency,
     paidAt = paidAt,
     affectsBalance = affectsBalance,
+    mode = AppMode.fromStored(mode),
 )
 
 fun DebtPayment.toEntity(): DebtPaymentEntity = DebtPaymentEntity(
@@ -86,6 +92,7 @@ fun DebtPayment.toEntity(): DebtPaymentEntity = DebtPaymentEntity(
     currency = currency,
     paidAt = paidAt,
     affectsBalance = affectsBalance,
+    mode = mode.name,
 )
 
 fun TransferEntity.toDomain(): Transfer = Transfer(
@@ -98,6 +105,7 @@ fun TransferEntity.toDomain(): Transfer = Transfer(
     debtId = debtId,
     debtPaymentId = debtPaymentId,
     note = note,
+    mode = AppMode.fromStored(mode),
 )
 
 fun Transfer.toEntity(): TransferEntity = TransferEntity(
@@ -110,6 +118,7 @@ fun Transfer.toEntity(): TransferEntity = TransferEntity(
     debtId = debtId,
     debtPaymentId = debtPaymentId,
     note = note,
+    mode = mode.name,
 )
 
 fun ExpenseEntity.toDomain(): Expense = Expense(
@@ -123,6 +132,7 @@ fun ExpenseEntity.toDomain(): Expense = Expense(
     debtId = debtId,
     debtPaymentId = debtPaymentId,
     goalId = goalId,
+    mode = AppMode.fromStored(mode),
 )
 
 fun Expense.toEntity(): ExpenseEntity = ExpenseEntity(
@@ -136,6 +146,7 @@ fun Expense.toEntity(): ExpenseEntity = ExpenseEntity(
     debtId = debtId,
     debtPaymentId = debtPaymentId,
     goalId = goalId,
+    mode = mode.name,
 )
 
 fun SavingsGoalEntity.toDomain(): SavingsGoal = SavingsGoal(
@@ -148,6 +159,7 @@ fun SavingsGoalEntity.toDomain(): SavingsGoal = SavingsGoal(
     updatedAt = updatedAt,
     deadlineMillis = deadlineMillis,
     kind = GoalKind.fromStored(kind),
+    mode = AppMode.fromStored(mode),
 )
 
 fun SavingsGoal.toEntity(): SavingsGoalEntity = SavingsGoalEntity(
@@ -160,6 +172,7 @@ fun SavingsGoal.toEntity(): SavingsGoalEntity = SavingsGoalEntity(
     updatedAt = updatedAt,
     deadlineMillis = deadlineMillis,
     kind = kind.name,
+    mode = mode.name,
 )
 
 fun GoalActionEntity.toDomain(): GoalAction = GoalAction(
