@@ -479,9 +479,9 @@ class FinanceSnapshotApplier(
     private suspend fun applyNotes(notes: List<SnapshotNote>): Map<String, Long> {
         val dao = database.financeNoteDao()
         val live = notes.filterNot { it.deleted }
-        val keepIds = live.map { it.id }.toSet()
+        val tombstoned = notes.filter { it.deleted }.map { it.id }.toSet()
         dao.getAllNotesOnce()
-            .filter { it.syncId !in keepIds }
+            .filter { it.syncId in tombstoned }
             .forEach { dao.deleteNote(it.id) }
         live.forEach { note ->
             val existing = dao.getNoteBySyncId(note.id)
@@ -516,9 +516,9 @@ class FinanceSnapshotApplier(
     ) {
         val dao = database.financeNoteDao()
         val live = lines.filter { !it.deleted && noteLocalIds.containsKey(it.noteId) }
-        val keepIds = live.map { it.id }.toSet()
+        val tombstoned = lines.filter { it.deleted }.map { it.id }.toSet()
         dao.getAllLinesOnce()
-            .filter { it.syncId !in keepIds }
+            .filter { it.syncId in tombstoned }
             .forEach { dao.deleteLine(it.id) }
         live.forEach { line ->
             val noteId = noteLocalIds.getValue(line.noteId)
