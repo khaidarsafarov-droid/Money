@@ -7,6 +7,7 @@ import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
+import com.example.money.data.local.entity.FinanceNoteEntity
 import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
@@ -102,6 +103,37 @@ class FinanceSnapshotApplierTest {
         assertNull(database.transferDao().getBySyncId("transfer-1"))
         assertNull(database.expenseDao().getBySyncId("expense-1"))
         assertEquals(5, database.syncTombstoneDao().getAll().size)
+    }
+
+    @Test
+    fun apply_keepsUnsyncedLocalNoteMissingFromPeerSnapshot() = runBlocking {
+        database.financeNoteDao().insertNote(
+            FinanceNoteEntity(
+                syncId = "local-only",
+                title = "Offline",
+                kind = "TEXT",
+                body = "not synced yet",
+                createdAt = 10L,
+                updatedAt = 10L,
+            ),
+        )
+
+        applier.apply(
+            FinanceSnapshot(
+                schemaVersion = FinanceSnapshot.CURRENT_SCHEMA_VERSION,
+                deviceId = "peer",
+                updatedAt = 20L,
+                goals = emptyList(),
+                debts = emptyList(),
+                debtPayments = emptyList(),
+                transactions = emptyList(),
+                voiceSettings = null,
+                notes = emptyList(),
+                noteLines = emptyList(),
+            ),
+        )
+
+        assertNotNull(database.financeNoteDao().getNoteBySyncId("local-only"))
     }
 
     @Test
