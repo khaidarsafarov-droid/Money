@@ -144,6 +144,10 @@ fun TabletHomeLayout(
     onAddLine: (Long, String, Long) -> Unit = { _, _, _ -> },
     onUpdateLine: (FinanceNoteLine) -> Unit = {},
     onDeleteLine: (Long, Long) -> Unit = { _, _ -> },
+    onNoteTitleChange: (FinanceNote, String) -> Unit = { _, _ -> },
+    onNoteBodyChange: (FinanceNote, String) -> Unit = { _, _ -> },
+    onFlushNoteDraft: (FinanceNote, String, String) -> Unit = { _, _, _ -> },
+    noteDraftBlocksRemote: (Long) -> Boolean = { false },
     calendarPermissionGranted: Boolean = true,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
@@ -336,6 +340,10 @@ fun TabletHomeLayout(
                     onUpdateLine = onUpdateLine,
                     onDeleteLine = onDeleteLine,
                     hideAmounts = privacySettings.hideAmounts,
+                    onNoteTitleChange = onNoteTitleChange,
+                    onNoteBodyChange = onNoteBodyChange,
+                    onFlushNoteDraft = onFlushNoteDraft,
+                    noteDraftBlocksRemote = noteDraftBlocksRemote,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),

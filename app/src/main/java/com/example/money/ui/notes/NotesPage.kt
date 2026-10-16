@@ -23,12 +23,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -119,6 +118,12 @@ fun NotesPage(
     onUpdateLine: (FinanceNoteLine) -> Unit,
     onDeleteLine: (Long, Long) -> Unit,
     hideAmounts: Boolean = false,
+    onNoteTitleChange: (FinanceNote, String) -> Unit = { _, _ -> },
+    onNoteBodyChange: (FinanceNote, String) -> Unit = { _, _ -> },
+    onFlushNoteDraft: (FinanceNote, String, String) -> Unit = { note, title, body ->
+        persistText(note, title, body, onUpdateNote)
+    },
+    noteDraftBlocksRemote: (Long) -> Boolean = { false },
     modifier: Modifier = Modifier,
 ) {
     val openNote = notes.firstOrNull { it.id == openNoteId }
@@ -146,6 +151,10 @@ fun NotesPage(
             onAddLine = { label, cents -> onAddLine(openNote.id, label, cents) },
             onUpdateLine = onUpdateLine,
             onDeleteLine = { lineId -> onDeleteLine(openNote.id, lineId) },
+            onNoteTitleChange = { title -> onNoteTitleChange(openNote, title) },
+            onNoteBodyChange = { body -> onNoteBodyChange(openNote, body) },
+            onFlushNoteDraft = { title, body -> onFlushNoteDraft(openNote, title, body) },
+            noteDraftBlocksRemote = { noteDraftBlocksRemote(openNote.id) },
             modifier = modifier,
         )
     }
@@ -240,22 +249,25 @@ private fun NoteEditor(
     onUpdateLine: (FinanceNoteLine) -> Unit,
     onDeleteLine: (Long) -> Unit,
     hideAmounts: Boolean = false,
+    onNoteTitleChange: (String) -> Unit = {},
+    onNoteBodyChange: (String) -> Unit = {},
+    onFlushNoteDraft: (String, String) -> Unit = { title, body ->
+        persistText(note, title, body, onUpdateNote)
+    },
+    noteDraftBlocksRemote: () -> Boolean = { false },
     modifier: Modifier = Modifier,
 ) {
-    var title by remember(note.id, note.title) { mutableStateOf(note.title) }
-    var body by remember(note.id, note.body) { mutableStateOf(note.body) }
-    val latestTitle = rememberUpdatedState(title)
-    val latestBody = rememberUpdatedState(body)
-    val latestNote = rememberUpdatedState(note)
-    val latestUpdate = rememberUpdatedState(onUpdateNote)
-    BackHandler(enabled = true) {
-        persistText(note, title, body, onUpdateNote)
-        onBack()
-    }
-    DisposableEffect(note.id) {
-        onDispose {
-            persistText(latestNote.value, latestTitle.value, latestBody.value, latestUpdate.value)
+    var title by remember(note.id) { mutableStateOf(note.title) }
+    var body by remember(note.id) { mutableStateOf(note.body) }
+    LaunchedEffect(note.updatedAt, note.title, note.body) {
+        if (!noteDraftBlocksRemote()) {
+            title = note.title
+            body = note.body
         }
+    }
+    BackHandler(enabled = true) {
+        onFlushNoteDraft(title, body)
+        onBack()
     }
     Column(
         modifier = modifier
@@ -266,7 +278,7 @@ private fun NoteEditor(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = {
-                persistText(note, title, body, onUpdateNote)
+                onFlushNoteDraft(title, body)
                 onBack()
             }) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.note_back))
@@ -279,7 +291,10 @@ private fun NoteEditor(
         }
         OutlinedTextField(
             value = title,
-            onValueChange = { title = it },
+            onValueChange = {
+                title = it
+                onNoteTitleChange(it)
+            },
             label = { Text(stringResource(R.string.note_title_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -288,14 +303,13 @@ private fun NoteEditor(
             NoteKind.TEXT -> {
                 OutlinedTextField(
                     value = body,
-                    onValueChange = { body = it },
+                    onValueChange = {
+                        body = it
+                        onNoteBodyChange(it)
+                    },
                     label = { Text(stringResource(R.string.note_body_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 6,
-                )
-                MoneyButton(
-                    text = stringResource(R.string.action_save),
-                    onClick = { persistText(note, title, body, onUpdateNote) },
                 )
             }
             NoteKind.FINANCIAL -> {

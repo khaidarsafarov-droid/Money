@@ -73,6 +73,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -237,7 +238,12 @@ fun HomeScreen(
     var showAddSheet by showAddSheetState
     val showNoteFormState = remember { mutableStateOf(false) }
     var showNoteForm by showNoteFormState
-    val openNoteIdState = remember { mutableStateOf<Long?>(null) }
+    val openNoteIdState = rememberSaveable(
+        saver = Saver(
+            save = { state -> state.value },
+            restore = { saved -> mutableStateOf(saved) },
+        ),
+    ) { mutableStateOf<Long?>(null) }
     var openNoteId by openNoteIdState
     val showCurrencyPickerState = remember { mutableStateOf(false) }
     var showCurrencyPicker by showCurrencyPickerState
@@ -562,7 +568,10 @@ fun HomeScreen(
         if (isTablet) {
             TabletHomeLayout(
                 section = tabletSection,
-                onSectionChange = { tabletSection = it },
+                onSectionChange = { section ->
+                    if (section != HomeSection.Notes) openNoteId = null
+                    tabletSection = section
+                },
                 selection = tabletSelection,
                 onSelectionChange = { tabletSelection = it },
                 syncState = syncState,
@@ -651,6 +660,10 @@ fun HomeScreen(
                 onAddLine = noteViewModel::addLine,
                 onUpdateLine = noteViewModel::updateLine,
                 onDeleteLine = noteViewModel::deleteLine,
+                onNoteTitleChange = noteViewModel::onTitleChange,
+                onNoteBodyChange = noteViewModel::onBodyChange,
+                onFlushNoteDraft = noteViewModel::flushDraft,
+                noteDraftBlocksRemote = noteViewModel::hasUnsavedDraft,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onViewContactHistory = { debtor ->
@@ -674,7 +687,10 @@ fun HomeScreen(
                 floatingActionButton = fab,
                 listState = listState,
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { tab ->
+                    if (HomeTab.entries[tab] != HomeTab.Notes) openNoteId = null
+                    selectedTab = tab
+                },
                 goals = goals,
                 goalActions = goalActions,
                 debtors = debtors,
@@ -744,6 +760,10 @@ fun HomeScreen(
                 onAddLine = noteViewModel::addLine,
                 onUpdateLine = noteViewModel::updateLine,
                 onDeleteLine = noteViewModel::deleteLine,
+                onNoteTitleChange = noteViewModel::onTitleChange,
+                onNoteBodyChange = noteViewModel::onBodyChange,
+                onFlushNoteDraft = noteViewModel::flushDraft,
+                noteDraftBlocksRemote = noteViewModel::hasUnsavedDraft,
                 calendarPermissionGranted = hasCalendarPermissions,
                 onOpenGoalHub = onOpenGoalHub,
                 onAddDebt = { showAddDebtorDialog = true },
