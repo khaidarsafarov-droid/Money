@@ -18,6 +18,7 @@ import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -43,6 +44,7 @@ class SyncService(
     private var nsdDiscovery: PeerDiscovery? = null
     private var queueObserverJob: Job? = null
     private var syncedDecayJob: Job? = null
+    private var syncDebounceJob: Job? = null
 
     private var localDeviceId: String = ""
     private var localServiceName: String = ""
@@ -102,7 +104,7 @@ class SyncService(
         queueObserverJob = scope.launch {
             syncQueueDao.observePendingCount().collect { pendingCount ->
                 if (pendingCount > 0) {
-                    trySyncWithBestPeer()
+                    scheduleSyncWithBestPeer()
                 }
             }
         }
@@ -112,6 +114,7 @@ class SyncService(
     fun stop() {
         queueObserverJob?.cancel()
         syncedDecayJob?.cancel()
+        syncDebounceJob?.cancel()
         nsdDiscovery?.stop()
         nsdDiscovery = null
         server?.stop(gracePeriodMillis = 250, timeoutMillis = 1_000)
@@ -148,9 +151,7 @@ class SyncService(
                 peerCount = discoveredPeers.size,
             )
         }
-        scope.launch {
-            trySyncWithPeer(peer)
-        }
+        scheduleSync(peer)
     }
 
     private fun handlePeerLost(serviceName: String) {
@@ -165,9 +166,17 @@ class SyncService(
         }
     }
 
-    private suspend fun trySyncWithBestPeer() {
+    private fun scheduleSyncWithBestPeer() {
         val peer = discoveredPeers.values.firstOrNull() ?: return
-        trySyncWithPeer(peer)
+        scheduleSync(peer)
+    }
+
+    private fun scheduleSync(peer: NsdPeerDiscovery.PeerEndpoint) {
+        syncDebounceJob?.cancel()
+        syncDebounceJob = scope.launch {
+            delay(SyncRetry.DEBOUNCE_MS)
+            trySyncWithPeer(peer)
+        }
     }
 
     private suspend fun trySyncWithPeer(peer: NsdPeerDiscovery.PeerEndpoint) {
@@ -182,6 +191,19 @@ class SyncService(
     }
 
     private suspend fun runInitiatorSession(host: String, port: Int, peerId: String) {
+        try {
+            SyncRetry.run {
+                syncOnceAsInitiator(host, port, peerId)
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            Log.w(TAG, "Initiator sync failed", exception)
+            reportError(exception.message)
+        }
+    }
+
+    private suspend fun syncOnceAsInitiator(host: String, port: Int, peerId: String) {
         SyncWriteGuard.withWriteLock {
             updateStatus(SyncStatus.Syncing)
             try {
@@ -211,9 +233,11 @@ class SyncService(
                     syncQueueDao.clearAll()
                     markSynced()
                 }
+            } catch (exception: CancellationException) {
+                throw exception
             } catch (exception: Exception) {
-                Log.w(TAG, "Initiator sync failed", exception)
                 reportError(exception.message)
+                throw exception
             }
         }
     }
@@ -243,6 +267,8 @@ class SyncService(
                 }
                 syncQueueDao.clearAll()
                 markSynced()
+            } catch (exception: CancellationException) {
+                throw exception
             } catch (exception: Exception) {
                 Log.w(TAG, "Acceptor sync failed", exception)
                 reportError(exception.message)
