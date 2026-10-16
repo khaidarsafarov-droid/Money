@@ -185,6 +185,7 @@
     <string name="error_goal_amount_required">Enter a goal amount</string>
     <string name="error_category_required">Enter a category</string>
     <string name="error_due_before_given">Due date cannot be earlier than the start date</string>
+    <string name="error_percent_range">Enter a rate from 0 to 100</string>
     <string name="budget_new_transfer_title">New transfer</string>
     <string name="budget_new_expense_title">New expense</string>
     <string name="field_amount">Amount</string>

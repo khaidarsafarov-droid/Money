@@ -199,6 +199,7 @@
     <string name="error_goal_amount_required">Введите сумму цели</string>
     <string name="error_category_required">Введите категорию</string>
     <string name="error_due_before_given">Срок не может быть раньше даты выдачи</string>
+    <string name="error_percent_range">Введите ставку от 0 до 100</string>
     <string name="budget_new_transfer_title">Новый перевод</string>
     <string name="budget_new_expense_title">Новый расход</string>
     <string name="field_amount">Сумма</string>

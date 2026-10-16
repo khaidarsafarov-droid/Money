@@ -51,6 +51,51 @@ object InputValidators {
         else -> null
     }
 
+    /**
+     * Percent in the closed range 0..100, returned as basis points (12.5% → 1250).
+     * A blank field is optional and returns 0. Comma and dot are both accepted.
+     * Out-of-range, negative, and non-numeric text returns null.
+     */
+    fun parsePercent(text: String): Int? {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return 0
+        val normalized = trimmed.replace(',', '.')
+        if (normalized.any { character -> character == 'e' || character == 'E' || character.isLetter() }) {
+            return null
+        }
+        val decimal = try {
+            BigDecimal(normalized)
+        } catch (_: NumberFormatException) {
+            return null
+        }
+        if (decimal.signum() < 0) return null
+        val basisPoints = try {
+            decimal.setScale(2, RoundingMode.HALF_UP).movePointRight(2).intValueExact()
+        } catch (_: ArithmeticException) {
+            return null
+        }
+        if (basisPoints < 0 || basisPoints > 10_000) return null
+        return basisPoints
+    }
+
+    @StringRes
+    fun validatePercent(text: String): Int? = when {
+        text.isBlank() -> null
+        parsePercent(text) == null -> R.string.error_percent_range
+        else -> null
+    }
+
+    fun formatBasisPoints(basisPoints: Int): String {
+        if (basisPoints <= 0) return ""
+        val whole = basisPoints / 100
+        val fraction = basisPoints % 100
+        return when {
+            fraction == 0 -> whole.toString()
+            fraction % 10 == 0 -> "$whole.${fraction / 10}"
+            else -> "$whole.${fraction.toString().padStart(2, '0')}"
+        }
+    }
+
     @StringRes
     fun validateCategory(category: String): Int? = when {
         category.isBlank() -> R.string.error_category_required

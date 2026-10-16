@@ -42,8 +42,8 @@ import com.example.money.domain.model.FinanceNote
 import com.example.money.domain.model.FinanceNoteLine
 import com.example.money.domain.model.NoteKind
 import com.example.money.domain.model.NoteMark
-import com.example.money.domain.util.MoneyMath
 import com.example.money.domain.util.NoteCalculator
+import com.example.money.ui.components.centsToInput
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyDialog
@@ -477,11 +477,7 @@ private fun LineEditor(
 ) {
     var label by remember(lineId) { mutableStateOf(initialLabel) }
     var amountText by remember(lineId) {
-        mutableStateOf(
-            MoneyMath.fromCents(initialAmountCents).let { amount ->
-                if (amount % 1.0 == 0.0) amount.toLong().toString() else amount.toString()
-            },
-        )
+        mutableStateOf(centsToInput(initialAmountCents))
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(

@@ -54,7 +54,7 @@ fun IncomeIdeasDialog(
         .sumOf { it.remainingAmountCents }
     val monthsToAccelerate = 12
     val extraNeeded = if (totalRemaining > 0) {
-        kotlin.math.ceil(totalRemaining.toDouble() / monthsToAccelerate).toLong()
+        (totalRemaining + monthsToAccelerate - 1) / monthsToAccelerate
     } else {
         0L
     }

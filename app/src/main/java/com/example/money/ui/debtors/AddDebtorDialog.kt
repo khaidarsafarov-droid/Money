@@ -107,8 +107,7 @@ fun DebtorFormDialog(
     }
     var interestRateText by remember(existingDebtor?.id, debtType) {
         mutableStateOf(
-            existingDebtor?.interestRateBps?.let { if (it > 0) (it / 100.0).toString() else "" }
-                .orEmpty(),
+            existingDebtor?.interestRateBps?.let(InputValidators::formatBasisPoints).orEmpty(),
         )
     }
     var pickedContact by remember(existingDebtor?.id, debtType) {
@@ -137,11 +136,13 @@ fun DebtorFormDialog(
     val amountPositiveError = stringResource(R.string.error_amount_positive)
     val amountBelowPaidError = stringResource(R.string.error_amount_below_paid)
     var dateError by remember { mutableStateOf<String?>(null) }
+    var interestError by remember { mutableStateOf<String?>(null) }
 
-    val canSubmit = remember(name, amountText, dateGiven, dateDue, isEdit, existingDebtor) {
+    val canSubmit = remember(name, amountText, dateGiven, dateDue, interestRateText, isEdit, existingDebtor) {
         InputValidators.validateName(name) == null &&
             InputValidators.validateAmount(amountText) == null &&
             InputValidators.validateDueDate(dateGiven, dateDue) == null &&
+            InputValidators.validatePercent(interestRateText) == null &&
             if (isEdit) {
                 val amount = InputValidators.parseAmount(amountText)
                 amount == null || amount >= (existingDebtor?.currentAmountCents ?: 0L)
@@ -365,9 +366,14 @@ fun DebtorFormDialog(
                     }
                     OutlinedTextField(
                         value = interestRateText,
-                        onValueChange = { interestRateText = it },
+                        onValueChange = {
+                            interestRateText = it
+                            interestError = null
+                        },
                         label = { Text(stringResource(R.string.loan_interest_rate_label)) },
                         singleLine = true,
+                        isError = interestError != null,
+                        supportingText = interestError?.let { message -> { Text(message) } },
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -386,6 +392,7 @@ fun DebtorFormDialog(
                         }
                     }
                     dateError = InputValidators.validateDueDate(dateGiven, dateDue)?.let(context::getString)
+                    interestError = InputValidators.validatePercent(interestRateText)?.let(context::getString)
 
                     if (isEdit && amountError == null) {
                         val amount = InputValidators.parseAmount(amountText)
@@ -397,11 +404,12 @@ fun DebtorFormDialog(
                         }
                     }
 
-                    if (nameError != null || amountError != null || dateError != null) return@TextButton
+                    if (nameError != null || amountError != null || dateError != null || interestError != null) {
+                        return@TextButton
+                    }
 
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
-                    val interestRateBps = interestRateText.toDoubleOrNull()
-                        ?.let { (it * 100).toInt().coerceAtLeast(0) } ?: 0
+                    val interestRateBps = InputValidators.parsePercent(interestRateText) ?: return@TextButton
                     onConfirm(
                         name.trim(),
                         amount,

@@ -36,6 +36,26 @@ class InputValidatorsTest {
     }
 
     @Test
+    fun parsePercent_acceptsCommaAndDotAsBasisPoints() {
+        assertEquals(1_250, InputValidators.parsePercent("12,5"))
+        assertEquals(1_250, InputValidators.parsePercent("12.5"))
+        assertEquals(10_000, InputValidators.parsePercent("100"))
+        assertEquals(0, InputValidators.parsePercent("0"))
+        assertEquals(0, InputValidators.parsePercent("   "))
+        assertEquals("12.5", InputValidators.formatBasisPoints(1_250))
+    }
+
+    @Test
+    fun parsePercent_rejectsOutOfRangeAndLetters() {
+        assertNull(InputValidators.parsePercent("101"))
+        assertNull(InputValidators.parsePercent("-1"))
+        assertNull(InputValidators.parsePercent("12%"))
+        assertNull(InputValidators.parsePercent("1e2"))
+        assertEquals(R.string.error_percent_range, InputValidators.validatePercent("101"))
+        assertNull(InputValidators.validatePercent(""))
+    }
+
+    @Test
     fun validateDueDate_rejectsDueBeforeGiven() {
         val given = 1_000L
         val due = 500L
