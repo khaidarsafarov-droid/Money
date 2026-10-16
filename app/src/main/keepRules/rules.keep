@@ -1,12 +1,47 @@
 # Add project specific R8 rules here.
 # AGP will combine all keep rule files in src/main/keepRules to pass to R8
-#
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-keepattributes *Annotation*,InnerClasses,Signature,EnclosingMethod
+
+# Ktor client/server and CIO engines are loaded by name.
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**
+-dontwarn kotlinx.atomicfu.**
+-dontwarn org.slf4j.**
+
+# kotlinx.serialization generated serializers.
+-if @kotlinx.serialization.Serializable class **
+-keepclassmembers class <1> {
+    static <1>$Companion Companion;
+}
+-keepclasseswithmembers class **$$serializer {
+    *** Companion;
+}
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-dontnote kotlinx.serialization.**
+
+# Room databases, entities, and generated implementations.
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-keepclassmembers class * {
+    @androidx.room.* <methods>;
+}
+-dontwarn androidx.room.paging.**
+
+# SQLCipher native entry points.
+-keep class net.zetetic.database.** { *; }
+-keep class net.zetetic.sqlcipher.** { *; }
+
+# Glance widgets are referenced from the manifest.
+-keep class * extends androidx.glance.appwidget.GlanceAppWidget
+-keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver
+-keep class androidx.glance.** { *; }
+
+# WorkManager workers are instantiated by class name.
+-keep class * extends androidx.work.Worker
+-keep class * extends androidx.work.CoroutineWorker
+-keep class * extends androidx.work.ListenableWorker {
+    public <init>(android.content.Context,androidx.work.WorkerParameters);
+}

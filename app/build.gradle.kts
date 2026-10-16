@@ -55,9 +55,9 @@ android {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             }
-            // Keep shrinking off until a signed release candidate is exercised on devices.
+            isShrinkResources = true
             optimization {
-                enable = false
+                enable = true
             }
         }
     }
