@@ -238,8 +238,6 @@ fun HomeScreen(
     var editGoal by editGoalState
     val stepsGoalIdState = remember { mutableStateOf<Long?>(null) }
     var stepsGoalId by stepsGoalIdState
-    val showWelcomeDialogState = remember { mutableStateOf(false) }
-    var showWelcomeDialog by showWelcomeDialogState
     val showAddSheetState = remember { mutableStateOf(false) }
     var showAddSheet by showAddSheetState
     val showNoteFormState = remember { mutableStateOf(false) }
@@ -320,8 +318,12 @@ fun HomeScreen(
         }
     }
 
+    val welcomeMessage = stringResource(R.string.welcome_title)
     LaunchedEffect(userProfile.onboardingCompleted) {
-        showWelcomeDialog = userProfile.onboardingCompleted && WelcomePreferences.shouldShowWelcome(context)
+        if (userProfile.onboardingCompleted && WelcomePreferences.shouldShowWelcome(context)) {
+            WelcomePreferences.markWelcomeSeen(context)
+            showMessage(welcomeMessage)
+        }
     }
 
     LaunchedEffect(
@@ -436,7 +438,6 @@ fun HomeScreen(
         pendingCalendarClose = pendingCalendarClose,
         addHighlight = addHighlight,
         addSheetActions = addSheetActions,
-        showWelcomeDialogState = showWelcomeDialogState,
         showAddDebtorDialogState = showAddDebtorDialogState,
         editDebtorState = editDebtorState,
         contactHistoryTargetState = contactHistoryTargetState,

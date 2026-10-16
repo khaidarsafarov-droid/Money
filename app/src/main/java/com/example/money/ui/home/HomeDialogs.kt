@@ -71,7 +71,6 @@ internal fun HomeDialogs(
     pendingCalendarClose: Debtor?,
     addHighlight: AddAction,
     addSheetActions: List<AddAction>,
-    showWelcomeDialogState: MutableState<Boolean>,
     showAddDebtorDialogState: MutableState<Boolean>,
     editDebtorState: MutableState<Debtor?>,
     contactHistoryTargetState: MutableState<Pair<String, String>?>,
@@ -96,7 +95,6 @@ internal fun HomeDialogs(
     showAdvisorSheetState: MutableState<Boolean>,
     onDebtWithDueDateSaved: () -> Unit = {},
 ) {
-    var showWelcomeDialog by showWelcomeDialogState
     var showAddDebtorDialog by showAddDebtorDialogState
     var editDebtor by editDebtorState
     var contactHistoryTarget by contactHistoryTargetState
@@ -133,27 +131,6 @@ internal fun HomeDialogs(
             dismissButton = {
                 TextButton(onClick = { debtorsViewModel.confirmRemoveCalendarEvent(remove = false) }) {
                     Text(stringResource(R.string.calendar_close_keep_mark))
-                }
-            },
-        )
-    }
-
-    if (showWelcomeDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                WelcomePreferences.markWelcomeSeen(context)
-                showWelcomeDialog = false
-            },
-            title = { Text(stringResource(R.string.welcome_title)) },
-            text = { Text(stringResource(R.string.welcome_body)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        WelcomePreferences.markWelcomeSeen(context)
-                        showWelcomeDialog = false
-                    },
-                ) {
-                    Text(stringResource(R.string.action_got_it))
                 }
             },
         )
