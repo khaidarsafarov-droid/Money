@@ -13,7 +13,7 @@ class NsdPeerDiscovery(
     private val localServiceName: String,
     private val onPeerResolved: (PeerEndpoint) -> Unit,
     private val onPeerLost: (String) -> Unit,
-) {
+) : PeerDiscovery {
     data class PeerEndpoint(
         val serviceName: String,
         val host: String,
@@ -72,7 +72,7 @@ class NsdPeerDiscovery(
         }
     }
 
-    fun registerService(port: Int) {
+    override fun registerService(port: Int) {
         if (!registered.compareAndSet(false, true)) return
         val serviceInfo = NsdServiceInfo().apply {
             serviceName = localServiceName
@@ -82,12 +82,12 @@ class NsdPeerDiscovery(
         nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
     }
 
-    fun startDiscovery() {
+    override fun startDiscovery() {
         if (!discovering.compareAndSet(false, true)) return
         nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
     }
 
-    fun stop() {
+    override fun stop() {
         unregisterAllServiceInfo()
         if (discovering.compareAndSet(true, false)) {
             try {

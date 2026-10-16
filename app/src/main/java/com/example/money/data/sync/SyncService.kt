@@ -1,14 +1,11 @@
 package com.example.money.data.sync
 
-import android.content.Context
 import android.util.Log
 import com.example.money.data.local.dao.SyncQueueDao
 import com.example.money.domain.repository.FinanceSnapshotRepository
+import com.example.money.domain.sync.FinanceSnapshot
 import com.example.money.domain.sync.SyncConnectionState
 import com.example.money.domain.sync.SyncStatus
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO as ClientCIO
-import io.ktor.client.plugins.websocket.WebSockets as ClientWebSockets
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO as ServerCIO
@@ -32,18 +29,16 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class SyncService(
-    private val context: Context,
-    private val deviceIdProvider: DeviceIdProvider,
+    private val readDeviceId: suspend () -> String,
     private val financeSnapshotRepository: FinanceSnapshotRepository,
-    private val financeSnapshotApplier: FinanceSnapshotApplier,
+    private val applySnapshot: suspend (FinanceSnapshot) -> Unit,
     private val syncQueueDao: SyncQueueDao,
     private val scope: CoroutineScope,
+    private val httpClients: SyncHttpClients = SyncHttpClients(),
+    private val discoveryFactory: PeerDiscoveryFactory,
 ) {
-    private val httpClient = HttpClient(ClientCIO) {
-        install(ClientWebSockets)
-    }
     private var server: EmbeddedServer<CIOApplicationEngine, *>? = null
-    private var nsdDiscovery: NsdPeerDiscovery? = null
+    private var nsdDiscovery: PeerDiscovery? = null
     private var queueObserverJob: Job? = null
     private var syncedDecayJob: Job? = null
 
@@ -56,17 +51,21 @@ class SyncService(
 
     suspend fun start() {
         if (server != null) return
-        localDeviceId = deviceIdProvider.getDeviceId()
+        httpClients.open()
+        localDeviceId = readDeviceId()
         localServiceName = NsdPeerDiscovery.buildServiceName(localDeviceId)
         startWebSocketServer()
-        val port = server?.engine?.resolvedConnectors()?.firstOrNull()?.port ?: return
+        val port = server?.engine?.resolvedConnectors()?.firstOrNull()?.port
+        if (port == null) {
+            stop()
+            return
+        }
         val webSocketUrl = LocalNetworkAddress.buildWebSocketUrl(
             LocalNetworkAddress.resolveLanIpv4(),
             port,
         )
         _connectionState.update { it.copy(webSocketUrl = webSocketUrl) }
-        nsdDiscovery = NsdPeerDiscovery(
-            context = context,
+        nsdDiscovery = discoveryFactory.create(
             localServiceName = localServiceName,
             onPeerResolved = { peer -> handlePeerDiscovered(peer) },
             onPeerLost = { serviceName -> handlePeerLost(serviceName) },
@@ -91,7 +90,7 @@ class SyncService(
         nsdDiscovery = null
         server?.stop(gracePeriodMillis = 250, timeoutMillis = 1_000)
         server = null
-        httpClient.close()
+        httpClients.close()
         discoveredPeers.clear()
         updateStatus(SyncStatus.Offline)
     }
@@ -151,11 +150,15 @@ class SyncService(
         runInitiatorSession(peer.host, peer.port)
     }
 
+    internal suspend fun syncWith(host: String, port: Int) {
+        runInitiatorSession(host, port)
+    }
+
     private suspend fun runInitiatorSession(host: String, port: Int) {
         SyncWriteGuard.withWriteLock {
             updateStatus(SyncStatus.Syncing)
             try {
-                httpClient.webSocket(host = host, port = port, path = "/sync") {
+                httpClients.require().webSocket(host = host, port = port, path = "/sync") {
                     val local = financeSnapshotRepository.buildSnapshot()
                     val merged = SyncPeerSession.runAsInitiator(
                         local = local,
@@ -170,7 +173,7 @@ class SyncService(
                         },
                     )
                     SyncWriteGuard.runWithoutRecording {
-                        financeSnapshotApplier.apply(merged)
+                        applySnapshot(merged)
                     }
                     syncQueueDao.clearAll()
                     markSynced()
@@ -198,7 +201,7 @@ class SyncService(
                     receiveText = receiveText,
                 )
                 SyncWriteGuard.runWithoutRecording {
-                    financeSnapshotApplier.apply(merged)
+                    applySnapshot(merged)
                 }
                 syncQueueDao.clearAll()
                 sendText(SyncPeerSession.ACK)

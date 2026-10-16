@@ -41,6 +41,8 @@ import com.example.money.data.repository.LuckDiaryRepositoryImpl
 import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.FinanceSnapshotApplier
 import com.example.money.data.sync.FinanceSnapshotRepositoryImpl
+import com.example.money.data.sync.NsdPeerDiscovery
+import com.example.money.data.sync.PeerDiscoveryFactory
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncService
 import com.example.money.domain.repository.BudgetRepository
@@ -100,12 +102,19 @@ class AppContainer(
 
     val syncService: SyncService by lazy {
         SyncService(
-            context = application,
-            deviceIdProvider = deviceIdProvider,
+            readDeviceId = { deviceIdProvider.getDeviceId() },
             financeSnapshotRepository = financeSnapshotRepository,
-            financeSnapshotApplier = financeSnapshotApplier,
+            applySnapshot = { snapshot -> financeSnapshotApplier.apply(snapshot) },
             syncQueueDao = database.syncQueueDao(),
             scope = applicationScope,
+            discoveryFactory = PeerDiscoveryFactory { serviceName, onPeerResolved, onPeerLost ->
+                NsdPeerDiscovery(
+                    context = application,
+                    localServiceName = serviceName,
+                    onPeerResolved = onPeerResolved,
+                    onPeerLost = onPeerLost,
+                )
+            },
         )
     }
 
