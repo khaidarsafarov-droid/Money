@@ -1,5 +1,6 @@
 package com.example.money.ui.notes
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -247,6 +248,10 @@ private fun NoteEditor(
     val latestBody = rememberUpdatedState(body)
     val latestNote = rememberUpdatedState(note)
     val latestUpdate = rememberUpdatedState(onUpdateNote)
+    BackHandler(enabled = true) {
+        persistText(note, title, body, onUpdateNote)
+        onBack()
+    }
     DisposableEffect(note.id) {
         onDispose {
             persistText(latestNote.value, latestTitle.value, latestBody.value, latestUpdate.value)
