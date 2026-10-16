@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.money.R
 
 object NotificationChannels {
@@ -29,6 +30,7 @@ object NotificationChannels {
         ).forEach(manager::createNotificationChannel)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun channel(
         context: Context,
         id: String,
