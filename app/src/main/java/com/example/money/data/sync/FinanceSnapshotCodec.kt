@@ -146,7 +146,7 @@ object FinanceSnapshotCodec {
         return JSONObject().apply {
             put("id", entity.syncId)
             put("kind", kind)
-            put("amountCents", MoneyMath.toCents(entity.amount))
+            put("amountCents", entity.amountCents)
             entity.goalSyncId?.let { put("goalId", it) }
             debtSyncId?.let { put("debtId", it) }
             debtPaymentSyncId?.let { put("debtPaymentId", it) }
@@ -167,7 +167,7 @@ object FinanceSnapshotCodec {
         JSONObject().apply {
             put("id", entity.syncId)
             put("kind", KIND_EXPENSE)
-            put("amountCents", MoneyMath.toCents(entity.amount))
+            put("amountCents", entity.amountCents)
             put("createdAt", SyncDates.formatDateTime(entity.date))
             put("category", entity.category)
             put("note", entity.note)
@@ -297,7 +297,7 @@ object FinanceSnapshotCodec {
         return SnapshotTransaction(
             id = entity.syncId,
             kind = kind,
-            amountCents = MoneyMath.toCents(entity.amount),
+            amountCents = entity.amountCents,
             goalId = entity.goalSyncId,
             debtId = debtSyncId,
             debtPaymentId = debtPaymentSyncId,
@@ -316,7 +316,7 @@ object FinanceSnapshotCodec {
         SnapshotTransaction(
             id = entity.syncId,
             kind = KIND_EXPENSE,
-            amountCents = MoneyMath.toCents(entity.amount),
+            amountCents = entity.amountCents,
             goalId = entity.goalSyncId,
             debtId = debtSyncId,
             debtPaymentId = debtPaymentSyncId,

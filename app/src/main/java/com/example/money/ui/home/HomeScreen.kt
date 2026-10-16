@@ -175,7 +175,7 @@ fun HomeScreen(
     val autopilotSettings by debtorsViewModel.autopilotSettings.collectAsStateWithLifecycle()
     val advisorMessages by debtorsViewModel.advisorMessages.collectAsStateWithLifecycle()
     val budgetSummary by budgetViewModel.budgetSummary.collectAsStateWithLifecycle()
-    val availableBalanceUsd = budgetSummary.availableBalance
+    val availableBalanceCents = budgetSummary.availableBalanceCents
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
     val debtProgressPercent = remember(allDebtors) {
@@ -368,7 +368,7 @@ fun HomeScreen(
         goalViewModel = goalViewModel,
         noteViewModel = noteViewModel,
         debtTab = debtTab,
-        availableBalanceUsd = availableBalanceUsd,
+        availableBalanceCents = availableBalanceCents,
         allDebtors = allDebtors,
         privacySettings = privacySettings,
         personalBranchSettings = personalBranchSettings,

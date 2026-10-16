@@ -273,12 +273,12 @@ class DebtorRepositoryImpl(
             debtor.targetAmountCents
         }
         if (bookedCents <= 0L) return
-        val amount = MoneyMath.fromCents(bookedCents)
+        val amountCents = bookedCents
         when (debtor.debtType) {
             DebtType.CREDITOR -> {
                 val id = expenseDao.insert(
                     ExpenseEntity(
-                        amount = amount,
+                        amountCents = amountCents,
                         category = DebtOperationLabels.categoryDebt,
                         date = at,
                         note = DebtOperationLabels.creationNote(debtor.name),
@@ -291,7 +291,7 @@ class DebtorRepositoryImpl(
             DebtType.DEBTOR -> {
                 val id = transferDao.insert(
                     TransferEntity(
-                        amount = amount,
+                        amountCents = amountCents,
                         date = at,
                         isConfirmed = true,
                         goalId = null,
@@ -341,12 +341,12 @@ class DebtorRepositoryImpl(
         paymentId: Long,
         paidAt: Long,
     ) {
-        val amount = MoneyMath.fromCents(paymentCents)
+        val amountCents = paymentCents
         when (runCatching { DebtType.valueOf(debtor.debtType) }.getOrDefault(DebtType.CREDITOR)) {
             DebtType.CREDITOR -> {
                 val id = transferDao.insert(
                     TransferEntity(
-                        amount = amount,
+                        amountCents = amountCents,
                         date = paidAt,
                         isConfirmed = true,
                         goalId = null,
@@ -360,7 +360,7 @@ class DebtorRepositoryImpl(
             DebtType.DEBTOR -> {
                 val id = expenseDao.insert(
                     ExpenseEntity(
-                        amount = amount,
+                        amountCents = amountCents,
                         category = DebtOperationLabels.categoryDebt,
                         date = paidAt,
                         note = DebtOperationLabels.paymentNote(debtor.name),

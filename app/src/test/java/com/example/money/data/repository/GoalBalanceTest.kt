@@ -66,26 +66,26 @@ class GoalBalanceTest {
 
     @Test
     fun addGoalTransferIfAffordable_rejectsWhenFreeBalanceIsShort() = runBlocking {
-        budget.addDeposit(Transfer(amount = 100.0, date = 1L))
-        budget.addExpense(Expense(amount = 30.0, category = "Food", date = 2L))
+        budget.addDeposit(Transfer(amountCents = 10_000L, date = 1L))
+        budget.addExpense(Expense(amountCents = 3_000L, category = "Food", date = 2L))
         val goalId = database.savingsGoalDao().insert(
             SavingsGoalEntity(name = "Trip", targetAmountCents = 50_000L, updatedAt = 1L),
         )
 
         assertTrue(
             budget.addGoalTransferIfAffordable(
-                Transfer(amount = 40.0, date = 3L, goalId = goalId),
+                Transfer(amountCents = 4_000L, date = 3L, goalId = goalId),
             ),
         )
         assertFalse(
             budget.addGoalTransferIfAffordable(
-                Transfer(amount = 40.0, date = 4L, goalId = goalId),
+                Transfer(amountCents = 4_000L, date = 4L, goalId = goalId),
             ),
         )
 
         val goalTransfers = database.transferDao().getAllOnce().filter { it.goalId != null }
         assertEquals(1, goalTransfers.size)
-        assertEquals(40.0, goalTransfers.single().amount, 0.001)
+        assertEquals(4_000L, goalTransfers.single().amountCents)
     }
 
     @Test

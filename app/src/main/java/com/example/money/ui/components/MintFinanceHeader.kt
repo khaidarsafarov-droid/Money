@@ -35,8 +35,6 @@ import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
-import kotlin.math.roundToInt
-
 private val HeroEnd = Color(0xFF0B5346)
 private val PastelMint = Color(0xFFD9F6E6)
 private val PastelPeach = Color(0xFFFFE4CC)
@@ -55,9 +53,9 @@ fun MintFinanceHeader(
     progressPercent: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulated + goalMetrics.totalRemainingToGoal
-    val goalPercent = if (goalPool > 0.0) {
-        ((goalMetrics.totalAccumulated / goalPool) * 100.0).roundToInt().coerceIn(0, 100)
+    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
+    val goalPercent = if (goalPool > 0L) {
+        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
     } else {
         0
     }
@@ -89,13 +87,13 @@ fun MintFinanceHeader(
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
                 label = stringResource(R.string.global_balance_accumulated_label),
-                value = Formatters.currencyCompact(goalMetrics.totalAccumulated, hide = hideAmounts),
+                value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
                 container = PastelLilac,
                 modifier = Modifier.weight(1f),
             )
             PastelStat(
                 label = stringResource(R.string.global_balance_remaining_label),
-                value = Formatters.currencyCompact(goalMetrics.totalRemainingToGoal, hide = hideAmounts),
+                value = Formatters.currencyFromCents(goalMetrics.totalRemainingToGoalCents, hide = hideAmounts),
                 container = PastelSand,
                 modifier = Modifier.weight(1f),
             )
@@ -206,9 +204,9 @@ fun HomePreviewCards(
     onProgressClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulated + goalMetrics.totalRemainingToGoal
-    val goalPercent = if (goalPool > 0.0) {
-        ((goalMetrics.totalAccumulated / goalPool) * 100.0).roundToInt().coerceIn(0, 100)
+    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
+    val goalPercent = if (goalPool > 0L) {
+        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
     } else {
         0
     }
@@ -236,7 +234,7 @@ fun HomePreviewCards(
             )
             PastelStat(
                 label = stringResource(R.string.home_preview_accumulated),
-                value = Formatters.currencyCompact(goalMetrics.totalAccumulated, hide = hideAmounts),
+                value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
                 container = PastelLilac,
                 onClick = onAccumulatedClick,
                 modifier = Modifier.weight(1f),
@@ -245,7 +243,7 @@ fun HomePreviewCards(
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
                 label = stringResource(R.string.global_balance_remaining_label),
-                value = Formatters.currencyCompact(goalMetrics.totalRemainingToGoal, hide = hideAmounts),
+                value = Formatters.currencyFromCents(goalMetrics.totalRemainingToGoalCents, hide = hideAmounts),
                 container = PastelSand,
                 onClick = onRemainingClick,
                 modifier = Modifier.weight(1f),

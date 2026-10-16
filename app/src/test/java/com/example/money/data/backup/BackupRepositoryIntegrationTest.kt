@@ -428,7 +428,7 @@ class BackupRepositoryIntegrationTest {
         database.expenseDao().insert(
             ExpenseEntity(
                 syncId = "expense-sync",
-                amount = 3.0,
+                amountCents = 300L,
                 category = "Food",
                 date = 1L,
                 isConfirmed = true,
@@ -516,7 +516,7 @@ class BackupRepositoryIntegrationTest {
             TransferEntity(
                 id = 44,
                 syncId = "transfer-sync",
-                amount = 12.34,
+                amountCents = 1_234L,
                 date = 400,
                 isConfirmed = false,
                 goalId = 41,
@@ -530,7 +530,7 @@ class BackupRepositoryIntegrationTest {
             ExpenseEntity(
                 id = 45,
                 syncId = "expense-sync",
-                amount = 5.67,
+                amountCents = 567L,
                 category = "Travel",
                 date = 500,
                 note = "expense metadata",

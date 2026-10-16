@@ -14,29 +14,29 @@ interface TransferDao {
     @Query("SELECT * FROM transfers ORDER BY date DESC")
     fun getAllTransfers(): Flow<List<TransferEntity>>
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
-    fun observeDepositTotal(): Flow<Double>
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
+    fun observeDepositTotal(): Flow<Long>
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
-    suspend fun getDepositTotalOnce(): Double
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NULL")
+    suspend fun getDepositTotalOnce(): Long
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
-    fun observeGoalAllocatedTotal(): Flow<Double>
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
+    fun observeGoalAllocatedTotal(): Flow<Long>
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
-    suspend fun getGoalAllocatedTotalOnce(): Double
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM transfers WHERE isConfirmed = 1 AND goalId IS NOT NULL")
+    suspend fun getGoalAllocatedTotalOnce(): Long
 
     @Query(
         """
-        SELECT COALESCE(SUM(amount), 0) FROM transfers
+        SELECT COALESCE(SUM(amount_cents), 0) FROM transfers
         WHERE isConfirmed = 1 AND goalId = :goalId
         """,
     )
-    suspend fun getGoalTransferTotalOnce(goalId: Long): Double
+    suspend fun getGoalTransferTotalOnce(goalId: Long): Long
 
     @Query(
         """
-        SELECT goalId, COALESCE(SUM(amount), 0) AS totalAmount
+        SELECT goalId, COALESCE(SUM(amount_cents), 0) AS totalAmount
         FROM transfers
         WHERE isConfirmed = 1 AND goalId IS NOT NULL
         GROUP BY goalId

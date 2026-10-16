@@ -20,7 +20,8 @@ data class ExpenseEntity(
     val id: Long = 0,
     @ColumnInfo(name = "sync_id")
     val syncId: String = SyncIds.newId(),
-    val amount: Double,
+    @ColumnInfo(name = "amount_cents")
+    val amountCents: Long,
     val category: String,
     val date: Long,
     val note: String = "",

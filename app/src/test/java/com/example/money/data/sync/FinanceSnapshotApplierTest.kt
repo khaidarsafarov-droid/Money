@@ -75,7 +75,7 @@ class FinanceSnapshotApplierTest {
         database.transferDao().insert(
             TransferEntity(
                 syncId = "transfer-1",
-                amount = 10.0,
+                amountCents = 1_000L,
                 date = 100L,
                 isConfirmed = true,
                 goalId = goalId,
@@ -85,7 +85,7 @@ class FinanceSnapshotApplierTest {
         database.expenseDao().insert(
             ExpenseEntity(
                 syncId = "expense-1",
-                amount = 5.0,
+                amountCents = 500L,
                 category = "Other",
                 date = 100L,
                 isConfirmed = true,

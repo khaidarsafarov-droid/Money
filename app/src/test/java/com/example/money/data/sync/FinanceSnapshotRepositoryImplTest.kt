@@ -96,7 +96,7 @@ class FinanceSnapshotRepositoryImplTest {
         val transferId = database.transferDao().insert(
             TransferEntity(
                 syncId = "transfer-1",
-                amount = 10.0,
+                amountCents = 1_000L,
                 date = 100L,
                 isConfirmed = true,
                 goalSyncId = "goal-1",
@@ -106,7 +106,7 @@ class FinanceSnapshotRepositoryImplTest {
         val expenseId = database.expenseDao().insert(
             ExpenseEntity(
                 syncId = "expense-1",
-                amount = 5.0,
+                amountCents = 500L,
                 category = "Other",
                 date = 100L,
                 isConfirmed = true,
@@ -159,7 +159,7 @@ class FinanceSnapshotRepositoryImplTest {
         database.expenseDao().insert(
             ExpenseEntity(
                 syncId = "expense-sync",
-                amount = 12.0,
+                amountCents = 1_200L,
                 category = "food",
                 date = 20L,
                 isConfirmed = true,
@@ -241,12 +241,12 @@ class FinanceSnapshotRepositoryImplTest {
         val goalId = goals.addGoal("Trip", 50_000L, null, GoalKind.MONEY)
         val goal = database.savingsGoalDao().getGoalById(goalId)!!
         budget.addExpense(
-            Expense(amount = 4.0, category = "Food", date = 20L, goalId = goalId),
+            Expense(amountCents = 400L, category = "Food", date = 20L, goalId = goalId),
         )
         database.transferDao().insert(
             TransferEntity(
                 syncId = "transfer-goal",
-                amount = 10.0,
+                amountCents = 1_000L,
                 date = 20L,
                 isConfirmed = true,
                 goalId = goalId,

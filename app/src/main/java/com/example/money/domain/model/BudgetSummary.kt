@@ -1,30 +1,30 @@
 package com.example.money.domain.model
 
 data class BudgetSummary(
-    val totalDeposits: Double,
-    val totalGoalAllocated: Double,
-    val totalExpenses: Double,
+    val totalDepositsCents: Long,
+    val totalGoalAllocatedCents: Long,
+    val totalExpensesCents: Long,
 ) {
-    val totalAccumulated: Double
-        get() = totalGoalAllocated
+    val totalAccumulatedCents: Long
+        get() = totalGoalAllocatedCents
 
-    /** Deposits minus wallet expenses. Goal allocations stay visible in [totalGoalAllocated]. */
-    val globalBalance: Double
-        get() = totalDeposits - totalExpenses
+    /** Deposits minus wallet expenses. Goal allocations stay visible in [totalGoalAllocatedCents]. */
+    val globalBalanceCents: Long
+        get() = totalDepositsCents - totalExpensesCents
 
     /** Free wallet: deposits minus net goal transfers minus wallet expenses. */
-    val availableBalance: Double
-        get() = totalDeposits - totalGoalAllocated - totalExpenses
+    val availableBalanceCents: Long
+        get() = totalDepositsCents - totalGoalAllocatedCents - totalExpensesCents
 
     /** Legacy alias used in older UI copy. */
-    val totalTransfers: Double
-        get() = totalDeposits + totalGoalAllocated
+    val totalTransfersCents: Long
+        get() = totalDepositsCents + totalGoalAllocatedCents
 
-    val balance: Double
-        get() = availableBalance
+    val balanceCents: Long
+        get() = availableBalanceCents
 }
 
 data class DashboardGoalMetrics(
-    val totalAccumulated: Double,
-    val totalRemainingToGoal: Double,
+    val totalAccumulatedCents: Long,
+    val totalRemainingToGoalCents: Long,
 )

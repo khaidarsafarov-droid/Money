@@ -22,8 +22,6 @@ import com.example.money.domain.sync.SyncEntityType
 import com.example.money.domain.sync.linkableDebtPayments
 import com.example.money.domain.sync.snapshotTransactionBucket
 import com.example.money.domain.model.GoalKind
-import com.example.money.domain.util.MoneyMath
-
 class FinanceSnapshotApplier(
     private val database: AppDatabase,
     private val preferencesStore: MoneyPreferencesStore,
@@ -333,7 +331,7 @@ class FinanceSnapshotApplier(
         val entity = TransferEntity(
             id = existing?.id ?: 0L,
             syncId = transaction.id,
-            amount = MoneyMath.fromCents(transaction.amountCents),
+            amountCents = transaction.amountCents,
             date = SyncDates.parseDateTime(transaction.createdAt),
             isConfirmed = true,
             goalId = goalId,
@@ -364,7 +362,7 @@ class FinanceSnapshotApplier(
         val entity = ExpenseEntity(
             id = existing?.id ?: 0L,
             syncId = transaction.id,
-            amount = MoneyMath.fromCents(transaction.amountCents),
+            amountCents = transaction.amountCents,
             category = transaction.category ?: "Other",
             date = SyncDates.parseDateTime(transaction.createdAt),
             note = transaction.note.orEmpty(),

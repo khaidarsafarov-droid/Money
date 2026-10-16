@@ -58,7 +58,7 @@ private fun formatAmountForInput(amount: Double): String {
 fun DebtorFormDialog(
     debtType: DebtType,
     existingDebtor: Debtor? = null,
-    @Suppress("UNUSED_PARAMETER") availableBalance: Double,
+    @Suppress("UNUSED_PARAMETER") availableBalance: Long,
     allDebtors: List<Debtor> = emptyList(),
     onDismiss: () -> Unit,
     onViewContactHistory: ((String, String) -> Unit)? = null,
@@ -434,7 +434,7 @@ fun DebtorFormDialog(
 @Composable
 fun AddDebtorDialog(
     debtType: DebtType,
-    availableBalance: Double,
+    availableBalance: Long,
     allDebtors: List<Debtor> = emptyList(),
     onDismiss: () -> Unit,
     onConfirm: (

@@ -18,7 +18,6 @@ import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.GoalAction
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
-import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.PersonalBranchSettings
 import com.example.money.settings.PrivacySettings
@@ -59,7 +58,7 @@ internal fun HomeDialogs(
     goalViewModel: GoalViewModel,
     noteViewModel: NoteViewModel,
     debtTab: DebtTab,
-    availableBalanceUsd: Double,
+    availableBalanceCents: Long,
     allDebtors: List<Debtor>,
     privacySettings: PrivacySettings,
     personalBranchSettings: PersonalBranchSettings,
@@ -166,7 +165,7 @@ internal fun HomeDialogs(
                 DebtTab.IOwe -> DebtType.DEBTOR
                 DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
             },
-            availableBalance = availableBalanceUsd,
+            availableBalance = availableBalanceCents,
             allDebtors = allDebtors,
             onViewContactHistory = openContactHistory,
             onDismiss = { showAddDebtorDialog = false },
@@ -200,7 +199,7 @@ internal fun HomeDialogs(
         DebtorFormDialog(
             debtType = debtor.debtType,
             existingDebtor = debtor,
-            availableBalance = availableBalanceUsd,
+            availableBalance = availableBalanceCents,
             allDebtors = allDebtors,
             onViewContactHistory = openContactHistory,
             onDismiss = { editDebtor = null },
@@ -249,7 +248,7 @@ internal fun HomeDialogs(
     showDebtPaymentDialog?.let { debtor ->
         DebtPaymentDialog(
             debtor = debtor,
-            availableBalance = availableBalanceUsd,
+            availableBalance = availableBalanceCents,
             initialAmountCents = debtPaymentPrefillCents,
             hideAmounts = privacySettings.hideAmounts,
             onDismiss = {
@@ -527,8 +526,8 @@ internal fun HomeDialogs(
     }
 
     if (showAdvisorSheet) {
-        val accumulatedCents = MoneyMath.toCents(goalMetrics.totalAccumulated)
-        val remainingCents = MoneyMath.toCents(goalMetrics.totalRemainingToGoal)
+        val accumulatedCents = goalMetrics.totalAccumulatedCents
+        val remainingCents = goalMetrics.totalRemainingToGoalCents
         DebtAdvisorBottomSheet(
             debts = allDebtors,
             messages = advisorMessages,

@@ -154,8 +154,8 @@ fun LazyListScope.homeOperationsSection(
 }
 
 internal fun historyEventTitle(event: AppHistoryEvent): String = when (event) {
-    is AppHistoryEvent.TransferEvent -> "+${Formatters.currencyCompact(event.transfer.amount)}"
-    is AppHistoryEvent.ExpenseEvent -> "−${Formatters.currencyCompact(event.expense.amount)}"
+    is AppHistoryEvent.TransferEvent -> "+${Formatters.currencyFromCents(event.transfer.amountCents)}"
+    is AppHistoryEvent.ExpenseEvent -> "−${Formatters.currencyFromCents(event.expense.amountCents)}"
     is AppHistoryEvent.DebtPaymentEvent -> {
         val amount = Formatters.currencyFromCents(event.payment.amountCents)
         if (event.debtor.debtType == DebtType.CREDITOR) "+$amount" else "−$amount"

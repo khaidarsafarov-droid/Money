@@ -6,5 +6,5 @@ data class GoalTransferTotal(
     @ColumnInfo(name = "goalId")
     val goalId: Long,
     @ColumnInfo(name = "totalAmount")
-    val totalAmount: Double,
+    val totalAmount: Long,
 )

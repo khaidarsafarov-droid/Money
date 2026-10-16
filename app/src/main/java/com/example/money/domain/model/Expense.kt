@@ -3,7 +3,7 @@ package com.example.money.domain.model
 data class Expense(
     val id: Long = 0,
     val syncId: String = "",
-    val amount: Double,
+    val amountCents: Long,
     val category: String,
     val date: Long,
     val note: String = "",

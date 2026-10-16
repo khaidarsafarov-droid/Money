@@ -14,15 +14,15 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses ORDER BY date DESC")
     fun getAllExpenses(): Flow<List<ExpenseEntity>>
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE isConfirmed = 1 AND goalId IS NULL")
-    fun observeConfirmedTotalAmount(): Flow<Double>
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM expenses WHERE isConfirmed = 1 AND goalId IS NULL")
+    fun observeConfirmedTotalAmount(): Flow<Long>
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE isConfirmed = 1 AND goalId IS NULL")
-    suspend fun getConfirmedTotalOnce(): Double
+    @Query("SELECT COALESCE(SUM(amount_cents), 0) FROM expenses WHERE isConfirmed = 1 AND goalId IS NULL")
+    suspend fun getConfirmedTotalOnce(): Long
 
     @Query(
         """
-        SELECT goalId, COALESCE(SUM(amount), 0) AS totalAmount
+        SELECT goalId, COALESCE(SUM(amount_cents), 0) AS totalAmount
         FROM expenses
         WHERE isConfirmed = 1 AND goalId IS NOT NULL
         GROUP BY goalId
@@ -32,11 +32,11 @@ interface ExpenseDao {
 
     @Query(
         """
-        SELECT COALESCE(SUM(amount), 0) FROM expenses
+        SELECT COALESCE(SUM(amount_cents), 0) FROM expenses
         WHERE isConfirmed = 1 AND goalId = :goalId
         """,
     )
-    suspend fun getGoalExpenseTotalOnce(goalId: Long): Double
+    suspend fun getGoalExpenseTotalOnce(goalId: Long): Long
 
     @Query("SELECT COUNT(*) FROM expenses WHERE isConfirmed = 0")
     fun observePendingCount(): Flow<Int>

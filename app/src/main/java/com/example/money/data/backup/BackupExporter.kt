@@ -16,6 +16,7 @@ import com.example.money.domain.backup.BackupManifest
 import com.example.money.domain.backup.BackupRecordCounts
 import com.example.money.domain.backup.BackupTransfer
 import com.example.money.domain.backup.BackupValidationException
+import com.example.money.domain.util.MoneyMath
 
 class BackupExporter(
     private val database: AppDatabase,
@@ -147,7 +148,7 @@ class BackupExporter(
                 transfers = transfers.map { transfer ->
                     BackupTransfer(
                         syncId = transfer.syncId,
-                        amount = transfer.amount,
+                        amount = MoneyMath.fromCents(transfer.amountCents),
                         dateEpochMillis = transfer.date,
                         isConfirmed = transfer.isConfirmed,
                         goalSyncId = transfer.goalId?.let { goalId ->
@@ -173,7 +174,7 @@ class BackupExporter(
                 expenses = expenses.map { expense ->
                     BackupExpense(
                         syncId = expense.syncId,
-                        amount = expense.amount,
+                        amount = MoneyMath.fromCents(expense.amountCents),
                         category = expense.category,
                         dateEpochMillis = expense.date,
                         note = expense.note,

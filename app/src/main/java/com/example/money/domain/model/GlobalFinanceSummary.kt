@@ -1,17 +1,17 @@
 package com.example.money.domain.model
 
 data class GlobalFinanceSummary(
-    val totalDeposits: Double,
-    val totalGoalAllocated: Double,
-    val totalExpenses: Double,
+    val totalDepositsCents: Long,
+    val totalGoalAllocatedCents: Long,
+    val totalExpensesCents: Long,
 ) {
-    val totalAccumulated: Double
-        get() = totalGoalAllocated
+    val totalAccumulatedCents: Long
+        get() = totalGoalAllocatedCents
 
-    val globalBalance: Double
-        get() = totalDeposits - totalExpenses
+    val globalBalanceCents: Long
+        get() = totalDepositsCents - totalExpensesCents
 
     /** Free wallet: deposits minus net goal transfers minus wallet expenses. */
-    val availableBalance: Double
-        get() = totalDeposits - totalGoalAllocated - totalExpenses
+    val availableBalanceCents: Long
+        get() = totalDepositsCents - totalGoalAllocatedCents - totalExpensesCents
 }

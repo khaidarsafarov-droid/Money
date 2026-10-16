@@ -9,8 +9,6 @@ import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.CurrencyRegion
-import kotlin.math.roundToInt
-
 /**
  * Builds the home-screen numbers the widget shows.
  * Debt score and goal totals use the same engines as [com.example.money.ui.components.MintFinanceHeader].
@@ -35,9 +33,9 @@ internal fun buildWidgetGoalSnapshot(
     val debtMetrics = DebtMetricsEngine.computeMetrics(debts)
     val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
     val debtPercent = GoalPsychologyEngines.totalDebtProgressPercent(debts).coerceIn(0, 100)
-    val goalPool = goalMetrics.totalAccumulated + goalMetrics.totalRemainingToGoal
-    val goalPercent = if (goalPool > 0.0) {
-        ((goalMetrics.totalAccumulated / goalPool) * 100.0).roundToInt().coerceIn(0, 100)
+    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
+    val goalPercent = if (goalPool > 0L) {
+        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
     } else {
         0
     }
@@ -64,8 +62,8 @@ internal fun buildWidgetGoalSnapshot(
             formatCents = formatCents,
             actionStepsLabel = actionStepsLabel,
         ),
-        totalAccumulated = goalMetrics.totalAccumulated,
-        totalRemainingToGoal = goalMetrics.totalRemainingToGoal,
+        totalAccumulated = MoneyMath.fromCents(goalMetrics.totalAccumulatedCents),
+        totalRemainingToGoal = MoneyMath.fromCents(goalMetrics.totalRemainingToGoalCents),
         owedToMeCents = debtMetrics.owedToMeCents,
         owedToMeCount = debtMetrics.owedToMeActiveCount,
         iOweCents = debtMetrics.iOweCents,

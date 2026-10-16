@@ -29,8 +29,10 @@ object GoalProgress {
     fun displayProgressFraction(targetCents: Long, currentCents: Long): Float =
         progressFractionRaw(targetCents, currentCents).coerceIn(0f, 1f)
 
-    fun progressPercent(targetCents: Long, currentCents: Long): Int =
-        (progressFractionRaw(targetCents, currentCents) * 100f).toInt()
+    fun progressPercent(targetCents: Long, currentCents: Long): Int {
+        if (targetCents <= 0L) return 0
+        return (currentCents * 100L / targetCents).toInt()
+    }
 
     fun isOverAchieved(targetCents: Long, currentCents: Long): Boolean =
         targetCents > 0L && currentCents > targetCents

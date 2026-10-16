@@ -17,7 +17,7 @@ class AppHistoryTest {
         val transfer = Transfer(
             id = 1,
             syncId = "t1",
-            amount = 200.0,
+            amountCents = 20_000L,
             date = 300,
             debtPaymentId = 7,
             goalId = 5,
@@ -25,7 +25,7 @@ class AppHistoryTest {
         val expense = Expense(
             id = 2,
             syncId = "e1",
-            amount = 15.0,
+            amountCents = 1_500L,
             category = "food",
             date = 200,
             debtPaymentId = 8,

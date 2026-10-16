@@ -7,18 +7,18 @@ import com.example.money.domain.model.GoalKind
 object GlobalFinanceEngine {
 
     fun computeSummary(
-        totalDeposits: Double,
-        totalGoalAllocated: Double,
-        totalExpenses: Double,
+        totalDepositsCents: Long,
+        totalGoalAllocatedCents: Long,
+        totalExpensesCents: Long,
     ): GlobalFinanceSummary = GlobalFinanceSummary(
-        totalDeposits = totalDeposits,
-        totalGoalAllocated = totalGoalAllocated,
-        totalExpenses = totalExpenses,
+        totalDepositsCents = totalDepositsCents,
+        totalGoalAllocatedCents = totalGoalAllocatedCents,
+        totalExpensesCents = totalExpensesCents,
     )
 
-    fun canAfford(summary: GlobalFinanceSummary, amount: Double): Boolean {
-        if (amount <= 0.0) return false
-        return amount <= summary.availableBalance + 0.000_001
+    fun canAfford(summary: GlobalFinanceSummary, amountCents: Long): Boolean {
+        if (amountCents <= 0L) return false
+        return amountCents <= summary.availableBalanceCents
     }
 
     /** Saved on a goal after a manual expense taken from that goal. */
@@ -27,11 +27,9 @@ object GlobalFinanceEngine {
 
     fun activeGoalMetrics(goals: List<com.example.money.domain.model.SavingsGoal>): DashboardGoalMetrics {
         val activeGoals = goals.filter { it.kind == GoalKind.MONEY && !it.isCompleted }
-        val accumulated = activeGoals.sumOf { it.currentAmountCents } / 100.0
-        val remaining = activeGoals.sumOf { it.remainingAmountCents } / 100.0
         return DashboardGoalMetrics(
-            totalAccumulated = accumulated,
-            totalRemainingToGoal = remaining,
+            totalAccumulatedCents = activeGoals.sumOf { it.currentAmountCents },
+            totalRemainingToGoalCents = activeGoals.sumOf { it.remainingAmountCents },
         )
     }
 }

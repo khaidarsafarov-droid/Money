@@ -10,13 +10,13 @@ class GlobalFinanceEngineTest {
     @Test
     fun computeSummary_globalBalanceIsIncomeMinusExpenses() {
         val summary = GlobalFinanceEngine.computeSummary(
-            totalDeposits = 500.0,
-            totalGoalAllocated = 200.0,
-            totalExpenses = 50.0,
+            totalDepositsCents = 50_000L,
+            totalGoalAllocatedCents = 20_000L,
+            totalExpensesCents = 5_000L,
         )
 
-        assertEquals(450.0, summary.globalBalance, 0.001)
-        assertEquals(250.0, summary.availableBalance, 0.001)
+        assertEquals(45_000L, summary.globalBalanceCents)
+        assertEquals(25_000L, summary.availableBalanceCents)
     }
 
     @Test
@@ -45,19 +45,19 @@ class GlobalFinanceEngineTest {
         )
 
         val metrics = GlobalFinanceEngine.activeGoalMetrics(goals)
-        assertEquals(40.0, metrics.totalAccumulated, 0.001)
-        assertEquals(60.0, metrics.totalRemainingToGoal, 0.001)
+        assertEquals(4_000L, metrics.totalAccumulatedCents)
+        assertEquals(6_000L, metrics.totalRemainingToGoalCents)
     }
 
     @Test
     fun canAfford_rejectsAmountAboveAvailableBalance() {
         val summary = GlobalFinanceEngine.computeSummary(
-            totalDeposits = 100.0,
-            totalGoalAllocated = 40.0,
-            totalExpenses = 10.0,
+            totalDepositsCents = 10_000L,
+            totalGoalAllocatedCents = 4_000L,
+            totalExpensesCents = 1_000L,
         )
 
-        assertTrue(GlobalFinanceEngine.canAfford(summary, 50.0))
-        assertFalse(GlobalFinanceEngine.canAfford(summary, 51.0))
+        assertTrue(GlobalFinanceEngine.canAfford(summary, 5_000L))
+        assertFalse(GlobalFinanceEngine.canAfford(summary, 5_001L))
     }
 }

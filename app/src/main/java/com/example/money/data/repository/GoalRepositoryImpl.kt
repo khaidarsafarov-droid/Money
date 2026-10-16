@@ -16,7 +16,6 @@ import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.domain.util.GlobalFinanceEngine
-import com.example.money.domain.util.MoneyMath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -37,12 +36,8 @@ class GoalRepositoryImpl(
             expenseDao.observeGoalExpenseTotals(),
             goalActionDao.observeAll(),
         ) { goals, totals, spent, actions ->
-            val allocatedByGoal = totals.associate { row ->
-                row.goalId to MoneyMath.toCents(row.totalAmount)
-            }
-            val spentByGoal = spent.associate { row ->
-                row.goalId to MoneyMath.toCents(row.totalAmount)
-            }
+            val allocatedByGoal = totals.associate { row -> row.goalId to row.totalAmount }
+            val spentByGoal = spent.associate { row -> row.goalId to row.totalAmount }
             val actionsByGoal = actions.groupBy { it.goalId }
             goals.map { entity ->
                 val steps = actionsByGoal[entity.id].orEmpty()

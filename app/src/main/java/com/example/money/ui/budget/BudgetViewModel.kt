@@ -7,7 +7,6 @@ import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
-import com.example.money.domain.util.MoneyMath
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -40,13 +39,13 @@ class BudgetViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = BudgetSummary(0.0, 0.0, 0.0),
+            initialValue = BudgetSummary(0L, 0L, 0L),
         )
 
     fun addDeposit(amountCents: Long, date: Long, onResult: (BudgetActionResult) -> Unit = {}) {
         viewModelScope.launch {
             budgetRepository.addDeposit(
-                Transfer(amount = MoneyMath.fromCents(amountCents), date = date),
+                Transfer(amountCents = amountCents, date = date),
             )
             onResult(BudgetActionResult.Success)
         }
@@ -61,7 +60,7 @@ class BudgetViewModel(
         viewModelScope.launch {
             val added = budgetRepository.addGoalTransferIfAffordable(
                 Transfer(
-                    amount = MoneyMath.fromCents(amountCents),
+                    amountCents = amountCents,
                     date = date,
                     goalId = goalId,
                 ),
@@ -85,7 +84,7 @@ class BudgetViewModel(
         viewModelScope.launch {
             val added = budgetRepository.addExpenseIfAffordable(
                 Expense(
-                    amount = MoneyMath.fromCents(amountCents),
+                    amountCents = amountCents,
                     category = category,
                     date = date,
                     note = note,

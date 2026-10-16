@@ -20,7 +20,8 @@ data class TransferEntity(
     val id: Long = 0,
     @ColumnInfo(name = "sync_id")
     val syncId: String = SyncIds.newId(),
-    val amount: Double,
+    @ColumnInfo(name = "amount_cents")
+    val amountCents: Long,
     val date: Long,
     /** Только подтверждённые транзакции учитываются в балансе. */
     val isConfirmed: Boolean = false,

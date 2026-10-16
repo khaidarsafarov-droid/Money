@@ -29,7 +29,7 @@ import com.example.money.ui.util.InputValidators
 @Composable
 fun DebtPaymentDialog(
     debtor: Debtor,
-    @Suppress("UNUSED_PARAMETER") availableBalance: Double,
+    @Suppress("UNUSED_PARAMETER") availableBalance: Long,
     initialAmountCents: Long = 0L,
     hideAmounts: Boolean = false,
     onDismiss: () -> Unit,

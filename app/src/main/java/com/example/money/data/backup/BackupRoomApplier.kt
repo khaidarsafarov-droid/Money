@@ -17,6 +17,7 @@ import com.example.money.data.sync.FinanceSnapshotCodec
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupBundle
 import com.example.money.domain.backup.BackupValidationException
+import com.example.money.domain.util.MoneyMath
 import com.example.money.domain.sync.SyncEntityType
 
 class BackupRoomApplier(
@@ -407,7 +408,7 @@ class BackupRoomApplier(
             database.transferDao().insert(
                 TransferEntity(
                     syncId = transfer.syncId,
-                    amount = transfer.amount,
+                    amountCents = MoneyMath.toCents(transfer.amount),
                     date = transfer.dateEpochMillis,
                     isConfirmed = transfer.isConfirmed,
                     goalId = transfer.goalSyncId?.let { syncId ->
@@ -444,7 +445,7 @@ class BackupRoomApplier(
             database.expenseDao().insert(
                 ExpenseEntity(
                     syncId = expense.syncId,
-                    amount = expense.amount,
+                    amountCents = MoneyMath.toCents(expense.amount),
                     category = expense.category,
                     date = expense.dateEpochMillis,
                     note = expense.note,

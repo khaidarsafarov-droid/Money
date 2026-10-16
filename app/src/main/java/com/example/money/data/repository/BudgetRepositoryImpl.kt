@@ -14,7 +14,6 @@ import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
 import com.example.money.domain.util.GlobalFinanceEngine
-import com.example.money.domain.util.MoneyMath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -40,14 +39,14 @@ class BudgetRepositoryImpl(
             expenseDao.observeConfirmedTotalAmount(),
         ) { totalDeposits, totalGoalAllocated, totalExpenses ->
             val summary = GlobalFinanceEngine.computeSummary(
-                totalDeposits = totalDeposits,
-                totalGoalAllocated = totalGoalAllocated,
-                totalExpenses = totalExpenses,
+                totalDepositsCents = totalDeposits,
+                totalGoalAllocatedCents = totalGoalAllocated,
+                totalExpensesCents = totalExpenses,
             )
             BudgetSummary(
-                totalDeposits = summary.totalDeposits,
-                totalGoalAllocated = summary.totalGoalAllocated,
-                totalExpenses = summary.totalExpenses,
+                totalDepositsCents = summary.totalDepositsCents,
+                totalGoalAllocatedCents = summary.totalGoalAllocatedCents,
+                totalExpensesCents = summary.totalExpensesCents,
             )
         }
 
@@ -79,7 +78,7 @@ class BudgetRepositoryImpl(
     override suspend fun addGoalTransferIfAffordable(transfer: Transfer): Boolean =
         SyncWriteGuard.withWriteLock {
             database.withTransaction {
-                if (!canAffordCurrentBalance(transfer.amount)) return@withTransaction false
+                if (!canAffordCurrentBalance(transfer.amountCents)) return@withTransaction false
                 val goalSyncId = transfer.goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
                 val id = transferDao.insert(
                     transfer.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),
@@ -106,8 +105,8 @@ class BudgetRepositoryImpl(
             database.withTransaction {
                 val goalId = expense.goalId
                 if (goalId != null) {
-                    if (!canSpendFromGoal(goalId, expense.amount)) return@withTransaction false
-                } else if (!canAffordCurrentBalance(expense.amount)) {
+                    if (!canSpendFromGoal(goalId, expense.amountCents)) return@withTransaction false
+                } else if (!canAffordCurrentBalance(expense.amountCents)) {
                     return@withTransaction false
                 }
                 val goalSyncId = goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
@@ -149,21 +148,21 @@ class BudgetRepositoryImpl(
         }
     }
 
-    private suspend fun canAffordCurrentBalance(amount: Double): Boolean {
+    private suspend fun canAffordCurrentBalance(amountCents: Long): Boolean {
         val summary = GlobalFinanceEngine.computeSummary(
-            totalDeposits = transferDao.getDepositTotalOnce(),
-            totalGoalAllocated = transferDao.getGoalAllocatedTotalOnce(),
-            totalExpenses = expenseDao.getConfirmedTotalOnce(),
+            totalDepositsCents = transferDao.getDepositTotalOnce(),
+            totalGoalAllocatedCents = transferDao.getGoalAllocatedTotalOnce(),
+            totalExpensesCents = expenseDao.getConfirmedTotalOnce(),
         )
-        return GlobalFinanceEngine.canAfford(summary, amount)
+        return GlobalFinanceEngine.canAfford(summary, amountCents)
     }
 
-    private suspend fun canSpendFromGoal(goalId: Long, amount: Double): Boolean {
+    private suspend fun canSpendFromGoal(goalId: Long, amountCents: Long): Boolean {
         if (savingsGoalDao.getGoalById(goalId) == null) return false
         val netCents = GlobalFinanceEngine.goalNetCents(
-            transferCents = MoneyMath.toCents(transferDao.getGoalTransferTotalOnce(goalId)),
-            expenseCents = MoneyMath.toCents(expenseDao.getGoalExpenseTotalOnce(goalId)),
+            transferCents = transferDao.getGoalTransferTotalOnce(goalId),
+            expenseCents = expenseDao.getGoalExpenseTotalOnce(goalId),
         )
-        return amount <= MoneyMath.fromCents(netCents) + 0.000_001
+        return amountCents <= netCents
     }
 }

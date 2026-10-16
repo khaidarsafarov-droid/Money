@@ -18,13 +18,12 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.MoneyTextField
-import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.util.InputValidators
 
 @Composable
 fun AddTransferDialog(
-    availableBalance: Double? = null,
-    goalRemainingAmount: Double? = null,
+    availableBalanceCents: Long? = null,
+    goalRemainingCents: Long? = null,
     onDismiss: () -> Unit,
     onConfirm: (amountCents: Long, date: Long) -> Unit,
 ) {
@@ -37,11 +36,11 @@ fun AddTransferDialog(
     val insufficientFunds = stringResource(R.string.msg_insufficient_funds)
 
     fun submitAmount(amountCents: Long) {
-        if (availableBalance != null && amountCents > MoneyMath.toCents(availableBalance)) {
+        if (availableBalanceCents != null && amountCents > availableBalanceCents) {
             amountError = insufficientFunds
             return
         }
-        if (goalRemainingAmount != null && amountCents > MoneyMath.toCents(goalRemainingAmount)) {
+        if (goalRemainingCents != null && amountCents > goalRemainingCents) {
             pendingAmount = amountCents
             showOverGoalConfirm = true
         } else {

@@ -273,7 +273,7 @@ class LocalDataResetterTest {
             TransferEntity(
                 id = 4,
                 syncId = "transfer",
-                amount = 1.0,
+                amountCents = 100L,
                 date = 40,
                 goalId = 1,
                 goalSyncId = "goal",
@@ -285,7 +285,7 @@ class LocalDataResetterTest {
             ExpenseEntity(
                 id = 5,
                 syncId = "expense",
-                amount = 2.0,
+                amountCents = 200L,
                 category = "test",
                 date = 50,
                 debtId = 2,
