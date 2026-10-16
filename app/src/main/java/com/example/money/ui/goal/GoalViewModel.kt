@@ -7,7 +7,6 @@ import com.example.money.domain.model.GoalAction
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
-import com.example.money.domain.util.MoneyMath
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -42,14 +41,14 @@ class GoalViewModel(
 
     fun addGoal(
         name: String,
-        targetAmount: Double,
+        targetAmountCents: Long,
         deadlineMillis: Long? = null,
         kind: GoalKind = GoalKind.MONEY,
     ) {
         viewModelScope.launch {
             goalRepository.addGoal(
                 name = name,
-                targetAmountCents = MoneyMath.toCents(targetAmount),
+                targetAmountCents = targetAmountCents,
                 deadlineMillis = deadlineMillis,
                 kind = kind,
             )
@@ -59,8 +58,8 @@ class GoalViewModel(
     fun updateGoal(
         goal: SavingsGoal,
         name: String,
-        targetAmount: Double,
-        currentAmount: Double,
+        targetAmountCents: Long,
+        currentAmountCents: Long,
         deadlineMillis: Long?,
         kind: GoalKind = goal.kind,
     ) {
@@ -68,8 +67,8 @@ class GoalViewModel(
             goalRepository.updateGoal(
                 goal.copy(
                     name = name.trim(),
-                    targetAmountCents = MoneyMath.toCents(targetAmount),
-                    currentAmountCents = MoneyMath.toCents(currentAmount),
+                    targetAmountCents = targetAmountCents,
+                    currentAmountCents = currentAmountCents,
                     deadlineMillis = deadlineMillis,
                     kind = kind,
                 ),

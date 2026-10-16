@@ -343,7 +343,7 @@ private fun FinancialNoteBody(
                 LineEditor(
                     lineId = line.id,
                     initialLabel = line.label,
-                    initialAmount = MoneyMath.fromCents(line.amountCents),
+                    initialAmountCents = line.amountCents,
                     onCancel = { editing = null },
                     onSave = { nextLabel, cents ->
                         onUpdateLine(line.copy(label = nextLabel, amountCents = cents))
@@ -419,10 +419,10 @@ private fun FinancialNoteBody(
     MoneyButton(
         text = stringResource(R.string.note_add_line),
         onClick = {
-            val amount = InputValidators.parseAmount(amountText) ?: return@MoneyButton
+            val amountCents = InputValidators.parseAmount(amountText) ?: return@MoneyButton
             if (label.isBlank()) return@MoneyButton
             onTitleCommit()
-            onAddLine(label.trim(), MoneyMath.toCents(amount))
+            onAddLine(label.trim(), amountCents)
             label = ""
             amountText = ""
         },
@@ -433,14 +433,16 @@ private fun FinancialNoteBody(
 private fun LineEditor(
     lineId: Long,
     initialLabel: String,
-    initialAmount: Double,
+    initialAmountCents: Long,
     onCancel: () -> Unit,
     onSave: (String, Long) -> Unit,
 ) {
     var label by remember(lineId) { mutableStateOf(initialLabel) }
     var amountText by remember(lineId) {
         mutableStateOf(
-            if (initialAmount % 1.0 == 0.0) initialAmount.toLong().toString() else initialAmount.toString(),
+            MoneyMath.fromCents(initialAmountCents).let { amount ->
+                if (amount % 1.0 == 0.0) amount.toLong().toString() else amount.toString()
+            },
         )
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -459,9 +461,9 @@ private fun LineEditor(
         Row {
             TextButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
             TextButton(onClick = {
-                val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
+                val amountCents = InputValidators.parseAmount(amountText) ?: return@TextButton
                 if (label.isBlank()) return@TextButton
-                onSave(label.trim(), MoneyMath.toCents(amount))
+                onSave(label.trim(), amountCents)
             }) { Text(stringResource(R.string.action_save)) }
         }
     }

@@ -249,7 +249,7 @@ class DebtorsViewModel(
 
     fun addDebtor(
         name: String,
-        amount: Double,
+        amountCents: Long,
         dateGiven: Long,
         dateDue: Long,
         debtType: DebtType,
@@ -266,7 +266,7 @@ class DebtorsViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val targetCents = MoneyMath.toCents(amount)
+                val targetCents = amountCents
                 if (targetCents <= 0L) {
                     Log.w(TAG, "Skipped debtor insert: target amount must be > 0 cents")
                     return@launch
@@ -305,7 +305,7 @@ class DebtorsViewModel(
     fun updateDebtor(
         debtor: Debtor,
         name: String,
-        amount: Double,
+        amountCents: Long,
         dateGiven: Long,
         dateDue: Long,
         affectsBalance: Boolean,
@@ -319,7 +319,7 @@ class DebtorsViewModel(
         email: String = debtor.email,
     ) {
         viewModelScope.launch {
-            val targetCents = MoneyMath.toCents(amount)
+            val targetCents = amountCents
             val previousAffectsBalance = debtor.affectsBalance
             val updated = debtor.copy(
                 name = name,
@@ -358,8 +358,8 @@ class DebtorsViewModel(
         debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
     }
 
-    suspend fun processPaymentSync(debtorId: Long, amount: Double, affectsBalance: Boolean): Boolean {
-        val paymentCents = MoneyMath.toCents(amount)
+    suspend fun processPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Boolean {
+        val paymentCents = amountCents
         val success = debtorRepository.processDebtPayment(debtorId, paymentCents, affectsBalance)
         val debtor = debtorRepository.getDebtorById(debtorId)
         if (debtor?.isPaid == true) {
@@ -385,7 +385,7 @@ class DebtorsViewModel(
         val affectsBalance = debtor.debtType == DebtType.CREDITOR
         val ok = processPaymentSync(
             debtorId = plan.debtorId,
-            amount = MoneyMath.fromCents(plan.amountCents),
+            amountCents = plan.amountCents,
             affectsBalance = affectsBalance,
         )
         return if (ok) plan else null

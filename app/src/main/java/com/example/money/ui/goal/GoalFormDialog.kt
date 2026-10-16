@@ -55,8 +55,8 @@ fun GoalFormDialog(
     onConfirm: (
         name: String,
         kind: GoalKind,
-        targetAmount: Double,
-        currentAmount: Double,
+        targetAmountCents: Long,
+        currentAmountCents: Long,
         deadlineMillis: Long?,
     ) -> Unit,
 ) {
@@ -109,7 +109,7 @@ fun GoalFormDialog(
             val target = if (isMoney) {
                 InputValidators.parseAmount(targetText) ?: return@MoneyDialog
             } else {
-                goal?.let { MoneyMath.fromCents(it.targetAmountCents) } ?: 0.0
+                goal?.targetAmountCents ?: 0L
             }
 
             if (nameError != null || targetError != null) return@MoneyDialog
@@ -118,7 +118,7 @@ fun GoalFormDialog(
                 name.trim(),
                 kind,
                 target,
-                goal?.let { MoneyMath.fromCents(it.currentAmountCents) } ?: 0.0,
+                goal?.currentAmountCents ?: 0L,
                 deadlineMillis.takeIf { hasDeadline },
             )
         },

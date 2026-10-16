@@ -7,6 +7,7 @@ import com.example.money.domain.model.BudgetSummary
 import com.example.money.domain.model.Expense
 import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.BudgetRepository
+import com.example.money.domain.util.MoneyMath
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -42,33 +43,39 @@ class BudgetViewModel(
             initialValue = BudgetSummary(0.0, 0.0, 0.0),
         )
 
-    fun addDeposit(amount: Double, date: Long, onResult: (BudgetActionResult) -> Unit = {}) {
+    fun addDeposit(amountCents: Long, date: Long, onResult: (BudgetActionResult) -> Unit = {}) {
         viewModelScope.launch {
-            budgetRepository.addDeposit(Transfer(amount = amount, date = date))
+            budgetRepository.addDeposit(
+                Transfer(amount = MoneyMath.fromCents(amountCents), date = date),
+            )
             onResult(BudgetActionResult.Success)
         }
     }
 
     fun addGoalTransfer(
         goalId: Long,
-        amount: Double,
+        amountCents: Long,
         date: Long,
         onResult: (BudgetActionResult) -> Unit = {},
     ) {
         viewModelScope.launch {
             budgetRepository.addGoalTransfer(
-                Transfer(amount = amount, date = date, goalId = goalId),
+                Transfer(
+                    amount = MoneyMath.fromCents(amountCents),
+                    date = date,
+                    goalId = goalId,
+                ),
             )
             onResult(BudgetActionResult.Success)
         }
     }
 
-    fun addTransfer(amount: Double, date: Long) {
-        addDeposit(amount, date)
+    fun addTransfer(amountCents: Long, date: Long) {
+        addDeposit(amountCents, date)
     }
 
     fun addExpense(
-        amount: Double,
+        amountCents: Long,
         category: String,
         date: Long,
         note: String,
@@ -78,7 +85,7 @@ class BudgetViewModel(
         viewModelScope.launch {
             val added = budgetRepository.addExpenseIfAffordable(
                 Expense(
-                    amount = amount,
+                    amount = MoneyMath.fromCents(amountCents),
                     category = category,
                     date = date,
                     note = note,

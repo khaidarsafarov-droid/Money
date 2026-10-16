@@ -65,6 +65,7 @@ import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.util.InputValidators
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -870,9 +871,7 @@ private fun LuckDiaryEntryDialog(
                 onClick = {
                     val trimmed = note.trim()
                     if (trimmed.isEmpty()) return@TextButton
-                    val amount = amountText.toDoubleOrNull()?.let {
-                        com.example.money.domain.util.MoneyMath.toCents(it)
-                    }
+                    val amount = amountText.trim().takeIf { it.isNotEmpty() }?.let(InputValidators::parseAmount)
                     onSave(trimmed, amount, category)
                 },
                 enabled = note.trim().isNotEmpty(),

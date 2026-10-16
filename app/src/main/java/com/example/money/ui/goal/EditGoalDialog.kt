@@ -25,7 +25,7 @@ private fun formatAmountForInput(amount: Double): String {
 fun EditGoalDialog(
     currentTarget: Double,
     onDismiss: () -> Unit,
-    onConfirm: (targetAmount: Double) -> Unit,
+    onConfirm: (targetAmountCents: Long) -> Unit,
 ) {
     var amountText by remember {
         mutableStateOf(formatAmountForInput(currentTarget))

@@ -34,7 +34,7 @@ fun GoalProgressLogDialog(
     goal: SavingsGoal,
     hideAmounts: Boolean,
     onDismiss: () -> Unit,
-    onSave: (amount: Double?, note: String, dateMillis: Long) -> Unit,
+    onSave: (amountCents: Long?, note: String, dateMillis: Long) -> Unit,
 ) {
     var amountText by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }

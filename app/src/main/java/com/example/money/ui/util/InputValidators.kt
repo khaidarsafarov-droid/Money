@@ -2,8 +2,12 @@ package com.example.money.ui.util
 
 import androidx.annotation.StringRes
 import com.example.money.R
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 object InputValidators {
+
+    const val MAX_AMOUNT_CENTS = 1_000_000_000L
 
     @StringRes
     fun validateGoalPurpose(purpose: String): Int? = when {
@@ -19,9 +23,25 @@ object InputValidators {
         else -> null
     }
 
-    fun parseAmount(text: String): Double? {
+    fun parseAmount(text: String): Long? {
         val normalized = text.trim().replace(',', '.')
-        return normalized.toDoubleOrNull()?.takeIf { it > 0 }
+        if (normalized.isEmpty()) return null
+        if (normalized.any { character -> character == 'e' || character == 'E' || character.isLetter() }) {
+            return null
+        }
+        val decimal = try {
+            BigDecimal(normalized)
+        } catch (_: NumberFormatException) {
+            return null
+        }
+        if (decimal.signum() <= 0) return null
+        val cents = try {
+            decimal.setScale(2, RoundingMode.HALF_UP).movePointRight(2).longValueExact()
+        } catch (_: ArithmeticException) {
+            return null
+        }
+        if (cents <= 0L || cents > MAX_AMOUNT_CENTS) return null
+        return cents
     }
 
     @StringRes

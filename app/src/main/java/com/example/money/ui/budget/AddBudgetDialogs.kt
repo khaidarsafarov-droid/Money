@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.util.InputValidators
 
 @Composable
@@ -25,26 +26,26 @@ fun AddTransferDialog(
     availableBalance: Double? = null,
     goalRemainingAmount: Double? = null,
     onDismiss: () -> Unit,
-    onConfirm: (amount: Double, date: Long) -> Unit,
+    onConfirm: (amountCents: Long, date: Long) -> Unit,
 ) {
     var amountText by remember { mutableStateOf("") }
     var date by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var amountError by remember { mutableStateOf<String?>(null) }
     var showOverGoalConfirm by remember { mutableStateOf(false) }
-    var pendingAmount by remember { mutableStateOf<Double?>(null) }
+    var pendingAmount by remember { mutableStateOf<Long?>(null) }
     val context = LocalContext.current
     val insufficientFunds = stringResource(R.string.msg_insufficient_funds)
 
-    fun submitAmount(amount: Double) {
-        if (availableBalance != null && amount > availableBalance) {
+    fun submitAmount(amountCents: Long) {
+        if (availableBalance != null && amountCents > MoneyMath.toCents(availableBalance)) {
             amountError = insufficientFunds
             return
         }
-        if (goalRemainingAmount != null && amount > goalRemainingAmount) {
-            pendingAmount = amount
+        if (goalRemainingAmount != null && amountCents > MoneyMath.toCents(goalRemainingAmount)) {
+            pendingAmount = amountCents
             showOverGoalConfirm = true
         } else {
-            onConfirm(amount, date)
+            onConfirm(amountCents, date)
         }
     }
 
@@ -117,9 +118,9 @@ fun AddTransferDialog(
 @Composable
 fun AddExpenseDialog(
     titleRes: Int = R.string.budget_new_expense_title,
-    spendLimit: Double? = null,
+    spendLimitCents: Long? = null,
     onDismiss: () -> Unit,
-    onConfirm: (amount: Double, category: String, date: Long, note: String) -> Unit,
+    onConfirm: (amountCents: Long, category: String, date: Long, note: String) -> Unit,
 ) {
     var amountText by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
@@ -177,7 +178,7 @@ fun AddExpenseDialog(
                     categoryError = InputValidators.validateCategory(category)?.let(context::getString)
                     if (amountError != null || categoryError != null) return@TextButton
                     val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
-                    if (spendLimit != null && amount > spendLimit + 0.000_001) {
+                    if (spendLimitCents != null && amount > spendLimitCents) {
                         amountError = overLimit
                         return@TextButton
                     }

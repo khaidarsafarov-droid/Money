@@ -173,7 +173,7 @@ internal fun HomeDialogs(
             onConfirm = { name, amount, dateGiven, dateDue, affectsBalance, note, loanCategory, interestRateBps, contactLookupKey, contactUri, contactPhotoUri, phone, email ->
                 debtorsViewModel.addDebtor(
                     name = name,
-                    amount = amount,
+                    amountCents = amount,
                     dateGiven = dateGiven,
                     dateDue = dateDue,
                     debtType = when (debtTab) {
@@ -208,7 +208,7 @@ internal fun HomeDialogs(
                 debtorsViewModel.updateDebtor(
                     debtor = debtor,
                     name = name,
-                    amount = amount,
+                    amountCents = amount,
                     dateGiven = dateGiven,
                     dateDue = dateDue,
                     affectsBalance = affectsBalance,
@@ -325,7 +325,7 @@ internal fun HomeDialogs(
             } else {
                 R.string.budget_new_expense_title
             },
-            spendLimit = expenseGoal?.let { it.currentAmountCents / 100.0 },
+            spendLimitCents = expenseGoal?.currentAmountCents,
             onDismiss = {
                 showExpenseDialog = false
                 goalExpenseTarget = null

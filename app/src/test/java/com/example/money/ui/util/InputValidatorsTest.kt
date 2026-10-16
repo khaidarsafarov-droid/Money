@@ -9,14 +9,30 @@ class InputValidatorsTest {
 
     @Test
     fun parseAmount_acceptsCommaAndDot() {
-        assertEquals(100.5, InputValidators.parseAmount("100,5")!!, 0.001)
-        assertEquals(100.5, InputValidators.parseAmount("100.5")!!, 0.001)
+        assertEquals(10_050L, InputValidators.parseAmount("100,5"))
+        assertEquals(10_050L, InputValidators.parseAmount("100.5"))
+    }
+
+    @Test
+    fun parseAmount_roundsHalfUpToCents() {
+        assertEquals(101L, InputValidators.parseAmount("1.005"))
+        assertEquals(100L, InputValidators.parseAmount("1.004"))
     }
 
     @Test
     fun parseAmount_rejectsZeroAndNegative() {
         assertNull(InputValidators.parseAmount("0"))
         assertNull(InputValidators.parseAmount("-10"))
+    }
+
+    @Test
+    fun parseAmount_rejectsExponentInfinityNanAndHugeValues() {
+        assertNull(InputValidators.parseAmount("Infinity"))
+        assertNull(InputValidators.parseAmount("NaN"))
+        assertNull(InputValidators.parseAmount("1e9"))
+        assertNull(InputValidators.parseAmount("1E2"))
+        assertNull(InputValidators.parseAmount("10000000.01"))
+        assertEquals(InputValidators.MAX_AMOUNT_CENTS, InputValidators.parseAmount("10000000"))
     }
 
     @Test

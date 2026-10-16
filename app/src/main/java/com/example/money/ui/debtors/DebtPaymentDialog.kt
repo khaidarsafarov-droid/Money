@@ -33,7 +33,7 @@ fun DebtPaymentDialog(
     initialAmountCents: Long = 0L,
     hideAmounts: Boolean = false,
     onDismiss: () -> Unit,
-    onConfirm: (amount: Double, affectsBalance: Boolean) -> Unit,
+    onConfirm: (amountCents: Long, affectsBalance: Boolean) -> Unit,
 ) {
     var amountText by remember(debtor.id, initialAmountCents) {
         mutableStateOf(
@@ -103,13 +103,12 @@ fun DebtPaymentDialog(
                 onClick = {
                     amountError = InputValidators.validateAmount(amountText)?.let(context::getString)
                     if (amountError != null) return@TextButton
-                    val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
-                    val paymentCents = MoneyMath.toCents(amount)
-                    if (paymentCents > debtor.remainingAmountCents) {
+                    val amountCents = InputValidators.parseAmount(amountText) ?: return@TextButton
+                    if (amountCents > debtor.remainingAmountCents) {
                         amountError = context.getString(R.string.error_payment_exceeds_remaining)
                         return@TextButton
                     }
-                    onConfirm(amount, false)
+                    onConfirm(amountCents, false)
                 },
             ) {
                 Text(stringResource(paymentActionRes))

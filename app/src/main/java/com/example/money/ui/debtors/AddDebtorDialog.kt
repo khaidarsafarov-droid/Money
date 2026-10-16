@@ -64,7 +64,7 @@ fun DebtorFormDialog(
     onViewContactHistory: ((String, String) -> Unit)? = null,
     onConfirm: (
         name: String,
-        amount: Double,
+        amountCents: Long,
         dateGiven: Long,
         dateDue: Long,
         affectsBalance: Boolean,
@@ -142,7 +142,7 @@ fun DebtorFormDialog(
             InputValidators.validateDueDate(dateGiven, dateDue) == null &&
             if (isEdit) {
                 val amount = InputValidators.parseAmount(amountText)
-                amount == null || MoneyMath.toCents(amount) >= (existingDebtor?.currentAmountCents ?: 0L)
+                amount == null || amount >= (existingDebtor?.currentAmountCents ?: 0L)
             } else {
                 true
             }
@@ -379,7 +379,7 @@ fun DebtorFormDialog(
                     amountError = InputValidators.validateAmount(amountText)?.let(context::getString)
                     if (amountError == null) {
                         val parsedAmount = InputValidators.parseAmount(amountText)
-                        if (parsedAmount != null && MoneyMath.toCents(parsedAmount) <= 0L) {
+                        if (parsedAmount != null && parsedAmount <= 0L) {
                             amountError = context.getString(R.string.error_amount_positive)
                         }
                     }
@@ -388,7 +388,7 @@ fun DebtorFormDialog(
                     if (isEdit && amountError == null) {
                         val amount = InputValidators.parseAmount(amountText)
                         if (amount != null) {
-                            val targetCents = MoneyMath.toCents(amount)
+                            val targetCents = amount
                             if (targetCents < existingDebtor.currentAmountCents) {
                                 amountError = context.getString(R.string.error_amount_below_paid)
                             }
@@ -439,7 +439,7 @@ fun AddDebtorDialog(
     onDismiss: () -> Unit,
     onConfirm: (
         name: String,
-        amount: Double,
+        amountCents: Long,
         dateGiven: Long,
         dateDue: Long,
         affectsBalance: Boolean,
