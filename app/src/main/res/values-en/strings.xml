@@ -91,6 +91,7 @@
     <string name="note_line_amount">Amount</string>
     <string name="note_add_line">Add line</string>
     <string name="note_total">Total</string>
+    <string name="note_total_amount">Total: %1$s</string>
     <string name="note_mark_paid">Paid</string>
     <string name="note_mark_owed">Owed</string>
     <string name="note_close">Close note</string>

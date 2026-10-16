@@ -335,6 +335,7 @@ fun TabletHomeLayout(
                     onAddLine = onAddLine,
                     onUpdateLine = onUpdateLine,
                     onDeleteLine = onDeleteLine,
+                    hideAmounts = privacySettings.hideAmounts,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),

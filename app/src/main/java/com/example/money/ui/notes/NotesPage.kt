@@ -117,6 +117,7 @@ fun NotesPage(
     onAddLine: (Long, String, Long) -> Unit,
     onUpdateLine: (FinanceNoteLine) -> Unit,
     onDeleteLine: (Long, Long) -> Unit,
+    hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val openNote = notes.firstOrNull { it.id == openNoteId }
@@ -125,12 +126,14 @@ fun NotesPage(
             notes = notes,
             lines = lines,
             onOpenNote = onOpenNote,
+            hideAmounts = hideAmounts,
             modifier = modifier,
         )
     } else {
         NoteEditor(
             note = openNote,
             lines = lines.filter { it.noteId == openNote.id },
+            hideAmounts = hideAmounts,
             onBack = onCloseNote,
             onUpdateNote = onUpdateNote,
             onSetMark = { onSetMark(openNote, it) },
@@ -152,6 +155,7 @@ private fun NotesList(
     notes: List<FinanceNote>,
     lines: List<FinanceNoteLine>,
     onOpenNote: (Long) -> Unit,
+    hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -174,7 +178,12 @@ private fun NotesList(
         } else {
             notes.forEach { note ->
                 val total = NoteCalculator.totalCents(lines.filter { it.noteId == note.id })
-                NoteListRow(note = note, totalCents = total, onClick = { onOpenNote(note.id) })
+                NoteListRow(
+                    note = note,
+                    totalCents = total,
+                    hideAmounts = hideAmounts,
+                    onClick = { onOpenNote(note.id) },
+                )
             }
         }
     }
@@ -184,6 +193,7 @@ private fun NotesList(
 private fun NoteListRow(
     note: FinanceNote,
     totalCents: Long,
+    hideAmounts: Boolean = false,
     onClick: () -> Unit,
 ) {
     val markColor = markColor(note.mark)
@@ -199,7 +209,7 @@ private fun NoteListRow(
         Text(text = note.title, fontWeight = FontWeight.SemiBold)
         val subtitle = when (note.kind) {
             NoteKind.TEXT -> stringResource(R.string.note_kind_text)
-            NoteKind.FINANCIAL -> Formatters.currencyFromCents(totalCents)
+            NoteKind.FINANCIAL -> Formatters.currencyFromCents(totalCents, hide = hideAmounts)
         }
         Text(
             text = if (note.closed) {
@@ -228,6 +238,7 @@ private fun NoteEditor(
     onAddLine: (String, Long) -> Unit,
     onUpdateLine: (FinanceNoteLine) -> Unit,
     onDeleteLine: (Long) -> Unit,
+    hideAmounts: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     var title by remember(note.id, note.title) { mutableStateOf(note.title) }
@@ -286,6 +297,7 @@ private fun NoteEditor(
                 FinancialNoteBody(
                     note = note,
                     lines = lines,
+                    hideAmounts = hideAmounts,
                     onSetMark = onSetMark,
                     onAddLine = onAddLine,
                     onUpdateLine = onUpdateLine,
@@ -328,6 +340,7 @@ private fun FinancialNoteBody(
     onSetMark: (NoteMark) -> Unit,
     onAddLine: (String, Long) -> Unit,
     onUpdateLine: (FinanceNoteLine) -> Unit,
+    hideAmounts: Boolean = false,
     onDeleteLine: (Long) -> Unit,
     onTitleCommit: () -> Unit,
 ) {
@@ -357,7 +370,7 @@ private fun FinancialNoteBody(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = line.label, fontWeight = FontWeight.Medium)
-                        Text(text = Formatters.currencyFromCents(line.amountCents))
+                        Text(text = Formatters.currencyFromCents(line.amountCents, hide = hideAmounts))
                     }
                     IconButton(onClick = { editing = line }) {
                         Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.note_edit_line))
@@ -371,7 +384,10 @@ private fun FinancialNoteBody(
     }
 
     Text(
-        text = stringResource(R.string.note_total) + ": " + Formatters.currencyFromCents(total),
+        text = stringResource(
+            R.string.note_total_amount,
+            Formatters.currencyFromCents(total, hide = hideAmounts),
+        ),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.SemiBold,
         color = totalColor,

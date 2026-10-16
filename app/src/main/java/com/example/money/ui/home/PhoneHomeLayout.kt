@@ -417,6 +417,7 @@ internal fun PhoneHomeLayout(
                     onAddLine = onAddLine,
                     onUpdateLine = onUpdateLine,
                     onDeleteLine = onDeleteLine,
+                    hideAmounts = privacySettings.hideAmounts,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
