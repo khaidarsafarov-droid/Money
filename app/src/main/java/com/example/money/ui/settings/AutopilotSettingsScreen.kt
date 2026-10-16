@@ -2,7 +2,6 @@ package com.example.money.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,7 +11,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -43,6 +42,7 @@ import com.example.money.ui.util.Formatters
 @Composable
 fun AutopilotSettingsScreen(
     onBack: () -> Unit,
+    onOpenGoalHub: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -132,23 +132,20 @@ fun AutopilotSettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(stringResource(R.string.autopilot_strategy), fontWeight = FontWeight.SemiBold)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = settings.strategy == AutopilotStrategy.SNOWBALL,
-                            onClick = { viewModel.setStrategy(AutopilotStrategy.SNOWBALL) },
-                            label = { Text(stringResource(R.string.autopilot_strategy_snowball)) },
-                        )
-                        FilterChip(
-                            selected = settings.strategy == AutopilotStrategy.AVALANCHE,
-                            onClick = { viewModel.setStrategy(AutopilotStrategy.AVALANCHE) },
-                            label = { Text(stringResource(R.string.autopilot_strategy_avalanche)) },
-                        )
-                    }
-                    if (settings.strategy == AutopilotStrategy.AVALANCHE) {
-                        Text(
-                            stringResource(R.string.autopilot_strategy_avalanche_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                    Text(
+                        stringResource(
+                            R.string.autopilot_strategy_current,
+                            stringResource(
+                                if (settings.strategy == AutopilotStrategy.AVALANCHE) {
+                                    R.string.autopilot_strategy_avalanche
+                                } else {
+                                    R.string.autopilot_strategy_snowball
+                                },
+                            ),
+                        ),
+                    )
+                    TextButton(onClick = onOpenGoalHub) {
+                        Text(stringResource(R.string.autopilot_strategy_change))
                     }
                 }
             }

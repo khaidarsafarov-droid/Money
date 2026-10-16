@@ -386,6 +386,8 @@
     <string name="autopilot_enabled_hint">Напоминание внести небольшую сумму в выбранный долг</string>
     <string name="autopilot_daily_amount">Сумма в день</string>
     <string name="autopilot_strategy">Стратегия</string>
+    <string name="autopilot_strategy_current">Сейчас: %1$s</string>
+    <string name="autopilot_strategy_change">Изменить в целях</string>
     <string name="autopilot_strategy_snowball">Снежный ком</string>
     <string name="autopilot_strategy_avalanche">Лавина</string>
     <string name="autopilot_apply_now">Внести сейчас</string>
@@ -743,8 +745,8 @@
     <string name="debt_tab_calendar">Календарь</string>
     <string name="calendar_settings_title">Напоминания и календарь</string>
     <string name="calendar_auto_sync">Добавлять долги в календарь</string>
-    <string name="calendar_remind_1d">Напоминание за 1 день</string>
-    <string name="calendar_remind_3d">Напоминание за 3 дня</string>
+    <string name="calendar_remind_1d">В календаре за 1 день</string>
+    <string name="calendar_remind_3d">В календаре за 3 дня</string>
     <string name="calendar_remind_due">Напоминание в день срока</string>
     <string name="calendar_use_debts_calendar">Использовать календарь «Долги»</string>
     <string name="calendar_create_debts_calendar">Создать календарь «Долги»</string>
@@ -791,8 +793,8 @@
     <string name="debt_notification_settings_title">Уведомления о долгах</string>
     <string name="debt_notification_settings_subtitle">Напоминания, авто-сообщения и каналы связи</string>
     <string name="debt_notification_enabled">Push-уведомления о долгах</string>
-    <string name="debt_notification_advance_3d">За 3 дня до срока</string>
-    <string name="debt_notification_advance_1d">За 1 день до срока</string>
+    <string name="debt_notification_advance_3d">Уведомление за 3 дня до срока</string>
+    <string name="debt_notification_advance_1d">Уведомление за 1 день до срока</string>
     <string name="debt_auto_message_title">Авто-сообщения</string>
     <string name="debt_auto_message_enabled">Автоматические напоминания (WorkManager)</string>
     <string name="debt_auto_message_sms">Авто-SMS</string>

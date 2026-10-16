@@ -590,6 +590,25 @@ class MoneyPreferencesStore(
     val userProfile: Flow<UserProfile> =
         context.moneyPreferencesDataStore.data.map { prefs -> prefs.toUserProfile() }
 
+    /**
+     * One payoff strategy. An explicit goal-screen value wins. If only the
+     * autopilot value was stored, that choice is kept. If neither was stored,
+     * both become the engine default (snowball).
+     */
+    suspend fun alignPayoffStrategy() {
+        context.moneyPreferencesDataStore.edit { prefs ->
+            val goal = prefs[MoneyPreferenceKeys.GOAL_PAYOFF_STRATEGY]
+            val autopilot = prefs[MoneyPreferenceKeys.AUTOPILOT_STRATEGY]
+            val chosen = when {
+                goal != null -> AutopilotStrategy.fromStored(goal).name
+                autopilot != null -> AutopilotStrategy.fromStored(autopilot).name
+                else -> AutopilotStrategy.SNOWBALL.name
+            }
+            if (goal != chosen) prefs[MoneyPreferenceKeys.GOAL_PAYOFF_STRATEGY] = chosen
+            if (autopilot != chosen) prefs[MoneyPreferenceKeys.AUTOPILOT_STRATEGY] = chosen
+        }
+    }
+
     suspend fun updateUserProfile(transform: (UserProfile) -> UserProfile) {
         context.moneyPreferencesDataStore.edit { prefs ->
             prefs.writeUserProfile(transform(prefs.toUserProfile()))

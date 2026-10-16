@@ -459,6 +459,8 @@
     <string name="autopilot_enabled_hint">Reminder to pay a small amount toward a chosen debt</string>
     <string name="autopilot_daily_amount">Daily amount</string>
     <string name="autopilot_strategy">Strategy</string>
+    <string name="autopilot_strategy_current">Current: %1$s</string>
+    <string name="autopilot_strategy_change">Change in Goals</string>
     <string name="autopilot_strategy_snowball">Snowball</string>
     <string name="autopilot_strategy_avalanche">Avalanche</string>
     <string name="autopilot_apply_now">Pay now</string>
@@ -484,8 +486,8 @@
     <string name="debt_notification_settings_title">Debt notifications</string>
     <string name="debt_notification_settings_subtitle">Reminders, auto-messages, and channels</string>
     <string name="debt_notification_enabled">Debt push notifications</string>
-    <string name="debt_notification_advance_3d">3 days before due</string>
-    <string name="debt_notification_advance_1d">1 day before due</string>
+    <string name="debt_notification_advance_3d">Notification 3 days before due</string>
+    <string name="debt_notification_advance_1d">Notification 1 day before due</string>
     <string name="debt_auto_message_title">Auto-messages</string>
     <string name="debt_auto_message_enabled">Automatic reminders (WorkManager)</string>
     <string name="debt_auto_message_sms">Auto SMS</string>
@@ -686,8 +688,8 @@
     <string name="debt_tab_calendar">Calendar</string>
     <string name="calendar_settings_title">Reminders and calendar</string>
     <string name="calendar_auto_sync">Add debts to the calendar</string>
-    <string name="calendar_remind_1d">Reminder 1 day before</string>
-    <string name="calendar_remind_3d">Reminder 3 days before</string>
+    <string name="calendar_remind_1d">Calendar reminder 1 day before</string>
+    <string name="calendar_remind_3d">Calendar reminder 3 days before</string>
     <string name="calendar_remind_due">Reminder on the due date</string>
     <string name="calendar_use_debts_calendar">Use the Debts calendar</string>
     <string name="calendar_create_debts_calendar">Create the Debts calendar</string>

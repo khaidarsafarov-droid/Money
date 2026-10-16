@@ -166,7 +166,10 @@ fun MoneyNavHost(
             PrivacySettingsScreen(onBack = { navController.popBackStack() })
         }
         composable(AppRoutes.AUTOPILOT_SETTINGS) {
-            AutopilotSettingsScreen(onBack = { navController.popBackStack() })
+            AutopilotSettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenGoalHub = { navController.navigate(AppRoutes.GOAL_HUB) },
+            )
         }
         composable(AppRoutes.CALENDAR_SETTINGS) {
             CalendarSettingsScreen(

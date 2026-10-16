@@ -109,6 +109,15 @@ class MoneyApplication : Application() {
         super.onCreate()
         AppLanguageManager.applyStored(this)
         NotificationChannels.create(this)
+        applicationScope.launch {
+            try {
+                preferencesStore.alignPayoffStrategy()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Log.w(TAG, "Failed to align payoff strategy", exception)
+            }
+        }
         rescheduleDebtReminders()
         syncPersonalDebtMessageSchedule()
         startWidgetPipeline()
