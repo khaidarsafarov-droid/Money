@@ -11,7 +11,7 @@ data class GlobalFinanceSummary(
     val globalBalance: Double
         get() = totalDeposits - totalExpenses
 
-    /** Free wallet. Goal money lives in [totalGoalAllocated] and is not part of this balance. */
+    /** Free wallet: deposits minus net goal transfers minus wallet expenses. */
     val availableBalance: Double
-        get() = totalDeposits - totalExpenses
+        get() = totalDeposits - totalGoalAllocated - totalExpenses
 }

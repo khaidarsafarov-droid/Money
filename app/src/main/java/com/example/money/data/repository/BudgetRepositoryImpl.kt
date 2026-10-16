@@ -79,6 +79,7 @@ class BudgetRepositoryImpl(
     override suspend fun addGoalTransferIfAffordable(transfer: Transfer): Boolean =
         SyncWriteGuard.withWriteLock {
             database.withTransaction {
+                if (!canAffordCurrentBalance(transfer.amount)) return@withTransaction false
                 val goalSyncId = transfer.goalId?.let { savingsGoalDao.getGoalById(it)?.syncId }
                 val id = transferDao.insert(
                     transfer.copy(isConfirmed = true).toEntity().copy(goalSyncId = goalSyncId),

@@ -144,6 +144,7 @@ class AppContainer(
 
     val goalRepository: GoalRepository by lazy {
         GoalRepositoryImpl(
+            database = database,
             savingsGoalDao = database.savingsGoalDao(),
             transferDao = database.transferDao(),
             expenseDao = database.expenseDao(),

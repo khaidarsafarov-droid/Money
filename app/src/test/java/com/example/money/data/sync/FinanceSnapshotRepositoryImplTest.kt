@@ -224,6 +224,7 @@ class FinanceSnapshotRepositoryImplTest {
     @Test
     fun deleteGoal_removesLinkedMoneyAndTasksAndKeepsThemInTheSnapshot() = runBlocking {
         val goals = GoalRepositoryImpl(
+            database = database,
             savingsGoalDao = database.savingsGoalDao(),
             transferDao = database.transferDao(),
             expenseDao = database.expenseDao(),

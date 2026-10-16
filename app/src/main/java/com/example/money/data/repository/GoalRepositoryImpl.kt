@@ -1,5 +1,7 @@
 package com.example.money.data.repository
 
+import androidx.room.withTransaction
+import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.dao.ExpenseDao
 import com.example.money.data.local.dao.GoalActionDao
 import com.example.money.data.local.dao.SavingsGoalDao
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 class GoalRepositoryImpl(
+    private val database: AppDatabase,
     private val savingsGoalDao: SavingsGoalDao,
     private val transferDao: TransferDao,
     private val expenseDao: ExpenseDao,
@@ -85,7 +88,7 @@ class GoalRepositoryImpl(
             val entity = existing.copy(
                 name = goal.name.trim(),
                 targetAmountCents = goal.targetAmountCents,
-                currentAmountCents = 0L,
+                currentAmountCents = existing.currentAmountCents,
                 currency = goal.currency,
                 deadlineMillis = goal.deadlineMillis,
                 updatedAt = now,
@@ -98,22 +101,24 @@ class GoalRepositoryImpl(
 
     override suspend fun deleteGoal(goal: SavingsGoal) {
         SyncWriteGuard.withWriteLock {
-            val existing = savingsGoalDao.getGoalById(goal.id) ?: return@withWriteLock
-            val now = System.currentTimeMillis()
-            val transfers = transferDao.getByGoalId(existing.id)
-            val expenses = expenseDao.getByGoalId(existing.id)
-            val actions = goalActionDao.getByGoalId(existing.id)
-            transfers.forEach { transferDao.delete(it) }
-            expenses.forEach { expenseDao.delete(it) }
-            actions.forEach { goalActionDao.deleteById(it.id) }
-            val marked = existing.copy(updatedAt = now)
-            savingsGoalDao.delete(existing)
-            transfers.forEach { syncQueueRecorder.recordTransfer(it, deleted = true) }
-            expenses.forEach { syncQueueRecorder.recordExpense(it, deleted = true) }
-            actions.forEach { action ->
-                syncQueueRecorder.recordGoalAction(action, existing.syncId, deleted = true)
+            database.withTransaction {
+                val existing = savingsGoalDao.getGoalById(goal.id) ?: return@withTransaction
+                val now = System.currentTimeMillis()
+                val transfers = transferDao.getByGoalId(existing.id)
+                val expenses = expenseDao.getByGoalId(existing.id)
+                val actions = goalActionDao.getByGoalId(existing.id)
+                transfers.forEach { transferDao.delete(it) }
+                expenses.forEach { expenseDao.delete(it) }
+                actions.forEach { goalActionDao.deleteById(it.id) }
+                val marked = existing.copy(updatedAt = now)
+                savingsGoalDao.delete(existing)
+                transfers.forEach { syncQueueRecorder.recordTransfer(it, deleted = true) }
+                expenses.forEach { syncQueueRecorder.recordExpense(it, deleted = true) }
+                actions.forEach { action ->
+                    syncQueueRecorder.recordGoalAction(action, existing.syncId, deleted = true)
+                }
+                syncQueueRecorder.recordGoal(marked, deleted = true)
             }
-            syncQueueRecorder.recordGoal(marked, deleted = true)
         }
     }
 

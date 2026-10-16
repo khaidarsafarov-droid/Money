@@ -59,14 +59,14 @@ class BudgetViewModel(
         onResult: (BudgetActionResult) -> Unit = {},
     ) {
         viewModelScope.launch {
-            budgetRepository.addGoalTransfer(
+            val added = budgetRepository.addGoalTransferIfAffordable(
                 Transfer(
                     amount = MoneyMath.fromCents(amountCents),
                     date = date,
                     goalId = goalId,
                 ),
             )
-            onResult(BudgetActionResult.Success)
+            onResult(if (added) BudgetActionResult.Success else BudgetActionResult.InsufficientFunds)
         }
     }
 
