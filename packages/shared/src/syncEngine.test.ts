@@ -38,6 +38,15 @@ function snapshot(
 }
 
 describe("mergeFinanceSnapshots", () => {
+  it("keeps both goals when sync uuids differ", () => {
+    const local = snapshot(deviceA, [goal("11111111-1111-4111-8111-111111111111", "Phone", 10)]);
+    const remote = snapshot(deviceB, [goal("22222222-2222-4222-8222-222222222222", "Tablet", 10)]);
+
+    const merged = mergeFinanceSnapshots(local, remote);
+
+    expect(merged.goals.map((item) => item.name).sort()).toEqual(["Phone", "Tablet"]);
+  });
+
   it("picks newer goal by syncUpdatedAt", () => {
     const local = snapshot(deviceA, [goal("1", "Local", 100)]);
     const remote = snapshot(deviceB, [goal("1", "Remote", 200)]);

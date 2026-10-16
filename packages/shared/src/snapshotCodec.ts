@@ -161,25 +161,41 @@ interface LegacySnapshotExpense {
   deleted?: boolean;
 }
 
+const SYNC_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isSyncUuid(id: string): boolean {
+  return SYNC_UUID.test(id);
+}
+
+function assignSyncId(id: number | string, assigned: Map<string, string>): string {
+  const raw = String(id);
+  const existing = assigned.get(raw);
+  if (existing) return existing;
+  const next = typeof id === "number" || /^\d+$/.test(raw) ? crypto.randomUUID() : raw;
+  assigned.set(raw, next);
+  return next;
+}
+
 function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
+  const assigned = new Map<string, string>();
   const transactions: SnapshotTransaction[] = legacy.transactions ?? [
     ...(legacy.transfers ?? []).map((transfer) => ({
-      id: String(transfer.id),
+      id: assignSyncId(transfer.id, assigned),
       kind: transfer.goalId == null ? ("DEPOSIT" as const) : ("GOAL_TRANSFER" as const),
       amountCents: Math.round(transfer.amount * 100),
-      goalId: transfer.goalId == null ? undefined : String(transfer.goalId),
+      goalId: transfer.goalId == null ? undefined : assignSyncId(transfer.goalId, assigned),
       createdAt: new Date(transfer.date).toISOString(),
       syncUpdatedAt: transfer.syncUpdatedAt,
       deleted: transfer.deleted,
     })),
     ...(legacy.expenses ?? []).map((expense) => ({
-      id: String(expense.id),
+      id: assignSyncId(expense.id, assigned),
       kind: "EXPENSE" as const,
       amountCents: Math.round(expense.amount * 100),
       createdAt: new Date(expense.date).toISOString(),
       category: expense.category,
       note: expense.note,
-      ...(expense.goalId == null ? {} : { goalId: String(expense.goalId) }),
+      ...(expense.goalId == null ? {} : { goalId: assignSyncId(expense.goalId, assigned) }),
       syncUpdatedAt: expense.syncUpdatedAt,
       deleted: expense.deleted,
     })),
@@ -190,7 +206,7 @@ function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
     deviceId: legacy.deviceId,
     updatedAt: legacy.updatedAt,
     goals: legacy.goals.map((goal) => ({
-      id: String(goal.id),
+      id: assignSyncId(goal.id, assigned),
       name: goal.name,
       targetAmountCents: goal.targetAmountCents,
       currency: goal.currency,
@@ -203,7 +219,7 @@ function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
       deleted: goal.deleted,
     })),
     debts: legacy.debts.map((debt) => ({
-      id: String(debt.id),
+      id: assignSyncId(debt.id, assigned),
       name: debt.name,
       targetAmountCents: debt.targetAmountCents,
       currentAmountCents: debt.currentAmountCents,
@@ -224,8 +240,8 @@ function migrateLegacySnapshot(legacy: LegacyFinanceSnapshot): FinanceSnapshot {
       deleted: debt.deleted,
     })),
     debtPayments: legacy.debtPayments.map((payment) => ({
-      id: String(payment.id),
-      debtorId: String(payment.debtorId),
+      id: assignSyncId(payment.id, assigned),
+      debtorId: assignSyncId(payment.debtorId, assigned),
       amountCents: payment.amountCents,
       paidAt: typeof payment.paidAt === "number"
         ? new Date(payment.paidAt).toISOString()

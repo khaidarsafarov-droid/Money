@@ -4,6 +4,9 @@ import type {
   SnapshotVoiceSettings,
 } from "./sync";
 
+/**
+ * Last-write-wins merge. Record `id` is the sync UUID, never a local numeric row id.
+ */
 function pickLww<T extends LwwRecord>(local: T, remote: T): T {
   if (remote.syncUpdatedAt > local.syncUpdatedAt) return remote;
   if (local.syncUpdatedAt > remote.syncUpdatedAt) return local;

@@ -95,7 +95,7 @@ localStorage.
 
 | Shared (TS) | Android (Kotlin) | Примечание |
 |-------------|------------------|------------|
-| `SnapshotGoal.id: string` | `Long` | Web string; Android Long — **коллизии id** при первом sync двух «пустых» устройств (TODO: UUID) |
+| `SnapshotGoal.id: string` | `savings_goal.sync_id` UUID | Локальный Room `id` Long в синхронизацию не входит |
 | `transactions[]` | `transfers[]` + `expenses[]` | Web unified ledger; Android split tables |
 | `syncUpdatedAt: number` | `Long` millis | LWW ключ |
 | `deviceId: string` | `String` UUID | `DeviceIdProvider` |

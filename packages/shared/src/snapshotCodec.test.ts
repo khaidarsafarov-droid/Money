@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SYNC_SCHEMA_VERSION } from "./constants";
-import { decodeFinanceSnapshot } from "./snapshotCodec";
+import { decodeFinanceSnapshot, isSyncUuid } from "./snapshotCodec";
+import { mergeFinanceSnapshots } from "./syncEngine";
 
 describe("decodeFinanceSnapshot", () => {
   const validSnapshot = {
@@ -92,6 +93,40 @@ describe("decodeFinanceSnapshot", () => {
     expect(decoded.goals[1]?.goalKind).toBeUndefined();
     expect(decoded.transactions[0]?.goalId).toBe("goal-sync");
     expect(decoded.notes).toBeUndefined();
+  });
+
+  it("assigns distinct uuids when two devices both used numeric goal id 1", () => {
+    const legacy = (deviceId: string, name: string) => JSON.stringify({
+      schemaVersion: 1,
+      deviceId,
+      updatedAt: 1,
+      goals: [{
+        id: 1,
+        name,
+        targetAmountCents: 100,
+        currency: "USD",
+        syncUpdatedAt: 1,
+      }],
+      debts: [],
+      debtPayments: [],
+      expenses: [{
+        id: 1,
+        amount: 1,
+        category: "food",
+        date: 1,
+        isConfirmed: true,
+        syncUpdatedAt: 1,
+        goalId: 1,
+      }],
+    });
+
+    const phone = decodeFinanceSnapshot(legacy("phone", "Phone"));
+    const tablet = decodeFinanceSnapshot(legacy("tablet", "Tablet"));
+
+    expect(isSyncUuid(phone.goals[0]!.id)).toBe(true);
+    expect(phone.goals[0]!.id).not.toBe(tablet.goals[0]!.id);
+    expect(phone.transactions[0]!.goalId).toBe(phone.goals[0]!.id);
+    expect(mergeFinanceSnapshots(phone, tablet).goals).toHaveLength(2);
   });
 
   it("rejects invalid JSON", () => {

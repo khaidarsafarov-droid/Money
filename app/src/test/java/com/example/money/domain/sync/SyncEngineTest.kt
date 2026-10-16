@@ -11,6 +11,21 @@ class SyncEngineTest {
     private val deviceB = "device-b"
 
     @Test
+    fun merge_keepsBothGoalsWhenLocalRowIdsWouldMatchButSyncIdsDiffer() {
+        val phone = snapshot(
+            goals = listOf(goal(id = "11111111-1111-4111-8111-111111111111", name = "Phone", syncUpdatedAt = 10L)),
+        )
+        val tablet = snapshot(
+            deviceId = deviceB,
+            goals = listOf(goal(id = "22222222-2222-4222-8222-222222222222", name = "Tablet", syncUpdatedAt = 10L)),
+        )
+
+        val merged = SyncEngine.merge(phone, tablet)
+
+        assertEquals(setOf("Phone", "Tablet"), merged.goals.map { it.name }.toSet())
+    }
+
+    @Test
     fun merge_picksNewerGoalBySyncUpdatedAt() {
         val local = snapshot(
             goals = listOf(

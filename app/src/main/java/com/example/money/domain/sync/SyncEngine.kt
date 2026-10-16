@@ -2,6 +2,7 @@ package com.example.money.domain.sync
 
 /**
  * Last-write-wins merge for offline P2P sync.
+ * Every record is keyed by its sync UUID (`sync_id`), never by the local Room row id.
  * Tie-breaker: newer [syncUpdatedAt] wins; equal timestamps prefer the remote side.
  */
 object SyncEngine {
