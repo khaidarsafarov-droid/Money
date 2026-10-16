@@ -40,6 +40,7 @@
     <string name="notification_snoozed">Reminder in 1 hour</string>
     <string name="notification_permission_needed">Allow notifications in settings to receive reminders</string>
     <string name="notification_permission_action">Allow notifications</string>
+    <string name="notification_permission_later">Not now</string>
     <string name="notification_sent">Reminder shown</string>
 
     <!-- Widget -->

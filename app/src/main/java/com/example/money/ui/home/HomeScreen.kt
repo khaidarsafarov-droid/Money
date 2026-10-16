@@ -117,6 +117,7 @@ import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.util.vibrateShort
+import com.example.money.ui.navigation.NotificationPermissionReason
 import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
@@ -128,7 +129,10 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     launchConfig: HomeLaunchConfig = HomeLaunchConfig(),
     notificationsEnabled: Boolean = true,
-    onRequestNotificationPermission: () -> Unit = {},
+    notificationPromptDismissed: Boolean = false,
+    requestNotificationPermissionIfNeeded: (NotificationPermissionReason) -> Unit = {},
+    onDismissNotificationPrompt: () -> Unit = {},
+    onRequestCalendarPermission: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenAppLanguage: () -> Unit = {},
     onOpenPrivacySettings: () -> Unit = {},
@@ -455,6 +459,9 @@ fun HomeScreen(
         pendingDeleteState = pendingDeleteState,
         pendingMarkPaidState = pendingMarkPaidState,
         showAdvisorSheetState = showAdvisorSheetState,
+        onDebtWithDueDateSaved = {
+            requestNotificationPermissionIfNeeded(NotificationPermissionReason.FIRST_DUE_DEBT)
+        },
     )
 
     BoxWithConstraints(modifier = modifier) {
@@ -667,6 +674,7 @@ fun HomeScreen(
                 onOpenSyncSettings = onOpenSyncSettings,
                 onOpenVoiceSettings = onOpenVoiceSettings,
                 calendarPermissionGranted = hasCalendarPermissions,
+                onRequestCalendarPermission = onRequestCalendarPermission,
                 onOpenIncomeIdeas = { showIncomeIdeas = true },
                 onOpenCurrency = { showCurrencyPicker = true },
                 notes = notes,
@@ -808,10 +816,14 @@ fun HomeScreen(
                 onFlushNoteDraft = noteViewModel::flushDraft,
                 noteDraftBlocksRemote = noteViewModel::hasUnsavedDraft,
                 calendarPermissionGranted = hasCalendarPermissions,
+                onRequestCalendarPermission = onRequestCalendarPermission,
                 onOpenGoalHub = onOpenGoalHub,
                 onAddDebt = { showAddDebtorDialog = true },
-                notificationsEnabled = notificationsEnabled,
-                onRequestNotificationPermission = onRequestNotificationPermission,
+                notificationsEnabled = notificationsEnabled || notificationPromptDismissed,
+                onRequestNotificationPermission = {
+                    requestNotificationPermissionIfNeeded(NotificationPermissionReason.BANNER)
+                },
+                onDismissNotificationPrompt = onDismissNotificationPrompt,
                 showCheckIn = showCheckIn,
                 onDismissCheckIn = debtorsViewModel::dismissCheckIn,
                 gamificationState = gamificationState,

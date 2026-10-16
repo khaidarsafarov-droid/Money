@@ -207,10 +207,12 @@ internal fun PhoneHomeLayout(
     onFlushNoteDraft: (FinanceNote, String, String) -> Unit = { _, _, _ -> },
     noteDraftBlocksRemote: (Long) -> Boolean = { false },
     calendarPermissionGranted: Boolean,
+    onRequestCalendarPermission: () -> Unit = {},
     onOpenGoalHub: () -> Unit,
     onAddDebt: () -> Unit,
     notificationsEnabled: Boolean,
     onRequestNotificationPermission: () -> Unit,
+    onDismissNotificationPrompt: () -> Unit = {},
     showCheckIn: Boolean,
     onDismissCheckIn: () -> Unit,
     gamificationState: com.example.money.settings.GamificationState,
@@ -459,6 +461,7 @@ internal fun PhoneHomeLayout(
                     item {
                         NotificationPermissionBanner(
                             onRequestPermission = onRequestNotificationPermission,
+                            onDismiss = onDismissNotificationPrompt,
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
                                 vertical = MoneySpacing.sm,
@@ -609,6 +612,7 @@ internal fun PhoneHomeLayout(
                         onApplyAutopilot = onApplyAutopilot,
                         calendarPermissionGranted = calendarPermissionGranted,
                         onOpenCalendarSettings = onOpenCalendarSettings,
+                        onRequestCalendarPermission = onRequestCalendarPermission,
                         highlightedDebtorId = highlightedDebtorId,
                         contactContext = contactContext,
                         onRemindDebtor = onRemindDebtor,
@@ -633,6 +637,7 @@ internal fun PhoneHomeLayout(
 @Composable
 internal fun NotificationPermissionBanner(
     onRequestPermission: () -> Unit,
+    onDismiss: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -653,6 +658,9 @@ internal fun NotificationPermissionBanner(
                 onClick = onRequestPermission,
                 priority = MoneyButtonPriority.Secondary,
             )
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.notification_permission_later))
+            }
         }
     }
 }

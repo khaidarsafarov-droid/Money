@@ -149,6 +149,7 @@ fun TabletHomeLayout(
     onFlushNoteDraft: (FinanceNote, String, String) -> Unit = { _, _, _ -> },
     noteDraftBlocksRemote: (Long) -> Boolean = { false },
     calendarPermissionGranted: Boolean = true,
+    onRequestCalendarPermission: () -> Unit = {},
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onAddDebt: () -> Unit = {},
@@ -495,6 +496,7 @@ fun TabletHomeLayout(
                                     hideAmounts = privacySettings.hideAmounts,
                                     calendarPermissionGranted = calendarPermissionGranted,
                                     onOpenCalendarSettings = onOpenCalendarSettings,
+                                    onRequestCalendarPermission = onRequestCalendarPermission,
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }

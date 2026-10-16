@@ -65,10 +65,6 @@ fun MoneyNavHost(
     val storedProfile by remember(app) {
         app.preferencesStore.userProfile.map<UserProfile, UserProfile?> { profile -> profile }
     }.collectAsStateWithLifecycle(initialValue = null)
-    val userProfile = storedProfile ?: UserProfile()
-    val calendarSettings by app.preferencesStore.calendarSettings.collectAsStateWithLifecycle(
-        initialValue = com.example.money.settings.CalendarSettings(),
-    )
     val notificationPermissionRequested by app.preferencesStore.notificationPermissionRequested
         .collectAsStateWithLifecycle(initialValue = false)
 
@@ -90,22 +86,13 @@ fun MoneyNavHost(
         }
     }
 
-    LaunchedEffect(userProfile.onboardingCompleted, calendarSettings.permissionRequested) {
-        if (userProfile.onboardingCompleted && !calendarSettings.permissionRequested) {
-            calendarPermissionLauncher.launch(
-                arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR),
-            )
-        }
-    }
-
-    LaunchedEffect(userProfile.onboardingCompleted, notificationPermissionRequested, notificationsEnabled) {
-        if (
-            userProfile.onboardingCompleted &&
-            !notificationPermissionRequested &&
-            !notificationsEnabled &&
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-        ) {
+    fun requestNotificationPermissionIfNeeded(reason: NotificationPermissionReason) {
+        if (notificationsEnabled) return
+        if (reason != NotificationPermissionReason.BANNER && notificationPermissionRequested) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            onRequestNotificationPermission()
         }
     }
 
@@ -138,12 +125,17 @@ fun MoneyNavHost(
             HomeScreen(
                 launchConfig = launchConfig,
                 notificationsEnabled = notificationsEnabled,
-                onRequestNotificationPermission = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        onRequestNotificationPermission()
+                notificationPromptDismissed = notificationPermissionRequested,
+                requestNotificationPermissionIfNeeded = ::requestNotificationPermissionIfNeeded,
+                onDismissNotificationPrompt = {
+                    scope.launch {
+                        app.preferencesStore.setNotificationPermissionRequested(true)
                     }
+                },
+                onRequestCalendarPermission = {
+                    calendarPermissionLauncher.launch(
+                        arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR),
+                    )
                 },
                 onLaunchConfigConsumed = onLaunchConfigConsumed,
                 onOpenVoiceSettings = { navController.navigate(AppRoutes.VOICE_SETTINGS) },
@@ -219,6 +211,9 @@ fun MoneyNavHost(
                     clientId = clientId,
                     onBack = { navController.popBackStack() },
                     onEdit = { id -> navController.navigate(AppRoutes.clientEdit(id)) },
+                    onDebtWithDueDateSaved = {
+                        requestNotificationPermissionIfNeeded(NotificationPermissionReason.FIRST_DUE_DEBT)
+                    },
                 )
             }
         }

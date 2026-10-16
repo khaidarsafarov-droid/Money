@@ -45,6 +45,7 @@ fun DebtCalendarTab(
     modifier: Modifier = Modifier,
     calendarPermissionGranted: Boolean = true,
     onOpenCalendarSettings: (() -> Unit)? = null,
+    onRequestCalendarPermission: (() -> Unit)? = null,
 ) {
     val activeDebts = debtors.filter { !it.isPaid }
     var monthAnchor by remember { mutableStateOf(startOfMonth(System.currentTimeMillis())) }
@@ -60,14 +61,24 @@ fun DebtCalendarTab(
         colors = CardDefaults.cardColors(containerColor = CreamSurface),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (!calendarPermissionGranted && onOpenCalendarSettings != null) {
+            if (!calendarPermissionGranted && (onRequestCalendarPermission != null || onOpenCalendarSettings != null)) {
                 Text(
                     text = stringResource(R.string.calendar_permission_denied),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                TextButton(onClick = onOpenCalendarSettings) {
-                    Text(stringResource(R.string.calendar_settings_title))
+                TextButton(
+                    onClick = { (onRequestCalendarPermission ?: onOpenCalendarSettings)?.invoke() },
+                ) {
+                    Text(
+                        stringResource(
+                            if (onRequestCalendarPermission != null) {
+                                R.string.calendar_request_permission
+                            } else {
+                                R.string.calendar_settings_title
+                            },
+                        ),
+                    )
                 }
             }
             val prevMonthCd = stringResource(R.string.calendar_prev_month)

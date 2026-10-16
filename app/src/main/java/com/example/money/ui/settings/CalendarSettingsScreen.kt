@@ -111,9 +111,11 @@ fun CalendarSettingsScreen(
                     SettingSwitch(
                         label = stringResource(R.string.calendar_auto_sync),
                         checked = settings.autoSyncEnabled,
-                        enabled = hasCalendarPermissions,
                         onCheckedChange = { enabled ->
                             viewModel.update { it.copy(autoSyncEnabled = enabled) }
+                            if (enabled && !hasCalendarPermissions) {
+                                onRequestPermission()
+                            }
                         },
                     )
                     SettingSwitch(

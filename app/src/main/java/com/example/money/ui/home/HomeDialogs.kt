@@ -94,6 +94,7 @@ internal fun HomeDialogs(
     pendingDeleteState: MutableState<PendingDelete?>,
     pendingMarkPaidState: MutableState<Debtor?>,
     showAdvisorSheetState: MutableState<Boolean>,
+    onDebtWithDueDateSaved: () -> Unit = {},
 ) {
     var showWelcomeDialog by showWelcomeDialogState
     var showAddDebtorDialog by showAddDebtorDialogState
@@ -191,6 +192,7 @@ internal fun HomeDialogs(
                     email = email,
                 )
                 showAddDebtorDialog = false
+                if (dateDue > 0L) onDebtWithDueDateSaved()
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_added)) }
             },
         )
@@ -221,6 +223,7 @@ internal fun HomeDialogs(
                     email = email,
                 )
                 editDebtor = null
+                if (dateDue > 0L) onDebtWithDueDateSaved()
                 scope.launch { showMessage(context.getString(R.string.msg_debtor_updated)) }
             },
         )

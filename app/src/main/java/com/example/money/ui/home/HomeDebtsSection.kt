@@ -52,6 +52,7 @@ fun LazyListScope.homeDebtsSection(
     onApplyAutopilot: () -> Unit,
     calendarPermissionGranted: Boolean = true,
     onOpenCalendarSettings: () -> Unit = {},
+    onRequestCalendarPermission: () -> Unit = {},
     highlightedDebtorId: Long?,
     contactContext: Context,
     onRemindDebtor: (Debtor) -> Unit,
@@ -130,6 +131,7 @@ fun LazyListScope.homeDebtsSection(
                 hideAmounts = privacySettings.hideAmounts,
                 calendarPermissionGranted = calendarPermissionGranted,
                 onOpenCalendarSettings = onOpenCalendarSettings,
+                onRequestCalendarPermission = onRequestCalendarPermission,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }

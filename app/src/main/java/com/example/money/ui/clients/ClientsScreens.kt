@@ -378,6 +378,7 @@ fun ClientDetailScreen(
     clientId: Long,
     onBack: () -> Unit,
     onEdit: (Long) -> Unit,
+    onDebtWithDueDateSaved: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as MoneyApplication
@@ -468,6 +469,7 @@ fun ClientDetailScreen(
                     } else {
                         viewModel.addDebt(current, cents, currency.currencyCode) {
                             amountText = ""
+                            onDebtWithDueDateSaved()
                         }
                     }
                 },
