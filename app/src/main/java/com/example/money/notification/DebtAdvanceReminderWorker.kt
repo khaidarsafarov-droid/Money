@@ -20,12 +20,11 @@ class DebtAdvanceReminderWorker(
 
         val app = applicationContext as MoneyApplication
         val settings = app.preferencesStore.personalBranchSettings.first()
-        if (!settings.debtNotificationsEnabled) return Result.success()
-
         val entity = app.database.debtorDao().getDebtorById(debtorId) ?: return Result.success()
         if (entity.status == "COMPLETED") return Result.success()
 
         val debtor = entity.toDomain()
+        if (!settings.notificationsEnabledFor(debtor.mode)) return Result.success()
         if (debtor.debtType != DebtType.CREDITOR) return Result.success()
 
         val now = System.currentTimeMillis()
@@ -35,7 +34,18 @@ class DebtAdvanceReminderWorker(
             return Result.success()
         }
 
-        DebtNotificationHelper.showAdvanceReminder(applicationContext, debtor, daysBefore)
+        val currency = app.preferencesStore.currencyRegion.first()
+        val client = debtor.clientId?.let { id ->
+            app.database.clientDao().getById(id, debtor.mode.name)
+        }
+        DebtNotificationHelper.showAdvanceReminder(
+            context = applicationContext,
+            debtor = debtor,
+            daysBefore = daysBefore,
+            currencyRegion = currency,
+            clientName = client?.name,
+            company = client?.company,
+        )
         return Result.success()
     }
 

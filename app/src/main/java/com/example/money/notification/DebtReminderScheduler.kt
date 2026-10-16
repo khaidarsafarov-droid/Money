@@ -138,7 +138,7 @@ class DebtReminderSchedulerImpl(
 
     override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
         if (debtor.isPaid || debtor.id == 0L) return
-        if (!settings.debtNotificationsEnabled) {
+        if (!settings.notificationsEnabledFor(debtor.mode)) {
             cancelAdvanceReminders(debtor.id)
             return
         }

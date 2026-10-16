@@ -22,6 +22,7 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
             try {
                 when (intent.action) {
                     ACTION_MARK_PAID -> handleMarkPaid(app, context, intent)
+                    ACTION_CONFIRM_MARK_PAID -> handleConfirmMarkPaid(app, context, intent)
                     ACTION_SNOOZE -> handleSnooze(app, context, intent)
                     ACTION_SEND_MESSAGE -> handleSendMessage(app, context, intent)
                 }
@@ -32,6 +33,18 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleMarkPaid(
+        app: MoneyApplication,
+        context: Context,
+        intent: Intent,
+    ) {
+        val debtorId = intent.getLongExtra(EXTRA_DEBTOR_ID, -1L)
+        if (debtorId <= 0L) return
+
+        val debtor = app.debtorRepository.getDebtorById(debtorId) ?: return
+        DebtNotificationHelper.showPaidConfirmation(context, debtor)
+    }
+
+    private suspend fun handleConfirmMarkPaid(
         app: MoneyApplication,
         context: Context,
         intent: Intent,
@@ -96,6 +109,7 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION_MARK_PAID = "com.example.money.action.MARK_DEBT_PAID"
+        const val ACTION_CONFIRM_MARK_PAID = "com.example.money.action.CONFIRM_MARK_DEBT_PAID"
         const val ACTION_SNOOZE = "com.example.money.action.SNOOZE_DEBT_REMINDER"
         const val ACTION_SEND_MESSAGE = "com.example.money.action.SEND_DEBT_MESSAGE"
 

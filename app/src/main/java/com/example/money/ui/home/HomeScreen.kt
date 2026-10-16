@@ -452,7 +452,10 @@ fun HomeScreen(
                             SegmentedButton(
                                 selected = appMode == mode,
                                 onClick = {
-                                    scope.launch { app.preferencesStore.setAppMode(mode) }
+                                    scope.launch {
+                                        app.preferencesStore.setAppMode(mode)
+                                        app.rescheduleDebtReminders()
+                                    }
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index, AppMode.entries.size),
                                 colors = SegmentedButtonDefaults.colors(

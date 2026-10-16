@@ -34,11 +34,12 @@ class WeeklyCheckInWorker(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val body = context.getString(R.string.weekly_checkin_notification_body)
+        val localized = DebtNotificationHelper.localizedContext(context)
+        val body = localized.getString(R.string.weekly_checkin_notification_body)
 
-        val notification = NotificationCompat.Builder(context, NotificationChannels.DEBT_REMINDERS)
+        val notification = NotificationCompat.Builder(localized, NotificationChannels.WEEKLY_REVIEW)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.weekly_checkin_notification_title))
+            .setContentTitle(localized.getString(R.string.weekly_checkin_notification_title))
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setAutoCancel(true)

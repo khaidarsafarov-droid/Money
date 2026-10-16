@@ -18,7 +18,7 @@ object DebtReminderCoordinator {
         companion object {
             fun from(debtor: Debtor, settings: PersonalBranchSettings) = ReminderSignature(
                 dateDue = debtor.dateDue,
-                notificationsEnabled = settings.debtNotificationsEnabled,
+                notificationsEnabled = settings.notificationsEnabledFor(debtor.mode),
                 remind3Days = settings.debtAdvanceRemind3Days,
                 remind1Day = settings.debtAdvanceRemind1Day,
             )
@@ -42,7 +42,7 @@ object DebtReminderCoordinator {
         active.forEach { debtor ->
             val signature = ReminderSignature.from(debtor, settings)
             if (previous[debtor.id] != signature) {
-                if (!settings.debtNotificationsEnabled) {
+                if (!signature.notificationsEnabled) {
                     scheduler.cancel(debtor.id)
                 } else {
                     scheduler.schedule(debtor)

@@ -10,6 +10,7 @@ import com.example.money.data.locale.AppLanguageManager
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
+import com.example.money.data.mapper.toDomain
 import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncService
@@ -190,14 +191,17 @@ class MoneyApplication : Application() {
     fun rescheduleDebtReminders() {
         applicationScope.launch {
             val settings = preferencesStore.personalBranchSettings.first()
-            debtorRepository.getActiveDebtors().first().forEach { debtor ->
-                if (!settings.debtNotificationsEnabled) {
-                    debtReminderScheduler.cancel(debtor.id)
-                } else {
-                    debtReminderScheduler.schedule(debtor)
-                    debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
+            database.debtorDao().getAllDebtorsOnce()
+                .map { it.toDomain() }
+                .filter { !it.isPaid }
+                .forEach { debtor ->
+                    if (!settings.notificationsEnabledFor(debtor.mode)) {
+                        debtReminderScheduler.cancel(debtor.id)
+                    } else {
+                        debtReminderScheduler.schedule(debtor)
+                        debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
+                    }
                 }
-            }
         }
     }
 

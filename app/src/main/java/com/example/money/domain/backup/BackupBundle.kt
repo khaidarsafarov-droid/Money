@@ -202,6 +202,7 @@ data class BackupPersonalDebtPreferences(
     val debtAutoMessageTelegram: Boolean,
     val debtAutoMessageEmail: Boolean,
     val debtDirectSmsEnabled: Boolean,
+    val clientNotificationsEnabled: Boolean = true,
 )
 
 /**

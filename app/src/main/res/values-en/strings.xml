@@ -836,6 +836,21 @@
         <item quantity="one">%d client</item>
         <item quantity="other">%d clients</item>
     </plurals>
+    <string name="notification_channel_due_today">Due today</string>
+    <string name="notification_channel_due_today_description">Debts that need to be settled today</string>
+    <string name="notification_channel_due_soon">Due soon</string>
+    <string name="notification_channel_due_soon_description">A reminder one or three days ahead</string>
+    <string name="notification_channel_overdue">Overdue</string>
+    <string name="notification_channel_overdue_description">Debts past their due date</string>
+    <string name="notification_channel_weekly">Weekly review</string>
+    <string name="notification_channel_weekly_description">A short weekly summary</string>
+    <string name="notification_mode_line">Mode: %1$s</string>
+    <string name="notification_client_line">Client: %1$s%2$s</string>
+    <string name="notification_action_confirm_paid">Confirm payment</string>
+    <string name="notification_confirm_paid_title">Confirm payment</string>
+    <string name="notification_confirm_paid_body">Mark “%1$s” as paid? Device confirmation is required.</string>
+    <string name="debt_notification_personal">Reminders for personal debts</string>
+    <string name="debt_notification_clients">Reminders for clients</string>
     <plurals name="client_debts_count">
         <item quantity="one">%d debt</item>
         <item quantity="other">%d debts</item>

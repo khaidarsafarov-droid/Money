@@ -148,6 +148,7 @@ object MoneyPreferenceKeys {
     val CALENDAR_PERMISSION_REQUESTED = booleanPreferencesKey("calendar_permission_requested")
     val NOTIFICATION_PERMISSION_REQUESTED = booleanPreferencesKey("notification_permission_requested")
     val PERSONAL_DEBT_NOTIFICATIONS_ENABLED = booleanPreferencesKey("personal_debt_notifications_enabled")
+    val CLIENT_DEBT_NOTIFICATIONS_ENABLED = booleanPreferencesKey("client_debt_notifications_enabled")
     val PERSONAL_DEBT_ADVANCE_1D = booleanPreferencesKey("personal_debt_advance_1d")
     val PERSONAL_DEBT_ADVANCE_3D = booleanPreferencesKey("personal_debt_advance_3d")
     val PERSONAL_DEBT_AUTO_MESSAGE_ENABLED = booleanPreferencesKey("personal_debt_auto_message_enabled")
@@ -322,6 +323,7 @@ class MoneyPreferencesStore(
             ),
             personalDebt = BackupPersonalDebtPreferences(
                 debtNotificationsEnabled = personalDebt.debtNotificationsEnabled,
+                clientNotificationsEnabled = personalDebt.clientNotificationsEnabled,
                 debtAdvanceRemind1Day = personalDebt.debtAdvanceRemind1Day,
                 debtAdvanceRemind3Days = personalDebt.debtAdvanceRemind3Days,
                 debtAutoMessageEnabled = personalDebt.debtAutoMessageEnabled,
@@ -427,6 +429,7 @@ class MoneyPreferencesStore(
             prefs.writePersonalBranchSettings(
                 PersonalBranchSettings(
                     debtNotificationsEnabled = preferences.personalDebt.debtNotificationsEnabled,
+                    clientNotificationsEnabled = preferences.personalDebt.clientNotificationsEnabled,
                     debtAdvanceRemind1Day = preferences.personalDebt.debtAdvanceRemind1Day,
                     debtAdvanceRemind3Days = preferences.personalDebt.debtAdvanceRemind3Days,
                     debtAutoMessageEnabled = preferences.personalDebt.debtAutoMessageEnabled,
@@ -885,6 +888,7 @@ private fun MutablePreferences.writeCalendarSettings(settings: CalendarSettings)
 private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
     PersonalBranchSettings(
         debtNotificationsEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_NOTIFICATIONS_ENABLED] ?: true,
+        clientNotificationsEnabled = this[MoneyPreferenceKeys.CLIENT_DEBT_NOTIFICATIONS_ENABLED] ?: true,
         debtAdvanceRemind1Day = this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_1D] ?: true,
         debtAdvanceRemind3Days = this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_3D] ?: true,
         debtAutoMessageEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_MESSAGE_ENABLED] ?: false,
@@ -897,6 +901,7 @@ private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
 
 private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBranchSettings) {
     this[MoneyPreferenceKeys.PERSONAL_DEBT_NOTIFICATIONS_ENABLED] = settings.debtNotificationsEnabled
+    this[MoneyPreferenceKeys.CLIENT_DEBT_NOTIFICATIONS_ENABLED] = settings.clientNotificationsEnabled
     this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_1D] = settings.debtAdvanceRemind1Day
     this[MoneyPreferenceKeys.PERSONAL_DEBT_ADVANCE_3D] = settings.debtAdvanceRemind3Days
     this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_MESSAGE_ENABLED] = settings.debtAutoMessageEnabled

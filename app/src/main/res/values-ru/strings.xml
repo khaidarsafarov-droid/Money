@@ -840,6 +840,21 @@
         <item quantity="many">%d клиентов</item>
         <item quantity="other">%d клиента</item>
     </plurals>
+    <string name="notification_channel_due_today">Срок сегодня</string>
+    <string name="notification_channel_due_today_description">Долги, которые нужно закрыть сегодня</string>
+    <string name="notification_channel_due_soon">Скоро срок</string>
+    <string name="notification_channel_due_soon_description">Напоминание за день или три дня</string>
+    <string name="notification_channel_overdue">Просрочено</string>
+    <string name="notification_channel_overdue_description">Долги с прошедшим сроком</string>
+    <string name="notification_channel_weekly">Еженедельный обзор</string>
+    <string name="notification_channel_weekly_description">Короткая сводка за неделю</string>
+    <string name="notification_mode_line">Режим: %1$s</string>
+    <string name="notification_client_line">Клиент: %1$s%2$s</string>
+    <string name="notification_action_confirm_paid">Подтвердить оплату</string>
+    <string name="notification_confirm_paid_title">Подтвердите оплату</string>
+    <string name="notification_confirm_paid_body">Отметить долг «%1$s» оплаченным? Нужно подтверждение устройства.</string>
+    <string name="debt_notification_personal">Напоминания о личных долгах</string>
+    <string name="debt_notification_clients">Напоминания по клиентам</string>
     <plurals name="client_debts_count">
         <item quantity="one">%d долг</item>
         <item quantity="few">%d долга</item>

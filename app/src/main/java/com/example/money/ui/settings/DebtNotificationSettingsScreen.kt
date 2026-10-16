@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +57,9 @@ fun DebtNotificationSettingsScreen(
     LaunchedEffect(settings.debtAutoMessageEnabled) {
         app.syncPersonalDebtMessageSchedule()
     }
+    LaunchedEffect(settings.debtNotificationsEnabled, settings.clientNotificationsEnabled) {
+        app.rescheduleDebtReminders()
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -81,10 +87,17 @@ fun DebtNotificationSettingsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             SettingsToggle(
-                label = stringResource(R.string.debt_notification_enabled),
+                label = stringResource(R.string.debt_notification_personal),
                 checked = settings.debtNotificationsEnabled,
                 onCheckedChange = { enabled ->
                     viewModel.updatePersonalBranchSettings { it.copy(debtNotificationsEnabled = enabled) }
+                },
+            )
+            SettingsToggle(
+                label = stringResource(R.string.debt_notification_clients),
+                checked = settings.clientNotificationsEnabled,
+                onCheckedChange = { enabled ->
+                    viewModel.updatePersonalBranchSettings { it.copy(clientNotificationsEnabled = enabled) }
                 },
             )
             SettingsToggle(
@@ -160,11 +173,18 @@ private fun SettingsToggle(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     androidx.compose.foundation.layout.Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onCheckedChange,
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, modifier = Modifier.weight(1f).padding(end = 8.dp))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(checked = checked, onCheckedChange = null)
     }
 }

@@ -58,9 +58,8 @@ class DebtReminderRestoreReconciler(
     suspend fun reconcile() {
         scheduler.cancelAll()
         val settings = loadSettings()
-        if (!settings.debtNotificationsEnabled) return
-
         loadActiveDebtors().forEach { debtor ->
+            if (!settings.notificationsEnabledFor(debtor.mode)) return@forEach
             scheduler.schedule(debtor)
             scheduler.scheduleAdvanceReminders(debtor, settings)
         }

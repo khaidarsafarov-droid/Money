@@ -12,7 +12,13 @@ data class PersonalBranchSettings(
     val debtAutoMessageTelegram: Boolean = false,
     val debtAutoMessageEmail: Boolean = true,
     val debtDirectSmsEnabled: Boolean = false,
+    val clientNotificationsEnabled: Boolean = true,
 ) {
+    fun notificationsEnabledFor(mode: AppMode): Boolean = when (mode) {
+        AppMode.PERSONAL -> debtNotificationsEnabled
+        AppMode.PROFESSIONAL -> clientNotificationsEnabled
+    }
+
     fun enabledAutoChannels(): List<MessagingChannel> = buildList {
         if (debtAutoMessageSms) add(MessagingChannel.SMS)
         if (debtAutoMessageWhatsapp) add(MessagingChannel.WHATSAPP)

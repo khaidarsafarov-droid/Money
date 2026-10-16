@@ -23,12 +23,11 @@ class DebtReminderWorker(
         if (debtorEntity.status == "COMPLETED") return Result.success()
 
         val settings = app.preferencesStore.personalBranchSettings.first()
-        if (!settings.debtNotificationsEnabled) {
+        val debtor = debtorEntity.toDomain()
+        if (!settings.notificationsEnabledFor(debtor.mode)) {
             app.debtReminderScheduler.cancel(debtorId)
             return Result.success()
         }
-
-        val debtor = debtorEntity.toDomain()
         val now = System.currentTimeMillis()
         val dueAtNine = DebtReminderScheduler.dueDateAtNineAm(debtor.dateDue)
         if (now < dueAtNine) {
@@ -36,7 +35,17 @@ class DebtReminderWorker(
             return Result.success()
         }
 
-        DebtNotificationHelper.show(applicationContext, debtor)
+        val currency = app.preferencesStore.currencyRegion.first()
+        val client = debtor.clientId?.let { id ->
+            app.database.clientDao().getById(id, debtor.mode.name)
+        }
+        DebtNotificationHelper.show(
+            context = applicationContext,
+            debtor = debtor,
+            currencyRegion = currency,
+            clientName = client?.name,
+            company = client?.company,
+        )
 
         if (!debtor.isPaid) {
             app.debtReminderScheduler.scheduleDailyFollowUp(debtor)

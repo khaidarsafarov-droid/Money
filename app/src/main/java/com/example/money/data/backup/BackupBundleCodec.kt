@@ -617,6 +617,7 @@ class BackupBundleCodec(
     private fun encodePersonalDebtPreferences(preferences: BackupPersonalDebtPreferences): JSONObject =
         JSONObject().apply {
             put(KEY_DEBT_NOTIFICATIONS_ENABLED, preferences.debtNotificationsEnabled)
+            put(KEY_CLIENT_NOTIFICATIONS_ENABLED, preferences.clientNotificationsEnabled)
             put(KEY_DEBT_ADVANCE_REMIND_1_DAY, preferences.debtAdvanceRemind1Day)
             put(KEY_DEBT_ADVANCE_REMIND_3_DAYS, preferences.debtAdvanceRemind3Days)
             put(KEY_DEBT_AUTO_MESSAGE_ENABLED, preferences.debtAutoMessageEnabled)
@@ -864,6 +865,7 @@ class BackupBundleCodec(
     private fun decodePersonalDebtPreferences(json: JSONObject): BackupPersonalDebtPreferences =
         BackupPersonalDebtPreferences(
             debtNotificationsEnabled = json.getBoolean(KEY_DEBT_NOTIFICATIONS_ENABLED),
+            clientNotificationsEnabled = json.optBoolean(KEY_CLIENT_NOTIFICATIONS_ENABLED, true),
             debtAdvanceRemind1Day = json.getBoolean(KEY_DEBT_ADVANCE_REMIND_1_DAY),
             debtAdvanceRemind3Days = json.getBoolean(KEY_DEBT_ADVANCE_REMIND_3_DAYS),
             debtAutoMessageEnabled = json.getBoolean(KEY_DEBT_AUTO_MESSAGE_ENABLED),
@@ -1131,6 +1133,7 @@ class BackupBundleCodec(
         private const val KEY_REMIND_ON_DUE_DAY = "remindOnDueDay"
         private const val KEY_USE_DEBTS_CALENDAR = "useDebtsCalendar"
         private const val KEY_DEBT_NOTIFICATIONS_ENABLED = "debtNotificationsEnabled"
+        private const val KEY_CLIENT_NOTIFICATIONS_ENABLED = "clientNotificationsEnabled"
         private const val KEY_DEBT_ADVANCE_REMIND_1_DAY = "debtAdvanceRemind1Day"
         private const val KEY_DEBT_ADVANCE_REMIND_3_DAYS = "debtAdvanceRemind3Days"
         private const val KEY_DEBT_AUTO_MESSAGE_ENABLED = "debtAutoMessageEnabled"
