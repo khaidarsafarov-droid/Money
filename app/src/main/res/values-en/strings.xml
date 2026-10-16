@@ -92,6 +92,8 @@
     <string name="note_add_line">Add line</string>
     <string name="note_total">Total</string>
     <string name="note_total_amount">Total: %1$s</string>
+    <string name="note_deleted">Deleted</string>
+    <string name="note_delete_line_cd">Delete line %1$s</string>
     <string name="note_mark_paid">Paid</string>
     <string name="note_mark_owed">Owed</string>
     <string name="note_close">Close note</string>

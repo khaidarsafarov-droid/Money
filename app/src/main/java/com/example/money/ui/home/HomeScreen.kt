@@ -52,6 +52,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -119,6 +120,7 @@ import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -172,8 +174,8 @@ fun HomeScreen(
     )
 
     val goals by goalViewModel.goals.collectAsStateWithLifecycle()
-    val notes by noteViewModel.notes.collectAsStateWithLifecycle()
-    val noteLines by noteViewModel.lines.collectAsStateWithLifecycle()
+    val notes by noteViewModel.visibleNotes.collectAsStateWithLifecycle()
+    val noteLines by noteViewModel.visibleLines.collectAsStateWithLifecycle()
     val currencyRegion by app.preferencesStore.currencyRegion.collectAsStateWithLifecycle(
         initialValue = CurrencyRegion.US,
     )
@@ -293,6 +295,25 @@ fun HomeScreen(
 
     suspend fun showMessage(message: String) {
         snackbarHostState.showSnackbar(message)
+    }
+
+    val noteDeletedMessage = stringResource(R.string.note_deleted)
+    val undoDeleteLabel = stringResource(R.string.action_undo)
+    fun offerUndo(start: () -> Unit, undo: () -> Unit) {
+        start()
+        scope.launch {
+            val waiting = launch {
+                val result = snackbarHostState.showSnackbar(
+                    message = noteDeletedMessage,
+                    actionLabel = undoDeleteLabel,
+                    duration = SnackbarDuration.Indefinite,
+                )
+                if (result == SnackbarResult.ActionPerformed) undo()
+            }
+            delay(5_000)
+            snackbarHostState.currentSnackbarData?.dismiss()
+            waiting.join()
+        }
     }
 
     LaunchedEffect(userProfile.onboardingCompleted) {
@@ -656,10 +677,21 @@ fun HomeScreen(
                 onUpdateNote = noteViewModel::updateNote,
                 onSetMark = noteViewModel::setMark,
                 onSetClosed = noteViewModel::setClosed,
-                onDeleteNote = noteViewModel::deleteNote,
+                onDeleteNote = { id ->
+                    openNoteId = null
+                    offerUndo(
+                        start = { noteViewModel.scheduleDeleteNote(id) },
+                        undo = { noteViewModel.undoDeleteNote(id) },
+                    )
+                },
                 onAddLine = noteViewModel::addLine,
                 onUpdateLine = noteViewModel::updateLine,
-                onDeleteLine = noteViewModel::deleteLine,
+                onDeleteLine = { noteId, lineId ->
+                    offerUndo(
+                        start = { noteViewModel.scheduleDeleteLine(noteId, lineId) },
+                        undo = { noteViewModel.undoDeleteLine(lineId) },
+                    )
+                },
                 onNoteTitleChange = noteViewModel::onTitleChange,
                 onNoteBodyChange = noteViewModel::onBodyChange,
                 onFlushNoteDraft = noteViewModel::flushDraft,
@@ -756,10 +788,21 @@ fun HomeScreen(
                 onUpdateNote = noteViewModel::updateNote,
                 onSetMark = noteViewModel::setMark,
                 onSetClosed = noteViewModel::setClosed,
-                onDeleteNote = noteViewModel::deleteNote,
+                onDeleteNote = { id ->
+                    openNoteId = null
+                    offerUndo(
+                        start = { noteViewModel.scheduleDeleteNote(id) },
+                        undo = { noteViewModel.undoDeleteNote(id) },
+                    )
+                },
                 onAddLine = noteViewModel::addLine,
                 onUpdateLine = noteViewModel::updateLine,
-                onDeleteLine = noteViewModel::deleteLine,
+                onDeleteLine = { noteId, lineId ->
+                    offerUndo(
+                        start = { noteViewModel.scheduleDeleteLine(noteId, lineId) },
+                        undo = { noteViewModel.undoDeleteLine(lineId) },
+                    )
+                },
                 onNoteTitleChange = noteViewModel::onTitleChange,
                 onNoteBodyChange = noteViewModel::onBodyChange,
                 onFlushNoteDraft = noteViewModel::flushDraft,

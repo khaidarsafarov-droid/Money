@@ -72,6 +72,8 @@
     <string name="note_add_line">Добавить строку</string>
     <string name="note_total">Итог</string>
     <string name="note_total_amount">Итог: %1$s</string>
+    <string name="note_deleted">Удалено</string>
+    <string name="note_delete_line_cd">Удалить строку %1$s</string>
     <string name="note_mark_paid">Оплачено</string>
     <string name="note_mark_owed">Должен</string>
     <string name="note_close">Закрыть заметку</string>

@@ -395,7 +395,10 @@ private fun FinancialNoteBody(
                         Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.note_edit_line))
                     }
                     IconButton(onClick = { onDeleteLine(line.id) }) {
-                        Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.note_delete))
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = stringResource(R.string.note_delete_line_cd, line.label),
+                        )
                     }
                 }
             }

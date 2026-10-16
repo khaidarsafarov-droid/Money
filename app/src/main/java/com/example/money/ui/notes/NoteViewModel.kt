@@ -8,10 +8,13 @@ import com.example.money.domain.model.FinanceNoteLine
 import com.example.money.domain.model.NoteKind
 import com.example.money.domain.model.NoteMark
 import com.example.money.domain.repository.NoteRepository
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -19,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 private const val TEXT_SAVE_DELAY_MS = 500L
+private const val DELETE_UNDO_MS = 5_000L
 
 private data class NoteTextDraft(
     val title: String,
@@ -38,6 +42,18 @@ class NoteViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val textDrafts = MutableStateFlow<Map<Long, NoteTextDraft>>(emptyMap())
+    private val hiddenNoteIds = MutableStateFlow<Set<Long>>(emptySet())
+    private val hiddenLineIds = MutableStateFlow<Set<Long>>(emptySet())
+    private val pendingNoteDeletes = mutableMapOf<Long, Job>()
+    private val pendingLineDeletes = mutableMapOf<Long, Job>()
+
+    val visibleNotes: StateFlow<List<FinanceNote>> = combine(notes, hiddenNoteIds) { rows, hidden ->
+        rows.filter { it.id !in hidden }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val visibleLines: StateFlow<List<FinanceNoteLine>> = combine(lines, hiddenLineIds) { rows, hidden ->
+        rows.filter { it.id !in hidden }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -115,6 +131,38 @@ class NoteViewModel(
 
     fun deleteNote(id: Long) {
         viewModelScope.launch { noteRepository.deleteNote(id) }
+    }
+
+    fun scheduleDeleteNote(id: Long) {
+        hiddenNoteIds.update { it + id }
+        pendingNoteDeletes.remove(id)?.cancel()
+        pendingNoteDeletes[id] = viewModelScope.launch {
+            delay(DELETE_UNDO_MS)
+            noteRepository.deleteNote(id)
+            hiddenNoteIds.update { it - id }
+            pendingNoteDeletes.remove(id)
+        }
+    }
+
+    fun undoDeleteNote(id: Long) {
+        pendingNoteDeletes.remove(id)?.cancel()
+        hiddenNoteIds.update { it - id }
+    }
+
+    fun scheduleDeleteLine(noteId: Long, lineId: Long) {
+        hiddenLineIds.update { it + lineId }
+        pendingLineDeletes.remove(lineId)?.cancel()
+        pendingLineDeletes[lineId] = viewModelScope.launch {
+            delay(DELETE_UNDO_MS)
+            noteRepository.deleteLine(noteId, lineId)
+            hiddenLineIds.update { it - lineId }
+            pendingLineDeletes.remove(lineId)
+        }
+    }
+
+    fun undoDeleteLine(lineId: Long) {
+        pendingLineDeletes.remove(lineId)?.cancel()
+        hiddenLineIds.update { it - lineId }
     }
 
     fun addLine(noteId: Long, label: String, amountCents: Long) {

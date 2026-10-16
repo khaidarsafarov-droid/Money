@@ -25,6 +25,7 @@ class NoteViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val saved = mutableListOf<FinanceNote>()
+    private val deletedNotes = mutableListOf<Long>()
 
     private val repository = object : NoteRepository {
         override fun observeNotes(): Flow<List<FinanceNote>> = MutableStateFlow(emptyList())
@@ -33,7 +34,9 @@ class NoteViewModelTest {
         override suspend fun updateNote(note: FinanceNote) {
             saved += note
         }
-        override suspend fun deleteNote(id: Long) = Unit
+        override suspend fun deleteNote(id: Long) {
+            deletedNotes += id
+        }
         override suspend fun addLine(noteId: Long, label: String, amountCents: Long) = Unit
         override suspend fun updateLine(line: FinanceNoteLine) = Unit
         override suspend fun deleteLine(noteId: Long, lineId: Long) = Unit
@@ -63,5 +66,19 @@ class NoteViewModelTest {
 
         assertEquals(listOf("hello"), saved.map { it.body })
         assertEquals("List", saved.single().title)
+    }
+
+    @Test
+    fun scheduledDelete_canBeUndoneBeforeTheTimeout() = runTest(dispatcher) {
+        val viewModel = NoteViewModel(repository)
+        viewModel.scheduleDeleteNote(4L)
+        advanceTimeBy(4_999)
+        assertTrue(deletedNotes.isEmpty())
+
+        viewModel.undoDeleteNote(4L)
+        advanceTimeBy(5_000)
+        advanceUntilIdle()
+
+        assertTrue(deletedNotes.isEmpty())
     }
 }
