@@ -49,7 +49,7 @@ export function NotesPanel({ hideAmounts = false }: NotesPanelProps) {
     <section className="space-y-4">
       <h2 className="text-base font-semibold">Заметки ({notes.length})</h2>
       <form
-        className="space-y-3 rounded-[24px] bg-white p-4 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]"
+        className="space-y-3 rounded-[24px] bg-milk-glass p-4 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]"
         onSubmit={(event) => {
           event.preventDefault();
           const note = createNote(title, kind);
@@ -87,7 +87,7 @@ export function NotesPanel({ hideAmounts = false }: NotesPanelProps) {
               <button
                 type="button"
                 onClick={() => setOpenId(note.id)}
-                className={`w-full rounded-[24px] bg-white p-4 text-left shadow-[0_8px_20px_rgb(15_110_92_/_0.06)] ${markClass(note.mark)}`}
+                className={`w-full rounded-[24px] bg-milk-glass p-4 text-left shadow-[0_8px_20px_rgb(15_110_92_/_0.06)] ${markClass(note.mark)}`}
               >
                 <p className="text-sm text-milk-muted">{note.kind === "FINANCIAL" ? "Расчёт" : "Текст"}</p>
                 <p className="text-lg font-semibold">{note.title}</p>
@@ -129,7 +129,7 @@ function NoteEditor({
       <input
         value={note.title}
         onChange={(event) => onChange({ ...note, title: event.target.value })}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-lg font-semibold outline-none"
+        className="w-full rounded-2xl bg-milk-glass px-4 py-3 text-lg font-semibold outline-none"
       />
       {note.kind === "TEXT" ? (
         <textarea
@@ -137,10 +137,10 @@ function NoteEditor({
           onChange={(event) => onChange({ ...note, body: event.target.value })}
           rows={8}
           placeholder="Текст"
-          className="w-full rounded-[24px] bg-white px-4 py-3 text-sm outline-none"
+          className="w-full rounded-[24px] bg-milk-glass px-4 py-3 text-sm outline-none"
         />
       ) : (
-        <div className="space-y-3 rounded-[24px] bg-white p-4">
+        <div className="space-y-3 rounded-[24px] bg-milk-glass p-4">
           {note.lines.map((line) => (
             <div key={line.id} className="flex gap-2">
               <input

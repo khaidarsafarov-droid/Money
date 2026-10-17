@@ -29,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.StatusActiveBg
 
@@ -132,14 +131,14 @@ private fun AddActionRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (highlighted) GoldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(22.dp),
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = if (highlighted) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (highlighted) GoldPrimary else MaterialTheme.colorScheme.onSurface,
+            color = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }

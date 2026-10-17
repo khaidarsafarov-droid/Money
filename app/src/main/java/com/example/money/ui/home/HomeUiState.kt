@@ -29,7 +29,7 @@ data class HomeUiState(
     val debtTab: DebtTab,
     val debtorFilter: DebtorFilter,
     val debtSearchQuery: String,
-    val debtProgressPercent: Int,
+    val planProgressPercent: Int,
     val privacySettings: PrivacySettings,
     val gamificationState: GamificationState,
     val autopilotSettings: AutopilotSettings,

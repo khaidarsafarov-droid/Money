@@ -18,8 +18,6 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.money.R
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.OverdueRed
 import com.example.money.ui.util.Formatters
@@ -35,7 +33,7 @@ fun GoalsSectionSummary(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = MaterialTheme.shapes.large,
     ) {
         Column(
@@ -63,13 +61,13 @@ fun GoalsSectionSummary(
                     text = "${summary.progressPercent}%",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = GoldPrimary,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             LinearProgressIndicator(
                 progress = { GoalProgress.displayProgressFraction(summary.targetCents, summary.savedCents) },
                 modifier = Modifier.fillMaxWidth(),
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
             summary.dailyCents?.let { daily ->

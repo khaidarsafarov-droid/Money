@@ -5,6 +5,7 @@ import {
   filterByType,
   filterItems,
   isDebtOverdue,
+  planProgressPercent,
   processPayment,
   remainingAmount,
   removeItem,
@@ -15,6 +16,30 @@ import { addTransaction } from "@/lib/globalFinanceEngine";
 import type { FinanceState } from "@/types/finance";
 
 const emptyState: FinanceState = { currency: "USD", items: [], transactions: [] };
+
+describe("planProgressPercent", () => {
+  it("combines paid debts with goal savings", () => {
+    expect(
+      planProgressPercent({
+        debtPaidCents: 5_000,
+        debtTargetCents: 10_000,
+        goalAccumulatedCents: 2_000,
+        goalRemainingCents: 2_000,
+      }),
+    ).toBe(50);
+  });
+
+  it("is zero when there is nothing to measure", () => {
+    expect(
+      planProgressPercent({
+        debtPaidCents: 0,
+        debtTargetCents: 0,
+        goalAccumulatedCents: 0,
+        goalRemainingCents: 0,
+      }),
+    ).toBe(0);
+  });
+});
 
 describe("resolveStatus", () => {
   it("returns ACTIVE when nothing paid", () => {

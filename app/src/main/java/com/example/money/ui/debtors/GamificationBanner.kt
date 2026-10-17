@@ -16,9 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.settings.GamificationBadges
 import com.example.money.settings.GamificationState
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 
 @Composable
 fun GamificationBanner(
@@ -31,7 +29,7 @@ fun GamificationBanner(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -42,7 +40,7 @@ fun GamificationBanner(
                     text = stringResource(R.string.gamification_streak, state.streakCount),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = GoldPrimary,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             val winMessage = state.lastWinMessage

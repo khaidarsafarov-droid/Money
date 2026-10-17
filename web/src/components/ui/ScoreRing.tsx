@@ -13,7 +13,7 @@ export function ScoreRing({ value, label, caption }: ScoreRingProps) {
   return (
     <section className="flex items-center gap-4 rounded-[28px] bg-gradient-to-br from-[#127863] to-[#0a4a3e] p-5 text-white shadow-[0_18px_40px_rgb(11_83_70_/_0.22)]">
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-white/75">{label}</p>
+        <p className="text-sm text-[#E7F6EF]">{label}</p>
         <p className="mt-1 text-lg font-semibold leading-snug">{caption}</p>
       </div>
       <svg width="92" height="92" viewBox="0 0 92 92" role="img" aria-label={`${clamped} из 100`}>

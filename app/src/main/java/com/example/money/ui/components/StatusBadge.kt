@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.ui.debtors.DebtDueStatus
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.StatusActiveBg
 import com.example.money.ui.theme.StatusActiveText
 import com.example.money.ui.theme.StatusOverdueBg
@@ -61,7 +60,7 @@ fun GoalStatusBadge(
     val (background, foreground) = when {
         isCompleted -> StatusPaidBg to StatusPaidText
         isOverdue -> StatusOverdueBg to StatusOverdueText
-        else -> StatusActiveBg to GoldPrimary
+        else -> StatusActiveBg to StatusActiveText
     }
     Text(
         text = label,

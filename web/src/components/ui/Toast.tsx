@@ -68,7 +68,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
               transition={{ duration: 0.15 }}
-              className="pointer-events-auto flex items-center gap-2 rounded-md border border-milk-surface bg-white px-3 py-2.5 text-sm text-milk-text"
+              className="pointer-events-auto flex items-center gap-2 rounded-md border border-milk-surface bg-milk-glass px-3 py-2.5 text-sm text-milk-text"
             >
               <AppIcon
                 icon={toast.tone === "success" ? CheckCircle2 : Info}

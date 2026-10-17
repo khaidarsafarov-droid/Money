@@ -1,5 +1,8 @@
 package com.example.money.ui.settings
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,7 +44,6 @@ import com.example.money.MoneyApplication
 import com.example.money.ui.util.withLightHaptic
 import com.example.money.R
 import com.example.money.data.sync.PairingOffer
-import com.example.money.ui.theme.CreamBackground
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.launch
@@ -61,10 +63,12 @@ fun SyncPairingScreen(
     var message by remember { mutableStateOf<String?>(null) }
     val pairedMessage = stringResource(R.string.sync_pair_saved)
     val rejectedMessage = stringResource(R.string.sync_pair_rejected)
+    val copiedMessage = stringResource(R.string.sync_web_url_copied)
+    val syncState by app.syncService.connectionState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.sync_settings_title)) },
@@ -76,7 +80,7 @@ fun SyncPairingScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
     ) { padding ->
@@ -99,6 +103,27 @@ fun SyncPairingScreen(
                     scope.launch { app.preferencesStore.setPeerSyncEnabled(checked) }
                 },
             )
+            syncState.webSocketUrl?.let { webSocketUrl ->
+                Text(
+                    text = stringResource(R.string.sync_web_url_menu),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = webSocketUrl,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Button(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("sync-url", webSocketUrl))
+                        message = copiedMessage
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.sync_copy_url))
+                }
+            }
             Button(
                 onClick = {
                     scope.launch {

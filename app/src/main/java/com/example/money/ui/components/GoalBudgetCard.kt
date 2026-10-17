@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.ui.theme.CardBorder
 import com.example.money.ui.theme.MoneySpacing
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -34,7 +33,7 @@ fun GoalBudgetCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, CardBorder),
         shape = MaterialTheme.shapes.extraLarge,
     ) {

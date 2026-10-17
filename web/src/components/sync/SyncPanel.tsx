@@ -50,7 +50,7 @@ export function SyncPanel({
       </div>
 
       <p className="text-xs text-milk-muted">
-        URL из меню Android (⋮ → «URL для веб-синхронизации»).
+        URL на экране синхронизации Android.
       </p>
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -59,14 +59,14 @@ export function SyncPanel({
           value={peerUrl}
           onChange={(event) => onPeerUrlChange(event.target.value)}
           placeholder="ws://192.168.1.10:54321/sync"
-          className="min-w-0 flex-1 rounded-md border border-milk-surface bg-white px-3 py-2 text-sm text-milk-text outline-none focus:border-milk-accent"
+          className="min-w-0 flex-1 rounded-md border border-milk-surface bg-milk-glass px-3 py-2 text-sm text-milk-text outline-none focus:border-milk-accent"
           disabled={isBusy}
         />
         <button
           type="button"
           onClick={onSync}
           disabled={isBusy}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-milk-surface bg-white px-3 py-2 text-sm text-milk-text transition hover:bg-milk-bg disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-milk-surface bg-milk-glass px-3 py-2 text-sm text-milk-text transition hover:bg-milk-bg disabled:opacity-50"
         >
           <RefreshCw className={`size-3.5 ${isBusy ? "animate-spin" : ""}`} strokeWidth={1.25} aria-hidden />
           Синхронизировать

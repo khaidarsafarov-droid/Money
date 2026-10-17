@@ -25,7 +25,6 @@ import com.example.money.R
 import com.example.money.data.backup.BackupErrorCode
 import com.example.money.data.backup.BackupProvider
 import com.example.money.domain.backup.BackupRemoteFile
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.withLightHaptic
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.OverdueRed
@@ -123,7 +122,7 @@ internal fun RemoteBackupCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -156,7 +155,7 @@ internal fun BackupSectionCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

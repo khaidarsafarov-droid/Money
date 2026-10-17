@@ -12,7 +12,7 @@ fun GlobalBalanceHeader(
     onOwesMeClick: () -> Unit = {},
     onIOweClick: () -> Unit = {},
     hideAmounts: Boolean = false,
-    progressPercent: Int? = null,
+    planProgressPercent: Int = 0,
     modifier: Modifier = Modifier,
 ) {
     MintFinanceHeader(
@@ -21,7 +21,7 @@ fun GlobalBalanceHeader(
         hideAmounts = hideAmounts,
         onOwesMeClick = onOwesMeClick,
         onIOweClick = onIOweClick,
-        progressPercent = progressPercent,
+        planProgressPercent = planProgressPercent,
         modifier = modifier,
     )
 }

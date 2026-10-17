@@ -13,7 +13,7 @@ interface StatusFilterTabsProps {
 
 export function StatusFilterTabs({ value, onChange }: StatusFilterTabsProps) {
   return (
-    <div className="flex gap-1 rounded-full bg-white p-1" role="tablist" aria-label="Фильтр по статусу">
+    <div className="flex gap-1 rounded-full bg-milk-glass p-1" role="tablist" aria-label="Фильтр по статусу">
       {filters.map((filter) => {
         const selected = value === filter.id;
         return (

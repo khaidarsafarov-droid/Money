@@ -25,7 +25,6 @@ import com.example.money.ui.components.FinanceListItem
 import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 
@@ -212,14 +211,15 @@ internal fun historyEventSubtitle(event: AppHistoryEvent, goals: List<SavingsGoa
         stringResource(R.string.history_goal_record, Formatters.shortDate(event.goal.updatedAt))
 }
 
+@Composable
 internal fun historyEventColor(event: AppHistoryEvent): Color = when (event) {
     is AppHistoryEvent.TransferEvent -> FinancePositive
     is AppHistoryEvent.ExpenseEvent -> FinanceNegative
     is AppHistoryEvent.DebtPaymentEvent ->
         if (event.debtor.debtType == DebtType.CREDITOR) FinancePositive else FinanceNegative
-    is AppHistoryEvent.GoalNoteEvent -> GoldPrimary
+    is AppHistoryEvent.GoalNoteEvent -> MaterialTheme.colorScheme.primary
     is AppHistoryEvent.DebtOpenedEvent -> FinanceInfo
-    is AppHistoryEvent.GoalRecordEvent -> GoldPrimary
+    is AppHistoryEvent.GoalRecordEvent -> MaterialTheme.colorScheme.primary
 }
 
 @Composable

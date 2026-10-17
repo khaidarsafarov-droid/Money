@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
 import com.example.money.ui.theme.GaugeTrack
-import com.example.money.ui.theme.GoldPrimary
 
 @Composable
 fun SemiCircularGauge(
@@ -34,6 +33,7 @@ fun SemiCircularGauge(
             .height(160.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
+        val progressColor = MaterialTheme.colorScheme.primary
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
@@ -60,7 +60,7 @@ fun SemiCircularGauge(
             )
 
             drawArc(
-                color = GoldPrimary,
+                color = progressColor,
                 startAngle = 180f,
                 sweepAngle = 180f * progress.coerceIn(0f, 1f),
                 useCenter = false,

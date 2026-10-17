@@ -13,9 +13,9 @@
   --color-milk-success: #0f6e5c;
   --color-milk-warning: #d4893a;
   --color-milk-error: #c45c4a;
-  --color-finance-positive: #0e8a62;
+  --color-finance-positive: #1a8f4a;
   --color-finance-negative: #d15b4a;
-  --color-finance-positive-soft: rgb(14 138 98 / 0.12);
+  --color-finance-positive-soft: rgb(26 143 74 / 0.12);
   --color-finance-negative-soft: rgb(209 91 74 / 0.12);
   --color-milk-gold: #e39a3c;
   --color-pastel-mint: #d9f6e6;
@@ -41,7 +41,7 @@
 
 @layer utilities {
   .glass-card {
-    @apply rounded-[24px] border border-white/80 bg-white shadow-[0_10px_30px_rgb(15_110_92_/_0.06)];
+    @apply rounded-[24px] border border-white/80 bg-milk-glass shadow-[0_10px_30px_rgb(15_110_92_/_0.06)];
   }
 
   .pill-btn {
@@ -53,7 +53,7 @@
   }
 
   .pill-btn-secondary {
-    @apply rounded-full border border-milk-surface bg-white px-4 py-2 text-sm font-medium text-milk-text transition-colors duration-150 hover:bg-pastel-mint;
+    @apply rounded-full border border-milk-surface bg-milk-glass px-4 py-2 text-sm font-medium text-milk-text transition-colors duration-150 hover:bg-pastel-mint;
   }
 
   .pill-btn-ghost {
@@ -82,5 +82,23 @@
 
   .goal-card-active {
     @apply border-milk-accent/25;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-milk-bg: #06241c;
+    --color-milk-surface: #1d4d40;
+    --color-milk-text: #e7f6ef;
+    --color-milk-muted: #9ec9bb;
+    --color-milk-accent: #3dbea4;
+    --color-milk-accent-dark: #8ee8d4;
+    --color-milk-glass: #10382e;
+    --color-finance-positive: #3dbe8a;
+  }
+
+  body {
+    background-image: none;
+    background-color: #06241c;
   }
 }

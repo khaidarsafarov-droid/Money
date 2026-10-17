@@ -38,8 +38,6 @@ import com.example.money.R
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.OverdueRed
 import com.example.money.ui.theme.moneyCaptionStyle
@@ -67,10 +65,10 @@ fun GoalListItem(
         GoalProgress.isDeadlinePassed(goal.deadlineMillis) &&
         !goal.isCompleted
     val progressColor = when {
-        goal.isOverAchieved -> GoldPrimary
+        goal.isOverAchieved -> MaterialTheme.colorScheme.primary
         goal.isCompleted -> MaterialTheme.colorScheme.primary
         isDeadlinePassed -> OverdueRed
-        else -> GoldPrimary
+        else -> MaterialTheme.colorScheme.primary
     }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -80,12 +78,12 @@ fun GoalListItem(
             .fillMaxWidth()
             .then(
                 if (goal.isOverAchieved) {
-                    Modifier.border(1.5.dp, GoldPrimary.copy(alpha = 0.5f), MaterialTheme.shapes.large)
+                    Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), MaterialTheme.shapes.large)
                 } else {
                     Modifier
                 },
             ),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (!goal.isCompleted) 2.dp else 1.dp,
@@ -147,7 +145,7 @@ fun GoalListItem(
                         Text(
                             text = stringResource(R.string.goal_kind_action),
                             style = moneyCaptionStyle(),
-                            color = GoldPrimary,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             text = stringResource(

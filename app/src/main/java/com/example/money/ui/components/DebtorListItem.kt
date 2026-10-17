@@ -48,7 +48,6 @@ import com.example.money.domain.model.Debtor
 import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.initials
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.OverdueRed
 import com.example.money.ui.theme.moneyCaptionStyle
@@ -79,7 +78,7 @@ fun DebtorListItem(
     var showMenu by remember { mutableStateOf(false) }
 
     val rowBackground = when {
-        highlighted -> GoldPrimary.copy(alpha = 0.12f)
+        highlighted -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
         isOverdue -> OverdueRed.copy(alpha = 0.06f)
         else -> Color.Transparent
     }
@@ -355,7 +354,7 @@ private fun DebtDueStatusLabel(status: DebtDueStatus, dateDue: Long) {
             Text(
                 text = stringResource(R.string.debtor_paid),
                 style = moneyCaptionStyle(),
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
             )
         }

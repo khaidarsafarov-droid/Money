@@ -42,7 +42,7 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
   const right = tabs.slice(2);
 
   return (
-    <div ref={rootRef} className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
+    <div ref={rootRef} className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4 lg:hidden">
       <div className="mx-auto w-full max-w-md">
         {open ? (
           <div className="mb-3 flex flex-col items-center gap-2">
@@ -54,7 +54,7 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
                   action.onClick();
                   setOpen(false);
                 }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white px-4 py-2 text-sm font-medium text-milk-text shadow-[0_10px_24px_rgb(15_110_92_/_0.12)]"
+                className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-milk-glass px-4 py-2 text-sm font-medium text-milk-text shadow-[0_10px_24px_rgb(15_110_92_/_0.12)]"
               >
                 <AppIcon icon={action.icon} size={16} className="text-milk-accent" />
                 {action.label}
@@ -64,7 +64,7 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
         ) : null}
 
         <nav
-          className="relative flex items-center justify-between rounded-full bg-white px-2 py-2 shadow-[0_12px_32px_rgb(15_110_92_/_0.14)]"
+          className="relative flex items-center justify-between rounded-full bg-milk-glass px-2 py-2 shadow-[0_12px_32px_rgb(15_110_92_/_0.14)]"
           aria-label="Разделы"
         >
           {left.map((item) => (

@@ -37,7 +37,8 @@ import { useAppPsychology } from "@/hooks/useAppPsychology";
 import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
 import { usePaymentDeepLink } from "@/hooks/usePaymentDeepLink";
-import { formatMoney, formatUsd, parseMoneyInput } from "@/lib/money";
+import { planProgressPercent, remainingAmount } from "@/lib/financeEngine";
+import { formatMoney, parseMoneyInput } from "@/lib/money";
 import type { FinancialItem } from "@/types/finance";
 
 export function DashboardPage() {
@@ -60,10 +61,6 @@ export function DashboardPage() {
   const hideAmounts = psychology.privacy.hideAmounts;
   const money = useCallback(
     (cents: number) => formatMoney(cents, { hidden: hideAmounts }),
-    [hideAmounts],
-  );
-  const usd = useCallback(
-    (amount: number) => formatUsd(amount, { hidden: hideAmounts }),
     [hideAmounts],
   );
 
@@ -121,30 +118,21 @@ export function DashboardPage() {
     if (!recordQueryNormalized) return true;
     return item.name.toLowerCase().includes(recordQueryNormalized);
   });
-  const debtProgressPercent =
-    activeDebts.length > 0
-      ? Math.min(
-          100,
-          Math.floor(
-            (activeDebts.reduce((sum, d) => sum + d.amount, 0) /
-              Math.max(
-                1,
-                activeDebts.reduce((sum, d) => sum + d.target, 0),
-              )) *
-              100,
-          ),
-        )
-      : 0;
-  const goalPoolCents =
-    finance.globalFinance.totalAccumulatedCents + finance.globalFinance.totalRemainingToGoalCents;
-  const goalProgressPercent =
-    goalPoolCents > 0
-      ? Math.round((finance.globalFinance.totalAccumulatedCents / goalPoolCents) * 100)
-      : 0;
-  const score = activeDebts.length > 0 ? debtProgressPercent : goalProgressPercent;
+  const visibleDebts = finance.state.items.filter((item) => item.type === "DEBT" && !item.deleted);
+  const debtRemainingCents = visibleDebts
+    .filter((item) => item.status !== "COMPLETED")
+    .reduce((sum, item) => sum + remainingAmount(item), 0);
+  const planPercent = planProgressPercent({
+    debtPaidCents: visibleDebts.reduce((sum, item) => sum + item.amount, 0),
+    debtTargetCents: visibleDebts.reduce((sum, item) => sum + item.target, 0),
+    goalAccumulatedCents: finance.globalFinance.totalAccumulatedCents,
+    goalRemainingCents: finance.globalFinance.totalRemainingToGoalCents,
+  });
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-32 pt-6">
+    <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-32 pt-6 lg:grid lg:max-w-6xl lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start lg:gap-8 lg:px-8 lg:pb-10 lg:pt-8">
+      <HomeRail tab={tab} onTabChange={setTab} />
+      <div className="min-w-0">
       {tab === "more" ? (
         <section className="space-y-4">
           <button
@@ -199,7 +187,7 @@ export function DashboardPage() {
               <h1 className="text-2xl font-semibold tracking-tight text-milk-text">
                 {personalizedGreeting(
                   userProfile.displayName,
-                  debtProgressPercent,
+                  planPercent,
                   navigator.language,
                 )}
               </h1>
@@ -208,7 +196,7 @@ export function DashboardPage() {
               type="button"
               aria-label="Настройки"
               onClick={() => setTab("more")}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_8px_20px_rgb(15_110_92_/_0.08)]"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-milk-glass shadow-[0_8px_20px_rgb(15_110_92_/_0.08)]"
             >
               <AppIcon icon={Settings} size={18} className="text-milk-accent" />
             </button>
@@ -221,11 +209,11 @@ export function DashboardPage() {
                   <h2 className="text-base font-semibold">Сводка</h2>
                   <div className="grid grid-cols-2 gap-3">
                     <StatCard
-                      label="Долги"
-                      value={usd(finance.dashboardTotals.totalDebtRemainingUsd)}
+                      label="Я должен"
+                      value={money(debtRemainingCents)}
                       icon={HandCoins}
                       hint="Осталось закрыть"
-                      tone="mint"
+                      tone="peach"
                     />
                     <StatCard
                       label="Накоплено"
@@ -241,24 +229,13 @@ export function DashboardPage() {
                       hint="Сколько ещё собрать"
                       tone="sand"
                     />
-                    <StatCard
-                      label="Счёт"
-                      value={`${score}`}
-                      icon={Sparkles}
-                      hint={activeDebts.length > 0 ? "По долгам" : "По целям"}
-                      tone="peach"
-                    />
                   </div>
                 </section>
 
                 <ScoreRing
-                  value={score}
-                  label={activeDebts.length > 0 ? "Погашение долгов" : "Накопления"}
-                  caption={
-                    activeDebts.length > 0
-                      ? "Доля уже закрытой суммы долгов"
-                      : "Доля накоплений от суммы целей"
-                  }
+                  value={planPercent}
+                  label="Прогресс"
+                  caption="Доля закрытых долгов и накоплений"
                 />
 
                 {activeDebts.length > 0 ? (
@@ -313,7 +290,7 @@ export function DashboardPage() {
                   <h2 className="text-base font-semibold">
                     {tab === "goals" ? "Цели" : "Долги"} ({listedItems.length})
                   </h2>
-                  <label className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
+                  <label className="flex items-center gap-2 rounded-full bg-milk-glass px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
                     <AppIcon icon={Search} size={16} />
                     <input
                       value={recordQuery}
@@ -472,6 +449,7 @@ export function DashboardPage() {
         }}
       />
 
+      </div>
       <AppTabBar
         tab={tab}
         onTabChange={setTab}
@@ -482,6 +460,42 @@ export function DashboardPage() {
         ]}
       />
     </div>
+  );
+}
+
+function HomeRail({
+  tab,
+  onTabChange,
+}: {
+  tab: AppTab;
+  onTabChange: (tab: AppTab) => void;
+}) {
+  const items: { id: AppTab; label: string }[] = [
+    { id: "home", label: "Главная" },
+    { id: "goals", label: "Цели" },
+    { id: "debts", label: "Долги" },
+    { id: "notes", label: "Заметки" },
+    { id: "more", label: "Настройки" },
+  ];
+  return (
+    <aside className="sticky top-8 hidden lg:block">
+      <p className="px-3 text-sm font-medium text-milk-muted">Финансовый контроль</p>
+      <nav className="mt-4 flex flex-col gap-1" aria-label="Разделы">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onTabChange(item.id)}
+            aria-current={tab === item.id ? "page" : undefined}
+            className={`min-h-11 rounded-full px-3 text-left text-sm font-medium ${
+              tab === item.id ? "bg-pastel-mint text-[#0f6e5c]" : "text-milk-muted hover:bg-milk-glass"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+    </aside>
   );
 }
 

@@ -34,8 +34,6 @@ import com.example.money.R
 import com.example.money.data.locale.AppLanguageManager
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.settings.AppLanguage
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -50,7 +48,7 @@ fun AppLanguageScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -68,7 +66,7 @@ fun AppLanguageScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CreamBackground,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ),
             )
         },
@@ -82,7 +80,7 @@ fun AppLanguageScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = CreamSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),

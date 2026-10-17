@@ -25,8 +25,6 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 
 private data class IncomeResource(
@@ -87,7 +85,7 @@ fun IncomeIdeasDialog(
                 INCOME_RESOURCES.forEach { resource ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         onClick = {
                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(resource.url)))
                         },
@@ -96,7 +94,7 @@ fun IncomeIdeasDialog(
                             Text(
                                 text = resource.title,
                                 fontWeight = FontWeight.SemiBold,
-                                color = GoldPrimary,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                             Text(
                                 text = resource.description,

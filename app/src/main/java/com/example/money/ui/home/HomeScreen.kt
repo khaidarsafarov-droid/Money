@@ -1,9 +1,5 @@
 package com.example.money.ui.home
 
-import android.content.Intent
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -36,12 +32,9 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -78,7 +71,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -95,7 +87,6 @@ import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.QuickPaymentSheet
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
-import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
@@ -112,8 +103,6 @@ import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.StatusActiveBg
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.util.HapticStrength
@@ -121,7 +110,6 @@ import com.example.money.ui.util.vibrate
 import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.navigation.NotificationPermissionReason
 import com.example.money.ui.theme.FinanceInfo
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -152,7 +140,6 @@ fun HomeScreen(
     val debtorNotFoundMessage = stringResource(R.string.debtor_not_found)
     val calendarSyncFailedMessage = stringResource(R.string.calendar_sync_failed)
     val calendarRemovedMessage = stringResource(R.string.calendar_removed)
-    val syncUrlCopiedMessage = stringResource(R.string.sync_web_url_copied)
     val autopilotAppliedTemplate = stringResource(R.string.autopilot_applied)
     val autopilotFailedMessage = stringResource(R.string.autopilot_apply_failed)
     val app = context.applicationContext as MoneyApplication
@@ -188,7 +175,7 @@ fun HomeScreen(
     val appMode by app.preferencesStore.appMode.collectAsStateWithLifecycle(
         initialValue = AppMode.PERSONAL,
     )
-    val modeAccent = if (appMode == AppMode.PROFESSIONAL) FinanceInfo else GoldPrimary
+    val modeAccent = if (appMode == AppMode.PROFESSIONAL) FinanceInfo else MaterialTheme.colorScheme.primary
     val modeLabel = stringResource(
         if (appMode == AppMode.PROFESSIONAL) R.string.mode_professional else R.string.mode_personal,
     )
@@ -210,8 +197,8 @@ fun HomeScreen(
     val availableBalanceCents = budgetSummary.availableBalanceCents
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
-    val debtProgressPercent = remember(allDebtors) {
-        GoalPsychologyEngines.totalDebtProgressPercent(allDebtors)
+    val planProgressPercent = remember(allDebtors, goalMetrics) {
+        GoalPsychologyEngines.planProgressPercent(allDebtors, goalMetrics)
     }
 
     var selectedTab by remember { mutableIntStateOf(launchConfig.initialTab.ordinal) }
@@ -255,7 +242,6 @@ fun HomeScreen(
     var showCurrencyPicker by showCurrencyPickerState
     var addHighlight by remember { mutableStateOf(AddAction.Expense) }
     var addSheetActions by remember { mutableStateOf(AddAction.entries.toList()) }
-    var showTopMenu by remember { mutableStateOf(false) }
     val showAdvisorSheetState = remember { mutableStateOf(false) }
     var showAdvisorSheet by showAdvisorSheetState
     val showIncomeIdeasState = remember { mutableStateOf(false) }
@@ -504,7 +490,7 @@ fun HomeScreen(
                                 shape = SegmentedButtonDefaults.itemShape(index, AppMode.entries.size),
                                 colors = SegmentedButtonDefaults.colors(
                                     activeContainerColor = modeAccent,
-                                    activeContentColor = Color.White,
+                                    activeContentColor = MaterialTheme.colorScheme.onPrimary,
                                 ),
                                 label = {
                                     Text(
@@ -527,46 +513,9 @@ fun HomeScreen(
                                 contentDescription = stringResource(R.string.settings_open),
                             )
                         }
-                        SyncStatusIndicator(
-                            state = syncState,
-                            modifier = Modifier.padding(end = 4.dp),
-                        )
-                    }
-                    syncState.webSocketUrl?.let { webSocketUrl ->
-                    IconButton(onClick = { showTopMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_more_options))
-                    }
-                    DropdownMenu(
-                        expanded = showTopMenu,
-                        onDismissRequest = { showTopMenu = false },
-                    ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Column {
-                                        Text(stringResource(R.string.sync_web_url_menu))
-                                        Text(
-                                            text = webSocketUrl,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            maxLines = 2,
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
-                                        as ClipboardManager
-                                    clipboard.setPrimaryClip(
-                                        ClipData.newPlainText("sync-url", webSocketUrl),
-                                    )
-                                    showTopMenu = false
-                                    scope.launch {
-                                        showMessage(syncUrlCopiedMessage)
-                                    }
-                                },
-                            )
-                    }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         }
 
@@ -589,7 +538,7 @@ fun HomeScreen(
                         }
                     }
                 },
-                containerColor = GoldPrimary,
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
                 Icon(
@@ -624,7 +573,7 @@ fun HomeScreen(
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
-                debtProgressPercent = debtProgressPercent,
+                planProgressPercent = planProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },
@@ -753,7 +702,7 @@ fun HomeScreen(
                 greetingName = userProfile.resolvedDisplayName(
                     stringResource(R.string.onboarding_default_name),
                 ),
-                debtProgressPercent = debtProgressPercent,
+                planProgressPercent = planProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },

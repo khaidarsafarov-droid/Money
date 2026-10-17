@@ -41,7 +41,7 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
-            className="relative z-10 w-full max-w-lg rounded-[28px] border border-white/80 bg-white p-5 shadow-[0_18px_40px_rgb(15_110_92_/_0.16)]"
+            className="relative z-10 w-full max-w-lg rounded-[28px] border border-white/80 bg-milk-glass p-5 shadow-[0_18px_40px_rgb(15_110_92_/_0.16)]"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}

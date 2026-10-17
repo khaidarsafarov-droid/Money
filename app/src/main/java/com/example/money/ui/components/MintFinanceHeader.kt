@@ -33,9 +33,11 @@ import androidx.compose.ui.unit.sp
 import com.example.money.R
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
+import com.example.money.ui.theme.HeroCaption
+import com.example.money.ui.theme.HeroEnd
+import com.example.money.ui.theme.HeroStart
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
-private val HeroEnd = Color(0xFF0B5346)
 private val PastelMint = Color(0xFFD9F6E6)
 private val PastelPeach = Color(0xFFFFE4CC)
 private val PastelLilac = Color(0xFFECE3FB)
@@ -50,20 +52,9 @@ fun MintFinanceHeader(
     hideAmounts: Boolean,
     onOwesMeClick: () -> Unit,
     onIOweClick: () -> Unit,
-    progressPercent: Int?,
+    planProgressPercent: Int,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-    val goalPercent = if (goalPool > 0L) {
-        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-    } else {
-        0
-    }
-    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
-    val debtScore = if (debtActive > 0) progressPercent else null
-    val usesDebtScore = debtScore != null
-    val score = debtScore?.coerceIn(0, 100) ?: goalPercent
-
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -99,10 +90,8 @@ fun MintFinanceHeader(
             )
         }
         ScoreCard(
-            score = score,
-            caption = stringResource(
-                if (usesDebtScore) R.string.home_score_debts else R.string.home_score_goals,
-            ),
+            score = planProgressPercent.coerceIn(0, 100),
+            caption = stringResource(R.string.home_score_plan),
         )
     }
 }
@@ -135,7 +124,7 @@ private fun ScoreCard(score: Int, caption: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF127863), HeroEnd)))
+            .background(Brush.linearGradient(listOf(HeroStart, HeroEnd)))
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -143,7 +132,7 @@ private fun ScoreCard(score: Int, caption: String) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.home_score_title),
-                color = Color.White.copy(alpha = 0.75f),
+                color = HeroCaption,
                 fontSize = 13.sp,
             )
             Text(
@@ -189,49 +178,42 @@ private fun ScoreCard(score: Int, caption: String) {
 }
 
 /**
- * Four tappable previews on the home screen. Net debt replaces the separate
- * "owes me" and "I owe" tiles; the breakdown stays inside the Debts section.
+ * Home summary: four money tiles with stable pastel roles, plus one plan score.
+ * Mint is money owed to me, peach is money I owe. The score never switches meaning.
  */
 @Composable
-fun HomePreviewCards(
+fun HomeSummary(
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
     hideAmounts: Boolean,
-    progressPercent: Int?,
-    onDebtsClick: () -> Unit,
+    planProgressPercent: Int,
+    onOwesMeClick: () -> Unit,
+    onIOweClick: () -> Unit,
     onAccumulatedClick: () -> Unit,
     onRemainingClick: () -> Unit,
-    onProgressClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-    val goalPercent = if (goalPool > 0L) {
-        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-    } else {
-        0
-    }
-    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
-    val score = if (debtActive > 0) {
-        (progressPercent ?: 0).coerceIn(0, 100)
-    } else {
-        goalPercent
-    }
-    val net = debtMetrics.owedToMeCents - debtMetrics.iOweCents
-    val netAmount = Formatters.currencyFromCents(kotlin.math.abs(net), hide = hideAmounts)
-    val netText = if (!hideAmounts && net < 0L) "−$netAmount" else netAmount
-
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
-                label = stringResource(R.string.tab_debts),
-                value = netText,
+                label = stringResource(R.string.debt_dashboard_owes_me),
+                value = Formatters.currencyFromCents(debtMetrics.owedToMeCents, hide = hideAmounts),
                 container = PastelMint,
-                onClick = onDebtsClick,
+                onClick = onOwesMeClick,
                 modifier = Modifier.weight(1f),
             )
+            PastelStat(
+                label = stringResource(R.string.debt_dashboard_i_owe),
+                value = Formatters.currencyFromCents(debtMetrics.iOweCents, hide = hideAmounts),
+                container = PastelPeach,
+                onClick = onIOweClick,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
                 label = stringResource(R.string.home_preview_accumulated),
                 value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
@@ -239,8 +221,6 @@ fun HomePreviewCards(
                 onClick = onAccumulatedClick,
                 modifier = Modifier.weight(1f),
             )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
                 label = stringResource(R.string.global_balance_remaining_label),
                 value = Formatters.currencyFromCents(goalMetrics.totalRemainingToGoalCents, hide = hideAmounts),
@@ -248,14 +228,11 @@ fun HomePreviewCards(
                 onClick = onRemainingClick,
                 modifier = Modifier.weight(1f),
             )
-            PastelStat(
-                label = stringResource(R.string.home_preview_progress),
-                value = stringResource(R.string.home_preview_progress_value, score),
-                container = PastelPeach,
-                onClick = onProgressClick,
-                modifier = Modifier.weight(1f),
-            )
         }
+        ScoreCard(
+            score = planProgressPercent.coerceIn(0, 100),
+            caption = stringResource(R.string.home_score_plan),
+        )
     }
 }
 

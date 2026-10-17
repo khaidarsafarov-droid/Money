@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.money.R
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.theme.MoneySpacing
 
 @Composable
@@ -47,7 +46,7 @@ fun MoneyDialog(
                 .fillMaxWidth()
                 .padding(horizontal = MoneySpacing.lg),
             shape = MaterialTheme.shapes.large,
-            color = CreamSurface,
+            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
             shadowElevation = 8.dp,
         ) {

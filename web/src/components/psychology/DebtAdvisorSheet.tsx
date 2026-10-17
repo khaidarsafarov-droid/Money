@@ -57,7 +57,7 @@ export function AdvisorConversation({
 
       <div className="max-h-[28rem] space-y-2 overflow-y-auto">
         {messages.length === 0 ? (
-          <p className="rounded-[22px] bg-white px-4 py-3 text-center text-sm text-milk-muted shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]">
+          <p className="rounded-[22px] bg-milk-glass px-4 py-3 text-center text-sm text-milk-muted shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]">
             Чем я могу помочь?
           </p>
         ) : null}
@@ -66,7 +66,7 @@ export function AdvisorConversation({
             key={`${message.atMs}-${index}`}
             className={`max-w-[90%] rounded-[22px] px-4 py-3 text-sm ${
               message.role === "advisor"
-                ? "bg-white text-milk-text shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]"
+                ? "bg-milk-glass text-milk-text shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]"
                 : "ml-auto bg-milk-accent text-white"
             }`}
           >

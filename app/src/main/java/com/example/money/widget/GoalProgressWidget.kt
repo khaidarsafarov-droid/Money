@@ -35,14 +35,14 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.money.R
 import com.example.money.navigation.AppIntents
-import com.example.money.ui.theme.BrownMuted
-import com.example.money.ui.theme.BrownText
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.theme.InkMuted
+import com.example.money.ui.theme.InkText
+import com.example.money.ui.theme.MintBackground
+import com.example.money.ui.theme.MintSurface
 import com.example.money.ui.theme.FinanceNegative
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GaugeTrack
-import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.MintPrimary
 import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.flow.first
 
@@ -80,13 +80,13 @@ private val CardSurface = Color(0xFFF7FCF9)
 
 private val WidgetColorProviders = ColorProviders(
     lightColorScheme(
-        primary = GoldPrimary,
+        primary = MintPrimary,
         onPrimary = Color.White,
-        background = CreamBackground,
-        onBackground = BrownText,
-        surface = CreamSurface,
-        onSurface = BrownText,
-        onSurfaceVariant = BrownMuted,
+        background = MintBackground,
+        onBackground = InkText,
+        surface = MintSurface,
+        onSurface = InkText,
+        onSurfaceVariant = InkMuted,
         surfaceVariant = GaugeTrack,
         tertiary = FinancePositive,
         onTertiary = Color.White,

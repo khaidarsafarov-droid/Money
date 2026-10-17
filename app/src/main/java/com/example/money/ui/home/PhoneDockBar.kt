@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +38,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
-import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.MintPrimary
+import com.example.money.ui.theme.MoneySpacing
 
 internal enum class PhoneDockTab {
     Home,
@@ -61,7 +65,7 @@ internal fun PhoneDockBar(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(50),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shadowElevation = 8.dp,
         ) {
             Row(
@@ -109,6 +113,8 @@ private fun DockItem(
 ) {
     Column(
         modifier = Modifier
+            .widthIn(min = MoneySpacing.minTouchTarget)
+            .heightIn(min = MoneySpacing.minTouchTarget)
             .clip(RoundedCornerShape(16.dp))
             .semantics { this.selected = selected }
             .clickable(onClick = onClick)
@@ -125,13 +131,13 @@ private fun DockItem(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = if (selected) GoldPrimary else Color(0xFF5C7D72),
+                    tint = if (selected) MintPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
             }
             Text(
                 text = label,
-                color = if (selected) GoldPrimary else Color(0xFF5C7D72),
+                color = if (selected) MintPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
                 maxLines = 1,
             )

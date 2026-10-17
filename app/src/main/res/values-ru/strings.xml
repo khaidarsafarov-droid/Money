@@ -91,6 +91,7 @@
     <string name="home_score_title">Прогресс</string>
     <string name="home_score_debts">Доля уже закрытой суммы долгов</string>
     <string name="home_score_goals">Доля накоплений от суммы целей</string>
+    <string name="home_score_plan">Доля закрытых долгов и накоплений</string>
     <string name="menu_add_goal">Новая цель</string>
     <string name="menu_add_debt">Новый долг</string>
 
@@ -102,6 +103,7 @@
     <string name="sync_status_synced">Синхронизация: успешно</string>
     <string name="sync_web_url_menu">URL для веб-синхронизации</string>
     <string name="sync_web_url_copied">URL скопирован</string>
+    <string name="sync_copy_url">Скопировать URL</string>
 
     <string name="section_goals">Цели</string>
     <string name="quick_add_title">Быстрое добавление</string>

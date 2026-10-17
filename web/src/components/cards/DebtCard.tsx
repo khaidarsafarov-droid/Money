@@ -50,7 +50,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
                 className="fixed inset-0 z-10"
                 onClick={() => setMenuOpen(false)}
               />
-              <div className="absolute right-0 z-20 mt-1 min-w-40 rounded-md border border-milk-surface bg-white py-1 shadow-sm">
+              <div className="absolute right-0 z-20 mt-1 min-w-40 rounded-md border border-milk-surface bg-milk-glass py-1 shadow-sm">
                 {canPay ? (
                   <button
                     type="button"

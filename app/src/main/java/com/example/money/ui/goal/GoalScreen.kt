@@ -59,10 +59,7 @@ import com.example.money.domain.util.GoalChallengeEngines
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.FinancialPsychotype
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 import com.example.money.ui.util.withLightHaptic
@@ -194,7 +191,7 @@ fun GoalScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.goal_hub_title)) },
@@ -208,7 +205,7 @@ fun GoalScreen(
                         Text(stringResource(R.string.psychotype_retake))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
     ) { padding ->
@@ -222,7 +219,7 @@ fun GoalScreen(
         ) {
             HubCard {
                 Text(stringResource(R.string.goal_hub_greeting, displayName, GoalPsychologyEngines.psychotypeLabel(psychotype)))
-                Text(GoalPsychologyEngines.psychotypeTagline(psychotype), color = GoldPrimary)
+                Text(GoalPsychologyEngines.psychotypeTagline(psychotype), color = MaterialTheme.colorScheme.primary)
             }
 
             FreedomHeroCard(
@@ -362,7 +359,7 @@ fun GoalScreen(
 private fun HubCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
@@ -383,7 +380,7 @@ private fun FreedomHeroCard(
         )
         val dateLabel = freedom.freedomDateMillis?.let { Formatters.shortDate(it) }
             ?: stringResource(R.string.debt_freedom_unknown)
-        Text(dateLabel, style = MaterialTheme.typography.headlineSmall, color = GoldPrimary, fontWeight = FontWeight.Bold)
+        Text(dateLabel, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
         freedom.monthsRemaining?.let { months ->
             Text(stringResource(R.string.debt_freedom_monthly_pace, Formatters.currencyFromCents(freedom.monthlyPaymentCents, hide = hideAmounts), months))
         }
@@ -581,7 +578,7 @@ private fun BadgesCard(badgeIds: Set<String>) {
 private fun PlayerPointsCard(progress: Int, challengeCount: Int) {
     HubCard {
         Text(stringResource(R.string.goal_hub_player_title), fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.goal_hub_player_points, progress), color = GoldPrimary)
+        Text(stringResource(R.string.goal_hub_player_points, progress), color = MaterialTheme.colorScheme.primary)
         Text(
             stringResource(R.string.goal_hub_player_challenges, challengeCount),
             style = MaterialTheme.typography.bodySmall,

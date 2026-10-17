@@ -90,6 +90,19 @@ export function sortItems(items: FinancialItem[]): FinancialItem[] {
   });
 }
 
+/** Paid "I owe" cents plus goal savings, over those targets plus the goal pool. */
+export function planProgressPercent(input: {
+  debtPaidCents: number;
+  debtTargetCents: number;
+  goalAccumulatedCents: number;
+  goalRemainingCents: number;
+}): number {
+  const paid = input.debtPaidCents + input.goalAccumulatedCents;
+  const pool = input.debtTargetCents + input.goalAccumulatedCents + input.goalRemainingCents;
+  if (pool <= 0) return 0;
+  return Math.min(100, Math.round((paid / pool) * 100));
+}
+
 export function computeDashboardTotals(state: FinanceState): DashboardTotals {
   const enriched = enrichFinanceState(state);
   const visibleItems = enriched.items.filter((item) => !item.deleted);

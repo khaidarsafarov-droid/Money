@@ -19,20 +19,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.domain.model.DashboardDebtMetrics
-import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.ui.components.DebtorListItem
-import com.example.money.ui.components.GlobalBalanceHeader
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.debtors.DebtContactActions
 @Composable
 fun HomeDetailPane(
     selection: HomeListSelection,
-    goalMetrics: DashboardGoalMetrics,
-    debtMetrics: DashboardDebtMetrics = DashboardDebtMetrics(0, 0, 0, 0),
     onEditGoal: (SavingsGoal) -> Unit,
     onOpenGoal: (SavingsGoal) -> Unit,
     onDeleteGoal: (SavingsGoal) -> Unit,
@@ -61,11 +56,6 @@ fun HomeDetailPane(
     ) {
         when (selection) {
             HomeListSelection.Overview -> {
-                GlobalBalanceHeader(
-                    goalMetrics = goalMetrics,
-                    debtMetrics = debtMetrics,
-                    hideAmounts = hideAmounts,
-                )
                 Text(
                     text = stringResource(R.string.tablet_detail_overview_hint),
                     style = MaterialTheme.typography.bodyMedium,

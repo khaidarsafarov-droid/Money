@@ -34,7 +34,6 @@ import com.example.money.domain.util.GoalProgress
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.MoneyDialog
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -96,7 +95,7 @@ fun GoalActionsPanel(
             LinearProgressIndicator(
                 progress = { goal.progressFraction.coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth(),
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
         }
@@ -115,13 +114,13 @@ fun GoalActionsPanel(
             Text(
                 text = stringResource(R.string.goal_action_progress, done, total),
                 style = MaterialTheme.typography.bodyMedium,
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
             )
             LinearProgressIndicator(
                 progress = { fraction },
                 modifier = Modifier.fillMaxWidth(),
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
         }

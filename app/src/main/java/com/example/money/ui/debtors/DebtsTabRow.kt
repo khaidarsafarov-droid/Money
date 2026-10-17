@@ -21,9 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.StatusActiveBg
+import com.example.money.ui.theme.StatusActiveText
 
 private val directionTabs = listOf(DebtTab.OwesMe, DebtTab.IOwe)
 
@@ -65,7 +65,7 @@ fun DebtTabRow(
                     text = stringResource(DebtTab.Freedom.titleRes),
                     fontWeight = if (selectedTab == DebtTab.Freedom) FontWeight.SemiBold else FontWeight.Medium,
                     color = if (selectedTab == DebtTab.Freedom) {
-                        GoldPrimary
+                        MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
@@ -76,7 +76,7 @@ fun DebtTabRow(
                     text = stringResource(DebtTab.Calendar.titleRes),
                     fontWeight = if (selectedTab == DebtTab.Calendar) FontWeight.SemiBold else FontWeight.Medium,
                     color = if (selectedTab == DebtTab.Calendar) {
-                        GoldPrimary
+                        MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
@@ -110,7 +110,7 @@ fun DebtorFilterRow(
                 },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = StatusActiveBg,
-                    selectedLabelColor = GoldPrimary,
+                    selectedLabelColor = StatusActiveText,
                     containerColor = MaterialTheme.colorScheme.surface,
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
@@ -118,7 +118,7 @@ fun DebtorFilterRow(
                     enabled = true,
                     selected = selected,
                     borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    selectedBorderColor = GoldPrimary,
+                    selectedBorderColor = StatusActiveText,
                 ),
                 shape = RoundedCornerShape(20.dp),
             )

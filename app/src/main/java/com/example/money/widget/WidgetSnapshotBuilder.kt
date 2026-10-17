@@ -11,7 +11,8 @@ import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.CurrencyRegion
 /**
  * Builds the home-screen numbers the widget shows.
- * Debt score and goal totals use the same engines as [com.example.money.ui.components.MintFinanceHeader].
+ * Goal totals match the home summary. The widget score still prefers debt payoff
+ * when any debt is active; the in-app ring uses [com.example.money.domain.util.GoalPsychologyEngines.planProgressPercent].
  */
 internal fun buildWidgetGoalSnapshot(
     goals: List<SavingsGoal>,

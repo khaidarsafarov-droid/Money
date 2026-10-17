@@ -1,5 +1,6 @@
 package com.example.money.domain.util
 
+import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DebtType
 import com.example.money.settings.AutopilotStrategy
@@ -159,6 +160,20 @@ object GoalPsychologyEngines {
         if (total <= 0L) return 0
         val paid = iOwe.sumOf { it.currentAmountCents }
         return ((paid.toDouble() / total) * 100).toInt().coerceAtMost(100)
+    }
+
+    /**
+     * One home score: paid "I owe" cents plus goal savings, over those debt
+     * targets plus the goal pool. Creditor balances stay out of the score.
+     */
+    fun planProgressPercent(debtors: List<Debtor>, goalMetrics: DashboardGoalMetrics): Int {
+        val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR }
+        val paid = iOwe.sumOf { it.currentAmountCents } + goalMetrics.totalAccumulatedCents
+        val pool = iOwe.sumOf { it.targetAmountCents } +
+            goalMetrics.totalAccumulatedCents +
+            goalMetrics.totalRemainingToGoalCents
+        if (pool <= 0L) return 0
+        return ((paid.toDouble() / pool) * 100).toInt().coerceIn(0, 100)
     }
 
     fun daysUntilPayday(paydayDayOfMonth: Int, now: Long = System.currentTimeMillis()): Int {

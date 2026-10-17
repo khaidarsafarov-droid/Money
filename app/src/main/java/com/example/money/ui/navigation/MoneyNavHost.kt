@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +36,6 @@ import com.example.money.ui.home.HomeScreen
 import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.onboarding.OnboardingScreen
 import com.example.money.ui.onboarding.OnboardingSessionViewModel
-import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.settings.AppLanguageScreen
 import com.example.money.ui.settings.AutopilotSettingsScreen
 import com.example.money.ui.settings.BackupSettingsScreen
@@ -235,7 +235,7 @@ fun MoneyNavHost(
 @Composable
 private fun StartupLoading(modifier: Modifier) {
     Box(
-        modifier = modifier.fillMaxSize().background(CreamBackground),
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()

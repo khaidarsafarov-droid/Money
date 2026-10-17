@@ -1,9 +1,5 @@
 package com.example.money.ui.home
 
-import android.content.Intent
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -48,13 +44,10 @@ import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -110,7 +103,7 @@ import com.example.money.ui.components.ConfirmDeleteDialog
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
-import com.example.money.ui.components.HomePreviewCards
+import com.example.money.ui.components.HomeSummary
 import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
@@ -138,12 +131,9 @@ import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.StatusActiveBg
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.util.systemMotionEnabled
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.launch
 
@@ -170,7 +160,7 @@ internal fun PhoneHomeLayout(
     goalMetrics: com.example.money.domain.model.DashboardGoalMetrics,
     debtMetrics: com.example.money.domain.model.DashboardDebtMetrics,
     greetingName: String,
-    debtProgressPercent: Int,
+    planProgressPercent: Int,
     highlightedDebtorId: Long?,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
@@ -399,7 +389,7 @@ internal fun PhoneHomeLayout(
         },
     ) {
         Scaffold(
-            containerColor = CreamBackground,
+            containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
             floatingActionButton = floatingActionButton,
@@ -478,8 +468,8 @@ internal fun PhoneHomeLayout(
                 if (page == HomeTab.Home) {
                 item {
                     Text(
-                        text = if (debtProgressPercent > 0) {
-                            stringResource(R.string.home_greeting_progress, greetingName, debtProgressPercent)
+                        text = if (planProgressPercent > 0) {
+                            stringResource(R.string.home_greeting_progress, greetingName, planProgressPercent)
                         } else {
                             stringResource(R.string.home_greeting_simple, greetingName)
                         },
@@ -489,7 +479,7 @@ internal fun PhoneHomeLayout(
                         ),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = GoldPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 }
@@ -506,30 +496,22 @@ internal fun PhoneHomeLayout(
                     }
                 }
                 if (page == HomeTab.Home) {
-                    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
                     item {
-                        HomePreviewCards(
+                        HomeSummary(
                             goalMetrics = goalMetrics,
                             debtMetrics = debtMetrics,
                             hideAmounts = privacySettings.hideAmounts,
-                            progressPercent = debtProgressPercent,
-                            onDebtsClick = {
-                                onDebtTabChange(
-                                    if (debtMetrics.iOweCents > debtMetrics.owedToMeCents) {
-                                        DebtTab.IOwe
-                                    } else {
-                                        DebtTab.OwesMe
-                                    },
-                                )
+                            planProgressPercent = planProgressPercent,
+                            onOwesMeClick = {
+                                onDebtTabChange(DebtTab.OwesMe)
+                                onTabSelected(HomeTab.Debts.ordinal)
+                            },
+                            onIOweClick = {
+                                onDebtTabChange(DebtTab.IOwe)
                                 onTabSelected(HomeTab.Debts.ordinal)
                             },
                             onAccumulatedClick = { onTabSelected(HomeTab.Goals.ordinal) },
                             onRemainingClick = { onTabSelected(HomeTab.Goals.ordinal) },
-                            onProgressClick = {
-                                onTabSelected(
-                                    if (debtActive > 0) HomeTab.Debts.ordinal else HomeTab.Goals.ordinal,
-                                )
-                            },
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
                                 vertical = MoneySpacing.sm,
@@ -679,7 +661,7 @@ internal fun NotificationPermissionBanner(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = MaterialTheme.shapes.medium,
     ) {
         Column(

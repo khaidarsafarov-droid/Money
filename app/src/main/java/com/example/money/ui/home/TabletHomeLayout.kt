@@ -60,7 +60,7 @@ import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.notes.NotesPage
 import com.example.money.ui.components.GoalsSectionSummary
-import com.example.money.ui.components.HomePreviewCards
+import com.example.money.ui.components.HomeSummary
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.domain.util.DebtFreedomEngine
@@ -77,8 +77,6 @@ import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtSearchField
 import com.example.money.ui.debtors.DebtorFilterRow
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.HapticStrength
@@ -106,7 +104,7 @@ fun TabletHomeLayout(
     onDebtSearchQueryChange: (String) -> Unit,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
-    debtProgressPercent: Int = 0,
+    planProgressPercent: Int = 0,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
     onOpenGoal: (SavingsGoal) -> Unit,
@@ -172,7 +170,7 @@ fun TabletHomeLayout(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = topBar,
         floatingActionButton = floatingActionButton,
@@ -182,10 +180,10 @@ fun TabletHomeLayout(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            NavigationRail(containerColor = CreamBackground) {
+            NavigationRail(containerColor = MaterialTheme.colorScheme.background) {
                 val railColors = NavigationRailItemDefaults.colors(
-                    selectedIconColor = GoldPrimary,
-                    selectedTextColor = GoldPrimary,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
                     indicatorColor = Color(0xFFD9F6E6),
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -368,30 +366,22 @@ fun TabletHomeLayout(
             ) {
                 when (section) {
                     HomeSection.Home -> {
-                        val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
                         item {
-                            HomePreviewCards(
+                            HomeSummary(
                                 goalMetrics = goalMetrics,
                                 debtMetrics = debtMetrics,
                                 hideAmounts = privacySettings.hideAmounts,
-                                progressPercent = debtProgressPercent,
-                                onDebtsClick = {
-                                    onDebtTabChange(
-                                        if (debtMetrics.iOweCents > debtMetrics.owedToMeCents) {
-                                            DebtTab.IOwe
-                                        } else {
-                                            DebtTab.OwesMe
-                                        },
-                                    )
+                                planProgressPercent = planProgressPercent,
+                                onOwesMeClick = {
+                                    onDebtTabChange(DebtTab.OwesMe)
+                                    onSectionChange(HomeSection.Debts)
+                                },
+                                onIOweClick = {
+                                    onDebtTabChange(DebtTab.IOwe)
                                     onSectionChange(HomeSection.Debts)
                                 },
                                 onAccumulatedClick = { onSectionChange(HomeSection.Goals) },
                                 onRemainingClick = { onSectionChange(HomeSection.Goals) },
-                                onProgressClick = {
-                                    onSectionChange(
-                                        if (debtActive > 0) HomeSection.Debts else HomeSection.Goals,
-                                    )
-                                },
                                 modifier = Modifier.padding(bottom = 8.dp),
                             )
                         }
@@ -605,8 +595,6 @@ fun TabletHomeLayout(
 
             HomeDetailPane(
                 selection = selection,
-                goalMetrics = goalMetrics,
-                debtMetrics = debtMetrics,
                 onEditGoal = onEditGoal,
                 onOpenGoal = onOpenGoal,
                 onDeleteGoal = onDeleteGoal,

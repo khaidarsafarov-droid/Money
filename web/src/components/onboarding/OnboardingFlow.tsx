@@ -92,14 +92,14 @@ export function OnboardingFlow() {
       <p className="text-sm font-medium text-milk-muted">
         Шаг {step + 1} из {totalSteps}
       </p>
-      <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-white">
+      <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-milk-glass">
         <div
           className="h-full rounded-full bg-milk-accent transition-all"
           style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
         />
       </div>
 
-      <div className="flex-1 rounded-[28px] border border-white/80 bg-white p-5 shadow-[0_12px_32px_rgb(15_110_92_/_0.08)]">
+      <div className="flex-1 rounded-[28px] border border-white/80 bg-milk-glass p-5 shadow-[0_12px_32px_rgb(15_110_92_/_0.08)]">
         {step === 0 && (
           <>
             <FinOrb className="mb-5" />
