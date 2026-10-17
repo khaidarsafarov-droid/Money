@@ -44,6 +44,7 @@ import com.example.money.domain.model.NoteKind
 import com.example.money.domain.model.NoteMark
 import com.example.money.domain.util.NoteCalculator
 import com.example.money.ui.components.centsToInput
+import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyDialog
@@ -184,6 +185,7 @@ private fun NotesList(
             EmptyStateMessage(
                 title = stringResource(R.string.notes_empty_title),
                 hint = stringResource(R.string.notes_empty_hint),
+                illustration = EmptyIllustration.Notes,
             )
         } else {
             notes.forEach { note ->

@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.example.money.data.backup.BackupErrorCode
 import com.example.money.data.backup.BackupProvider
 import com.example.money.domain.backup.BackupRemoteFile
 import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.util.withLightHaptic
 import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.OverdueRed
 import java.text.DateFormat
@@ -184,7 +186,11 @@ internal fun BackupSwitchRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, modifier = Modifier.weight(1f))
-        Switch(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked,
+            enabled = enabled,
+            onCheckedChange = withLightHaptic(LocalContext.current, enabled, onCheckedChange),
+        )
     }
 }
 

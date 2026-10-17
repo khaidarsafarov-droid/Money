@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,6 +32,7 @@ import com.example.money.R
 import com.example.money.settings.CurrencyRegion
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
+import com.example.money.ui.util.vibrateLight
 
 private val QUICK_AMOUNT_CENTS = longArrayOf(5_000L, 10_000L, 50_000L)
 
@@ -48,6 +50,7 @@ fun QuickPaymentSheet(
     val amountRequired = stringResource(R.string.error_amount_required)
     val amountPositive = stringResource(R.string.error_amount_positive)
     val exceedsRemaining = stringResource(R.string.error_payment_exceeds_remaining)
+    val context = LocalContext.current
 
     fun submit() {
         when (val validation = InputValidators.validateAmount(amountText)) {
@@ -117,6 +120,7 @@ fun QuickPaymentSheet(
                 if (remainingCents > 0L) {
                     AssistChip(
                         onClick = {
+                            vibrateLight(context)
                             amountText = centsToInput(remainingCents)
                             errorText = null
                         },
@@ -128,6 +132,7 @@ fun QuickPaymentSheet(
                     if (cents <= remainingCents) {
                         AssistChip(
                             onClick = {
+                                vibrateLight(context)
                                 amountText = centsToInput(cents)
                                 errorText = null
                             },

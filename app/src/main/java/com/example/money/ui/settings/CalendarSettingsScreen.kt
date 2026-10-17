@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
+import com.example.money.ui.util.withLightHaptic
 import com.example.money.R
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
@@ -196,7 +197,7 @@ private fun SettingSwitch(
         )
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = withLightHaptic(LocalContext.current, enabled, onCheckedChange),
             enabled = enabled,
         )
     }

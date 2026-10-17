@@ -37,6 +37,7 @@ import com.example.money.settings.AutopilotStrategy
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.util.withLightHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,7 +94,9 @@ fun AutopilotSettingsScreen(
                     }
                     Switch(
                         checked = settings.enabled,
-                        onCheckedChange = { enabled -> viewModel.update { it.copy(enabled = enabled) } },
+                        onCheckedChange = withLightHaptic(LocalContext.current) { enabled ->
+                            viewModel.update { it.copy(enabled = enabled) }
+                        },
                     )
                 }
             }
@@ -169,7 +172,7 @@ fun AutopilotSettingsScreen(
                     }
                     Switch(
                         checked = settings.roundPaymentsToTen,
-                        onCheckedChange = { enabled ->
+                        onCheckedChange = withLightHaptic(LocalContext.current) { enabled ->
                             viewModel.update { it.copy(roundPaymentsToTen = enabled) }
                         },
                     )
@@ -196,7 +199,7 @@ fun AutopilotSettingsScreen(
                     }
                     Switch(
                         checked = weeklyCheckIn.enabled,
-                        onCheckedChange = { enabled ->
+                        onCheckedChange = withLightHaptic(LocalContext.current) { enabled ->
                             viewModel.updateWeeklyCheckIn { it.copy(enabled = enabled) }
                         },
                     )

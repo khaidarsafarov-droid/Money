@@ -27,6 +27,7 @@ import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.DatePickerField
+import com.example.money.ui.util.withLightHaptic
 import com.example.money.ui.components.MoneyDialog
 import com.example.money.ui.components.MoneyTextField
 import com.example.money.ui.util.InputValidators
@@ -212,7 +213,7 @@ fun GoalFormDialog(
                 }
                 Switch(
                     checked = hasDeadline,
-                    onCheckedChange = { hasDeadline = it },
+                    onCheckedChange = withLightHaptic(LocalContext.current) { hasDeadline = it },
                 )
             }
             if (hasDeadline) {

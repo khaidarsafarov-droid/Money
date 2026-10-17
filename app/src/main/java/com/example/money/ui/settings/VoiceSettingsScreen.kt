@@ -46,6 +46,7 @@ import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.util.withLightHaptic
 import com.example.money.voice.VoiceGender
 import com.example.money.voice.VoiceLanguage
 import com.example.money.voice.VoiceReportSpeaker
@@ -168,7 +169,7 @@ fun VoiceSettingsScreen(
                         }
                         Switch(
                             checked = settings.enabled,
-                            onCheckedChange = viewModel::setEnabled,
+                            onCheckedChange = withLightHaptic(LocalContext.current, onCheckedChange = viewModel::setEnabled),
                         )
                     }
 
@@ -240,7 +241,10 @@ fun VoiceSettingsScreen(
                         }
                         Switch(
                             checked = settings.forceInSilentMode,
-                            onCheckedChange = viewModel::setForceInSilentMode,
+                            onCheckedChange = withLightHaptic(
+                                LocalContext.current,
+                                onCheckedChange = viewModel::setForceInSilentMode,
+                            ),
                         )
                     }
 

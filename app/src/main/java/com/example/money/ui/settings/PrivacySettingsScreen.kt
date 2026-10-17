@@ -33,6 +33,7 @@ import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
+import com.example.money.ui.util.withLightHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +112,10 @@ private fun PrivacyToggleCard(
                 Text(text = title, fontWeight = FontWeight.SemiBold)
                 Text(text = subtitle, style = MaterialTheme.typography.bodySmall)
             }
-            Switch(checked = checked, onCheckedChange = onCheckedChange)
+            Switch(
+                checked = checked,
+                onCheckedChange = withLightHaptic(LocalContext.current, onCheckedChange = onCheckedChange),
+            )
         }
     }
 }

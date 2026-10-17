@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Home
@@ -38,6 +42,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,6 +56,7 @@ import com.example.money.domain.model.NoteMark
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.sync.SyncConnectionState
+import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.notes.NotesPage
 import com.example.money.ui.components.GoalsSectionSummary
@@ -75,6 +81,8 @@ import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.util.HapticStrength
+import com.example.money.ui.util.vibrate
 
 @Composable
 fun TabletHomeLayout(
@@ -187,20 +195,23 @@ fun TabletHomeLayout(
                     state = syncState,
                     modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
                 )
+                val railContext = LocalContext.current
                 listOf(HomeSection.Home, HomeSection.Goals, HomeSection.Debts, HomeSection.Notes).forEach { item ->
+                    val selectedItem = section == item
                     NavigationRailItem(
-                        selected = section == item,
+                        selected = selectedItem,
                         onClick = {
+                            if (!selectedItem) vibrate(railContext, HapticStrength.MEDIUM)
                             onSectionChange(item)
                             onSelectionChange(HomeListSelection.Overview)
                         },
                         icon = {
                             Icon(
                                 imageVector = when (item) {
-                                    HomeSection.Home -> Icons.Outlined.Home
-                                    HomeSection.Goals -> Icons.Outlined.Flag
-                                    HomeSection.Debts -> Icons.Outlined.People
-                                    HomeSection.Notes -> Icons.Outlined.EditNote
+                                    HomeSection.Home -> if (selectedItem) Icons.Filled.Home else Icons.Outlined.Home
+                                    HomeSection.Goals -> if (selectedItem) Icons.Filled.Flag else Icons.Outlined.Flag
+                                    HomeSection.Debts -> if (selectedItem) Icons.Filled.People else Icons.Outlined.People
+                                    HomeSection.Notes -> if (selectedItem) Icons.Filled.EditNote else Icons.Outlined.EditNote
                                 },
                                 contentDescription = stringResource(item.titleRes),
                             )
@@ -431,6 +442,7 @@ fun TabletHomeLayout(
                                 EmptyStateMessage(
                                     title = stringResource(R.string.empty_goals_title),
                                     hint = stringResource(R.string.empty_goals_hint),
+                                    illustration = EmptyIllustration.Goals,
                                 )
                             }
                         } else {
@@ -550,6 +562,11 @@ fun TabletHomeLayout(
                                     EmptyStateMessage(
                                         title = emptyDebtorsTitle(debtorFilter),
                                         hint = emptyDebtorsHint(debtorFilter),
+                                        illustration = if (debtSearchQuery.isNotBlank()) {
+                                            EmptyIllustration.Search
+                                        } else {
+                                            EmptyIllustration.Debts
+                                        },
                                     )
                                 }
                             } else {

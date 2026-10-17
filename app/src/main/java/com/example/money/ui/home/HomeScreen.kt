@@ -116,6 +116,8 @@ import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
+import com.example.money.ui.util.HapticStrength
+import com.example.money.ui.util.vibrate
 import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.navigation.NotificationPermissionReason
 import com.example.money.ui.theme.FinanceInfo
@@ -310,7 +312,10 @@ fun HomeScreen(
                     actionLabel = undoDeleteLabel,
                     duration = SnackbarDuration.Indefinite,
                 )
-                if (result == SnackbarResult.ActionPerformed) undo()
+                if (result == SnackbarResult.ActionPerformed) {
+                    vibrate(context, HapticStrength.MEDIUM)
+                    undo()
+                }
             }
             delay(5_000)
             snackbarHostState.currentSnackbarData?.dismiss()
@@ -729,6 +734,7 @@ fun HomeScreen(
                 listState = listState,
                 selectedTab = selectedTab,
                 onTabSelected = { tab ->
+                    if (tab != selectedTab) vibrate(context, HapticStrength.MEDIUM)
                     if (HomeTab.entries[tab] != HomeTab.Notes) openNoteId = null
                     selectedTab = tab
                 },
@@ -877,6 +883,7 @@ fun HomeScreen(
                                 actionLabel = undoLabel,
                             )
                             if (result == SnackbarResult.ActionPerformed) {
+                                vibrate(context, HapticStrength.MEDIUM)
                                 debtorsViewModel.undoPaymentSync(debtorId, paymentId)
                             }
                         } else {

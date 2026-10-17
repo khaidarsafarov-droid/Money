@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.ui.debtors.DebtorsViewModel
+import com.example.money.ui.util.withLightHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -179,7 +180,7 @@ private fun SettingsToggle(
             .toggleable(
                 value = checked,
                 role = Role.Switch,
-                onValueChange = onCheckedChange,
+                onValueChange = withLightHaptic(LocalContext.current, onCheckedChange = onCheckedChange),
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,

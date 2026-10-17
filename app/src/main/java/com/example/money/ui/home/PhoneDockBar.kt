@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Home
@@ -26,6 +30,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
@@ -67,25 +73,25 @@ internal fun PhoneDockBar(
             ) {
                 DockItem(
                     label = stringResource(R.string.nav_home),
-                    icon = Icons.Outlined.Home,
+                    icon = if (selected == PhoneDockTab.Home) Icons.Filled.Home else Icons.Outlined.Home,
                     selected = selected == PhoneDockTab.Home,
                     onClick = onHome,
                 )
                 DockItem(
                     label = stringResource(R.string.section_goals),
-                    icon = Icons.Outlined.Flag,
+                    icon = if (selected == PhoneDockTab.Goals) Icons.Filled.Flag else Icons.Outlined.Flag,
                     selected = selected == PhoneDockTab.Goals,
                     onClick = onGoals,
                 )
                 DockItem(
                     label = stringResource(R.string.tab_debts),
-                    icon = Icons.Outlined.People,
+                    icon = if (selected == PhoneDockTab.Debts) Icons.Filled.People else Icons.Outlined.People,
                     selected = selected == PhoneDockTab.Debts,
                     onClick = onDebts,
                 )
                 DockItem(
                     label = stringResource(R.string.tab_notes),
-                    icon = Icons.Outlined.EditNote,
+                    icon = if (selected == PhoneDockTab.Notes) Icons.Filled.EditNote else Icons.Outlined.EditNote,
                     selected = selected == PhoneDockTab.Notes,
                     onClick = onNotes,
                 )
@@ -104,6 +110,7 @@ private fun DockItem(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
+            .semantics { this.selected = selected }
             .clickable(onClick = onClick)
             .padding(horizontal = 2.dp, vertical = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -4,9 +4,18 @@ import android.content.Intent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -77,6 +86,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -97,6 +107,7 @@ import com.example.money.ui.budget.BudgetViewModel
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.ConfirmDeleteDialog
+import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.HomePreviewCards
@@ -131,6 +142,7 @@ import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
+import com.example.money.ui.util.systemMotionEnabled
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.launch
@@ -227,6 +239,8 @@ internal fun PhoneHomeLayout(
     onOpenClients: () -> Unit = {},
 ) {
     val contactContext = LocalContext.current
+    val homeListState = rememberLazyListState()
+    val goalsListState = rememberLazyListState()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -400,7 +414,7 @@ internal fun PhoneHomeLayout(
                     selected = dockTab,
                     onHome = {
                         onTabSelected(HomeTab.Home.ordinal)
-                        scope.launch { listState.animateScrollToItem(0) }
+                        scope.launch { homeListState.animateScrollToItem(0) }
                     },
                     onGoals = { onTabSelected(HomeTab.Goals.ordinal) },
                     onDebts = { onTabSelected(HomeTab.Debts.ordinal) },
@@ -408,7 +422,28 @@ internal fun PhoneHomeLayout(
                 )
             },
         ) { innerPadding ->
-            val page = HomeTab.entries[selectedTab]
+            val motionEnabled = systemMotionEnabled(LocalContext.current)
+            val tabSlide = tween<IntOffset>(durationMillis = 250)
+            val tabFade = tween<Float>(durationMillis = 250)
+            AnimatedContent(
+                targetState = selectedTab,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                transitionSpec = {
+                    if (!motionEnabled) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        val forward = targetState > initialState
+                        val enterOffset: (Int) -> Int = { width -> if (forward) width / 5 else -width / 5 }
+                        val exitOffset: (Int) -> Int = { width -> if (forward) -width / 5 else width / 5 }
+                        (slideInHorizontally(tabSlide, enterOffset) + fadeIn(tabFade)) togetherWith
+                            (slideOutHorizontally(tabSlide, exitOffset) + fadeOut(tabFade))
+                    }
+                },
+                label = "phoneHomeTab",
+            ) { tabIndex ->
+            val page = HomeTab.entries[tabIndex]
             if (page == HomeTab.Notes) {
                 NotesPage(
                     notes = notes,
@@ -428,18 +463,19 @@ internal fun PhoneHomeLayout(
                     onNoteBodyChange = onNoteBodyChange,
                     onFlushNoteDraft = onFlushNoteDraft,
                     noteDraftBlocksRemote = noteDraftBlocksRemote,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                    modifier = Modifier.fillMaxSize(),
                 )
             } else LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                state = when (page) {
+                    HomeTab.Home -> homeListState
+                    HomeTab.Goals -> goalsListState
+                    HomeTab.Debts -> listState
+                    HomeTab.Notes -> listState
+                },
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
-                if (HomeTab.entries[selectedTab] == HomeTab.Home) {
+                if (page == HomeTab.Home) {
                 item {
                     Text(
                         text = if (debtProgressPercent > 0) {
@@ -469,7 +505,6 @@ internal fun PhoneHomeLayout(
                         )
                     }
                 }
-                val page = HomeTab.entries[selectedTab]
                 if (page == HomeTab.Home) {
                     val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
                     item {
@@ -521,7 +556,7 @@ internal fun PhoneHomeLayout(
                 }
 
                 val orderedGoals = GoalProgress.orderedForSection(goals)
-                if (HomeTab.entries[selectedTab] == HomeTab.Goals) {
+                if (page == HomeTab.Goals) {
                 item {
                     Text(
                         text = stringResource(R.string.goals_section_title, goals.size),
@@ -549,6 +584,7 @@ internal fun PhoneHomeLayout(
                         EmptyStateMessage(
                             title = stringResource(R.string.empty_goals_title),
                             hint = stringResource(R.string.empty_goals_hint),
+                            illustration = EmptyIllustration.Goals,
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
                                 vertical = MoneySpacing.sm,
@@ -591,7 +627,7 @@ internal fun PhoneHomeLayout(
                 }
                 }
 
-                if (HomeTab.entries[selectedTab] == HomeTab.Debts) {
+                if (page == HomeTab.Debts) {
                 homeDebtsSection(
                         debtTab = debtTab,
                         onDebtTabChange = onDebtTabChange,
@@ -629,6 +665,7 @@ internal fun PhoneHomeLayout(
                         emptyDebtorsHint = emptyDebtorsHint,
                     )
                 }
+            }
             }
         }
     }

@@ -9,7 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import com.example.money.ui.util.vibrateLight
 
 @Composable
 fun MoneyTextField(
@@ -28,9 +30,16 @@ fun MoneyTextField(
     } else {
         modifier.fillMaxWidth().focusRequester(focusRequester)
     }
+    val context = LocalContext.current
+    val numericKeyboard = keyboardOptions.keyboardType == KeyboardType.Decimal ||
+        keyboardOptions.keyboardType == KeyboardType.Number ||
+        keyboardOptions.keyboardType == KeyboardType.NumberPassword
     OutlinedTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = { next ->
+            if (numericKeyboard && next != value) vibrateLight(context)
+            onValueChange(next)
+        },
         label = { Text(label) },
         isError = isError,
         supportingText = supportingText?.let { { Text(it) } },

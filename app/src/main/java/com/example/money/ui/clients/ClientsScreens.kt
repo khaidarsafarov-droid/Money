@@ -55,6 +55,8 @@ import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyTextField
 import com.example.money.ui.components.QuickPaymentSheet
 import com.example.money.ui.debtors.DebtorsViewModel
+import com.example.money.ui.util.HapticStrength
+import com.example.money.ui.util.vibrate
 import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.util.Formatters
@@ -183,6 +185,7 @@ fun ClientListScreen(
                             actionLabel = undoLabel,
                         )
                         if (result == SnackbarResult.ActionPerformed) {
+                            vibrate(context, HapticStrength.MEDIUM)
                             debtorsViewModel.undoPaymentSync(debtorId, paymentId)
                         }
                     }

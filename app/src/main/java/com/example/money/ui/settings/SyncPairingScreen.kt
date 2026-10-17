@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.money.MoneyApplication
+import com.example.money.ui.util.withLightHaptic
 import com.example.money.R
 import com.example.money.data.sync.PairingOffer
 import com.example.money.ui.theme.CreamBackground
@@ -94,7 +95,7 @@ fun SyncPairingScreen(
             )
             Switch(
                 checked = enabled,
-                onCheckedChange = { checked ->
+                onCheckedChange = withLightHaptic(LocalContext.current) { checked ->
                     scope.launch { app.preferencesStore.setPeerSyncEnabled(checked) }
                 },
             )

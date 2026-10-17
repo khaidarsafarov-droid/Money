@@ -18,6 +18,7 @@ import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.components.DebtorListItem
+import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
@@ -165,6 +166,11 @@ fun LazyListScope.homeDebtsSection(
                 EmptyStateMessage(
                     title = emptyDebtorsTitle(debtorFilter),
                     hint = emptyDebtorsHint(debtorFilter),
+                    illustration = if (debtSearchQuery.isNotBlank()) {
+                        EmptyIllustration.Search
+                    } else {
+                        EmptyIllustration.Debts
+                    },
                     modifier = Modifier.padding(
                         horizontal = MoneySpacing.lg,
                         vertical = MoneySpacing.sm,

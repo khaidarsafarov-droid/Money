@@ -65,6 +65,7 @@ import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
+import com.example.money.ui.util.withLightHaptic
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -346,7 +347,10 @@ fun GoalScreen(
             HubCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(stringResource(R.string.goal_hub_word_power), fontWeight = FontWeight.SemiBold)
-                    Switch(checked = profile.wordPowerEnabled, onCheckedChange = viewModel::setWordPowerEnabled)
+                    Switch(
+                        checked = profile.wordPowerEnabled,
+                        onCheckedChange = withLightHaptic(context, onCheckedChange = viewModel::setWordPowerEnabled),
+                    )
                 }
                 Text(stringResource(R.string.goal_hub_word_power_hint), style = MaterialTheme.typography.bodySmall)
             }
