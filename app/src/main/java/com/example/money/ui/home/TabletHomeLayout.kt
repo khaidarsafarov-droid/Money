@@ -110,7 +110,7 @@ fun TabletHomeLayout(
     onDebtSearchQueryChange: (String) -> Unit,
     goalMetrics: DashboardGoalMetrics,
     debtMetrics: DashboardDebtMetrics,
-    debtProgressPercent: Int = 0,
+    planProgressPercent: Int = 0,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
     onOpenGoal: (SavingsGoal) -> Unit,
@@ -391,7 +391,7 @@ fun TabletHomeLayout(
                                 goalMetrics = goalMetrics,
                                 debtMetrics = debtMetrics,
                                 hideAmounts = privacySettings.hideAmounts,
-                                progressPercent = debtProgressPercent,
+                                progressPercent = planProgressPercent,
                                 onOwesMeClick = {
                                     onDebtTabChange(DebtTab.OwesMe)
                                     onSectionChange(HomeSection.Debts)
@@ -625,7 +625,7 @@ fun TabletHomeLayout(
                 onAccelerateDebtPayment = onAccelerateDebtPayment,
                 onMarkDebtPaid = onMarkDebtPaid,
                 hideAmounts = privacySettings.hideAmounts,
-                progressPercent = debtProgressPercent,
+                progressPercent = planProgressPercent,
                 onEditDebtor = onEditDebtor,
                 onDeleteDebtor = onDeleteDebtor,
                 onViewContactHistory = onViewContactHistory,

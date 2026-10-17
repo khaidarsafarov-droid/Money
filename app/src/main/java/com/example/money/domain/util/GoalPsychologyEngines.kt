@@ -1,5 +1,6 @@
 package com.example.money.domain.util
 
+import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DebtType
 import com.example.money.settings.AutopilotStrategy
@@ -165,9 +166,24 @@ object GoalPsychologyEngines {
         return ((paid.toDouble() / total) * 100).toInt().coerceAtMost(100)
     }
 
-    /** Ring follows «I owe» when any of those debts are still open, otherwise goals. */
+    /** Widget ring follows open «I owe» debts when any remain, otherwise goals. */
     fun displayedHomeProgressPercent(iOweActiveCount: Int, debtPercent: Int, goalPercent: Int): Int =
         if (iOweActiveCount > 0) debtPercent.coerceIn(0, 100) else goalPercent.coerceIn(0, 100)
+
+    /**
+     * Home ring: paid «I owe» amounts plus goal savings, over those debt targets
+     * plus the goal pool. Creditor balances stay out. An empty pool is 0.
+     * Truncates toward zero, matching [Int] conversion of the ratio.
+     */
+    fun planProgressPercent(debtors: List<Debtor>, goalMetrics: DashboardGoalMetrics): Int {
+        val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR }
+        val paid = iOwe.sumOf { it.currentAmountCents } + goalMetrics.totalAccumulatedCents
+        val pool = iOwe.sumOf { it.targetAmountCents } +
+            goalMetrics.totalAccumulatedCents +
+            goalMetrics.totalRemainingToGoalCents
+        if (pool <= 0L) return 0
+        return ((paid.toDouble() / pool) * 100).toInt().coerceIn(0, 100)
+    }
 
     fun daysUntilPayday(paydayDayOfMonth: Int, now: Long = System.currentTimeMillis()): Int {
         val calendar = java.util.Calendar.getInstance().apply { timeInMillis = now }

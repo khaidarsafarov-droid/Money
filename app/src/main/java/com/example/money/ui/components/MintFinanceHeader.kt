@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.sp
 import com.example.money.R
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
-import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 
@@ -52,7 +51,7 @@ fun MintFinanceHeader(
     progressPercent: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val score = homeScore(goalMetrics, debtMetrics, progressPercent, hideAmounts)
+    val score = homeScore(progressPercent)
     val scheme = MaterialTheme.colorScheme
 
     Column(
@@ -201,8 +200,8 @@ private fun ScoreCard(score: Int, caption: String) {
 }
 
 /**
- * Phone and tablet list preview: the two debt sides stay separate, and the
- * ring uses the same percent as its caption.
+ * Phone and tablet list preview: the two debt sides stay separate tiles.
+ * The ring shows [progressPercent] from [com.example.money.domain.util.GoalPsychologyEngines.planProgressPercent].
  */
 @Composable
 fun HomePreviewCards(
@@ -216,7 +215,7 @@ fun HomePreviewCards(
     onRemainingClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val score = homeScore(goalMetrics, debtMetrics, progressPercent, hideAmounts)
+    val score = homeScore(progressPercent)
     val scheme = MaterialTheme.colorScheme
 
     Column(
@@ -262,35 +261,9 @@ fun HomePreviewCards(
 private data class HomeScore(val percent: Int, val caption: String)
 
 @Composable
-private fun homeScore(
-    goalMetrics: DashboardGoalMetrics,
-    debtMetrics: DashboardDebtMetrics,
-    progressPercent: Int?,
-    hideAmounts: Boolean,
-): HomeScore {
-    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-    val goalPercent = if (goalPool > 0L) {
-        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-    } else {
-        0
-    }
-    val usesDebts = debtMetrics.iOweActiveCount > 0
-    val percent = GoalPsychologyEngines.displayedHomeProgressPercent(
-        iOweActiveCount = debtMetrics.iOweActiveCount,
-        debtPercent = progressPercent ?: 0,
-        goalPercent = goalPercent,
-    )
-    val remaining = if (usesDebts) {
-        debtMetrics.iOweCents
-    } else {
-        goalMetrics.totalRemainingToGoalCents
-    }
-    val caption = stringResource(
-        if (usesDebts) R.string.home_score_debts else R.string.home_score_goals,
-        percent,
-        Formatters.currencyFromCents(remaining, hide = hideAmounts),
-    )
-    return HomeScore(percent, caption)
+private fun homeScore(progressPercent: Int?): HomeScore {
+    val percent = (progressPercent ?: 0).coerceIn(0, 100)
+    return HomeScore(percent, stringResource(R.string.home_score_plan))
 }
 
 @Composable

@@ -171,7 +171,7 @@ internal fun PhoneHomeLayout(
     goalMetrics: com.example.money.domain.model.DashboardGoalMetrics,
     debtMetrics: com.example.money.domain.model.DashboardDebtMetrics,
     greetingName: String,
-    debtProgressPercent: Int,
+    planProgressPercent: Int,
     highlightedDebtorId: Long?,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
@@ -489,21 +489,10 @@ internal fun PhoneHomeLayout(
                 contentPadding = listPadding,
             ) {
                 if (page == HomeTab.Home) {
-                val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-                val goalPercent = if (goalPool > 0L) {
-                    ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-                } else {
-                    0
-                }
-                val shownProgress = com.example.money.domain.util.GoalPsychologyEngines.displayedHomeProgressPercent(
-                    iOweActiveCount = debtMetrics.iOweActiveCount,
-                    debtPercent = debtProgressPercent,
-                    goalPercent = goalPercent,
-                )
                 item {
                     Text(
-                        text = if (shownProgress > 0) {
-                            stringResource(R.string.home_greeting_progress, greetingName, shownProgress)
+                        text = if (planProgressPercent > 0) {
+                            stringResource(R.string.home_greeting_progress, greetingName, planProgressPercent)
                         } else {
                             stringResource(R.string.home_greeting_simple, greetingName)
                         },
@@ -535,7 +524,7 @@ internal fun PhoneHomeLayout(
                             goalMetrics = goalMetrics,
                             debtMetrics = debtMetrics,
                             hideAmounts = privacySettings.hideAmounts,
-                            progressPercent = debtProgressPercent,
+                            progressPercent = planProgressPercent,
                             onOwesMeClick = {
                                 onDebtTabChange(DebtTab.OwesMe)
                                 onTabSelected(HomeTab.Debts.ordinal)

@@ -38,7 +38,7 @@ import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
 import { usePaymentDeepLink } from "@/hooks/usePaymentDeepLink";
 import { formatMoney, parseMoneyInput } from "@/lib/money";
-import { remainingAmount } from "@/lib/financeEngine";
+import { planProgressPercent, remainingAmount } from "@/lib/financeEngine";
 import type { FinancialItem } from "@/types/finance";
 
 export function DashboardPage() {
@@ -119,27 +119,17 @@ export function DashboardPage() {
     if (!recordQueryNormalized) return true;
     return item.name.toLowerCase().includes(recordQueryNormalized);
   });
-  const debtPaidCents = activeDebts.reduce((sum, debt) => sum + debt.amount, 0);
-  const debtTargetCents = activeDebts.reduce((sum, debt) => sum + debt.target, 0);
-  const debtProgressPercent =
-    debtTargetCents > 0
-      ? Math.min(100, Math.floor((debtPaidCents * 100) / debtTargetCents))
-      : 0;
-  const goalPoolCents =
-    finance.globalFinance.totalAccumulatedCents + finance.globalFinance.totalRemainingToGoalCents;
-  const goalProgressPercent =
-    goalPoolCents > 0
-      ? Math.min(100, Math.floor((finance.globalFinance.totalAccumulatedCents * 100) / goalPoolCents))
-      : 0;
+  const visibleDebts = finance.state.items.filter((item) => item.type === "DEBT" && !item.deleted);
+  const score = planProgressPercent({
+    debtPaidCents: visibleDebts.reduce((sum, item) => sum + item.amount, 0),
+    debtTargetCents: visibleDebts.reduce((sum, item) => sum + item.target, 0),
+    goalAccumulatedCents: finance.globalFinance.totalAccumulatedCents,
+    goalRemainingCents: finance.globalFinance.totalRemainingToGoalCents,
+  });
   const selectedRecord =
     listedItems.find((item) => item.id === selectedRecordId) ?? listedItems[0] ?? null;
-  const score = activeDebts.length > 0 ? debtProgressPercent : goalProgressPercent;
   const debtRemainingCents = activeDebts.reduce((sum, debt) => sum + remainingAmount(debt), 0);
-  const ringRemaining = activeDebts.length > 0 ? money(debtRemainingCents) : money(finance.globalFinance.totalRemainingToGoalCents);
-  const ringCaption =
-    activeDebts.length > 0
-      ? `Закрыто ${score}% · осталось ${ringRemaining}`
-      : `Накоплено ${score}% · осталось ${ringRemaining}`;
+  const ringCaption = "Доля закрытых долгов и накоплений";
 
   return (
     <>

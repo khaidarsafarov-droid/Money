@@ -213,8 +213,8 @@ fun HomeScreen(
     val availableBalanceCents = budgetSummary.availableBalanceCents
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
-    val debtProgressPercent = remember(allDebtors) {
-        GoalPsychologyEngines.totalDebtProgressPercent(allDebtors)
+    val planProgressPercent = remember(allDebtors, goalMetrics) {
+        GoalPsychologyEngines.planProgressPercent(allDebtors, goalMetrics)
     }
 
     var selectedTab by remember { mutableIntStateOf(launchConfig.initialTab.ordinal) }
@@ -627,7 +627,7 @@ fun HomeScreen(
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
-                debtProgressPercent = debtProgressPercent,
+                planProgressPercent = planProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },
@@ -756,7 +756,7 @@ fun HomeScreen(
                 greetingName = userProfile.resolvedDisplayName(
                     stringResource(R.string.onboarding_default_name),
                 ),
-                debtProgressPercent = debtProgressPercent,
+                planProgressPercent = planProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
