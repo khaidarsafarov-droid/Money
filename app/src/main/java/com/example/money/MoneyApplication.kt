@@ -10,6 +10,7 @@ import com.example.money.data.locale.AppLanguageManager
 import com.example.money.data.locale.AppLanguageStorage
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
+import com.example.money.data.local.SqlCipherLibrary
 import com.example.money.data.mapper.toDomain
 import com.example.money.data.sync.DeviceIdProvider
 import com.example.money.data.sync.SyncQueueRecorder
@@ -107,6 +108,7 @@ class MoneyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        SqlCipherLibrary.load()
         AppLanguageManager.applyStored(this)
         NotificationChannels.create(this)
         applicationScope.launch {

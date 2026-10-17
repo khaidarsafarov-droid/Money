@@ -6,7 +6,7 @@ import net.zetetic.database.sqlcipher.SQLiteDatabase
 internal object SqlCipherExporter {
 
     fun export(plainCopy: File, encryptedFile: File, passphrase: ByteArray) {
-        System.loadLibrary("sqlcipher")
+        SqlCipherLibrary.load()
         val database = SQLiteDatabase.openOrCreateDatabase(
             encryptedFile,
             passphrase,
