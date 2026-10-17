@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +36,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
-import com.example.money.ui.theme.GoldPrimary
 
 internal enum class PhoneDockTab {
     Home,
@@ -61,7 +61,7 @@ internal fun PhoneDockBar(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(50),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
             shadowElevation = 8.dp,
         ) {
             Row(
@@ -119,19 +119,19 @@ private fun DockItem(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(if (selected) Color(0xFFD9F6E6) else Color.Transparent),
+                    .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = if (selected) GoldPrimary else Color(0xFF5C7D72),
+                    tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp),
                 )
             }
             Text(
                 text = label,
-                color = if (selected) GoldPrimary else Color(0xFF5C7D72),
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
                 maxLines = 1,
             )

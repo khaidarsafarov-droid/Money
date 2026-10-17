@@ -47,7 +47,6 @@ import com.example.money.R
 import com.example.money.data.backup.AutomaticBackupExecutor
 import com.example.money.data.locale.AppLanguageManager
 import com.example.money.domain.backup.BackupRemoteFile
-import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.util.findActivity
 
 private sealed interface BackupPasswordAction {
@@ -220,7 +219,7 @@ fun BackupSettingsScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -233,7 +232,7 @@ fun BackupSettingsScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
     ) { padding ->

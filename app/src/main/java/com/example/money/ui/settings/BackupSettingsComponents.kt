@@ -25,10 +25,7 @@ import com.example.money.R
 import com.example.money.data.backup.BackupErrorCode
 import com.example.money.data.backup.BackupProvider
 import com.example.money.domain.backup.BackupRemoteFile
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.withLightHaptic
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.OverdueRed
 import java.text.DateFormat
 import java.util.Date
 
@@ -52,7 +49,7 @@ internal fun GoogleConnectionCard(
                     else -> R.string.backup_google_disconnected
                 },
             ),
-            color = if (connected) FinancePositive else if (reconnect) OverdueRed else {
+            color = if (connected) MaterialTheme.colorScheme.primary else if (reconnect) MaterialTheme.colorScheme.error else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             },
         )
@@ -103,12 +100,12 @@ internal fun LastBackupCard(state: BackupSettingsUiState) {
         },
     ) {
         if (device.reconnectRequired) {
-            Text(stringResource(R.string.backup_google_reconnect), color = OverdueRed)
+            Text(stringResource(R.string.backup_google_reconnect), color = MaterialTheme.colorScheme.error)
         }
         device.lastError?.let { error ->
             Text(
                 stringResource(R.string.backup_status_error, deviceErrorMessage(error)),
-                color = OverdueRed,
+                color = MaterialTheme.colorScheme.error,
             )
         }
     }
@@ -123,7 +120,7 @@ internal fun RemoteBackupCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -156,7 +153,7 @@ internal fun BackupSectionCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

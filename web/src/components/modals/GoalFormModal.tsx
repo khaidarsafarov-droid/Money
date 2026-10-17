@@ -78,16 +78,16 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
           placeholder="1000"
         />
       </FormField>
-      <p className="text-xs text-milk-muted">
+      <p className="text-xs text-on-surface-variant">
         Накопления начинаются с нуля. Пополните общий баланс и переведите средства на цель.
       </p>
       <FormField label="Срок цели">
-        <label className="flex items-center gap-3 text-sm text-milk-muted">
+        <label className="flex items-center gap-3 text-sm text-on-surface-variant">
           <input
             type="checkbox"
             checked={hasDeadline}
             onChange={(e) => setHasDeadline(e.target.checked)}
-            className="size-4 rounded border-milk-surface"
+            className="size-4 rounded border-outline-variant"
           />
           Рассчитать ежедневный взнос до дедлайна
         </label>

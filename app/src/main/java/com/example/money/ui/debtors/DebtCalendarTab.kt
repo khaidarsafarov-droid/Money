@@ -31,10 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 import java.util.Calendar
 
@@ -58,7 +54,7 @@ fun DebtCalendarTab(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!calendarPermissionGranted && (onRequestCalendarPermission != null || onOpenCalendarSettings != null)) {
@@ -141,8 +137,8 @@ fun DebtCalendarTab(
                                 .clip(CircleShape)
                                 .background(
                                     when {
-                                        dayMillis == selectedDay -> GoldPrimary.copy(alpha = 0.2f)
-                                        hasDebts -> FinancePositive.copy(alpha = 0.15f)
+                                        dayMillis == selectedDay -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                        hasDebts -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                         else -> MaterialTheme.colorScheme.surface
                                     },
                                 )
@@ -162,7 +158,7 @@ fun DebtCalendarTab(
                                     Box(
                                         modifier = Modifier
                                             .clip(CircleShape)
-                                            .background(FinanceNegative)
+                                            .background(MaterialTheme.colorScheme.error)
                                             .padding(2.dp),
                                     )
                                 }
@@ -181,7 +177,7 @@ fun DebtCalendarTab(
                 Text(stringResource(R.string.calendar_day_empty), style = MaterialTheme.typography.bodySmall)
             } else {
                 dayDebts.forEach { debtor ->
-                    val color = if (debtor.debtType == DebtType.CREDITOR) FinancePositive else FinanceNegative
+                    val color = if (debtor.debtType == DebtType.CREDITOR) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                     Text(
                         text = "• ${debtor.name} · ${Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency, hide = hideAmounts)}",
                         color = color,

@@ -26,9 +26,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.Debtor
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 
 enum class CelebrationReward {
     WALK,
@@ -83,7 +80,7 @@ fun DebtCelebrationDialog(
                 }
                 if (selectedReward != null) {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
                     ) {
                         Column(
                             modifier = Modifier
@@ -100,14 +97,14 @@ fun DebtCelebrationDialog(
                                 text = stringResource(R.string.celebration_postcard_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = GoldPrimary,
+                                color = MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.Center,
                             )
                             Text(
                                 text = stringResource(R.string.celebration_postcard_body),
                                 style = MaterialTheme.typography.bodyMedium,
                                 textAlign = TextAlign.Center,
-                                color = FinancePositive,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }

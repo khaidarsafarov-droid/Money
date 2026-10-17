@@ -18,9 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -42,7 +39,7 @@ fun DebtCheckInSheet(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -63,8 +60,8 @@ fun DebtCheckInSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
-                color = FinancePositive,
-                trackColor = GoldPrimary.copy(alpha = 0.2f),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
             )
             Text(
                 text = stringResource(
@@ -85,7 +82,7 @@ fun DebtCheckInSheet(
                 Text(
                     text = stringResource(R.string.weekly_checkin_closed_count, iOwePaid.size),
                     style = MaterialTheme.typography.bodySmall,
-                    color = FinancePositive,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }

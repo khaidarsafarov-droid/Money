@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.sync.SyncConnectionState
 import com.example.money.domain.sync.SyncStatus
-import com.example.money.ui.theme.FinancePositive
 
 @Composable
 fun SyncStatusIndicator(
@@ -30,7 +29,7 @@ fun SyncStatusIndicator(
         SyncStatus.Synced -> stringResource(R.string.sync_status_synced)
     }
     val color = if (state.isIndicatorActive) {
-        FinancePositive
+        MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.outline
     }

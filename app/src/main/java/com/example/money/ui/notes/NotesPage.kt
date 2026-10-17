@@ -49,9 +49,7 @@ import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyDialog
 import com.example.money.ui.components.MoneyTextField
-import com.example.money.ui.theme.FinancePositive
 import com.example.money.ui.theme.MoneySpacing
-import com.example.money.ui.theme.OverdueRed
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 
@@ -337,7 +335,7 @@ private fun NoteEditor(
             )
         }
         TextButton(onClick = onDeleteNote) {
-            Text(stringResource(R.string.note_delete), color = OverdueRed)
+            Text(stringResource(R.string.note_delete), color = MaterialTheme.colorScheme.error)
         }
     }
 }
@@ -428,7 +426,7 @@ private fun FinancialNoteBody(
                 onTitleCommit()
                 onSetMark(NoteMark.PAID)
             },
-            label = { Text(stringResource(R.string.note_mark_paid), color = FinancePositive) },
+            label = { Text(stringResource(R.string.note_mark_paid), color = MaterialTheme.colorScheme.primary) },
         )
         FilterChip(
             selected = note.mark == NoteMark.OWED,
@@ -436,7 +434,7 @@ private fun FinancialNoteBody(
                 onTitleCommit()
                 onSetMark(NoteMark.OWED)
             },
-            label = { Text(stringResource(R.string.note_mark_owed), color = OverdueRed) },
+            label = { Text(stringResource(R.string.note_mark_owed), color = MaterialTheme.colorScheme.error) },
         )
     }
     Text(
@@ -505,8 +503,9 @@ private fun LineEditor(
     }
 }
 
+@Composable
 private fun markColor(mark: NoteMark): Color = when (mark) {
-    NoteMark.NONE -> Color(0xFF5C7D72)
-    NoteMark.PAID -> FinancePositive
-    NoteMark.OWED -> OverdueRed
+    NoteMark.NONE -> MaterialTheme.colorScheme.onSurfaceVariant
+    NoteMark.PAID -> MaterialTheme.colorScheme.primary
+    NoteMark.OWED -> MaterialTheme.colorScheme.error
 }

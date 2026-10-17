@@ -1,7 +1,6 @@
 package com.example.money.widget
 
 import android.content.Context
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -35,14 +34,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.money.R
 import com.example.money.navigation.AppIntents
-import com.example.money.ui.theme.BrownMuted
-import com.example.money.ui.theme.BrownText
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GaugeTrack
-import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.LightColorScheme
 import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.flow.first
 
@@ -65,34 +57,22 @@ class GoalProgressWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = GoalProgressWidget()
 }
 
-private val MintPage = Color(0xFFE7F6EF)
-private val HeroTeal = Color(0xFF0F6E5C)
-private val HeroText = Color(0xFFFFFFFF)
-private val HeroMuted = Color(0xC7FFFFFF)
-private val HeroAlert = Color(0xFFFFE4CC)
-private val Ink = Color(0xFF12352C)
-private val InkMuted = Color(0xFF5C7D72)
-private val PastelMint = Color(0xFFD9F6E6)
-private val PastelPeach = Color(0xFFFFE4CC)
-private val PastelLilac = Color(0xFFECE3FB)
-private val PastelSand = Color(0xFFFFF4CF)
-private val CardSurface = Color(0xFFF7FCF9)
+private val MintPage = LightColorScheme.background
+private val HeroTeal = LightColorScheme.primary
+private val HeroText = LightColorScheme.onPrimary
+private val HeroMuted = LightColorScheme.onPrimary.copy(alpha = 0xC7 / 255f)
+private val HeroAlert = LightColorScheme.errorContainer
+private val Ink = LightColorScheme.onSurface
+private val InkMuted = LightColorScheme.onSurfaceVariant
+private val PastelMint = LightColorScheme.primaryContainer
+private val PastelPeach = LightColorScheme.errorContainer
+private val PastelLilac = LightColorScheme.tertiaryContainer
+private val PastelSand = LightColorScheme.secondaryContainer
+private val CardSurface = LightColorScheme.surfaceContainerLowest
 
 private val WidgetColorProviders = ColorProviders(
-    lightColorScheme(
-        primary = GoldPrimary,
-        onPrimary = Color.White,
-        background = CreamBackground,
-        onBackground = BrownText,
-        surface = CreamSurface,
-        onSurface = BrownText,
-        onSurfaceVariant = BrownMuted,
-        surfaceVariant = GaugeTrack,
-        tertiary = FinancePositive,
-        onTertiary = Color.White,
-        error = FinanceNegative,
-        onError = Color.White,
-    ),
+    light = LightColorScheme,
+    dark = LightColorScheme,
 )
 
 private enum class WidgetDensity {
@@ -375,8 +355,8 @@ private fun NextItemRow(
         WidgetItemType.GOAL -> context.getString(R.string.widget_item_type_goal)
         WidgetItemType.DEBT -> context.getString(R.string.widget_item_type_debt)
     }
-    val chipColor = if (item.isOverdue) Color(0xFFFDE8E4) else PastelMint
-    val chipText = if (item.isOverdue) Color(0xFF8B3A32) else HeroTeal
+    val chipColor = if (item.isOverdue) LightColorScheme.errorContainer else PastelMint
+    val chipText = if (item.isOverdue) LightColorScheme.onErrorContainer else HeroTeal
 
     Column(
         modifier = GlanceModifier
@@ -407,7 +387,7 @@ private fun NextItemRow(
                 text = item.name,
                 modifier = GlanceModifier.defaultWeight(),
                 style = TextStyle(
-                    color = ColorProvider(if (item.isOverdue) Color(0xFF8B3A32) else Ink),
+                    color = ColorProvider(if (item.isOverdue) LightColorScheme.onErrorContainer else Ink),
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                 ),

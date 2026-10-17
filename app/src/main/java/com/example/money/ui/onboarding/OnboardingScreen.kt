@@ -47,10 +47,6 @@ import com.example.money.settings.UserGender
 import com.example.money.ui.components.FinOrb
 import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.home.WelcomePreferences
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +66,7 @@ fun OnboardingScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -81,14 +77,14 @@ fun OnboardingScreen(
             Text(
                 stringResource(R.string.onboarding_step, step + 1, OnboardingViewModel.TOTAL_STEPS),
                 style = MaterialTheme.typography.labelLarge,
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
             )
             LinearProgressIndicator(
                 progress = { (step + 1).toFloat() / OnboardingViewModel.TOTAL_STEPS },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp),
-                color = FinancePositive,
+                color = MaterialTheme.colorScheme.primary,
             )
 
             AnimatedContent(
@@ -131,7 +127,7 @@ fun OnboardingScreen(
 private fun OnboardingCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         shape = RoundedCornerShape(28.dp),
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
@@ -190,7 +186,7 @@ private fun NameStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
         if (viewModel.isValidName()) {
             Text(
                 stringResource(R.string.onboarding_name_preview, draft.displayName.trim()),
-                color = FinancePositive,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
             )
         }
@@ -256,7 +252,7 @@ private fun PsychotypeStep(
                     R.string.goal_hub_psychotype,
                     GoalPsychologyEngines.psychotypeLabel(psychotype),
                 ),
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(GoalPsychologyEngines.psychotypeOnboardingDescription(psychotype))
@@ -269,7 +265,7 @@ private fun PsychotypeStep(
             Text(
                 stringResource(R.string.psychotype_test_title, index + 1, questions.size),
                 style = MaterialTheme.typography.labelLarge,
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(stringResource(questionRes), style = MaterialTheme.typography.titleMedium)
             options.forEach { (key, labelRes) ->
@@ -329,7 +325,7 @@ private fun FearsStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
             label = { Text(stringResource(R.string.onboarding_fears_other)) },
             modifier = Modifier.fillMaxWidth(),
         )
-        Text(stringResource(R.string.onboarding_fears_reassurance), color = FinancePositive)
+        Text(stringResource(R.string.onboarding_fears_reassurance), color = MaterialTheme.colorScheme.primary)
         Button(onClick = viewModel::nextStep, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.action_next))
         }
@@ -371,7 +367,7 @@ private fun GoalStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
             modifier = Modifier.fillMaxWidth(),
         )
         val name = draft.displayName.trim().ifBlank { stringResource(R.string.onboarding_default_name) }
-        Text(stringResource(R.string.onboarding_goal_thanks, name), color = FinancePositive, fontWeight = FontWeight.Medium)
+        Text(stringResource(R.string.onboarding_goal_thanks, name), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
         Button(onClick = viewModel::nextStep, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.action_next))
         }

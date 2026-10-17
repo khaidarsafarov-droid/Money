@@ -77,8 +77,6 @@ import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtSearchField
 import com.example.money.ui.debtors.DebtorFilterRow
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.HapticStrength
@@ -172,7 +170,7 @@ fun TabletHomeLayout(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = topBar,
         floatingActionButton = floatingActionButton,
@@ -182,11 +180,11 @@ fun TabletHomeLayout(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            NavigationRail(containerColor = CreamBackground) {
+            NavigationRail(containerColor = MaterialTheme.colorScheme.background) {
                 val railColors = NavigationRailItemDefaults.colors(
-                    selectedIconColor = GoldPrimary,
-                    selectedTextColor = GoldPrimary,
-                    indicatorColor = Color(0xFFD9F6E6),
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

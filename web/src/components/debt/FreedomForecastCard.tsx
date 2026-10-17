@@ -19,8 +19,8 @@ export function FreedomForecastCard({ debts, hideAmounts = false }: FreedomForec
   if (!projection.hasActiveDebts) {
     return (
       <SurfaceCard className="space-y-1">
-        <p className="text-xs text-milk-muted">Свобода</p>
-        <p className="text-sm text-milk-muted">Нет активных долгов.</p>
+        <p className="text-xs text-on-surface-variant">Свобода</p>
+        <p className="text-sm text-on-surface-variant">Нет активных долгов.</p>
       </SurfaceCard>
     );
   }
@@ -35,20 +35,20 @@ export function FreedomForecastCard({ debts, hideAmounts = false }: FreedomForec
 
   return (
     <SurfaceCard className="space-y-3">
-      <p className="text-xs text-milk-muted">Прогноз</p>
+      <p className="text-xs text-on-surface-variant">Прогноз</p>
 
       <div>
-        <p className="text-sm text-milk-muted">Дата свободы от долгов</p>
-        <p className="text-xl font-medium text-milk-text">{freedomLabel}</p>
+        <p className="text-sm text-on-surface-variant">Дата свободы от долгов</p>
+        <p className="text-xl font-medium text-on-surface">{freedomLabel}</p>
       </div>
 
-      <p className="text-sm text-milk-muted">
+      <p className="text-sm text-on-surface-variant">
         Осталось {formatMoney(projection.totalRemainingCents, { hidden: hideAmounts })} ·{" "}
         {formatMoney(projection.monthlyPaymentCents, { hidden: hideAmounts })}/мес · ~{projection.monthsRemaining} мес.
       </p>
 
       <label className="block space-y-1.5">
-        <span className="text-sm text-milk-text">
+        <span className="text-sm text-on-surface">
           Дополнительно в месяц: {formatMoney(extraMonthlyCents, { hidden: hideAmounts })}
         </span>
         <input
@@ -58,12 +58,12 @@ export function FreedomForecastCard({ debts, hideAmounts = false }: FreedomForec
           step={2500}
           value={extraMonthlyCents}
           onChange={(event) => setExtraMonthlyCents(Number(event.target.value))}
-          className="w-full accent-milk-text"
+          className="w-full accent-on-surface"
         />
       </label>
 
       {projection.monthsSavedWithExtra != null && projection.monthsSavedWithExtra > 0 ? (
-        <p className="text-sm text-milk-success">
+        <p className="text-sm text-primary">
           С этой суммой вы освободитесь на {projection.monthsSavedWithExtra} мес. раньше.
         </p>
       ) : null}

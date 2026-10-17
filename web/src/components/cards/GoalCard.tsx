@@ -42,7 +42,7 @@ export function GoalCard({ item, hideAmounts = false, onTransfer, onExpense, onD
               <button
                 type="button"
                 onClick={expense}
-                className="pill-btn-ghost inline-flex flex-1 items-center justify-center gap-2 border border-milk-surface"
+                className="pill-btn-ghost inline-flex flex-1 items-center justify-center gap-2 border border-outline-variant"
               >
                 <AppIcon icon={ArrowUpRight} size={14} />
                 Расход

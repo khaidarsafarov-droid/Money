@@ -23,12 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyBodyStyle
 import com.example.money.ui.theme.moneyHeadingStyle
@@ -53,7 +50,7 @@ fun EmptyStateMessage(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
@@ -103,14 +100,14 @@ private fun EmptyStateArtwork(
             modifier = Modifier
                 .size(76.dp)
                 .clip(CircleShape)
-                .background(GoldPrimary.copy(alpha = 0.12f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
         )
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
-                tint = GoldPrimary,
+                tint = MaterialTheme.colorScheme.primary,
             )
         } else {
             when (kind) {
@@ -123,7 +120,7 @@ private fun EmptyStateArtwork(
                         modifier = Modifier
                             .size(18.dp)
                             .clip(CircleShape)
-                            .background(GoldPrimary),
+                            .background(MaterialTheme.colorScheme.primary),
                     )
                 }
             }
@@ -139,14 +136,14 @@ private fun DebtMark() {
                 .offset(x = (-8).dp)
                 .size(34.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest),
         )
         Box(
             modifier = Modifier
                 .offset(x = 10.dp, y = 8.dp)
                 .size(34.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(GoldPrimary.copy(alpha = 0.72f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)),
         )
     }
 }
@@ -158,14 +155,14 @@ private fun GoalMark() {
             modifier = Modifier
                 .width(4.dp)
                 .height(36.dp)
-                .background(GoldPrimary),
+                .background(MaterialTheme.colorScheme.primary),
         )
         Box(
             modifier = Modifier
                 .offset(x = 4.dp, y = (-12).dp)
                 .size(width = 22.dp, height = 14.dp)
                 .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
-                .background(GoldPrimary),
+                .background(MaterialTheme.colorScheme.primary),
         )
     }
 }
@@ -176,7 +173,7 @@ private fun NoteMark() {
         modifier = Modifier
             .size(width = 34.dp, height = 42.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
@@ -185,7 +182,7 @@ private fun NoteMark() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(3.dp)
-                    .background(GoldPrimary.copy(alpha = 0.45f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
             )
         }
     }
@@ -197,7 +194,7 @@ private fun SearchMark() {
         Box(
             modifier = Modifier
                 .size(26.dp)
-                .border(3.dp, GoldPrimary, CircleShape),
+                .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape),
         )
         Box(
             modifier = Modifier
@@ -205,7 +202,7 @@ private fun SearchMark() {
                 .width(14.dp)
                 .height(3.dp)
                 .rotate(45f)
-                .background(GoldPrimary),
+                .background(MaterialTheme.colorScheme.primary),
         )
     }
 }

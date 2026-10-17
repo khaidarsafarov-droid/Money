@@ -150,9 +150,9 @@ export function DashboardPage() {
           <button
             type="button"
             onClick={() => setTab("home")}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-milk-accent"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
           >
-            <AppIcon icon={ArrowLeft} size={16} className="text-milk-accent" />
+            <AppIcon icon={ArrowLeft} size={16} className="text-primary" />
             Назад
           </button>
           <h1 className="text-2xl font-semibold tracking-tight">Настройки</h1>
@@ -195,8 +195,8 @@ export function DashboardPage() {
         <>
           <header className="mb-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-milk-muted">Финансовый контроль</p>
-              <h1 className="text-2xl font-semibold tracking-tight text-milk-text">
+              <p className="text-sm font-medium text-on-surface-variant">Финансовый контроль</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
                 {personalizedGreeting(
                   userProfile.displayName,
                   debtProgressPercent,
@@ -208,9 +208,9 @@ export function DashboardPage() {
               type="button"
               aria-label="Настройки"
               onClick={() => setTab("more")}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_8px_20px_rgb(15_110_92_/_0.08)]"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgb(15_110_92_/_0.08)]"
             >
-              <AppIcon icon={Settings} size={18} className="text-milk-accent" />
+              <AppIcon icon={Settings} size={18} className="text-primary" />
             </button>
           </header>
 
@@ -313,13 +313,13 @@ export function DashboardPage() {
                   <h2 className="text-base font-semibold">
                     {tab === "goals" ? "Цели" : "Долги"} ({listedItems.length})
                   </h2>
-                  <label className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
+                  <label className="flex items-center gap-2 rounded-full bg-surface-container-lowest px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
                     <AppIcon icon={Search} size={16} />
                     <input
                       value={recordQuery}
                       onChange={(event) => setRecordQuery(event.target.value)}
                       placeholder={tab === "goals" ? "Поиск целей" : "Поиск долгов"}
-                      className="w-full bg-transparent text-sm outline-none placeholder:text-milk-muted"
+                      className="w-full bg-transparent text-sm outline-none placeholder:text-on-surface-variant"
                     />
                   </label>
                   <StatusFilterTabs value={finance.statusFilter} onChange={finance.setStatusFilter} />
@@ -344,7 +344,7 @@ export function DashboardPage() {
                             onClick={() => setShowAddGoal(true)}
                             className="pill-btn-primary inline-flex items-center gap-1.5"
                           >
-                            <AppIcon icon={Target} size={14} className="text-white" />
+                            <AppIcon icon={Target} size={14} className="text-on-primary" />
                             Новая цель
                           </button>
                         ) : (

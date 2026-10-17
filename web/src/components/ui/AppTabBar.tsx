@@ -54,9 +54,9 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
                   action.onClick();
                   setOpen(false);
                 }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white px-4 py-2 text-sm font-medium text-milk-text shadow-[0_10px_24px_rgb(15_110_92_/_0.12)]"
+                className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface shadow-[0_10px_24px_rgb(15_110_92_/_0.12)]"
               >
-                <AppIcon icon={action.icon} size={16} className="text-milk-accent" />
+                <AppIcon icon={action.icon} size={16} className="text-primary" />
                 {action.label}
               </button>
             ))}
@@ -64,7 +64,7 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
         ) : null}
 
         <nav
-          className="relative flex items-center justify-between rounded-full bg-white px-2 py-2 shadow-[0_12px_32px_rgb(15_110_92_/_0.14)]"
+          className="relative flex items-center justify-between rounded-full bg-surface-container-lowest px-2 py-2 shadow-[0_12px_32px_rgb(15_110_92_/_0.14)]"
           aria-label="Разделы"
         >
           {left.map((item) => (
@@ -79,9 +79,9 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-label={open ? "Закрыть меню" : "Добавить запись"}
-            className="absolute left-1/2 top-0 flex size-14 -translate-x-1/2 -translate-y-1/3 items-center justify-center rounded-full bg-milk-accent text-white shadow-[0_10px_24px_rgb(15_110_92_/_0.35)]"
+            className="absolute left-1/2 top-0 flex size-14 -translate-x-1/2 -translate-y-1/3 items-center justify-center rounded-full bg-primary text-on-primary shadow-[0_10px_24px_rgb(15_110_92_/_0.35)]"
           >
-            <AppIcon icon={open ? X : Plus} size={22} className="text-white" />
+            <AppIcon icon={open ? X : Plus} size={22} className="text-on-primary" />
           </button>
         </nav>
       </div>
@@ -104,15 +104,15 @@ function TabButton({
       onClick={() => onSelect(item.id)}
       aria-current={selected ? "page" : undefined}
       className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium ${
-        selected ? "text-milk-accent" : "text-milk-muted"
+        selected ? "text-primary" : "text-on-surface-variant"
       }`}
     >
       <span
         className={`flex size-8 items-center justify-center rounded-full ${
-          selected ? "bg-pastel-mint" : ""
+          selected ? "bg-primary-container" : ""
         }`}
       >
-        <AppIcon icon={item.icon} size={16} className={selected ? "text-milk-accent" : "text-milk-muted"} />
+        <AppIcon icon={item.icon} size={16} className={selected ? "text-primary" : "text-on-surface-variant"} />
       </span>
       {item.label}
     </button>

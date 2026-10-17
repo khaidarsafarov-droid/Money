@@ -49,7 +49,7 @@ export function NotesPanel({ hideAmounts = false }: NotesPanelProps) {
     <section className="space-y-4">
       <h2 className="text-base font-semibold">Заметки ({notes.length})</h2>
       <form
-        className="space-y-3 rounded-[24px] bg-white p-4 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]"
+        className="space-y-3 rounded-[24px] bg-surface-container-lowest p-4 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]"
         onSubmit={(event) => {
           event.preventDefault();
           const note = createNote(title, kind);
@@ -62,14 +62,14 @@ export function NotesPanel({ hideAmounts = false }: NotesPanelProps) {
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Название"
-          className="w-full rounded-2xl bg-milk-bg px-4 py-3 text-sm outline-none"
+          className="w-full rounded-2xl bg-background px-4 py-3 text-sm outline-none"
         />
         <div className="flex gap-2">
           <KindButton selected={kind === "TEXT"} onClick={() => setKind("TEXT")} label="Текст" />
           <KindButton selected={kind === "FINANCIAL"} onClick={() => setKind("FINANCIAL")} label="Расчёт" />
         </div>
         <button type="submit" className="pill-btn-primary inline-flex items-center gap-1.5">
-          <AppIcon icon={Plus} size={14} className="text-white" />
+          <AppIcon icon={Plus} size={14} className="text-on-primary" />
           Новая заметка
         </button>
       </form>
@@ -87,16 +87,16 @@ export function NotesPanel({ hideAmounts = false }: NotesPanelProps) {
               <button
                 type="button"
                 onClick={() => setOpenId(note.id)}
-                className={`w-full rounded-[24px] bg-white p-4 text-left shadow-[0_8px_20px_rgb(15_110_92_/_0.06)] ${markClass(note.mark)}`}
+                className={`w-full rounded-[24px] bg-surface-container-lowest p-4 text-left shadow-[0_8px_20px_rgb(15_110_92_/_0.06)] ${markClass(note.mark)}`}
               >
-                <p className="text-sm text-milk-muted">{note.kind === "FINANCIAL" ? "Расчёт" : "Текст"}</p>
+                <p className="text-sm text-on-surface-variant">{note.kind === "FINANCIAL" ? "Расчёт" : "Текст"}</p>
                 <p className="text-lg font-semibold">{note.title}</p>
                 {note.kind === "FINANCIAL" ? (
                   <p className={`text-sm font-medium ${markText(note.mark)}`}>
                     {formatMoney(noteTotalCents(note), { hidden: hideAmounts })}
                   </p>
                 ) : (
-                  <p className="truncate text-sm text-milk-muted">{note.body || "Пустая заметка"}</p>
+                  <p className="truncate text-sm text-on-surface-variant">{note.body || "Пустая заметка"}</p>
                 )}
               </button>
             </li>
@@ -123,13 +123,13 @@ function NoteEditor({
   const total = noteTotalCents(note);
   return (
     <section className="space-y-4">
-      <button type="button" onClick={onBack} className="text-sm font-semibold text-milk-accent">
+      <button type="button" onClick={onBack} className="text-sm font-semibold text-primary">
         Назад к заметкам
       </button>
       <input
         value={note.title}
         onChange={(event) => onChange({ ...note, title: event.target.value })}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-lg font-semibold outline-none"
+        className="w-full rounded-2xl bg-surface-container-lowest px-4 py-3 text-lg font-semibold outline-none"
       />
       {note.kind === "TEXT" ? (
         <textarea
@@ -137,10 +137,10 @@ function NoteEditor({
           onChange={(event) => onChange({ ...note, body: event.target.value })}
           rows={8}
           placeholder="Текст"
-          className="w-full rounded-[24px] bg-white px-4 py-3 text-sm outline-none"
+          className="w-full rounded-[24px] bg-surface-container-lowest px-4 py-3 text-sm outline-none"
         />
       ) : (
-        <div className="space-y-3 rounded-[24px] bg-white p-4">
+        <div className="space-y-3 rounded-[24px] bg-surface-container-lowest p-4">
           {note.lines.map((line) => (
             <div key={line.id} className="flex gap-2">
               <input
@@ -154,7 +154,7 @@ function NoteEditor({
                   })
                 }
                 placeholder="Строка"
-                className="min-w-0 flex-1 rounded-2xl bg-milk-bg px-3 py-2 text-sm outline-none"
+                className="min-w-0 flex-1 rounded-2xl bg-background px-3 py-2 text-sm outline-none"
               />
               <input
                 value={line.amountCents ? (line.amountCents / 100).toString() : ""}
@@ -169,13 +169,13 @@ function NoteEditor({
                 }}
                 inputMode="decimal"
                 placeholder="0"
-                className="w-24 rounded-2xl bg-milk-bg px-3 py-2 text-sm outline-none"
+                className="w-24 rounded-2xl bg-background px-3 py-2 text-sm outline-none"
               />
               <button
                 type="button"
                 aria-label="Удалить строку"
                 onClick={() => onChange({ ...note, lines: note.lines.filter((item) => item.id !== line.id) })}
-                className="flex size-10 items-center justify-center rounded-full text-milk-muted"
+                className="flex size-10 items-center justify-center rounded-full text-on-surface-variant"
               >
                 <AppIcon icon={Trash2} size={14} />
               </button>
@@ -200,19 +200,19 @@ function NoteEditor({
             <MarkButton
               label="Оплачено"
               selected={note.mark === "PAID"}
-              className="text-milk-success"
+              className="text-primary"
               onClick={() => onChange({ ...note, mark: toggleMark(note.mark, "PAID") })}
             />
             <MarkButton
               label="Должен"
               selected={note.mark === "OWED"}
-              className="text-milk-error"
+              className="text-error"
               onClick={() => onChange({ ...note, mark: toggleMark(note.mark, "OWED") })}
             />
           </div>
         </div>
       )}
-      <button type="button" onClick={onDelete} className="text-sm font-medium text-milk-error">
+      <button type="button" onClick={onDelete} className="text-sm font-medium text-error">
         Удалить заметку
       </button>
     </section>
@@ -224,15 +224,15 @@ function toggleMark(current: NoteMark, next: NoteMark): NoteMark {
 }
 
 function markClass(mark: NoteMark): string {
-  if (mark === "PAID") return "ring-1 ring-milk-success/40";
-  if (mark === "OWED") return "ring-1 ring-milk-error/40";
+  if (mark === "PAID") return "ring-1 ring-primary/40";
+  if (mark === "OWED") return "ring-1 ring-error/40";
   return "";
 }
 
 function markText(mark: NoteMark): string {
-  if (mark === "PAID") return "text-milk-success";
-  if (mark === "OWED") return "text-milk-error";
-  return "text-milk-text";
+  if (mark === "PAID") return "text-primary";
+  if (mark === "OWED") return "text-error";
+  return "text-on-surface";
 }
 
 function KindButton({ selected, onClick, label }: { selected: boolean; onClick: () => void; label: string }) {
@@ -240,7 +240,7 @@ function KindButton({ selected, onClick, label }: { selected: boolean; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 rounded-full px-3 py-2 text-sm font-medium ${selected ? "bg-milk-accent text-white" : "bg-milk-bg text-milk-muted"}`}
+      className={`flex-1 rounded-full px-3 py-2 text-sm font-medium ${selected ? "bg-primary text-on-primary" : "bg-background text-on-surface-variant"}`}
     >
       {label}
     </button>
@@ -262,7 +262,7 @@ function MarkButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 rounded-full border px-3 py-2 text-sm font-medium ${className} ${selected ? "border-current bg-milk-bg" : "border-milk-surface"}`}
+      className={`flex-1 rounded-full border px-3 py-2 text-sm font-medium ${className} ${selected ? "border-current bg-background" : "border-outline-variant"}`}
     >
       {label}
     </button>

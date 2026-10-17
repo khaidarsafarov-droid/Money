@@ -137,13 +137,9 @@ import com.example.money.settings.AppMode
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
-import com.example.money.ui.theme.StatusActiveBg
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.util.systemMotionEnabled
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.launch
 
@@ -399,7 +395,7 @@ internal fun PhoneHomeLayout(
         },
     ) {
         Scaffold(
-            containerColor = CreamBackground,
+            containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
             floatingActionButton = floatingActionButton,
@@ -489,7 +485,7 @@ internal fun PhoneHomeLayout(
                         ),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = GoldPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 }
@@ -679,7 +675,7 @@ internal fun NotificationPermissionBanner(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         shape = MaterialTheme.shapes.medium,
     ) {
         Column(

@@ -37,7 +37,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-milk-muted transition hover:bg-milk-bg"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-on-surface-variant transition hover:bg-background"
             aria-label="Ещё"
           >
             <AppIcon icon={MoreHorizontal} size={18} />
@@ -50,11 +50,11 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
                 className="fixed inset-0 z-10"
                 onClick={() => setMenuOpen(false)}
               />
-              <div className="absolute right-0 z-20 mt-1 min-w-40 rounded-md border border-milk-surface bg-white py-1 shadow-sm">
+              <div className="absolute right-0 z-20 mt-1 min-w-40 rounded-md border border-outline-variant bg-surface-container-lowest py-1 shadow-sm">
                 {canPay ? (
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-milk-bg"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-background"
                     onClick={() => {
                       setMenuOpen(false);
                       onAddPayment?.(item, accelerateCents);
@@ -66,7 +66,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
                 ) : null}
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-milk-bg"
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-background"
                   onClick={() => {
                     setMenuOpen(false);
                     void shareDebtReminder(item);
@@ -82,7 +82,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
       }
       meta={
         item.dateDue ? (
-          <p className={`text-subheading ${overdue ? "font-medium text-milk-error" : ""}`}>
+          <p className={`text-subheading ${overdue ? "font-medium text-error" : ""}`}>
             Срок: {new Date(item.dateDue).toLocaleDateString("ru-RU")}
           </p>
         ) : null
@@ -94,7 +94,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
             onClick={() => onAddPayment(item)}
             className="pill-btn-primary inline-flex w-full items-center justify-center gap-2"
           >
-            <AppIcon icon={HandCoins} size={14} className="text-white" />
+            <AppIcon icon={HandCoins} size={14} className="text-on-primary" />
             Добавить оплату
           </button>
         ) : null
