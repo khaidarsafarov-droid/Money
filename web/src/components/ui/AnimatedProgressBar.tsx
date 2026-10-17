@@ -33,8 +33,8 @@ export function AnimatedProgressBar({
       aria-valuenow={Math.round(clamped * 100)}
     >
       <div
-        className={`h-full rounded-full transition-[width] duration-300 ease-out ${variantClasses[variant]}`}
-        style={{ width: `${clamped * 100}%` }}
+        className={`h-full origin-left rounded-full transition-transform duration-300 ease-out motion-reduce:transition-none ${variantClasses[variant]}`}
+        style={{ width: "100%", transform: `scaleX(${clamped})` }}
       />
     </div>
   );

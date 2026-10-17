@@ -87,7 +87,7 @@ export function OnboardingFlow() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col p-4">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col p-4 min-[600px]:max-w-2xl">
       <p className="text-sm font-medium text-on-surface-variant">
         Шаг {step + 1} из {totalSteps}
       </p>

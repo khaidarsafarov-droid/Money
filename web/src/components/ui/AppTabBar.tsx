@@ -42,7 +42,10 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
   const right = tabs.slice(2);
 
   return (
-    <div ref={rootRef} className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
+    <div
+      ref={rootRef}
+      className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] min-[600px]:hidden"
+    >
       <div className="mx-auto w-full max-w-md">
         {open ? (
           <div className="mb-3 flex flex-col items-center gap-2">
@@ -86,6 +89,57 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
         </nav>
       </div>
     </div>
+  );
+}
+
+export function AppSideRail({
+  tab,
+  onTabChange,
+  actions = [],
+}: {
+  tab: AppTab;
+  onTabChange: (tab: AppTab) => void;
+  actions?: TabAction[];
+}) {
+  return (
+    <nav
+      className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col gap-2 border-r border-outline-variant bg-surface-container-low px-3 py-6 min-[600px]:flex"
+      aria-label="Разделы"
+    >
+      <p className="px-3 pb-2 text-sm font-medium text-on-surface-variant">Финансовый контроль</p>
+      {tabs.map((item) => {
+        const selected = tab === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onTabChange(item.id)}
+            aria-current={selected ? "page" : undefined}
+            className={`flex min-h-12 items-center gap-3 rounded-full px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+              selected ? "bg-primary-container text-on-primary-container" : "text-on-surface-variant"
+            }`}
+          >
+            <AppIcon icon={item.icon} size={18} className={selected ? "text-on-primary-container" : "text-on-surface-variant"} />
+          {item.label}
+        </button>
+        );
+      })}
+      {actions.length > 0 ? (
+        <div className="mt-4 space-y-2 border-t border-outline-variant pt-4">
+          {actions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              className="flex min-h-12 w-full items-center gap-3 rounded-full px-4 text-sm font-medium text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <AppIcon icon={action.icon} size={18} className="text-primary" />
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </nav>
   );
 }
 

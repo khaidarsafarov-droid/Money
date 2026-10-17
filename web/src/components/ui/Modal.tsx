@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { AppIcon } from "@/components/ui/SurfaceCard";
 
 interface ModalProps {
@@ -13,10 +13,23 @@ interface ModalProps {
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return reduced;
+}
+
 export function Modal({ open, title, onClose, children, footer }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  const reduceMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     if (!open) return;
@@ -70,10 +83,10 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
       {open && (
         <motion.div
           className="fixed inset-0 z-50 flex items-end justify-center overscroll-contain p-4 sm:items-center"
-          initial={{ opacity: 0 }}
+          initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: reduceMotion ? 0 : 0.15 }}
         >
           <button
             type="button"
@@ -89,10 +102,10 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
             aria-labelledby={titleId}
             tabIndex={-1}
             className="relative z-10 max-h-[min(640px,calc(100dvh-2rem))] w-full max-w-lg overflow-y-auto overscroll-contain rounded-[28px] border border-outline-variant bg-surface-container-lowest p-5 shadow-[0_18px_40px_rgb(15_110_92_/_0.16)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            initial={{ opacity: 0, y: 12 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.15 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+            transition={{ duration: reduceMotion ? 0 : 0.15 }}
           >
             <div className="mb-4 flex items-start justify-between gap-4">
               <h2 id={titleId} className="text-lg font-medium text-on-surface">

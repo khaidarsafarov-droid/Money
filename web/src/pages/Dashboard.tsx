@@ -24,7 +24,7 @@ import { PaymentModal } from "@/components/modals/PaymentModal";
 import { AdvisorConversation } from "@/components/psychology/DebtAdvisorSheet";
 import { GamificationBanner } from "@/components/psychology/GamificationBanner";
 import { PsychologySettingsPanel } from "@/components/psychology/PsychologySettingsPanel";
-import { AppTabBar, type AppTab } from "@/components/ui/AppTabBar";
+import { AppSideRail, AppTabBar, type AppTab } from "@/components/ui/AppTabBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ScoreRing } from "@/components/ui/ScoreRing";
 import { AppIcon } from "@/components/ui/SurfaceCard";
@@ -57,6 +57,7 @@ export function DashboardPage() {
   const [tab, setTab] = useState<AppTab>("home");
   const [recordQuery, setRecordQuery] = useState("");
   const [showAdvisor, setShowAdvisor] = useState(false);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
   const hideAmounts = psychology.privacy.hideAmounts;
   const money = useCallback(
@@ -130,6 +131,8 @@ export function DashboardPage() {
     goalPoolCents > 0
       ? Math.min(100, Math.floor((finance.globalFinance.totalAccumulatedCents * 100) / goalPoolCents))
       : 0;
+  const selectedRecord =
+    listedItems.find((item) => item.id === selectedRecordId) ?? listedItems[0] ?? null;
   const score = activeDebts.length > 0 ? debtProgressPercent : goalProgressPercent;
   const debtRemainingCents = activeDebts.reduce((sum, debt) => sum + remainingAmount(debt), 0);
   const ringRemaining = activeDebts.length > 0 ? money(debtRemainingCents) : money(finance.globalFinance.totalRemainingToGoalCents);
@@ -139,7 +142,18 @@ export function DashboardPage() {
       : `Накоплено ${score}% · осталось ${ringRemaining}`;
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-32 pt-6">
+    <>
+    <div className="mx-auto flex min-h-dvh w-full min-[600px]:max-w-[1104px]">
+    <AppSideRail
+      tab={tab}
+      onTabChange={setTab}
+      actions={[
+        { label: "Новая цель", icon: Target, onClick: () => { setTab("goals"); setShowAddGoal(true); } },
+        { label: "Новый долг", icon: HandCoins, onClick: () => { setTab("debts"); setShowAddDebt(true); } },
+        { label: "Новая заметка", icon: Sparkles, onClick: () => setTab("notes") },
+      ]}
+    />
+    <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-6 min-[600px]:max-w-[840px] min-[600px]:pb-10">
       {tab === "more" ? (
         <section className="space-y-4">
           <button
@@ -352,7 +366,8 @@ export function DashboardPage() {
                   />
                   </div>
                 ) : (
-                  <div className="grid gap-3">
+                  <>
+                  <div className="grid gap-3 min-[600px]:hidden">
                     <AnimatePresence mode="popLayout">
                       {listedItems.map((item) => (
                         <FinanceCard
@@ -367,6 +382,41 @@ export function DashboardPage() {
                       ))}
                     </AnimatePresence>
                   </div>
+                  <div className="hidden gap-6 min-[600px]:grid min-[600px]:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]">
+                    <ul className="space-y-2">
+                      {listedItems.map((item) => {
+                        const selected = selectedRecord?.id === item.id;
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedRecordId(item.id)}
+                              aria-current={selected ? "true" : undefined}
+                              className={`flex min-h-12 w-full items-center rounded-2xl px-4 text-left text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                                selected
+                                  ? "bg-primary-container text-on-primary-container"
+                                  : "bg-surface-container-lowest text-on-surface"
+                              }`}
+                            >
+                              {item.name}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    {selectedRecord ? (
+                      <FinanceCard
+                        key={selectedRecord.id}
+                        item={selectedRecord}
+                        hideAmounts={hideAmounts}
+                        onAddPayment={openPayment}
+                        onGoalTransfer={setTransferGoal}
+                        onGoalExpense={() => setExpenseGoal(selectedRecord)}
+                        onDelete={setPendingDelete}
+                      />
+                    ) : null}
+                  </div>
+                  </>
                 )}
               </section>
             ) : null}
@@ -463,7 +513,10 @@ export function DashboardPage() {
         }}
       />
 
-      <AppTabBar
+    </div>
+    </div>
+
+    <AppTabBar
         tab={tab}
         onTabChange={setTab}
         actions={[
@@ -472,7 +525,7 @@ export function DashboardPage() {
           { label: "Новая заметка", icon: Sparkles, onClick: () => setTab("notes") },
         ]}
       />
-    </div>
+    </>
   );
 }
 
