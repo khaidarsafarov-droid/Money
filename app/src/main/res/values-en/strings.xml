@@ -61,6 +61,7 @@
     <string name="calendar_weekday_sat">Sat</string>
     <string name="calendar_weekday_sun">Sun</string>
     <string name="calendar_day_with_debts">Day %1$d, has debts</string>
+    <string name="calendar_has_debt_mark">due</string>
     <string name="calendar_day_empty_cd">Day %1$d</string>
     <string name="widget_remaining">Remaining: %1$s of %2$s</string>
     <string name="widget_remaining_empty">Set a goal in the app</string>
@@ -661,6 +662,11 @@
     <string name="onboarding_goal_title">Your main goal</string>
     <string name="onboarding_goal_label">What do you want to do when every debt is closed?</string>
     <string name="onboarding_emotion_label">How do you feel right now?</string>
+    <string name="emotion_happy">Joy</string>
+    <string name="emotion_neutral">Calm</string>
+    <string name="emotion_sad">Sadness</string>
+    <string name="emotion_angry">Anger</string>
+    <string name="emotion_thinking">Thinking</string>
     <string name="onboarding_priority_label">What matters most as you get out of debt?</string>
     <string name="onboarding_goal_thanks">Thank you, %1$s! We saved your goal and will help you reach it.</string>
     <string name="onboarding_default_name">Friend</string>

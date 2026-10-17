@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.money.ui.theme.MoneySpacing
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
@@ -335,11 +337,11 @@ private fun FearsStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
 @Composable
 private fun GoalStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
     val emotions = listOf(
-        UserEmotion.HAPPY to "😊",
-        UserEmotion.NEUTRAL to "😐",
-        UserEmotion.SAD to "😔",
-        UserEmotion.ANGRY to "😡",
-        UserEmotion.THINKING to "🤔",
+        UserEmotion.HAPPY to R.string.emotion_happy,
+        UserEmotion.NEUTRAL to R.string.emotion_neutral,
+        UserEmotion.SAD to R.string.emotion_sad,
+        UserEmotion.ANGRY to R.string.emotion_angry,
+        UserEmotion.THINKING to R.string.emotion_thinking,
     )
 
     OnboardingCard {
@@ -352,11 +354,12 @@ private fun GoalStep(viewModel: OnboardingViewModel, draft: OnboardingDraft) {
         )
         Text(stringResource(R.string.onboarding_emotion_label), fontWeight = FontWeight.Medium)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            emotions.forEach { (emotion, emoji) ->
+            emotions.forEach { (emotion, labelRes) ->
                 FilterChip(
                     selected = draft.emotion == emotion,
                     onClick = { viewModel.updateEmotion(emotion) },
-                    label = { Text(emoji) },
+                    label = { Text(stringResource(labelRes)) },
+                    modifier = Modifier.defaultMinSize(minHeight = MoneySpacing.minTouchTarget),
                 )
             }
         }
@@ -411,7 +414,9 @@ private fun SummaryStep(
         }
         SummaryRow(
             label = stringResource(R.string.onboarding_summary_goal),
-            value = "${emotionEmoji(draft.emotion)} $goal",
+            value = draft.emotion?.let { emotion ->
+                "${stringResource(emotionLabelRes(emotion))} · $goal"
+            } ?: goal,
         )
         SummaryRow(
             label = stringResource(R.string.onboarding_summary_debts),
@@ -435,11 +440,10 @@ private fun SummaryRow(label: String, value: String) {
     }
 }
 
-private fun emotionEmoji(emotion: UserEmotion?): String = when (emotion) {
-    UserEmotion.HAPPY -> "😊"
-    UserEmotion.NEUTRAL -> "😐"
-    UserEmotion.SAD -> "😔"
-    UserEmotion.ANGRY -> "😡"
-    UserEmotion.THINKING -> "🤔"
-    null -> "🎯"
+private fun emotionLabelRes(emotion: UserEmotion): Int = when (emotion) {
+    UserEmotion.HAPPY -> R.string.emotion_happy
+    UserEmotion.NEUTRAL -> R.string.emotion_neutral
+    UserEmotion.SAD -> R.string.emotion_sad
+    UserEmotion.ANGRY -> R.string.emotion_angry
+    UserEmotion.THINKING -> R.string.emotion_thinking
 }

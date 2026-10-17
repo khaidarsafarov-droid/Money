@@ -37,7 +37,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-on-surface-variant transition hover:bg-background"
+            className="flex min-h-12 min-w-12 items-center justify-center rounded-md text-on-surface-variant transition hover:bg-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             aria-label="Ещё"
           >
             <AppIcon icon={MoreHorizontal} size={18} />
@@ -54,7 +54,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
                 {canPay ? (
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-background"
+                    className="flex min-h-12 w-full items-center gap-2 px-3 text-left text-sm hover:bg-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     onClick={() => {
                       setMenuOpen(false);
                       onAddPayment?.(item, accelerateCents);
@@ -66,7 +66,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
                 ) : null}
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-background"
+                  className="flex min-h-12 w-full items-center gap-2 px-3 text-left text-sm hover:bg-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   onClick={() => {
                     setMenuOpen(false);
                     void shareDebtReminder(item);

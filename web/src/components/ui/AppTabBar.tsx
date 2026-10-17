@@ -54,7 +54,7 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
                   action.onClick();
                   setOpen(false);
                 }}
-                className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface shadow-[0_10px_24px_rgb(15_110_92_/_0.12)]"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface shadow-[0_10px_24px_rgb(15_110_92_/_0.12)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <AppIcon icon={action.icon} size={16} className="text-primary" />
                 {action.label}
@@ -79,7 +79,7 @@ export function AppTabBar({ tab, onTabChange, actions }: AppTabBarProps) {
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-label={open ? "Закрыть меню" : "Добавить запись"}
-            className="absolute left-1/2 top-0 flex size-14 -translate-x-1/2 -translate-y-1/3 items-center justify-center rounded-full bg-primary text-on-primary shadow-[0_10px_24px_rgb(15_110_92_/_0.35)]"
+            className="absolute left-1/2 top-0 flex size-14 -translate-x-1/2 -translate-y-1/3 items-center justify-center rounded-full bg-primary text-on-primary shadow-[0_10px_24px_rgb(15_110_92_/_0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <AppIcon icon={open ? X : Plus} size={22} className="text-on-primary" />
           </button>
@@ -103,7 +103,7 @@ function TabButton({
       type="button"
       onClick={() => onSelect(item.id)}
       aria-current={selected ? "page" : undefined}
-      className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium ${
+      className={`flex min-h-12 min-w-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
         selected ? "text-primary" : "text-on-surface-variant"
       }`}
     >

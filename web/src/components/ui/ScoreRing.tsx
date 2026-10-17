@@ -20,7 +20,7 @@ export function ScoreRing({ value, label, caption }: ScoreRingProps) {
       aria-label={caption}
     >
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-on-hero/75">{label}</p>
+        <p className="text-sm text-on-hero">{label}</p>
         <p className="mt-1 text-lg font-semibold leading-snug">{caption}</p>
       </div>
       <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">

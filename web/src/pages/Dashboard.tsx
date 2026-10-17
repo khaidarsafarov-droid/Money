@@ -199,7 +199,7 @@ export function DashboardPage() {
               type="button"
               aria-label="Настройки"
               onClick={() => setTab("more")}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgb(15_110_92_/_0.08)]"
+              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgb(15_110_92_/_0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <AppIcon icon={Settings} size={18} className="text-primary" />
             </button>
@@ -293,14 +293,23 @@ export function DashboardPage() {
                   <h2 className="text-base font-semibold">
                     {tab === "goals" ? "Цели" : "Долги"} ({listedItems.length})
                   </h2>
-                  <label className="flex items-center gap-2 rounded-full bg-surface-container-lowest px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
-                    <AppIcon icon={Search} size={16} />
-                    <input
-                      value={recordQuery}
-                      onChange={(event) => setRecordQuery(event.target.value)}
-                      placeholder={tab === "goals" ? "Поиск целей" : "Поиск долгов"}
-                      className="w-full bg-transparent text-sm outline-none placeholder:text-on-surface-variant"
-                    />
+                  <label className="block space-y-1.5">
+                    <span className="text-sm text-on-surface-variant">
+                      {tab === "goals" ? "Поиск целей" : "Поиск долгов"}
+                    </span>
+                    <span className="flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-4 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
+                      <AppIcon icon={Search} size={16} />
+                      <input
+                        name="q"
+                        type="search"
+                        autoComplete="off"
+                        value={recordQuery}
+                        onChange={(event) => setRecordQuery(event.target.value)}
+                        placeholder={tab === "goals" ? "Название цели" : "Имя или название"}
+                        aria-describedby={recordQueryNormalized && listedItems.length === 0 ? "search-empty" : undefined}
+                        className="w-full bg-transparent py-3 text-sm text-on-surface placeholder:text-on-surface-variant focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      />
+                    </span>
                   </label>
                   <StatusFilterTabs value={finance.statusFilter} onChange={finance.setStatusFilter} />
                 </div>
@@ -310,6 +319,7 @@ export function DashboardPage() {
                 ) : null}
 
                 {listedItems.length === 0 ? (
+                  <div id={recordQueryNormalized ? "search-empty" : undefined}>
                   <EmptyState
                     icon={Inbox}
                     title={recordQueryNormalized ? "Ничего не найдено" : "Пока пусто"}
@@ -340,6 +350,7 @@ export function DashboardPage() {
                       ) : undefined
                     }
                   />
+                  </div>
                 ) : (
                   <div className="grid gap-3">
                     <AnimatePresence mode="popLayout">
@@ -486,7 +497,11 @@ function PreviewList({
 }) {
   return (
     <section className="space-y-3">
-      <button type="button" onClick={onOpen} className="text-base font-semibold">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="inline-flex min-h-12 items-center rounded-full bg-surface-container-lowest px-4 text-base font-semibold text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
         {title}
       </button>
       <div className="grid gap-3">

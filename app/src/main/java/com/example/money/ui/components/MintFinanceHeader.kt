@@ -144,7 +144,7 @@ private fun ScoreCard(score: Int, caption: String) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.home_score_title),
-                color = onHero.copy(alpha = 0.75f),
+                color = onHero,
                 fontSize = 13.sp,
             )
             Text(

@@ -60,6 +60,7 @@
     <string name="calendar_weekday_sat">СБ</string>
     <string name="calendar_weekday_sun">ВС</string>
     <string name="calendar_day_with_debts">День %1$d, есть долги</string>
+    <string name="calendar_has_debt_mark">долг</string>
     <string name="calendar_day_empty_cd">День %1$d</string>
     <string name="widget_remaining">Осталось: %1$s из %2$s</string>
     <string name="widget_remaining_empty">Задайте цель в приложении</string>
@@ -641,6 +642,11 @@
     <string name="onboarding_goal_title">Ваша главная цель</string>
     <string name="onboarding_goal_label">Что вы хотите сделать, когда закроете все долги?</string>
     <string name="onboarding_emotion_label">Как вы себя чувствуете прямо сейчас?</string>
+    <string name="emotion_happy">Радость</string>
+    <string name="emotion_neutral">Спокойно</string>
+    <string name="emotion_sad">Грусть</string>
+    <string name="emotion_angry">Злость</string>
+    <string name="emotion_thinking">Думаю</string>
     <string name="onboarding_priority_label">Что для вас самое важное в избавлении от долгов?</string>
     <string name="onboarding_goal_thanks">Спасибо, %1$s! Мы запомнили вашу цель и поможем к ней прийти.</string>
     <string name="onboarding_default_name">Друг</string>

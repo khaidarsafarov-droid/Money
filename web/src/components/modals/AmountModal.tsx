@@ -57,6 +57,8 @@ export function AmountModal({
       <FormField label="Сумма (USD)" error={error}>
         <input
           className={inputClassName}
+          name="amount"
+          autoComplete="off"
           inputMode="decimal"
           placeholder="50.00"
           value={amount}

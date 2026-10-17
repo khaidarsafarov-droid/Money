@@ -64,6 +64,8 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
       >
         <input
           className={inputClassName}
+          name="goal-name"
+          autoComplete="off"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ремонт грузовика, отпуск, резерв на рейс"
@@ -72,6 +74,8 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
       <FormField label="Сумма цели (USD)" error={error && name.trim() ? error : null}>
         <input
           className={inputClassName}
+          name="goal-amount"
+          autoComplete="off"
           inputMode="decimal"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
@@ -96,6 +100,8 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
         <FormField label="Дата окончания">
           <input
             type="date"
+            name="goal-deadline"
+            autoComplete="off"
             className={inputClassName}
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}

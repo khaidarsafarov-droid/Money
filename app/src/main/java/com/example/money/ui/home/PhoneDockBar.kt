@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
+import com.example.money.ui.theme.MoneySpacing
 
 internal enum class PhoneDockTab {
     Home,
@@ -109,6 +111,7 @@ private fun DockItem(
 ) {
     Column(
         modifier = Modifier
+            .defaultMinSize(minWidth = MoneySpacing.minTouchTarget, minHeight = MoneySpacing.minTouchTarget)
             .clip(RoundedCornerShape(16.dp))
             .semantics { this.selected = selected }
             .clickable(onClick = onClick)
@@ -132,7 +135,7 @@ private fun DockItem(
             Text(
                 text = label,
                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 maxLines = 1,
             )
         }

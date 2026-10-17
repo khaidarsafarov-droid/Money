@@ -68,17 +68,21 @@ export function DebtFormModal({ open, onClose, onSubmit }: DebtFormModalProps) {
         </>
       }
     >
-      <FormField label="Кому должен?" error={error}>
+      <FormField label="Кому должен?" error={!name.trim() ? error : null}>
         <input
           className={inputClassName}
+          name="debtor-name"
+          autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Имя или компания"
         />
       </FormField>
-      <FormField label="Сумма долга (USD)">
+      <FormField label="Сумма долга (USD)" error={name.trim() && !parseMoneyInput(target) ? error : null}>
         <input
           className={inputClassName}
+          name="debt-amount"
+          autoComplete="off"
           inputMode="decimal"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
@@ -89,14 +93,21 @@ export function DebtFormModal({ open, onClose, onSubmit }: DebtFormModalProps) {
         <FormField label="Дата выдачи">
           <input
             className={inputClassName}
+            name="date-given"
+            autoComplete="off"
             type="date"
             value={dateGiven}
             onChange={(e) => setDateGiven(e.target.value)}
           />
         </FormField>
-        <FormField label="Срок возврата">
+        <FormField
+          label="Срок возврата"
+          error={name.trim() && parseMoneyInput(target) && dateDue < dateGiven ? error : null}
+        >
           <input
             className={inputClassName}
+            name="date-due"
+            autoComplete="off"
             type="date"
             value={dateDue}
             onChange={(e) => setDateDue(e.target.value)}

@@ -25,16 +25,15 @@ const FEAR_OPTIONS: { id: UserFearId; label: string }[] = [
   { id: "afraid_of_numbers", label: "Мне страшно даже смотреть на цифры" },
 ];
 
-const EMOTIONS: { id: UserEmotion; emoji: string }[] = [
-  { id: "HAPPY", emoji: "😊" },
-  { id: "NEUTRAL", emoji: "😐" },
-  { id: "SAD", emoji: "😔" },
-  { id: "ANGRY", emoji: "😡" },
-  { id: "THINKING", emoji: "🤔" },
+const EMOTIONS: { id: UserEmotion; label: string }[] = [
+  { id: "HAPPY", label: "Радость" },
+  { id: "NEUTRAL", label: "Спокойно" },
+  { id: "SAD", label: "Грусть" },
+  { id: "ANGRY", label: "Злость" },
+  { id: "THINKING", label: "Думаю" },
 ];
 
-const inputClass =
-  "w-full rounded-2xl border border-outline-variant bg-background px-3 py-2.5 text-sm text-on-surface outline-none focus:border-primary";
+const inputClass = "field-control w-full";
 
 export function OnboardingFlow() {
   const { completeOnboarding } = useUserProfile();
@@ -116,17 +115,23 @@ export function OnboardingFlow() {
         {step === 1 && (
           <>
             <h2 className="text-lg font-medium text-on-surface">Как вас зовут?</h2>
-            <input
-              className={`${inputClass} mt-3`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ваше имя"
-            />
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <label className="mt-3 block space-y-1.5">
+              <span className="text-sm text-on-surface-variant">Имя</span>
+              <input
+                className={inputClass}
+                name="name"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ваше имя"
+              />
+            </label>
+            <div className="mt-3 flex flex-wrap gap-2">
               {(["MALE", "FEMALE", "UNSPECIFIED"] as UserGender[]).map((g) => (
                 <button
                   key={g}
                   type="button"
+                  aria-pressed={gender === g}
                   className={gender === g ? "pill-btn-primary text-sm" : "pill-btn-secondary text-sm"}
                   onClick={() => setGender(g)}
                 >
@@ -134,12 +139,18 @@ export function OnboardingFlow() {
                 </button>
               ))}
             </div>
-            <input
-              className={`${inputClass} mt-3`}
-              value={ageText}
-              onChange={(e) => setAgeText(e.target.value.replace(/\D/g, "").slice(0, 2))}
-              placeholder="Возраст (необязательно)"
-            />
+            <label className="mt-3 block space-y-1.5">
+              <span className="text-sm text-on-surface-variant">Возраст (необязательно)</span>
+              <input
+                className={inputClass}
+                name="age"
+                inputMode="numeric"
+                autoComplete="off"
+                value={ageText}
+                onChange={(e) => setAgeText(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                placeholder="Возраст"
+              />
+            </label>
             {isValidDisplayName(name) && (
               <p className="mt-3 text-sm text-primary">Приятно познакомиться, {name.trim()}!</p>
             )}
@@ -217,12 +228,17 @@ export function OnboardingFlow() {
                 </label>
               ))}
             </div>
-            <input
-              className={`${inputClass} mt-3`}
-              value={customFear}
-              onChange={(e) => setCustomFear(e.target.value)}
-              placeholder="Другое"
-            />
+            <label className="mt-3 block space-y-1.5">
+              <span className="text-sm text-on-surface-variant">Другое</span>
+              <input
+                className={inputClass}
+                name="custom-fear"
+                autoComplete="off"
+                value={customFear}
+                onChange={(e) => setCustomFear(e.target.value)}
+                placeholder="Своими словами"
+              />
+            </label>
             <p className="mt-3 text-sm text-on-surface-variant">Мы учтём это. Вы не одиноки в своих переживаниях.</p>
             <button type="button" className="pill-btn-primary mt-6 w-full" onClick={() => setStep(4)}>
               Далее
@@ -233,30 +249,42 @@ export function OnboardingFlow() {
         {step === 4 && (
           <>
             <h2 className="text-lg font-medium text-on-surface">Ваша главная цель</h2>
-            <input
-              className={`${inputClass} mt-3`}
-              value={goalText}
-              onChange={(e) => setGoalText(e.target.value)}
-              placeholder="Например: поехать в путешествие"
-            />
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <label className="mt-3 block space-y-1.5">
+              <span className="text-sm text-on-surface-variant">Цель</span>
+              <input
+                className={inputClass}
+                name="goal"
+                autoComplete="off"
+                value={goalText}
+                onChange={(e) => setGoalText(e.target.value)}
+                placeholder="Например: поехать в путешествие"
+              />
+            </label>
+            <p className="mt-3 text-sm text-on-surface-variant">Как вы себя чувствуете</p>
+            <div className="mt-2 flex flex-wrap gap-2">
               {EMOTIONS.map((item) => (
                 <button
                   key={item.id}
                   type="button"
-                  className={`rounded-md px-2.5 py-1.5 text-lg ${emotion === item.id ? "ring-1 ring-on-surface" : ""}`}
+                  aria-pressed={emotion === item.id}
+                  className={emotion === item.id ? "pill-btn-primary" : "pill-btn-secondary"}
                   onClick={() => setEmotion(item.id)}
                 >
-                  {item.emoji}
+                  {item.label}
                 </button>
               ))}
             </div>
-            <input
-              className={`${inputClass} mt-3`}
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              placeholder="Что важнее всего? Спокойствие, свобода…"
-            />
+            <label className="mt-3 block space-y-1.5">
+              <span className="text-sm text-on-surface-variant">Что важнее всего</span>
+              <input
+                className={inputClass}
+                name="priority"
+                autoComplete="off"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                placeholder="Спокойствие, свобода…"
+              />
+            </label>
             <p className="mt-3 text-sm text-on-surface-variant">
               Спасибо, {displayName}! Мы запомнили вашу цель.
             </p>

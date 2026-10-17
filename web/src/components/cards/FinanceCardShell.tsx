@@ -84,7 +84,7 @@ export function FinanceCardShell({
                 item.status === "COMPLETED"
                   ? "bg-primary/15 text-primary"
                   : overdue
-                    ? "bg-error-container text-error"
+                    ? "bg-error-container text-on-error-container"
                     : "bg-background text-on-surface-variant"
               }`}
             >
@@ -113,7 +113,7 @@ export function FinanceCardShell({
             <button
               type="button"
               onClick={() => onDelete(item)}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-on-surface-variant transition hover:bg-background hover:text-error"
+              className="flex min-h-12 min-w-12 items-center justify-center rounded-md text-on-surface-variant transition hover:bg-background hover:text-error focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               aria-label="Удалить"
             >
               <AppIcon icon={Trash2} size={14} />

@@ -64,19 +64,23 @@
   }
 
   .pill-btn {
-    @apply min-h-11 rounded-full px-4 py-2.5 text-sm font-medium transition-colors duration-150 active:scale-[0.98];
+    @apply min-h-12 rounded-full px-4 py-2.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98];
   }
 
   .pill-btn-primary {
-    @apply rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary/90;
+    @apply min-h-12 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
   }
 
   .pill-btn-secondary {
-    @apply rounded-full border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface transition-colors duration-150 hover:bg-primary-container;
+    @apply min-h-12 rounded-full border border-outline-variant bg-surface-container-lowest px-4 py-2 text-sm font-medium text-on-surface transition-colors duration-150 hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
   }
 
   .pill-btn-ghost {
-    @apply rounded-full bg-transparent px-4 py-2 text-sm font-medium text-on-surface-variant transition-colors duration-150 hover:bg-surface-container-lowest/70 hover:text-on-surface;
+    @apply min-h-12 rounded-full bg-transparent px-4 py-2 text-sm font-medium text-on-surface-variant transition-colors duration-150 hover:bg-surface-container-lowest/70 hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+
+  .field-control {
+    @apply rounded-2xl border border-outline-variant bg-background px-3 py-2.5 text-sm text-on-surface transition-colors focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
   }
 
   .balance-card {
