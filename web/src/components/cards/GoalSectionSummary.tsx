@@ -12,7 +12,7 @@ export function GoalSectionSummary({ items, hideAmounts = false }: GoalSectionSu
   const summary = summarizeGoals(items);
   if (summary.activeCount === 0) return null;
 
-  const english = navigator.language.toLowerCase().startsWith("en");
+  const english = false;
   const saved = formatMoney(summary.savedCents, { hidden: hideAmounts });
   const target = formatMoney(summary.targetCents, { hidden: hideAmounts });
 

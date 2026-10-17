@@ -366,30 +366,22 @@ fun TabletHomeLayout(
             ) {
                 when (section) {
                     HomeSection.Home -> {
-                        val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
                         item {
                             HomePreviewCards(
                                 goalMetrics = goalMetrics,
                                 debtMetrics = debtMetrics,
                                 hideAmounts = privacySettings.hideAmounts,
                                 progressPercent = debtProgressPercent,
-                                onDebtsClick = {
-                                    onDebtTabChange(
-                                        if (debtMetrics.iOweCents > debtMetrics.owedToMeCents) {
-                                            DebtTab.IOwe
-                                        } else {
-                                            DebtTab.OwesMe
-                                        },
-                                    )
+                                onOwesMeClick = {
+                                    onDebtTabChange(DebtTab.OwesMe)
+                                    onSectionChange(HomeSection.Debts)
+                                },
+                                onIOweClick = {
+                                    onDebtTabChange(DebtTab.IOwe)
                                     onSectionChange(HomeSection.Debts)
                                 },
                                 onAccumulatedClick = { onSectionChange(HomeSection.Goals) },
                                 onRemainingClick = { onSectionChange(HomeSection.Goals) },
-                                onProgressClick = {
-                                    onSectionChange(
-                                        if (debtActive > 0) HomeSection.Debts else HomeSection.Goals,
-                                    )
-                                },
                                 modifier = Modifier.padding(bottom = 8.dp),
                             )
                         }
@@ -617,6 +609,7 @@ fun TabletHomeLayout(
                 onAccelerateDebtPayment = onAccelerateDebtPayment,
                 onMarkDebtPaid = onMarkDebtPaid,
                 hideAmounts = privacySettings.hideAmounts,
+                progressPercent = debtProgressPercent,
                 onEditDebtor = onEditDebtor,
                 onDeleteDebtor = onDeleteDebtor,
                 onViewContactHistory = onViewContactHistory,

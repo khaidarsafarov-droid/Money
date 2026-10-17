@@ -472,10 +472,21 @@ internal fun PhoneHomeLayout(
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
                 if (page == HomeTab.Home) {
+                val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
+                val goalPercent = if (goalPool > 0L) {
+                    ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
+                } else {
+                    0
+                }
+                val shownProgress = com.example.money.domain.util.GoalPsychologyEngines.displayedHomeProgressPercent(
+                    iOweActiveCount = debtMetrics.iOweActiveCount,
+                    debtPercent = debtProgressPercent,
+                    goalPercent = goalPercent,
+                )
                 item {
                     Text(
-                        text = if (debtProgressPercent > 0) {
-                            stringResource(R.string.home_greeting_progress, greetingName, debtProgressPercent)
+                        text = if (shownProgress > 0) {
+                            stringResource(R.string.home_greeting_progress, greetingName, shownProgress)
                         } else {
                             stringResource(R.string.home_greeting_simple, greetingName)
                         },
@@ -502,30 +513,22 @@ internal fun PhoneHomeLayout(
                     }
                 }
                 if (page == HomeTab.Home) {
-                    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
                     item {
                         HomePreviewCards(
                             goalMetrics = goalMetrics,
                             debtMetrics = debtMetrics,
                             hideAmounts = privacySettings.hideAmounts,
                             progressPercent = debtProgressPercent,
-                            onDebtsClick = {
-                                onDebtTabChange(
-                                    if (debtMetrics.iOweCents > debtMetrics.owedToMeCents) {
-                                        DebtTab.IOwe
-                                    } else {
-                                        DebtTab.OwesMe
-                                    },
-                                )
+                            onOwesMeClick = {
+                                onDebtTabChange(DebtTab.OwesMe)
+                                onTabSelected(HomeTab.Debts.ordinal)
+                            },
+                            onIOweClick = {
+                                onDebtTabChange(DebtTab.IOwe)
                                 onTabSelected(HomeTab.Debts.ordinal)
                             },
                             onAccumulatedClick = { onTabSelected(HomeTab.Goals.ordinal) },
                             onRemainingClick = { onTabSelected(HomeTab.Goals.ordinal) },
-                            onProgressClick = {
-                                onTabSelected(
-                                    if (debtActive > 0) HomeTab.Debts.ordinal else HomeTab.Goals.ordinal,
-                                )
-                            },
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
                                 vertical = MoneySpacing.sm,

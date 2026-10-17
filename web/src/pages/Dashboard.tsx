@@ -37,7 +37,8 @@ import { useAppPsychology } from "@/hooks/useAppPsychology";
 import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
 import { usePaymentDeepLink } from "@/hooks/usePaymentDeepLink";
-import { formatMoney, formatUsd, parseMoneyInput } from "@/lib/money";
+import { formatMoney, parseMoneyInput } from "@/lib/money";
+import { remainingAmount } from "@/lib/financeEngine";
 import type { FinancialItem } from "@/types/finance";
 
 export function DashboardPage() {
@@ -60,10 +61,6 @@ export function DashboardPage() {
   const hideAmounts = psychology.privacy.hideAmounts;
   const money = useCallback(
     (cents: number) => formatMoney(cents, { hidden: hideAmounts }),
-    [hideAmounts],
-  );
-  const usd = useCallback(
-    (amount: number) => formatUsd(amount, { hidden: hideAmounts }),
     [hideAmounts],
   );
 
@@ -121,27 +118,25 @@ export function DashboardPage() {
     if (!recordQueryNormalized) return true;
     return item.name.toLowerCase().includes(recordQueryNormalized);
   });
+  const debtPaidCents = activeDebts.reduce((sum, debt) => sum + debt.amount, 0);
+  const debtTargetCents = activeDebts.reduce((sum, debt) => sum + debt.target, 0);
   const debtProgressPercent =
-    activeDebts.length > 0
-      ? Math.min(
-          100,
-          Math.floor(
-            (activeDebts.reduce((sum, d) => sum + d.amount, 0) /
-              Math.max(
-                1,
-                activeDebts.reduce((sum, d) => sum + d.target, 0),
-              )) *
-              100,
-          ),
-        )
+    debtTargetCents > 0
+      ? Math.min(100, Math.floor((debtPaidCents * 100) / debtTargetCents))
       : 0;
   const goalPoolCents =
     finance.globalFinance.totalAccumulatedCents + finance.globalFinance.totalRemainingToGoalCents;
   const goalProgressPercent =
     goalPoolCents > 0
-      ? Math.round((finance.globalFinance.totalAccumulatedCents / goalPoolCents) * 100)
+      ? Math.min(100, Math.floor((finance.globalFinance.totalAccumulatedCents * 100) / goalPoolCents))
       : 0;
   const score = activeDebts.length > 0 ? debtProgressPercent : goalProgressPercent;
+  const debtRemainingCents = activeDebts.reduce((sum, debt) => sum + remainingAmount(debt), 0);
+  const ringRemaining = activeDebts.length > 0 ? money(debtRemainingCents) : money(finance.globalFinance.totalRemainingToGoalCents);
+  const ringCaption =
+    activeDebts.length > 0
+      ? `Закрыто ${score}% · осталось ${ringRemaining}`
+      : `Накоплено ${score}% · осталось ${ringRemaining}`;
 
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-32 pt-6">
@@ -197,11 +192,7 @@ export function DashboardPage() {
             <div className="min-w-0">
               <p className="text-sm font-medium text-on-surface-variant">Финансовый контроль</p>
               <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
-                {personalizedGreeting(
-                  userProfile.displayName,
-                  debtProgressPercent,
-                  navigator.language,
-                )}
+                {personalizedGreeting(userProfile.displayName, score, "ru")}
               </h1>
             </div>
             <button
@@ -221,11 +212,11 @@ export function DashboardPage() {
                   <h2 className="text-base font-semibold">Сводка</h2>
                   <div className="grid grid-cols-2 gap-3">
                     <StatCard
-                      label="Долги"
-                      value={usd(finance.dashboardTotals.totalDebtRemainingUsd)}
+                      label="Я должен"
+                      value={money(debtRemainingCents)}
                       icon={HandCoins}
                       hint="Осталось закрыть"
-                      tone="mint"
+                      tone="peach"
                     />
                     <StatCard
                       label="Накоплено"
@@ -241,24 +232,13 @@ export function DashboardPage() {
                       hint="Сколько ещё собрать"
                       tone="sand"
                     />
-                    <StatCard
-                      label="Счёт"
-                      value={`${score}`}
-                      icon={Sparkles}
-                      hint={activeDebts.length > 0 ? "По долгам" : "По целям"}
-                      tone="peach"
-                    />
                   </div>
                 </section>
 
                 <ScoreRing
                   value={score}
-                  label={activeDebts.length > 0 ? "Погашение долгов" : "Накопления"}
-                  caption={
-                    activeDebts.length > 0
-                      ? "Доля уже закрытой суммы долгов"
-                      : "Доля накоплений от суммы целей"
-                  }
+                  label="Прогресс"
+                  caption={ringCaption}
                 />
 
                 {activeDebts.length > 0 ? (

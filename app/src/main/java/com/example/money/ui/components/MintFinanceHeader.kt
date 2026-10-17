@@ -27,7 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.example.money.R
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
+import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 
@@ -49,16 +52,7 @@ fun MintFinanceHeader(
     progressPercent: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-    val goalPercent = if (goalPool > 0L) {
-        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-    } else {
-        0
-    }
-    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
-    val debtScore = if (debtActive > 0) progressPercent else null
-    val usesDebtScore = debtScore != null
-    val score = debtScore?.coerceIn(0, 100) ?: goalPercent
+    val score = homeScore(goalMetrics, debtMetrics, progressPercent, hideAmounts)
     val scheme = MaterialTheme.colorScheme
 
     Column(
@@ -95,12 +89,7 @@ fun MintFinanceHeader(
                 modifier = Modifier.weight(1f),
             )
         }
-        ScoreCard(
-            score = score,
-            caption = stringResource(
-                if (usesDebtScore) R.string.home_score_debts else R.string.home_score_goals,
-            ),
-        )
+        ScoreCard(score = score.percent, caption = score.caption)
     }
 }
 
@@ -147,6 +136,7 @@ private fun ScoreCard(score: Int, caption: String) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
             .background(Brush.linearGradient(listOf(heroStart, heroEnd)))
+            .semantics { contentDescription = caption }
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -164,7 +154,17 @@ private fun ScoreCard(score: Int, caption: String) {
                 fontSize = 16.sp,
             )
         }
-        Box(modifier = Modifier.size(88.dp), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .semantics {
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        current = score.coerceIn(0, 100) / 100f,
+                        range = 0f..1f,
+                    )
+                },
+            contentAlignment = Alignment.Center,
+        ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val stroke = 8.dp.toPx()
                 val arcSize = Size(size.width - stroke, size.height - stroke)
@@ -201,8 +201,8 @@ private fun ScoreCard(score: Int, caption: String) {
 }
 
 /**
- * Four tappable previews on the home screen. Net debt replaces the separate
- * "owes me" and "I owe" tiles; the breakdown stays inside the Debts section.
+ * Phone and tablet list preview: the two debt sides stay separate, and the
+ * ring uses the same percent as its caption.
  */
 @Composable
 fun HomePreviewCards(
@@ -210,27 +210,13 @@ fun HomePreviewCards(
     debtMetrics: DashboardDebtMetrics,
     hideAmounts: Boolean,
     progressPercent: Int?,
-    onDebtsClick: () -> Unit,
+    onOwesMeClick: () -> Unit,
+    onIOweClick: () -> Unit,
     onAccumulatedClick: () -> Unit,
     onRemainingClick: () -> Unit,
-    onProgressClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-    val goalPercent = if (goalPool > 0L) {
-        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-    } else {
-        0
-    }
-    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
-    val score = if (debtActive > 0) {
-        (progressPercent ?: 0).coerceIn(0, 100)
-    } else {
-        goalPercent
-    }
-    val net = debtMetrics.owedToMeCents - debtMetrics.iOweCents
-    val netAmount = Formatters.currencyFromCents(kotlin.math.abs(net), hide = hideAmounts)
-    val netText = if (!hideAmounts && net < 0L) "−$netAmount" else netAmount
+    val score = homeScore(goalMetrics, debtMetrics, progressPercent, hideAmounts)
     val scheme = MaterialTheme.colorScheme
 
     Column(
@@ -239,21 +225,28 @@ fun HomePreviewCards(
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
-                label = stringResource(R.string.tab_debts),
-                value = netText,
-                container = scheme.primaryContainer,
-                onClick = onDebtsClick,
+                label = stringResource(R.string.debt_dashboard_owes_me),
+                value = Formatters.currencyFromCents(debtMetrics.owedToMeCents, hide = hideAmounts),
+                container = scheme.tertiaryContainer,
+                onClick = onOwesMeClick,
                 modifier = Modifier.weight(1f),
             )
             PastelStat(
-                label = stringResource(R.string.home_preview_accumulated),
-                value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
-                container = scheme.tertiaryContainer,
-                onClick = onAccumulatedClick,
+                label = stringResource(R.string.debt_dashboard_i_owe),
+                value = Formatters.currencyFromCents(debtMetrics.iOweCents, hide = hideAmounts),
+                container = scheme.errorContainer,
+                onClick = onIOweClick,
                 modifier = Modifier.weight(1f),
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            PastelStat(
+                label = stringResource(R.string.home_preview_accumulated),
+                value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
+                container = scheme.primaryContainer,
+                onClick = onAccumulatedClick,
+                modifier = Modifier.weight(1f),
+            )
             PastelStat(
                 label = stringResource(R.string.global_balance_remaining_label),
                 value = Formatters.currencyFromCents(goalMetrics.totalRemainingToGoalCents, hide = hideAmounts),
@@ -261,15 +254,43 @@ fun HomePreviewCards(
                 onClick = onRemainingClick,
                 modifier = Modifier.weight(1f),
             )
-            PastelStat(
-                label = stringResource(R.string.home_preview_progress),
-                value = stringResource(R.string.home_preview_progress_value, score),
-                container = scheme.errorContainer,
-                onClick = onProgressClick,
-                modifier = Modifier.weight(1f),
-            )
         }
+        ScoreCard(score = score.percent, caption = score.caption)
     }
+}
+
+private data class HomeScore(val percent: Int, val caption: String)
+
+@Composable
+private fun homeScore(
+    goalMetrics: DashboardGoalMetrics,
+    debtMetrics: DashboardDebtMetrics,
+    progressPercent: Int?,
+    hideAmounts: Boolean,
+): HomeScore {
+    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
+    val goalPercent = if (goalPool > 0L) {
+        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
+    } else {
+        0
+    }
+    val usesDebts = debtMetrics.iOweActiveCount > 0
+    val percent = GoalPsychologyEngines.displayedHomeProgressPercent(
+        iOweActiveCount = debtMetrics.iOweActiveCount,
+        debtPercent = progressPercent ?: 0,
+        goalPercent = goalPercent,
+    )
+    val remaining = if (usesDebts) {
+        debtMetrics.iOweCents
+    } else {
+        goalMetrics.totalRemainingToGoalCents
+    }
+    val caption = stringResource(
+        if (usesDebts) R.string.home_score_debts else R.string.home_score_goals,
+        percent,
+        Formatters.currencyFromCents(remaining, hide = hideAmounts),
+    )
+    return HomeScore(percent, caption)
 }
 
 @Composable

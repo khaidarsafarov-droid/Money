@@ -45,6 +45,7 @@ fun HomeDetailPane(
     onAccelerateDebtPayment: (Debtor, Long) -> Unit = { _, _ -> },
     onMarkDebtPaid: (Debtor) -> Unit = {},
     hideAmounts: Boolean = false,
+    progressPercent: Int? = null,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onViewContactHistory: (Debtor) -> Unit = {},
@@ -65,6 +66,7 @@ fun HomeDetailPane(
                     goalMetrics = goalMetrics,
                     debtMetrics = debtMetrics,
                     hideAmounts = hideAmounts,
+                    progressPercent = progressPercent,
                 )
                 Text(
                     text = stringResource(R.string.tablet_detail_overview_hint),

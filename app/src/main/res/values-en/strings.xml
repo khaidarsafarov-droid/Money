@@ -109,8 +109,8 @@
     <string name="widget_goals_debts_title">Goals and debts</string>
     <string name="home_only_goals_debts">Home shows only goals and debts</string>
     <string name="home_score_title">Progress</string>
-    <string name="home_score_debts">Share of debt already paid off</string>
-    <string name="home_score_goals">Share of savings toward goal totals</string>
+    <string name="home_score_debts">Closed %1$d%% · %2$s left</string>
+    <string name="home_score_goals">Saved %1$d%% · %2$s left</string>
     <string name="menu_add_goal">New goal</string>
     <string name="menu_add_debt">New debt</string>
 

@@ -31,7 +31,6 @@ internal fun buildWidgetGoalSnapshot(
     val totalTargetCents = moneyGoals.sumOf { it.targetAmountCents }
     val goalMetrics = GlobalFinanceEngine.activeGoalMetrics(goals)
     val debtMetrics = DebtMetricsEngine.computeMetrics(debts)
-    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
     val debtPercent = GoalPsychologyEngines.totalDebtProgressPercent(debts).coerceIn(0, 100)
     val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
     val goalPercent = if (goalPool > 0L) {
@@ -39,8 +38,12 @@ internal fun buildWidgetGoalSnapshot(
     } else {
         0
     }
-    val scoreUsesDebts = debtActive > 0
-    val score = if (scoreUsesDebts) debtPercent else goalPercent
+    val scoreUsesDebts = debtMetrics.iOweActiveCount > 0
+    val score = GoalPsychologyEngines.displayedHomeProgressPercent(
+        iOweActiveCount = debtMetrics.iOweActiveCount,
+        debtPercent = debtPercent,
+        goalPercent = goalPercent,
+    )
     val overdueDebtCount = debts.count { !it.isPaid && DebtDueDateUtils.isOverdue(it.dateDue, now) }
 
     return WidgetGoalSnapshot(

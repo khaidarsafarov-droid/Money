@@ -10,7 +10,7 @@ export function GamificationBanner({ state }: GamificationBannerProps) {
     return null;
   }
 
-  const locale = navigator.language;
+  const locale = "ru";
   const winMessage = resolveWinMessage(state.lastWinMessage, locale);
   return (
     <SurfaceCard className="space-y-1 text-sm">

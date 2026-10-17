@@ -20,9 +20,12 @@ export function parseMoneyInput(raw: string): number | null {
   return toCents(value);
 }
 
+/** Russian UI, currency code from shared (`USD`) until the web has a region picker. */
+const MONEY_LOCALE = "ru";
+
 export function formatMoney(cents: number, options?: { hidden?: boolean }): string {
   if (options?.hidden) return MASKED_AMOUNT;
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(MONEY_LOCALE, {
     style: "currency",
     currency: APP_CURRENCY,
     maximumFractionDigits: 2,
@@ -30,11 +33,7 @@ export function formatMoney(cents: number, options?: { hidden?: boolean }): stri
 }
 
 export function formatUsd(amount: number, options?: { hidden?: boolean }): string {
-  if (options?.hidden) return MASKED_AMOUNT;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: APP_CURRENCY,
-  }).format(amount);
+  return formatMoney(toCents(amount), options);
 }
 
 export function createId(): string {

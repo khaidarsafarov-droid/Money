@@ -53,13 +53,13 @@ export function OnboardingFlow() {
 
   const totalSteps = 6;
   const parsedAge = ageText ? Number(ageText) : null;
-  const displayName = resolveDisplayName(name, navigator.language);
+  const displayName = resolveDisplayName(name, "ru");
   const psychotypeQuestion = PSYCHOTYPE_QUESTIONS[psychotypeQuestionIndex];
 
   const finish = () => {
     const psychotype = psychotypeResult ?? determinePsychotype(answers);
     completeOnboarding({
-      displayName: resolveDisplayName(name, navigator.language),
+      displayName: resolveDisplayName(name, "ru"),
       gender,
       age: parsedAge && isValidAge(parsedAge) ? parsedAge : null,
       fears,

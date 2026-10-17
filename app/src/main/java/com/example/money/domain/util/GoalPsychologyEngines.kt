@@ -153,13 +153,21 @@ object GoalPsychologyEngines {
             now = now,
         )
 
+    /**
+     * Paid share of active «I owe» debts only. Money owed to the user is a
+     * separate tile and does not move this percent.
+     */
     fun totalDebtProgressPercent(debtors: List<Debtor>): Int {
-        val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR }
+        val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }
         val total = iOwe.sumOf { it.targetAmountCents }
         if (total <= 0L) return 0
         val paid = iOwe.sumOf { it.currentAmountCents }
         return ((paid.toDouble() / total) * 100).toInt().coerceAtMost(100)
     }
+
+    /** Ring follows «I owe» when any of those debts are still open, otherwise goals. */
+    fun displayedHomeProgressPercent(iOweActiveCount: Int, debtPercent: Int, goalPercent: Int): Int =
+        if (iOweActiveCount > 0) debtPercent.coerceIn(0, 100) else goalPercent.coerceIn(0, 100)
 
     fun daysUntilPayday(paydayDayOfMonth: Int, now: Long = System.currentTimeMillis()): Int {
         val calendar = java.util.Calendar.getInstance().apply { timeInMillis = now }

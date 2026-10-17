@@ -65,8 +65,8 @@ export function FinanceCardShell({
   const progressPercent = progressPercentRaw(item);
   const overAchieved = !taskGoal && item.type === "GOAL" && isGoalOverAchieved(item);
   const daily = !taskGoal && item.type === "GOAL" ? dailyGoalCents(item) : null;
-  const locale = navigator.language;
-  const english = locale.toLowerCase().startsWith("en");
+  const locale = "ru";
+  const english = false;
   const daysLeft = item.type === "GOAL" && item.dateDeadline ? daysUntilDeadline(item.dateDeadline) : null;
   const visibleHistory = item.history.filter((payment) => !payment.deleted);
 

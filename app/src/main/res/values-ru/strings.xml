@@ -89,8 +89,8 @@
     <string name="widget_goals_debts_title">Цели и долги</string>
     <string name="home_only_goals_debts">На главной только цели и долги</string>
     <string name="home_score_title">Прогресс</string>
-    <string name="home_score_debts">Доля уже закрытой суммы долгов</string>
-    <string name="home_score_goals">Доля накоплений от суммы целей</string>
+    <string name="home_score_debts">Закрыто %1$d%% · осталось %2$s</string>
+    <string name="home_score_goals">Накоплено %1$d%% · осталось %2$s</string>
     <string name="menu_add_goal">Новая цель</string>
     <string name="menu_add_debt">Новый долг</string>
 
