@@ -5,7 +5,7 @@ data class GoalProgress(
     val balance: Double,
     val spentOrAllocated: Double,
 ) {
-    /** Прогресс = остаток бюджета (переводы − расходы) относительно цели. */
+    /** Прогресс этой цели: её переводы минус её расходы, относительно её суммы. */
     val progressFraction: Float
         get() = if (targetAmount <= 0) 0f else (balance / targetAmount).toFloat().coerceIn(0f, 1f)
 

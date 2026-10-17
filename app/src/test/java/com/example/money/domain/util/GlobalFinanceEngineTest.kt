@@ -16,7 +16,7 @@ class GlobalFinanceEngineTest {
         )
 
         assertEquals(45_000L, summary.globalBalanceCents)
-        assertEquals(25_000L, summary.availableBalanceCents)
+        assertEquals(45_000L, summary.availableBalanceCents)
     }
 
     @Test
@@ -57,7 +57,7 @@ class GlobalFinanceEngineTest {
             totalExpensesCents = 1_000L,
         )
 
-        assertTrue(GlobalFinanceEngine.canAfford(summary, 5_000L))
-        assertFalse(GlobalFinanceEngine.canAfford(summary, 5_001L))
+        assertTrue(GlobalFinanceEngine.canAfford(summary, 9_000L))
+        assertFalse(GlobalFinanceEngine.canAfford(summary, 9_001L))
     }
 }

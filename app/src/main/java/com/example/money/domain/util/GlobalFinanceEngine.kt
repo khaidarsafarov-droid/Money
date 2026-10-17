@@ -17,6 +17,7 @@ object GlobalFinanceEngine {
         totalExpensesCents = totalExpensesCents,
     )
 
+    /** Free-wallet check. Goal savings are not included and are not required. */
     fun canAfford(summary: GlobalFinanceSummary, amountCents: Long): Boolean {
         if (amountCents <= 0L) return false
         return amountCents <= summary.availableBalanceCents

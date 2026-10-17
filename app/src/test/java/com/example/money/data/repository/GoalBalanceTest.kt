@@ -9,6 +9,7 @@ import com.example.money.domain.model.Expense
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.model.Transfer
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -67,27 +68,43 @@ class GoalBalanceTest {
     }
 
     @Test
-    fun addGoalTransferIfAffordable_rejectsWhenFreeBalanceIsShort() = runBlocking {
-        budget.addDeposit(Transfer(amountCents = 10_000L, date = 1L))
-        budget.addExpense(Expense(amountCents = 3_000L, category = "Food", date = 2L))
-        val goalId = database.savingsGoalDao().insert(
+    fun goalTransfersStayOnEachGoalAndDoNotUseASharedRemainder() = runBlocking {
+        val goalA = database.savingsGoalDao().insert(
             SavingsGoalEntity(name = "Trip", targetAmountCents = 50_000L, updatedAt = 1L),
+        )
+        val goalB = database.savingsGoalDao().insert(
+            SavingsGoalEntity(name = "Reserve", targetAmountCents = 20_000L, updatedAt = 1L),
         )
 
         assertTrue(
             budget.addGoalTransferIfAffordable(
-                Transfer(amountCents = 4_000L, date = 3L, goalId = goalId),
+                Transfer(amountCents = 8_000L, date = 1L, goalId = goalA),
+            ),
+        )
+        assertTrue(
+            budget.addGoalTransferIfAffordable(
+                Transfer(amountCents = 3_000L, date = 2L, goalId = goalB),
+            ),
+        )
+        assertTrue(
+            budget.addExpenseIfAffordable(
+                Expense(amountCents = 2_000L, category = "Ticket", date = 3L, goalId = goalA),
             ),
         )
         assertFalse(
-            budget.addGoalTransferIfAffordable(
-                Transfer(amountCents = 4_000L, date = 4L, goalId = goalId),
+            budget.addExpenseIfAffordable(
+                Expense(amountCents = 7_000L, category = "Hotel", date = 4L, goalId = goalA),
             ),
         )
 
-        val goalTransfers = database.transferDao().getAllOnce().filter { it.goalId != null }
-        assertEquals(1, goalTransfers.size)
-        assertEquals(4_000L, goalTransfers.single().amountCents)
+        assertEquals(8_000L, database.transferDao().getGoalTransferTotalOnce(goalA))
+        assertEquals(3_000L, database.transferDao().getGoalTransferTotalOnce(goalB))
+        assertEquals(2_000L, database.expenseDao().getGoalExpenseTotalOnce(goalA))
+        assertEquals(0L, database.expenseDao().getGoalExpenseTotalOnce(goalB))
+
+        val summary = budget.observeBudgetSummary().first()
+        assertEquals(0L, summary.availableBalanceCents)
+        assertEquals(11_000L, summary.totalGoalAllocatedCents)
     }
 
     @Test

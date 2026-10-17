@@ -26,14 +26,36 @@ describe("computeGlobalFinanceSummary", () => {
     expect(summary.totalAccumulatedCents).toBe(20_000);
   });
 
-  it("lets a goal contribution succeed when the free wallet is empty", () => {
-    const withGoal = addGoal(emptyState, { name: "Trip", target: 100_000 });
-    const goalId = withGoal.items[0]!.id;
-    const result = addTransaction(withGoal, { kind: "GOAL_TRANSFER", amountCents: 20_000, goalId });
-    expect(result.error).toBeUndefined();
-    const summary = computeGlobalFinanceSummary(result.state);
+  it("keeps each goal independent of the free wallet and of other goals", () => {
+    const withGoals = addGoal(
+      addGoal(emptyState, { name: "Trip", target: 100_000 }),
+      { name: "Reserve", target: 40_000 },
+    );
+    const tripId = withGoals.items.find((item) => item.name === "Trip")!.id;
+    const reserveId = withGoals.items.find((item) => item.name === "Reserve")!.id;
+
+    let state = addTransaction(withGoals, { kind: "GOAL_TRANSFER", amountCents: 20_000, goalId: tripId }).state;
+    state = addTransaction(state, { kind: "GOAL_TRANSFER", amountCents: 5_000, goalId: reserveId }).state;
+    const spent = addTransaction(state, {
+      kind: "EXPENSE",
+      amountCents: 4_000,
+      goalId: tripId,
+    });
+    expect(spent.error).toBeUndefined();
+    state = spent.state;
+
+    const blocked = addTransaction(state, {
+      kind: "EXPENSE",
+      amountCents: 17_000,
+      goalId: tripId,
+    });
+    expect(blocked.error).toBeTruthy();
+
+    const enriched = enrichFinanceState(state);
+    const summary = computeGlobalFinanceSummary(enriched);
     expect(summary.availableBalanceCents).toBe(0);
-    expect(summary.totalAccumulatedCents).toBe(20_000);
+    expect(enriched.items.find((item) => item.id === tripId)?.amount).toBe(16_000);
+    expect(enriched.items.find((item) => item.id === reserveId)?.amount).toBe(5_000);
   });
 
   it("spends a goal expense only from that goal", () => {

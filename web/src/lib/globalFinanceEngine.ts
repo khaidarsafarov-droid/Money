@@ -116,7 +116,7 @@ export function addTransaction(
       return { state, error: "Недостаточно средств на цели" };
     }
   } else if (input.kind === "EXPENSE" && input.amountCents > summary.availableBalanceCents) {
-    return { state, error: "Недостаточно средств на общем остатке" };
+    return { state, error: "Недостаточно свободных средств" };
   }
 
   if (input.kind === "GOAL_TRANSFER" && !input.goalId) {

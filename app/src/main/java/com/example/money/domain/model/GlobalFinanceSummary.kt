@@ -11,7 +11,10 @@ data class GlobalFinanceSummary(
     val globalBalanceCents: Long
         get() = totalDepositsCents - totalExpensesCents
 
-    /** Free wallet: deposits minus net goal transfers minus wallet expenses. */
+    /**
+     * Free wallet only: deposits minus expenses that are not tied to a goal.
+     * Goal savings are not part of this figure and do not reduce it.
+     */
     val availableBalanceCents: Long
-        get() = totalDepositsCents - totalGoalAllocatedCents - totalExpensesCents
+        get() = globalBalanceCents
 }

@@ -74,9 +74,9 @@ export interface GlobalFinanceSummary {
   totalAccumulatedCents: number;
   /** Sum of (target − accumulated) for active goals. */
   totalRemainingToGoalCents: number;
-  /** Free wallet: deposits minus expenses that are not tied to a goal. */
+  /** Free wallet: deposits minus expenses that are not tied to a goal. Goal savings are separate. */
   globalBalanceCents: number;
-  /** Free wallet available for expenses that are not tied to a goal. */
+  /** Same free wallet. A goal's balance does not reduce it. */
   availableBalanceCents: number;
 }
 
