@@ -101,6 +101,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
+                SqlCipherLibrary.load()
                 val appContext = context.applicationContext
                 val passphrase = DatabasePassphrase(appContext).getOrCreate()
                 checkpointPlaintextWal(appContext)
