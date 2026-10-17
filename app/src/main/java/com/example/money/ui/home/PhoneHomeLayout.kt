@@ -24,6 +24,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -84,6 +88,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
@@ -421,11 +426,16 @@ internal fun PhoneHomeLayout(
             val motionEnabled = systemMotionEnabled(LocalContext.current)
             val tabSlide = tween<IntOffset>(durationMillis = 250)
             val tabFade = tween<Float>(durationMillis = 250)
+            val layoutDirection = LocalLayoutDirection.current
+            val listPadding = PaddingValues(
+                start = innerPadding.calculateStartPadding(layoutDirection),
+                top = innerPadding.calculateTopPadding(),
+                end = innerPadding.calculateEndPadding(layoutDirection),
+                bottom = innerPadding.calculateBottomPadding() + 24.dp,
+            )
             AnimatedContent(
                 targetState = selectedTab,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = Modifier.fillMaxSize(),
                 transitionSpec = {
                     if (!motionEnabled) {
                         EnterTransition.None togetherWith ExitTransition.None
@@ -459,7 +469,11 @@ internal fun PhoneHomeLayout(
                     onNoteBodyChange = onNoteBodyChange,
                     onFlushNoteDraft = onFlushNoteDraft,
                     noteDraftBlocksRemote = noteDraftBlocksRemote,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .consumeWindowInsets(innerPadding)
+                        .imePadding(),
                 )
             } else LazyColumn(
                 state = when (page) {
@@ -468,8 +482,11 @@ internal fun PhoneHomeLayout(
                     HomeTab.Debts -> listState
                     HomeTab.Notes -> listState
                 },
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
+                contentPadding = listPadding,
             ) {
                 if (page == HomeTab.Home) {
                 val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents

@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -175,12 +180,16 @@ fun TabletHomeLayout(
         topBar = topBar,
         floatingActionButton = floatingActionButton,
     ) { innerPadding ->
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-            NavigationRail(containerColor = MaterialTheme.colorScheme.background) {
+        val layoutDirection = LocalLayoutDirection.current
+        val safeTop = innerPadding.calculateTopPadding()
+        val safeBottom = innerPadding.calculateBottomPadding()
+        val safeStart = innerPadding.calculateStartPadding(layoutDirection)
+        val safeEnd = innerPadding.calculateEndPadding(layoutDirection)
+        Row(modifier = Modifier.fillMaxSize()) {
+            NavigationRail(
+                modifier = Modifier.padding(start = safeStart, top = safeTop, bottom = safeBottom),
+                containerColor = MaterialTheme.colorScheme.background,
+            ) {
                 val railColors = NavigationRailItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -356,13 +365,23 @@ fun TabletHomeLayout(
                     noteDraftBlocksRemote = noteDraftBlocksRemote,
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .padding(top = safeTop, bottom = safeBottom, end = safeEnd)
+                        .consumeWindowInsets(innerPadding)
+                        .imePadding(),
                 )
             } else LazyColumn(
                 modifier = Modifier
                     .weight(0.42f)
-                    .fillMaxHeight(),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    .fillMaxHeight()
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = safeTop + 8.dp,
+                    bottom = safeBottom + 8.dp,
+                ),
             ) {
                 when (section) {
                     HomeSection.Home -> {
@@ -617,7 +636,10 @@ fun TabletHomeLayout(
                 onRemoveCalendar = onRemoveCalendar,
                 modifier = Modifier
                     .weight(0.58f)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    .padding(top = safeTop, bottom = safeBottom, end = safeEnd)
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
             )
             }
         }
