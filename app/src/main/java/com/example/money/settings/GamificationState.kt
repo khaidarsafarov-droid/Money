@@ -6,10 +6,3 @@ data class GamificationState(
     val unlockedBadges: Set<String> = emptySet(),
     val lastWinMessage: String? = null,
 )
-
-object GamificationBadges {
-    const val FIRST_STEP = "first_step"
-    const val HALF_WAY = "half_way"
-    const val FREEDOM = "freedom"
-    const val STREAK_3 = "streak_3"
-}

@@ -15,7 +15,6 @@ import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.settings.AutopilotSettings
-import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.EmptyIllustration
@@ -29,7 +28,6 @@ import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorFilterRow
-import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.theme.MoneySpacing
 
 fun LazyListScope.homeDebtsSection(
@@ -43,7 +41,6 @@ fun LazyListScope.homeDebtsSection(
     onDebtSearchQueryChange: (String) -> Unit,
     showCheckIn: Boolean,
     onDismissCheckIn: () -> Unit,
-    gamificationState: GamificationState,
     privacySettings: PrivacySettings,
     autopilotSettings: AutopilotSettings,
     onApplyAutopilot: () -> Unit,
@@ -112,12 +109,6 @@ fun LazyListScope.homeDebtsSection(
                     Text(stringResource(R.string.action_close))
                 }
             }
-        }
-        item {
-            GamificationBanner(
-                state = gamificationState,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-            )
         }
     }
     if (debtTab == DebtTab.Calendar) {

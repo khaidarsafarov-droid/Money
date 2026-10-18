@@ -1,13 +1,16 @@
 package com.example.money.ui.debtors
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +32,7 @@ import com.example.money.R
 import com.example.money.data.sync.DebtAdvanceIds
 import com.example.money.domain.model.DebtAdvance
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.MoneyTextField
 import com.example.money.ui.util.Formatters
@@ -41,8 +45,9 @@ fun DebtHistorySheet(
     hideAmounts: Boolean,
     onDismiss: () -> Unit,
     onAddAdvance: (amountCents: Long, givenAt: Long, note: String) -> Unit,
+    onAddPayment: (amountCents: Long, paidAt: Long) -> Unit,
 ) {
-    var showForm by remember(debtor.id) { mutableStateOf(false) }
+    var form by remember(debtor.id) { mutableStateOf(HistoryForm.None) }
     val entries = remember(debtor.id, debtor.advances, debtor.paymentHistory, debtor.targetAmountCents, debtor.dateGiven) {
         historyEntries(debtor)
     }
@@ -81,21 +86,26 @@ fun DebtHistorySheet(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
             }
-            if (showForm) {
-                AdvanceForm(
-                    onCancel = { showForm = false },
+            when (form) {
+                HistoryForm.Advance -> AdvanceForm(
+                    onCancel = { form = HistoryForm.None },
                     onSave = { amountCents, givenAt, note ->
                         onAddAdvance(amountCents, givenAt, note)
-                        showForm = false
+                        form = HistoryForm.None
                     },
                 )
-            } else {
-                Button(
-                    onClick = { showForm = true },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.debt_history_add))
-                }
+                HistoryForm.Payment -> PaymentForm(
+                    remainingCents = debtor.remainingAmountCents,
+                    onCancel = { form = HistoryForm.None },
+                    onSave = { amountCents, paidAt ->
+                        onAddPayment(amountCents, paidAt)
+                        form = HistoryForm.None
+                    },
+                )
+                HistoryForm.None -> HistoryActions(
+                    onTook = { form = HistoryForm.Advance },
+                    onReturned = { form = HistoryForm.Payment },
+                )
             }
         }
     }
@@ -127,6 +137,48 @@ private fun HistoryRow(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+private enum class HistoryForm { None, Advance, Payment }
+
+@Composable
+private fun HistoryActions(
+    onTook: () -> Unit,
+    onReturned: () -> Unit,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val tookFill = historyTookFill(isSystemInDarkTheme())
+    val tookContainer = if (tookFill == HistoryTookFill.ErrorContainer) scheme.errorContainer else scheme.error
+    val tookContent = if (tookFill == HistoryTookFill.ErrorContainer) scheme.onErrorContainer else scheme.onError
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Button(
+            onClick = onTook,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = 48.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = tookContainer,
+                contentColor = tookContent,
+            ),
+        ) {
+            Text(stringResource(R.string.debt_history_took))
+        }
+        Button(
+            onClick = onReturned,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = 48.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = scheme.primary,
+                contentColor = scheme.onPrimary,
+            ),
+        ) {
+            Text(stringResource(R.string.debt_history_returned))
         }
     }
 }
@@ -183,6 +235,69 @@ private fun AdvanceForm(
             }
         }
     }
+}
+
+@Composable
+private fun PaymentForm(
+    remainingCents: Long,
+    onCancel: () -> Unit,
+    onSave: (amountCents: Long, paidAt: Long) -> Unit,
+) {
+    var amountText by remember { mutableStateOf("") }
+    var paidAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var amountError by remember { mutableStateOf<String?>(null) }
+    val positiveError = stringResource(R.string.error_amount_positive)
+    val exceedsError = stringResource(R.string.error_payment_exceeds_remaining)
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        MoneyTextField(
+            value = amountText,
+            onValueChange = {
+                amountText = it
+                amountError = null
+            },
+            label = stringResource(R.string.debt_advance_amount_label),
+            isError = amountError != null,
+            supportingText = amountError,
+        )
+        TextButton(
+            onClick = {
+                amountText = formatAmountInput(remainingCents)
+                amountError = null
+            },
+            modifier = Modifier.heightIn(min = 48.dp),
+        ) {
+            Text(stringResource(R.string.debt_history_pay_all))
+        }
+        DatePickerField(
+            label = stringResource(R.string.debt_advance_date_label),
+            selectedDateMillis = paidAt,
+            onDateSelected = { paidAt = it },
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = onCancel, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(stringResource(R.string.action_cancel))
+            }
+            Button(
+                onClick = {
+                    val cents = InputValidators.parseAmount(amountText)
+                    when {
+                        cents == null || cents <= 0L -> amountError = positiveError
+                        cents > remainingCents -> amountError = exceedsError
+                        else -> onSave(cents, paidAt)
+                    }
+                },
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) {
+                Text(stringResource(R.string.action_save))
+            }
+        }
+    }
+}
+
+private fun formatAmountInput(cents: Long): String {
+    val amount = MoneyMath.fromCents(cents)
+    return if (amount % 1.0 == 0.0) amount.toLong().toString() else amount.toString()
 }
 
 private enum class DebtHistoryKind { Advance, Payment }

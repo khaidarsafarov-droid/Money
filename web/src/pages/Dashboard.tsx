@@ -21,7 +21,6 @@ import { DebtFormModal } from "@/components/modals/DebtFormModal";
 import { GoalFormModal } from "@/components/modals/GoalFormModal";
 import { PaymentModal } from "@/components/modals/PaymentModal";
 import { AdvisorConversation } from "@/components/psychology/DebtAdvisorSheet";
-import { GamificationBanner } from "@/components/psychology/GamificationBanner";
 import { PsychologySettingsPanel } from "@/components/psychology/PsychologySettingsPanel";
 import { AppSideRail, AppTabBar, type AppTab } from "@/components/ui/AppTabBar";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -36,8 +35,8 @@ import { useAppPsychology } from "@/hooks/useAppPsychology";
 import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
 import { usePaymentDeepLink } from "@/hooks/usePaymentDeepLink";
-import { formatMoney, parseMoneyInput } from "@/lib/money";
-import { remainingAmount } from "@/lib/financeEngine";
+import { formatMoney } from "@/lib/money";
+import { remainingAmount, sortItems } from "@/lib/financeEngine";
 import type { FinancialItem } from "@/types/finance";
 
 export function DashboardPage() {
@@ -70,7 +69,7 @@ export function DashboardPage() {
   const homeGoals = finance.state.items.filter(
     (item) => item.type === "GOAL" && item.status !== "COMPLETED" && !item.deleted,
   ).slice(0, 4);
-  const homeDebts = activeDebts.slice(0, 4);
+  const homeDebts = sortItems(activeDebts).slice(0, 4);
 
   const openPayment = useCallback((item: FinancialItem, prefillCents = 0) => {
     setPaymentPrefillCents(prefillCents);
@@ -86,15 +85,10 @@ export function DashboardPage() {
       return;
     }
     const amountInput = (plan.amountCents / 100).toFixed(2);
-    const item = finance.state.items.find((entry) => entry.id === plan.debtId);
     const result = finance.processPayment(plan.debtId, amountInput);
-    if (result.ok && item) {
-      const paymentCents = parseMoneyInput(amountInput);
-      if (paymentCents) {
-        psychology.recordDebtPayment(item, paymentCents);
-      }
+    if (result.ok) {
       showToast("Операция сохранена");
-    } else if (!result.ok) {
+    } else {
       showToast(result.error ?? "Не удалось применить платёж", "info");
     }
   }, [finance, psychology, showToast]);
@@ -232,15 +226,10 @@ export function DashboardPage() {
                   caption={ringCaption}
                 />
 
-                {activeDebts.length > 0 ? (
-                  <>
-                    <GamificationBanner state={psychology.gamification} />
-                    {psychology.autopilot.enabled ? (
-                      <button type="button" onClick={applyAutopilot} className="pill-btn-primary w-full">
-                        Внести сейчас
-                      </button>
-                    ) : null}
-                  </>
+                {activeDebts.length > 0 && psychology.autopilot.enabled ? (
+                  <button type="button" onClick={applyAutopilot} className="pill-btn-primary w-full">
+                    Внести сейчас
+                  </button>
                 ) : null}
 
                 {homeGoals.length === 0 && homeDebts.length === 0 ? (
@@ -348,7 +337,11 @@ export function DashboardPage() {
                           onAddPayment={openPayment}
                           onAddAdvance={(amountCents, givenAt, note) => {
                             finance.addDebtAdvance(item.id, amountCents, givenAt, note);
-                            showToast("Сумма добавлена в этот долг");
+                            showToast("Добавлено");
+                          }}
+                          onRecordPayment={(amountCents, paidAt) => {
+                            const result = finance.recordDebtPayment(item.id, amountCents, paidAt);
+                            showToast(result.ok ? "Операция сохранена" : (result.error ?? "Не удалось применить платёж"));
                           }}
                           showHistory={item.type === "DEBT"}
                           onGoalTransfer={setTransferGoal}
@@ -389,7 +382,11 @@ export function DashboardPage() {
                         showHistory={selectedRecord.type === "DEBT"}
                         onAddAdvance={(amountCents, givenAt, note) => {
                           finance.addDebtAdvance(selectedRecord.id, amountCents, givenAt, note);
-                          showToast("Сумма добавлена в этот долг");
+                          showToast("Добавлено");
+                        }}
+                        onRecordPayment={(amountCents, paidAt) => {
+                          const result = finance.recordDebtPayment(selectedRecord.id, amountCents, paidAt);
+                          showToast(result.ok ? "Операция сохранена" : (result.error ?? "Не удалось применить платёж"));
                         }}
                         onGoalTransfer={setTransferGoal}
                         onGoalExpense={() => setExpenseGoal(selectedRecord)}
@@ -416,15 +413,8 @@ export function DashboardPage() {
           setPaymentPrefillCents(0);
         }}
         onSubmit={(id, amount) => {
-          const item = paymentItem;
           const result = finance.processPayment(id, amount);
           if (result.ok) {
-            if (item?.type === "DEBT") {
-              const paymentCents = parseMoneyInput(amount);
-              if (paymentCents) {
-                psychology.recordDebtPayment(item, paymentCents);
-              }
-            }
             showToast("Операция сохранена");
           }
           return result;

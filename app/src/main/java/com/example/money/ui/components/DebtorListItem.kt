@@ -349,6 +349,7 @@ private fun DebtDueStatusLabel(status: DebtDueStatus, dateDue: Long) {
             )
         }
         DebtDueStatus.NORMAL -> {
+            if (dateDue <= 0L) return
             Text(
                 text = stringResource(R.string.debtor_due_date, Formatters.dueDateCompact(dateDue)),
                 style = moneyCaptionStyle(),

@@ -72,11 +72,9 @@ import com.example.money.ui.debtors.DebtTab
 import com.example.money.domain.util.GoalProgress
 import com.example.money.settings.AppMode
 import com.example.money.settings.AutopilotSettings
-import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
-import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtSearchField
@@ -121,7 +119,6 @@ fun TabletHomeLayout(
     onOpenDebtor: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
     onMarkDebtPaid: (Debtor) -> Unit = {},
-    gamificationState: GamificationState = GamificationState(),
     privacySettings: PrivacySettings = PrivacySettings(),
     autopilotSettings: AutopilotSettings = AutopilotSettings(),
     onOpenAdvisor: () -> Unit = {},
@@ -529,12 +526,6 @@ fun TabletHomeLayout(
                                         Text(stringResource(R.string.action_close))
                                     }
                                 }
-                            }
-                            item {
-                                GamificationBanner(
-                                    state = gamificationState,
-                                    modifier = Modifier.padding(vertical = 4.dp),
-                                )
                             }
                             item {
                                 DebtorFilterRow(

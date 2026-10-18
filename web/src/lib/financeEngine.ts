@@ -63,9 +63,13 @@ export function isDebtOverdue(item: FinancialItem): boolean {
 }
 
 function itemSortRank(item: FinancialItem): number {
-  if (isDebtOverdue(item)) return 0;
+  if (item.type === "DEBT") {
+    if (item.status === "COMPLETED") return 3;
+    if (!item.dateDue) return 2;
+    if (isDebtOverdue(item)) return 0;
+    return 1;
+  }
   if (
-    item.type === "GOAL" &&
     item.status !== "COMPLETED" &&
     item.dateDeadline &&
     isGoalDeadlinePassed(item.dateDeadline)
@@ -137,6 +141,7 @@ export function processPayment(
   state: FinanceState,
   id: string,
   paymentCents: number,
+  paidAt?: string,
 ): FinanceState {
   if (paymentCents <= 0) return state;
 
@@ -162,7 +167,12 @@ export function processPayment(
     const payment: Payment = {
       id: createId(),
       amount: capped,
-      paidAt: new Date().toISOString(),
+      paidAt: paidAt
+        ? paidAt.includes("T")
+          ? paidAt
+          : `${paidAt}T00:00:00.000Z`
+        : new Date().toISOString(),
+      syncUpdatedAt: Date.now(),
     };
 
     return {

@@ -15,7 +15,7 @@ import {
   sortItems,
 } from "@/lib/financeEngine";
 import { addTransaction } from "@/lib/globalFinanceEngine";
-import type { FinanceState } from "@/types/finance";
+import type { FinanceState, FinancialItem } from "@/types/finance";
 
 const emptyState: FinanceState = { currency: "USD", items: [], transactions: [] };
 
@@ -99,6 +99,24 @@ describe("processPayment", () => {
     expect(remainingAmount(item)).toBe(3_000);
   });
 
+  it("stores the chosen payment date and lowers the same debt", () => {
+    const withDebt = addDebt(emptyState, {
+      name: "Alex",
+      target: 5_000,
+      dateGiven: "2026-01-01",
+      dateDue: "2026-06-01",
+    });
+    const debtId = withDebt.items[0]!.id;
+    const grown = addDebtAdvance(withDebt, debtId, 2_000, "2026-02-01", "");
+    const paid = processPayment(grown, debtId, 1_000, "2026-03-04");
+    const item = paid.items[0]!;
+
+    expect(item.target).toBe(7_000);
+    expect(item.amount).toBe(1_000);
+    expect(remainingAmount(item)).toBe(6_000);
+    expect(item.history[0]?.paidAt).toBe("2026-03-04T00:00:00.000Z");
+  });
+
   it("caps payment at remaining balance", () => {
     const withDebt = addDebt(emptyState, {
       name: "Alex",
@@ -172,6 +190,39 @@ describe("filterByType and sortItems", () => {
     const sorted = sortItems(fresh.items);
     expect(sorted[0]?.name).toBe("Late");
     expect(isDebtOverdue(sorted[0]!)).toBe(true);
+  });
+
+  it("sorts debts oldest overdue, then nearest active, then undated, then paid", () => {
+    const debt = (
+      name: string,
+      dateDue: string | undefined,
+      status: "ACTIVE" | "COMPLETED" = "ACTIVE",
+    ): FinancialItem => ({
+      id: name,
+      type: "DEBT",
+      name,
+      status,
+      amount: status === "COMPLETED" ? 100 : 0,
+      target: 100,
+      history: [],
+      dateDue,
+    });
+    const sorted = sortItems([
+      debt("Later", "2028-01-01"),
+      debt("Paid", "2024-06-01", "COMPLETED"),
+      debt("Nearest", "2027-01-01"),
+      debt("No date", undefined),
+      debt("Oldest overdue", "2024-01-01"),
+      debt("Newer overdue", "2025-06-01"),
+    ]);
+    expect(sorted.map((item) => item.name)).toEqual([
+      "Oldest overdue",
+      "Newer overdue",
+      "Nearest",
+      "Later",
+      "No date",
+      "Paid",
+    ]);
   });
 });
 

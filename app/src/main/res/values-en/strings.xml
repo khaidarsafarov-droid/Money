@@ -138,7 +138,9 @@
     <string name="debt_history_advance">Borrowed %1$s</string>
     <string name="debt_history_payment">Returned %1$s</string>
     <string name="debt_history_empty">No operations yet</string>
-    <string name="debt_history_add">Add to this debt</string>
+    <string name="debt_history_took">Took</string>
+    <string name="debt_history_returned">Returned</string>
+    <string name="debt_history_pay_all">All remaining</string>
     <string name="debt_advance_amount_label">Amount</string>
     <string name="debt_advance_date_label">Date</string>
     <string name="debt_advance_note_label">Note</string>
@@ -345,15 +347,6 @@
     <string name="cd_more_options">More</string>
     <string name="cd_navigate_up">Back</string>
     <string name="settings_open">Settings</string>
-
-    <string name="gamification_streak">Payment streak: %1$d</string>
-    <string name="gamification_win_closed">Debt closed</string>
-    <string name="gamification_win_milestone">A little left to %1$d%%</string>
-    <string name="gamification_win_streak">Streak: %1$d</string>
-    <string name="gamification_badge_first_step">First step</string>
-    <string name="gamification_badge_half_way">Halfway</string>
-    <string name="gamification_badge_freedom">Debts closed</string>
-    <string name="gamification_badge_streak_3">Streak ×3</string>
 
     <string name="autopilot_settings_title">Autopilot</string>
     <string name="autopilot_enabled">Daily micro-payments</string>

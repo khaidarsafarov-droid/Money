@@ -8,6 +8,8 @@ import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.CurrencyRegion
+import com.example.money.ui.debtors.DebtorSort
+
 /**
  * Builds the home-screen numbers the widget shows.
  * The percent is goal savings only and is labeled as goals.
@@ -39,7 +41,9 @@ internal fun buildWidgetGoalSnapshot(
     }
     val scoreUsesDebts = false
     val score = goalPercent
-    val overdueDebtCount = debts.count { !it.isPaid && DebtDueDateUtils.isOverdue(it.dateDue, now) }
+    val overdueDebtCount = debts.count {
+        !it.isPaid && it.dateDue > 0L && DebtDueDateUtils.isOverdue(it.dateDue, now)
+    }
 
     return WidgetGoalSnapshot(
         currentAmount = MoneyMath.fromCents(totalCurrentCents),
@@ -86,7 +90,7 @@ private fun buildWidgetActiveItems(
     val debtItems = debts
         .filter { !it.isPaid && it.remainingAmountCents > 0L }
         .sortedWith(
-            compareByDescending<Debtor> { DebtDueDateUtils.isOverdue(it.dateDue, now) }
+            compareBy<Debtor> { DebtorSort.rank(it, now) }
                 .thenBy { it.dateDue },
         )
         .map { debt ->
@@ -97,7 +101,7 @@ private fun buildWidgetActiveItems(
                 name = debt.name,
                 remainingLabel = formatCents(debt.remainingAmountCents),
                 progressFraction = debt.progressFraction,
-                isOverdue = DebtDueDateUtils.isOverdue(debt.dateDue, now),
+                isOverdue = debt.dateDue > 0L && DebtDueDateUtils.isOverdue(debt.dateDue, now),
             )
         }
 

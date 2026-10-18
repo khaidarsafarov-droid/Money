@@ -46,7 +46,7 @@ interface DebtorDao {
             :filter = 'ALL'
             OR (:filter = 'ACTIVE' AND status != 'COMPLETED')
             OR (:filter = 'PAID' AND status = 'COMPLETED')
-            OR (:filter = 'OVERDUE' AND status != 'COMPLETED' AND date_due < :overdueBefore)
+            OR (:filter = 'OVERDUE' AND status != 'COMPLETED' AND date_due > 0 AND date_due < :overdueBefore)
         )
         AND (
             :searchPattern = '%'

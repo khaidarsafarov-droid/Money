@@ -13,6 +13,7 @@ interface DebtCardProps {
   hideAmounts?: boolean;
   onAddPayment?: (item: FinancialItem, prefillCents?: number) => void;
   onAddAdvance?: (amountCents: number, givenAt: string, note: string) => void;
+  onRecordPayment?: (amountCents: number, paidAt: string) => void;
   showHistory?: boolean;
   onDelete?: (item: FinancialItem) => void;
 }
@@ -22,6 +23,7 @@ export function DebtCard({
   hideAmounts = false,
   onAddPayment,
   onAddAdvance,
+  onRecordPayment,
   showHistory = false,
   onDelete,
 }: DebtCardProps) {
@@ -111,7 +113,14 @@ export function DebtCard({
         ) : null
       }
     />
-    {showHistory ? <DebtHistory item={item} hideAmounts={hideAmounts} onAddAdvance={onAddAdvance} /> : null}
+    {showHistory ? (
+      <DebtHistory
+        item={item}
+        hideAmounts={hideAmounts}
+        onAddAdvance={onAddAdvance}
+        onRecordPayment={onRecordPayment}
+      />
+    ) : null}
     </div>
   );
 }
@@ -120,12 +129,15 @@ function DebtHistory({
   item,
   hideAmounts,
   onAddAdvance,
+  onRecordPayment,
 }: {
   item: FinancialItem;
   hideAmounts: boolean;
   onAddAdvance?: (amountCents: number, givenAt: string, note: string) => void;
+  onRecordPayment?: (amountCents: number, paidAt: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<"none" | "took" | "returned">("none");
   const [amount, setAmount] = useState("");
   const [givenAt, setGivenAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState("");
@@ -136,6 +148,7 @@ function DebtHistory({
     advances.map((advance) => advance.amount),
     payments.map((payment) => payment.amount),
   );
+  const payable = Math.max(item.target - item.amount, 0);
   const rows = [
     ...advances.map((advance) => ({
       id: advance.id,
@@ -177,7 +190,30 @@ function DebtHistory({
               <span className="text-on-surface-variant">{new Date(row.at).toLocaleDateString("ru-RU")}</span>
             </div>
           ))}
-          {onAddAdvance ? (
+          {form === "none" ? (
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                className="history-took min-h-12 rounded-full px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={() => {
+                  setForm("took");
+                  setError(null);
+                }}
+              >
+                Взял
+              </button>
+              <button
+                type="button"
+                className="pill-btn-primary"
+                onClick={() => {
+                  setForm("returned");
+                  setError(null);
+                }}
+              >
+                Отдал
+              </button>
+            </div>
+          ) : (
             <form
               className="grid gap-2 pt-2"
               onSubmit={(event) => {
@@ -187,10 +223,19 @@ function DebtHistory({
                   setError("Сумма должна быть больше 0");
                   return;
                 }
-                onAddAdvance(cents, givenAt, note.trim());
+                if (form === "returned" && cents > payable) {
+                  setError("Сумма превышает остаток долга");
+                  return;
+                }
+                if (form === "took") {
+                  onAddAdvance?.(cents, givenAt, note.trim());
+                } else {
+                  onRecordPayment?.(cents, givenAt);
+                }
                 setAmount("");
                 setNote("");
                 setError(null);
+                setForm("none");
               }}
             >
               <input
@@ -201,6 +246,18 @@ function DebtHistory({
                 aria-label="Сумма"
                 className="min-h-12 rounded-xl border border-outline-variant bg-transparent px-3"
               />
+              {form === "returned" ? (
+                <button
+                  type="button"
+                  className="min-h-12 text-left text-sm font-medium text-primary"
+                  onClick={() => {
+                    setAmount((payable / 100).toFixed(2));
+                    setError(null);
+                  }}
+                >
+                  Весь остаток
+                </button>
+              ) : null}
               <input
                 type="date"
                 value={givenAt}
@@ -208,19 +265,33 @@ function DebtHistory({
                 aria-label="Дата"
                 className="min-h-12 rounded-xl border border-outline-variant bg-transparent px-3"
               />
-              <input
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                placeholder="Заметка"
-                aria-label="Заметка"
-                className="min-h-12 rounded-xl border border-outline-variant bg-transparent px-3"
-              />
+              {form === "took" ? (
+                <input
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder="Заметка"
+                  aria-label="Заметка"
+                  className="min-h-12 rounded-xl border border-outline-variant bg-transparent px-3"
+                />
+              ) : null}
               {error ? <p className="text-sm text-error">{error}</p> : null}
-              <button type="submit" className="pill-btn-primary min-h-12">
-                Добавить в долг
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className="pill-btn-secondary"
+                  onClick={() => {
+                    setForm("none");
+                    setError(null);
+                  }}
+                >
+                  Отмена
+                </button>
+                <button type="submit" className="pill-btn-primary">
+                  Сохранить
+                </button>
+              </div>
             </form>
-          ) : null}
+          )}
         </div>
       ) : null}
     </div>

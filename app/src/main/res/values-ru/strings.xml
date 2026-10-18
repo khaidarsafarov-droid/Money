@@ -122,7 +122,9 @@
     <string name="debt_history_advance">Взял %1$s</string>
     <string name="debt_history_payment">Вернул %1$s</string>
     <string name="debt_history_empty">Пока нет операций</string>
-    <string name="debt_history_add">Добавить в долг</string>
+    <string name="debt_history_took">Взял</string>
+    <string name="debt_history_returned">Отдал</string>
+    <string name="debt_history_pay_all">Весь остаток</string>
     <string name="debt_advance_amount_label">Сумма</string>
     <string name="debt_advance_date_label">Дата</string>
     <string name="debt_advance_note_label">Заметка</string>
@@ -306,8 +308,6 @@
     <string name="advisor_prompt_extra">Что если +$50?</string>
     <string name="advisor_prompt_motivation">Мотивация</string>
 
-    <string name="gamification_streak">Серия платежей: %1$d</string>
-
     <string name="autopilot_settings_title">Автопилот</string>
     <string name="autopilot_enabled">Ежедневные микроплатежи</string>
     <string name="autopilot_daily_amount">Сумма в день</string>
@@ -457,13 +457,6 @@
     <string name="cd_more_options">Ещё</string>
     <string name="cd_navigate_up">Назад</string>
     <string name="settings_open">Настройки</string>
-    <string name="gamification_win_closed">Долг закрыт</string>
-    <string name="gamification_win_milestone">До %1$d%% немного</string>
-    <string name="gamification_win_streak">Серия: %1$d</string>
-    <string name="gamification_badge_first_step">Первый шаг</string>
-    <string name="gamification_badge_half_way">Полпути</string>
-    <string name="gamification_badge_freedom">Долги закрыты</string>
-    <string name="gamification_badge_streak_3">Серия ×3</string>
     <string name="autopilot_round_to_ten">Округлять платёж до $10</string>
     <string name="loan_category_label">Тип долга</string>
     <string name="loan_category_credit_card">Кредитная карта</string>

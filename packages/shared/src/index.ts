@@ -14,7 +14,6 @@ export * from "./debtExtraPayment";
 export * from "./incomeIdeas";
 export * from "./debtFreedomEngine";
 export * from "./debtAdvisorTemplates";
-export * from "./debtGamification";
 export * from "./debtAutopilot";
 export * from "./appPreferences";
 export * from "./sync";

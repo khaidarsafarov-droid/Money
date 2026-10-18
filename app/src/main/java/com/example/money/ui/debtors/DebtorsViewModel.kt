@@ -12,7 +12,6 @@ import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtAutopilotEngine
-import com.example.money.domain.util.DebtGamificationEngine
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.calendar.DebtCalendarSyncService
@@ -22,7 +21,6 @@ import com.example.money.notification.PersonalDebtMessageScheduler
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
 import com.example.money.settings.CalendarSettings
-import com.example.money.settings.GamificationState
 import com.example.money.settings.PersonalBranchSettings
 import com.example.money.settings.PrivacySettings
 import com.example.money.settings.UserProfile
@@ -142,12 +140,6 @@ class DebtorsViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = PrivacySettings(),
-    )
-
-    val gamificationState: StateFlow<GamificationState> = preferencesStore.gamificationState.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = GamificationState(),
     )
 
     val autopilotSettings: StateFlow<AutopilotSettings> = preferencesStore.autopilotSettings.stateIn(
@@ -384,11 +376,20 @@ class DebtorsViewModel(
         return saved
     }
 
-    suspend fun processPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Boolean =
-        recordPaymentSync(debtorId, amountCents, affectsBalance) != null
+    suspend fun processPaymentSync(
+        debtorId: Long,
+        amountCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long = System.currentTimeMillis(),
+    ): Boolean = recordPaymentSync(debtorId, amountCents, affectsBalance, paidAt) != null
 
-    suspend fun recordPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Long? {
-        val paymentId = debtorRepository.recordDebtPayment(debtorId, amountCents, affectsBalance)
+    suspend fun recordPaymentSync(
+        debtorId: Long,
+        amountCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long = System.currentTimeMillis(),
+    ): Long? {
+        val paymentId = debtorRepository.recordDebtPayment(debtorId, amountCents, affectsBalance, paidAt)
         val debtor = debtorRepository.getDebtorById(debtorId)
         if (debtor?.isPaid == true) {
             debtReminderScheduler.cancel(debtorId)
@@ -397,11 +398,8 @@ class DebtorsViewModel(
                 _pendingCalendarClose.value = debtor
             }
         }
-        if (paymentId != null && debtor != null) {
-            recordPaymentGamification(debtor)
-            if (!debtor.isPaid) {
-                syncDebtToCalendar(debtor, force = true)
-            }
+        if (paymentId != null && debtor != null && !debtor.isPaid) {
+            syncDebtToCalendar(debtor, force = true)
         }
         return paymentId
     }
@@ -430,20 +428,6 @@ class DebtorsViewModel(
             affectsBalance = affectsBalance,
         )
         return if (ok) plan else null
-    }
-
-    private suspend fun recordPaymentGamification(debtor: Debtor) {
-        val current = preferencesStore.gamificationState.first()
-        val latest = debtor.paymentHistory.maxByOrNull { it.paidAt } ?: return
-        val next = DebtGamificationEngine.applyPayment(
-            previous = current,
-            paidAtMillis = latest.paidAt,
-            dateDueMillis = debtor.dateDue,
-            currentCents = debtor.currentAmountCents,
-            targetCents = debtor.targetAmountCents,
-            paymentCount = debtor.paymentHistory.size,
-        )
-        preferencesStore.updateGamificationState { next }
     }
 
     fun markAsPaid(id: Long) {
