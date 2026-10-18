@@ -77,11 +77,6 @@ fun IncomeIdeasDialog(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-                Text(
-                    text = stringResource(R.string.income_ideas_subtitle),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium,
-                )
                 INCOME_RESOURCES.forEach { resource ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),

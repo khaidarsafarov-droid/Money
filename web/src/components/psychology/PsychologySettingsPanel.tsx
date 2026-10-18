@@ -20,12 +20,7 @@ export function PsychologySettingsPanel({
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <SurfaceCard className="space-y-3">
-        <div>
-          <h3 className="text-sm font-medium text-on-surface">Приватность</h3>
-          <p className="mt-0.5 text-sm text-on-surface-variant">
-            Скрывайте суммы — вместо цифр показывается •••
-          </p>
-        </div>
+        <h3 className="text-sm font-medium text-on-surface">Приватность</h3>
 
         <label className="flex items-start gap-2 text-sm">
           <input
@@ -44,12 +39,7 @@ export function PsychologySettingsPanel({
       </SurfaceCard>
 
       <SurfaceCard className="space-y-3">
-        <div>
-          <h3 className="text-sm font-medium text-on-surface">Автопилот</h3>
-          <p className="mt-0.5 text-sm text-on-surface-variant">
-            Ежедневный микроплатёж в выбранный долг одной кнопкой.
-          </p>
-        </div>
+        <h3 className="text-sm font-medium text-on-surface">Автопилот</h3>
 
         <label className="flex items-center gap-2 text-sm">
           <input

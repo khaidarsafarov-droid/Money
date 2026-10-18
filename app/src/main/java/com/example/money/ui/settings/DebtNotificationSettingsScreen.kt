@@ -82,11 +82,6 @@ fun DebtNotificationSettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = stringResource(R.string.debt_notification_settings_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             SettingsToggle(
                 label = stringResource(R.string.debt_notification_personal),
                 checked = settings.debtNotificationsEnabled,

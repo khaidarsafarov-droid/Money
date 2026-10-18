@@ -46,10 +46,6 @@ fun CurrencyPickerDialog(
         title = { Text(stringResource(R.string.currency_settings_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = stringResource(R.string.currency_settings_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                )
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },

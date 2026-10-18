@@ -67,12 +67,6 @@ fun DebtAdvisorBottomSheet(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
-            Text(
-                text = stringResource(R.string.advisor_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AdvisorPrompt.entries.forEach { prompt ->
                     FilterChip(

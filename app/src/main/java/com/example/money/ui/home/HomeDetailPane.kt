@@ -68,11 +68,6 @@ fun HomeDetailPane(
                     hideAmounts = hideAmounts,
                     progressPercent = progressPercent,
                 )
-                Text(
-                    text = stringResource(R.string.tablet_detail_overview_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
             is HomeListSelection.GoalItem -> {
                 Text(

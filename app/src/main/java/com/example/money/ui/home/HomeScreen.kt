@@ -81,6 +81,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -190,9 +191,6 @@ fun HomeScreen(
     } else {
         MaterialTheme.colorScheme.onPrimary
     }
-    val modeLabel = stringResource(
-        if (appMode == AppMode.PROFESSIONAL) R.string.mode_professional else R.string.mode_personal,
-    )
     SideEffect { Formatters.activeRegion = currencyRegion }
     val goalActions by goalViewModel.actions.collectAsStateWithLifecycle()
     val allDebtors by debtorsViewModel.allDebtorsList.collectAsStateWithLifecycle()
@@ -478,18 +476,12 @@ fun HomeScreen(
         val topBar: @Composable () -> Unit = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = modeLabel,
-                            color = modeAccent,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.home_screen_title),
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 },
                 actions = {
                     SingleChoiceSegmentedButtonRow {
@@ -719,7 +711,6 @@ fun HomeScreen(
                 onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
                 onAddDebt = { showAddDebtorDialog = true },
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
-                emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
                 appMode = appMode,
                 onOpenClients = onOpenClients,
             )
@@ -852,7 +843,6 @@ fun HomeScreen(
                 },
                 scope = scope,
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
-                emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
                 appMode = appMode,
                 onOpenClients = onOpenClients,
             )

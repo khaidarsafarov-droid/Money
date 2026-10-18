@@ -357,13 +357,6 @@ fun DebtorFormDialog(
                             )
                         }
                     }
-                    if (loanCategory.isHighPriority) {
-                        Text(
-                            text = stringResource(R.string.loan_category_priority_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
                     OutlinedTextField(
                         value = interestRateText,
                         onValueChange = {

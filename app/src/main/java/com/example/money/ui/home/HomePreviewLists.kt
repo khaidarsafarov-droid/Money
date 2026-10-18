@@ -43,7 +43,6 @@ fun LazyListScope.homeGoalAndDebtPreview(
         item {
             EmptyStateMessage(
                 title = stringResource(R.string.home_only_goals_debts),
-                hint = stringResource(R.string.empty_goals_hint),
                 modifier = Modifier.padding(horizontalPadding),
             )
         }

@@ -63,7 +63,6 @@ fun LazyListScope.homeDebtsSection(
     onSyncCalendar: (Debtor) -> Unit,
     onRemoveCalendar: (Debtor) -> Unit,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
-    emptyDebtorsHint: @Composable (DebtorFilter) -> String,
 ) {
     item {
         DebtTabRow(
@@ -151,7 +150,6 @@ fun LazyListScope.homeDebtsSection(
             item {
                 EmptyStateMessage(
                     title = emptyDebtorsTitle(debtorFilter),
-                    hint = emptyDebtorsHint(debtorFilter),
                     illustration = if (debtSearchQuery.isNotBlank()) {
                         EmptyIllustration.Search
                     } else {

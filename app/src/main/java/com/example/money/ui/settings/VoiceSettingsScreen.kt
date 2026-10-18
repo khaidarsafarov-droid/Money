@@ -154,17 +154,11 @@ fun VoiceSettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.voice_settings_enabled_label),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                text = stringResource(R.string.voice_settings_enabled_hint),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.voice_settings_enabled_label),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                         Switch(
                             checked = settings.enabled,
                             onCheckedChange = withLightHaptic(LocalContext.current, onCheckedChange = viewModel::setEnabled),
@@ -187,7 +181,6 @@ fun VoiceSettingsScreen(
 
                     VoiceSettingSection(
                         title = stringResource(R.string.voice_settings_language_label),
-                        hint = stringResource(R.string.voice_settings_language_hint),
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
@@ -205,7 +198,6 @@ fun VoiceSettingsScreen(
 
                     VoiceSettingSection(
                         title = stringResource(R.string.voice_settings_gender_label),
-                        hint = stringResource(R.string.voice_settings_gender_hint),
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
@@ -226,17 +218,11 @@ fun VoiceSettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.voice_settings_force_silent_label),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                text = stringResource(R.string.voice_settings_force_silent_hint),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.voice_settings_force_silent_label),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                         Switch(
                             checked = settings.forceInSilentMode,
                             onCheckedChange = withLightHaptic(
@@ -281,11 +267,6 @@ fun VoiceSettingsScreen(
                 }
             }
 
-            Text(
-                text = stringResource(R.string.voice_settings_footer),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
@@ -296,16 +277,10 @@ private fun formatTime(hour: Int, minute: Int): String =
 @Composable
 private fun VoiceSettingSection(
     title: String,
-    hint: String,
     content: @Composable () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = title, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = hint,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
         content()
     }
 }

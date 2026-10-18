@@ -59,7 +59,7 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
       }
     >
       <FormField
-        label="Для чего цель?"
+        label="Цель"
         error={error && !name.trim() ? error : null}
       >
         <input
@@ -68,7 +68,7 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
           autoComplete="off"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ремонт грузовика, отпуск, резерв на рейс"
+          placeholder="Отпуск"
         />
       </FormField>
       <FormField label="Сумма цели (USD)" error={error && name.trim() ? error : null}>
@@ -82,18 +82,15 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
           placeholder="1000"
         />
       </FormField>
-      <p className="text-xs text-on-surface-variant">
-        Накопления начинаются с нуля. Сумма записывается только в эту цель.
-      </p>
       <FormField label="Срок цели">
-        <label className="flex items-center gap-3 text-sm text-on-surface-variant">
+        <label className="flex items-center gap-3 text-sm text-on-surface">
           <input
             type="checkbox"
             checked={hasDeadline}
             onChange={(e) => setHasDeadline(e.target.checked)}
             className="size-4 rounded border-outline-variant"
           />
-          Рассчитать ежедневный взнос до дедлайна
+          До даты
         </label>
       </FormField>
       {hasDeadline && (

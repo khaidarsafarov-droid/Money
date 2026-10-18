@@ -83,7 +83,6 @@ export function NotesPanel({ hideAmounts = false }: NotesPanelProps) {
         <EmptyState
           icon={NotebookPen}
           title="Заметок пока нет"
-          description="Текст или расчёт с итогом. Оплаченное отмечается зелёным, долг — красным."
         />
       ) : (
         <ul className="grid gap-3">

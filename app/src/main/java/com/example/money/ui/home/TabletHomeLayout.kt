@@ -164,7 +164,6 @@ fun TabletHomeLayout(
     onSyncCalendar: (Debtor) -> Unit = {},
     onRemoveCalendar: (Debtor) -> Unit = {},
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
-    emptyDebtorsHint: @Composable (DebtorFilter) -> String,
     appMode: AppMode = AppMode.PERSONAL,
     onOpenClients: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -446,7 +445,6 @@ fun TabletHomeLayout(
                             item {
                                 EmptyStateMessage(
                                     title = stringResource(R.string.empty_goals_title),
-                                    hint = stringResource(R.string.empty_goals_hint),
                                     illustration = EmptyIllustration.Goals,
                                 )
                             }
@@ -556,7 +554,6 @@ fun TabletHomeLayout(
                                 item {
                                     EmptyStateMessage(
                                         title = emptyDebtorsTitle(debtorFilter),
-                                        hint = emptyDebtorsHint(debtorFilter),
                                         illustration = if (debtSearchQuery.isNotBlank()) {
                                             EmptyIllustration.Search
                                         } else {

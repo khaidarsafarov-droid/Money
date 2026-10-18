@@ -106,7 +106,7 @@ export function AppSideRail({
       className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col gap-2 border-r border-outline-variant bg-surface-container-low px-3 py-6 min-[600px]:flex"
       aria-label="Разделы"
     >
-      <p className="px-3 pb-2 text-sm font-medium text-on-surface-variant">Финансовый контроль</p>
+      <p className="px-3 pb-2 text-sm font-semibold text-on-surface">Финансы</p>
       {tabs.map((item) => {
         const selected = tab === item.id;
         return (

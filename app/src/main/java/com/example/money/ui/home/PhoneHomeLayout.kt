@@ -230,7 +230,6 @@ internal fun PhoneHomeLayout(
     onApplyAutopilot: () -> Unit,
     scope: kotlinx.coroutines.CoroutineScope,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
-    emptyDebtorsHint: @Composable (DebtorFilter) -> String,
     appMode: AppMode = AppMode.PERSONAL,
     onOpenClients: () -> Unit = {},
 ) {
@@ -579,7 +578,6 @@ internal fun PhoneHomeLayout(
                     item {
                         EmptyStateMessage(
                             title = stringResource(R.string.empty_goals_title),
-                            hint = stringResource(R.string.empty_goals_hint),
                             illustration = EmptyIllustration.Goals,
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
@@ -655,7 +653,6 @@ internal fun PhoneHomeLayout(
                         onSyncCalendar = onSyncCalendar,
                         onRemoveCalendar = onRemoveCalendar,
                         emptyDebtorsTitle = emptyDebtorsTitle,
-                        emptyDebtorsHint = emptyDebtorsHint,
                     )
                 }
             }
@@ -735,12 +732,4 @@ internal fun emptyDebtorsTitle(filter: DebtorFilter): String = when (filter) {
     DebtorFilter.ACTIVE -> stringResource(R.string.empty_debtors_active)
     DebtorFilter.OVERDUE -> stringResource(R.string.empty_debtors_overdue)
     DebtorFilter.PAID -> stringResource(R.string.empty_debtors_paid)
-}
-
-@Composable
-internal fun emptyDebtorsHint(filter: DebtorFilter): String = when (filter) {
-    DebtorFilter.ALL -> stringResource(R.string.empty_debtors_all_hint)
-    DebtorFilter.ACTIVE -> stringResource(R.string.empty_debtors_active_hint)
-    DebtorFilter.OVERDUE -> stringResource(R.string.empty_debtors_overdue_hint)
-    DebtorFilter.PAID -> stringResource(R.string.empty_debtors_paid_hint)
 }

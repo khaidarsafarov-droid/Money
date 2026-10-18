@@ -49,10 +49,6 @@ export function SyncPanel({
         />
       </div>
 
-      <p className="text-xs text-on-surface-variant">
-        URL из меню Android (⋮ → «URL для веб-синхронизации»).
-      </p>
-
       <label className="block space-y-1.5">
         <span className="text-sm text-on-surface-variant">Адрес телефона</span>
         <div className="flex flex-col gap-2 sm:flex-row">

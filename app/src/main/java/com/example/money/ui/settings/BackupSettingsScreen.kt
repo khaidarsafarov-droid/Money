@@ -256,7 +256,6 @@ fun BackupSettingsScreen(
             item {
                 BackupSectionCard(
                     title = stringResource(R.string.backup_local_title),
-                    body = stringResource(R.string.backup_local_hint),
                 ) {
                     Button(
                         onClick = { passwordAction = BackupPasswordAction.LocalExport },
@@ -284,7 +283,6 @@ fun BackupSettingsScreen(
             item {
                 BackupSectionCard(
                     title = stringResource(R.string.backup_automatic_title),
-                    body = stringResource(R.string.backup_automatic_hint),
                 ) {
                     BackupSwitchRow(
                         label = stringResource(R.string.backup_automatic_enabled),

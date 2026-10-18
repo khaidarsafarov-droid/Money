@@ -182,7 +182,6 @@ private fun NotesList(
         if (notes.isEmpty()) {
             EmptyStateMessage(
                 title = stringResource(R.string.notes_empty_title),
-                hint = stringResource(R.string.notes_empty_hint),
                 illustration = EmptyIllustration.Notes,
             )
         } else {

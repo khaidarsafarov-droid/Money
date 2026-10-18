@@ -42,11 +42,6 @@ fun DebtCheckInSheet(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = stringResource(R.string.weekly_checkin_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
                 text = stringResource(
                     R.string.weekly_checkin_remaining,
                     Formatters.currencyFromCents(totalRemaining, hide = hideAmounts),

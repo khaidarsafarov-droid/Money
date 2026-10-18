@@ -83,13 +83,11 @@ fun AutopilotSettingsScreen(
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.autopilot_enabled), fontWeight = FontWeight.SemiBold)
-                        Text(
-                            stringResource(R.string.autopilot_enabled_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
+                    Text(
+                        stringResource(R.string.autopilot_enabled),
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.SemiBold,
+                    )
                     Switch(
                         checked = settings.enabled,
                         onCheckedChange = withLightHaptic(LocalContext.current) { enabled ->
@@ -161,13 +159,11 @@ fun AutopilotSettingsScreen(
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.autopilot_round_to_ten), fontWeight = FontWeight.SemiBold)
-                        Text(
-                            stringResource(R.string.autopilot_round_to_ten_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
+                    Text(
+                        stringResource(R.string.autopilot_round_to_ten),
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.SemiBold,
+                    )
                     Switch(
                         checked = settings.roundPaymentsToTen,
                         onCheckedChange = withLightHaptic(LocalContext.current) { enabled ->
@@ -188,13 +184,11 @@ fun AutopilotSettingsScreen(
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.weekly_checkin_enabled), fontWeight = FontWeight.SemiBold)
-                        Text(
-                            stringResource(R.string.weekly_checkin_enabled_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
+                    Text(
+                        stringResource(R.string.weekly_checkin_enabled),
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.SemiBold,
+                    )
                     Switch(
                         checked = weeklyCheckIn.enabled,
                         onCheckedChange = withLightHaptic(LocalContext.current) { enabled ->

@@ -236,14 +236,6 @@ fun GoalScreen(
                 val days = GoalPsychologyEngines.daysUntilPayday(profile.paydayDayOfMonth)
                 HubCard {
                     Text(stringResource(R.string.goal_hub_payday, days), fontWeight = FontWeight.SemiBold)
-                    Text(stringResource(R.string.goal_hub_autosave_hint))
-                }
-            }
-
-            if (psychotype == FinancialPsychotype.SAVER || psychotype == FinancialPsychotype.BALANCED) {
-                HubCard {
-                    Text(stringResource(R.string.goal_hub_treat_title), fontWeight = FontWeight.SemiBold)
-                    Text(stringResource(R.string.goal_hub_treat_body))
                 }
             }
 
@@ -330,7 +322,6 @@ fun GoalScreen(
                         onCheckedChange = withLightHaptic(context, onCheckedChange = viewModel::setWordPowerEnabled),
                     )
                 }
-                Text(stringResource(R.string.goal_hub_word_power_hint), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -430,7 +421,6 @@ private fun MotivationCard(motivation: String, onMotivationChange: (String) -> U
     var text by remember(motivation) { mutableStateOf(motivation) }
     HubCard {
         Text(stringResource(R.string.goal_hub_motivation_title), fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.goal_hub_motivation_hint), style = MaterialTheme.typography.bodySmall)
         OutlinedTextField(
             value = text,
             onValueChange = {
@@ -514,7 +504,6 @@ private fun VisionBoardCard(
 ) {
     HubCard {
         Text(stringResource(R.string.goal_hub_vision_title), fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.goal_hub_vision_hint), style = MaterialTheme.typography.bodySmall)
         photoPath?.let { path ->
             val bitmap = remember(path) {
                 try {
@@ -565,9 +554,7 @@ private fun ChallengesCard(
                 Text(stringResource(R.string.goal_hub_challenges_add))
             }
         }
-        if (challenges.isEmpty()) {
-            Text(stringResource(R.string.goal_hub_challenges_empty), style = MaterialTheme.typography.bodySmall)
-        } else {
+        if (challenges.isNotEmpty()) {
             challenges.forEach { challenge ->
                 val template = GoalChallengeEngines.templateFor(challenge.templateId)
                 Column(Modifier.padding(vertical = 6.dp)) {

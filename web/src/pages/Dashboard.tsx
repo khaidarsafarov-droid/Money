@@ -99,13 +99,6 @@ export function DashboardPage() {
     }
   }, [finance, psychology, showToast]);
 
-  const emptyDescription =
-    finance.statusFilter === "completed"
-      ? "Завершённые записи появятся здесь."
-      : tab === "debts"
-        ? "Добавьте первый долг, чтобы отслеживать возвраты."
-        : "Создайте цель и начните копить на важную задачу.";
-
   if (!userProfile.onboardingCompleted) {
     return <OnboardingFlow />;
   }
@@ -192,7 +185,6 @@ export function DashboardPage() {
         <>
           <header className="mb-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-on-surface-variant">Финансовый контроль</p>
               <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
                 {personalizedGreeting(userProfile.displayName, score, "ru")}
               </h1>
@@ -217,21 +209,18 @@ export function DashboardPage() {
                       label="Я должен"
                       value={money(debtRemainingCents)}
                       icon={HandCoins}
-                      hint="Осталось закрыть"
                       tone="peach"
                     />
                     <StatCard
                       label="Накоплено"
                       value={money(finance.globalFinance.totalAccumulatedCents)}
                       icon={PiggyBank}
-                      hint="На денежных целях"
                       tone="lilac"
                     />
                     <StatCard
                       label="До целей"
                       value={money(finance.globalFinance.totalRemainingToGoalCents)}
                       icon={Target}
-                      hint="Сколько ещё собрать"
                       tone="sand"
                     />
                   </div>
@@ -257,8 +246,7 @@ export function DashboardPage() {
                 {homeGoals.length === 0 && homeDebts.length === 0 ? (
                   <EmptyState
                     icon={Inbox}
-                    title="Пока только цели и долги"
-                    description="Создайте цель или добавьте долг — всё в одном месте."
+                    title="Пока пусто"
                   />
                 ) : null}
                 {homeGoals.length > 0 ? (
@@ -295,18 +283,16 @@ export function DashboardPage() {
                     {tab === "goals" ? "Цели" : "Долги"} ({listedItems.length})
                   </h2>
                   <label className="block space-y-1.5">
-                    <span className="text-sm text-on-surface-variant">
-                      {tab === "goals" ? "Поиск целей" : "Поиск долгов"}
-                    </span>
                     <span className="flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-4 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
                       <AppIcon icon={Search} size={16} />
                       <input
                         name="q"
                         type="search"
                         autoComplete="off"
+                        aria-label="Поиск"
                         value={recordQuery}
                         onChange={(event) => setRecordQuery(event.target.value)}
-                        placeholder={tab === "goals" ? "Название цели" : "Имя или название"}
+                        placeholder="Поиск"
                         aria-describedby={recordQueryNormalized && listedItems.length === 0 ? "search-empty" : undefined}
                         className="w-full bg-transparent py-3 text-sm text-on-surface placeholder:text-on-surface-variant focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                       />
@@ -324,9 +310,7 @@ export function DashboardPage() {
                   <EmptyState
                     icon={Inbox}
                     title={recordQueryNormalized ? "Ничего не найдено" : "Пока пусто"}
-                    description={
-                      recordQueryNormalized ? "Попробуйте другое название." : emptyDescription
-                    }
+                    description={recordQueryNormalized ? "Другой запрос" : undefined}
                     action={
                       !recordQueryNormalized && finance.statusFilter !== "completed" ? (
                         tab === "goals" ? (
@@ -450,7 +434,6 @@ export function DashboardPage() {
       <AmountModal
         open={transferGoal !== null}
         title={transferGoal ? `Перевод — ${transferGoal.name}` : "Перевод"}
-        hint="Сумма добавится к этой цели."
         submitLabel="Перевести"
         onClose={() => setTransferGoal(null)}
         onSubmit={(amount) => {
@@ -464,7 +447,6 @@ export function DashboardPage() {
       <AmountModal
         open={expenseGoal !== null}
         title={expenseGoal ? `Расход — ${expenseGoal.name}` : "Расход с цели"}
-        hint="Сумма спишется только с этой цели."
         submitLabel="Списать"
         onClose={() => setExpenseGoal(null)}
         onSubmit={(amount) => {

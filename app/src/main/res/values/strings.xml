@@ -1,10 +1,10 @@
 <resources>
+    <string name="home_screen_title">Финансы</string>
     <string name="app_name">Финансовый Контроль</string>
 
     <!-- App language -->
     <string name="app_language_menu">Язык интерфейса</string>
     <string name="app_language_title">Язык приложения</string>
-    <string name="app_language_hint">Выберите язык меню, карточек и уведомлений</string>
     <string name="app_language_system">Как в системе</string>
     <string name="app_language_ru">Русский</string>
     <string name="app_language_en">English</string>
@@ -15,7 +15,7 @@
     <string name="action_delete">Удалить</string>
     <string name="action_mark_paid">Погашено</string>
     <string name="mark_debt_paid_title">Отметить долг погашенным?</string>
-    <string name="mark_debt_paid_message">«%1$s»: остаток %2$s будет отмечен погашенным. Это действие может изменить общий баланс.</string>
+    <string name="mark_debt_paid_message">«%1$s» будет погашен. Остаток %2$s.</string>
     <string name="action_add_payment">Добавить оплату</string>
     <string name="action_make_payment">Внести оплату</string>
     <string name="action_confirm">Подтвердить</string>
@@ -34,13 +34,13 @@
     <string name="notification_debt_overdue_i_owe">Вы просрочили возврат %1$s %2$s на %3$d дн.</string>
     <string name="notification_action_mark_paid">Погашено</string>
     <string name="notification_action_snooze">Напомнить позже</string>
-    <string name="notification_permission_needed">Разрешите уведомления в настройках, чтобы получать напоминания</string>
+    <string name="notification_permission_needed">Разрешите уведомления</string>
     <string name="notification_permission_action">Разрешить уведомления</string>
     <string name="notification_permission_later">Не сейчас</string>
 
     <!-- Widget -->
     <string name="widget_goal_title">Мои финансы</string>
-    <string name="widget_goal_description">Доступный остаток, долги, цели и быстрое добавление</string>
+    <string name="widget_goal_description">Долги и цели</string>
     <string name="widget_score_chip_debts">Долги · %1$d%%</string>
     <string name="widget_score_chip_goals">Цели · %1$d%%</string>
     <string name="widget_preview_score">Цели · 33%</string>
@@ -62,7 +62,7 @@
     <string name="calendar_day_with_debts">День %1$d, есть долги</string>
     <string name="calendar_has_debt_mark">долг</string>
     <string name="calendar_day_empty_cd">День %1$d</string>
-    <string name="widget_remaining_empty">Задайте цель в приложении</string>
+    <string name="widget_remaining_empty">Нет цели</string>
     <string name="widget_quick_add">Быстрое добавление</string>
     <string name="widget_pending_badge">%1$d ждут</string>
     <string name="widget_overdue_debts">%1$d просроч. долг.</string>
@@ -75,7 +75,6 @@
     <string name="nav_more">Ещё</string>
     <string name="tab_notes">Заметки</string>
     <string name="notes_empty_title">Заметок пока нет</string>
-    <string name="notes_empty_hint">Обычная заметка или финансовая с калькулятором.</string>
     <string name="note_add_title">Новая заметка</string>
     <string name="note_title_label">Название</string>
     <string name="note_kind_text">Обычная</string>
@@ -96,8 +95,7 @@
     <string name="note_closed_badge">Закрыта</string>
     <string name="note_edit_line">Исправить</string>
     <string name="currency_settings_title">Валюта</string>
-    <string name="currency_settings_hint">Суммы в приложении показываются в выбранной валюте. Можно выбрать любую.</string>
-    <string name="currency_search">Поиск валюты</string>
+    <string name="currency_search">Поиск</string>
     <string name="widget_goals_debts_title">Цели и долги</string>
     <string name="home_only_goals_debts">На главной только цели и долги</string>
     <string name="home_score_title">Прогресс</string>
@@ -113,7 +111,6 @@
     <string name="sync_web_url_copied">URL скопирован</string>
 
     <string name="section_goals">Цели</string>
-    <string name="tablet_detail_overview_hint">Выберите элемент слева, чтобы увидеть детали и действия.</string>
     <string name="tablet_detail_goal">Цель</string>
     <string name="tablet_detail_debtor">Должник</string>
     <string name="tablet_list_goal_subtitle">%1$s / %2$s · %3$d%%</string>
@@ -125,7 +122,6 @@
 
     <!-- Empty states -->
     <string name="empty_debtors_overdue">Нет просроченных долгов</string>
-    <string name="empty_debtors_overdue_hint">Просроченные долги отображаются здесь автоматически</string>
     <string name="debt_tab_owes_me">Мне должны</string>
     <string name="debt_tab_i_owe">Я должен</string>
     <string name="debt_accelerate">Ускорить</string>
@@ -135,7 +131,7 @@
     <string name="debt_filter_paid">Погашенные</string>
     <string name="debt_add_title_owes_me">Новый долг: Мне должны</string>
     <string name="debt_add_title_i_owe">Новый долг: Я должен</string>
-    <string name="debt_creditor_name_label">Имя кредитора</string>
+    <string name="debt_creditor_name_label">Имя</string>
     <string name="debt_date_received_label">Дата получения</string>
     <string name="debt_note_label">Примечание</string>
     <string name="debt_payment_dialog_title">Добавить оплату</string>
@@ -148,7 +144,7 @@
     <string name="debt_advance_amount_label">Сумма</string>
     <string name="debt_advance_date_label">Дата</string>
     <string name="debt_advance_note_label">Заметка</string>
-    <string name="msg_debt_advance_saved">Сумма добавлена в этот долг</string>
+    <string name="msg_debt_advance_saved">Добавлено</string>
     <string name="error_debt_advance_failed">Не удалось добавить сумму</string>
     <string name="debt_payment_max">Максимум</string>
     <string name="debt_dashboard_owes_me">Мне должны</string>
@@ -180,20 +176,16 @@
     <string name="field_amount">Сумма</string>
     <string name="field_date">Дата</string>
     <string name="field_category">Категория</string>
-    <string name="field_note_optional">Заметка (необязательно)</string>
+    <string name="field_note_optional">Заметка</string>
     <string name="action_add">Добавить</string>
     <string name="empty_debtors_all">Список пуст</string>
-    <string name="empty_debtors_all_hint">Нажмите +, чтобы добавить первый долг</string>
     <string name="empty_debtors_active">Нет активных долгов</string>
-    <string name="empty_debtors_active_hint">Все погашены или смените фильтр «Все»</string>
     <string name="empty_debtors_paid">Нет погашенных долгов</string>
-    <string name="empty_debtors_paid_hint">Отметьте долг как погашенный кнопкой на карточке</string>
     <string name="empty_budget">Нет операций</string>
-    <string name="empty_budget_hint">Нажмите + внизу экрана, чтобы добавить операцию</string>
     <string name="debtor_not_found">Должник не найден</string>
     <string name="error_payment_failed">Не удалось применить платёж</string>
     <string name="debtor_edit_title">Изменить — %1$s</string>
-    <string name="debtor_name_label">Имя должника</string>
+    <string name="debtor_name_label">Имя</string>
     <string name="debtor_amount_label">Сумма долга</string>
     <string name="debtor_date_given_label">Дата выдачи</string>
     <string name="debtor_date_due_label">Срок возврата</string>
@@ -222,13 +214,13 @@
     <string name="msg_debtor_updated">Долг обновлён</string>
     <string name="msg_debtor_paid">Долг отмечен погашенным</string>
     <string name="msg_debtor_deleted">Долг удалён</string>
-    <string name="msg_transfer_added">Перевод сохранён и учтён в балансе.</string>
-    <string name="msg_expense_added">Расход сохранён и учтён в балансе.</string>
+    <string name="msg_transfer_added">Перевод сохранён</string>
+    <string name="msg_expense_added">Расход сохранён</string>
     <string name="msg_insufficient_funds">Недостаточно свободных средств.</string>
     <string name="msg_save_failed">Не удалось сохранить операцию.</string>
     <string name="msg_goal_insufficient">Недостаточно средств на цели.</string>
-    <string name="msg_goal_expense_added">Расход из цели сохранён.</string>
-    <string name="msg_goal_transfer_added">Перевод в цель выполнен.</string>
+    <string name="msg_goal_expense_added">Расход сохранён</string>
+    <string name="msg_goal_transfer_added">Перевод сохранён</string>
     <string name="drawer_group_data">Данные</string>
     <string name="drawer_group_autopilot">Автопилот</string>
     <string name="drawer_group_settings">Настройки</string>
@@ -250,7 +242,6 @@
     <string name="operations_section_title">Операции</string>
     <string name="history_title">История</string>
     <string name="history_readonly_hint">Только просмотр</string>
-    <string name="history_empty_hint">Здесь появится история пополнений, расходов, платежей и записей по целям</string>
     <string name="history_debt_payment">Оплата · %1$s</string>
     <string name="history_debt_opened">Долг · %1$s</string>
     <string name="history_goal_note">Запись · %1$s</string>
@@ -261,9 +252,8 @@
     <string name="operation_goal_transfer">Перевод · %1$s</string>
     <string name="goal_action_transfer">Перевод</string>
     <string name="goal_action_expense">Расход</string>
-    <string name="goal_current_readonly">Накоплено: %1$s (из операций)</string>
+    <string name="goal_current_readonly">Накоплено: %1$s</string>
     <string name="goal_expense_title">Расход из цели</string>
-    <string name="goal_starts_at_zero_hint">Накопления начинаются с нуля. Запишите сумму прямо в цель — свободные деньги от этого не уменьшатся.</string>
     <string name="msg_goal_saved">Цель сохранена</string>
 
     <!-- Dialogs -->
@@ -279,8 +269,6 @@
     <string name="goal_kind_label">Вид цели</string>
     <string name="goal_kind_money">Финансовая цель</string>
     <string name="goal_kind_action">Любая цель</string>
-    <string name="goal_action_kind_hint">Внутри цели можно добавить свои задачи, которые помогут её достичь.</string>
-    <string name="goal_kind_money_hint">В финансовой цели можно добавлять деньги и вести её финансы.</string>
     <string name="goal_actions_title">Шаги к цели</string>
     <string name="goal_action_add">Добавить шаг</string>
     <string name="goal_log_button">Записать</string>
@@ -293,14 +281,13 @@
     <string name="goal_log_collected">Собрано %1$s</string>
     <string name="goal_action_hint">Что сделать</string>
     <string name="goal_action_progress">%1$d из %2$d шагов</string>
-    <string name="goal_action_empty">Добавьте шаги — по ним будет виден прогресс цели</string>
+    <string name="goal_action_empty">Нет шагов</string>
     <string name="goal_edit_title">Изменить — %1$s</string>
-    <string name="goal_name_label">Для чего цель?</string>
-    <string name="goal_name_hint">Например: ремонт грузовика, отпуск, резерв на рейс</string>
+    <string name="goal_name_label">Цель</string>
+    <string name="goal_name_hint">Отпуск</string>
     <string name="goal_purpose_error">Укажите, для чего эта цель</string>
     <string name="goal_target_label">Сумма цели</string>
     <string name="goal_deadline_toggle">Срок цели</string>
-    <string name="goal_deadline_hint">Рассчитать ежедневный взнос до дедлайна</string>
     <string name="goal_deadline_label">Дата окончания</string>
     <string name="goal_deadline_date">Срок: %1$s</string>
     <string name="goal_pace_line">Ежедневно: %1$s · осталось %2$d дн.</string>
@@ -313,7 +300,6 @@
     <string name="msg_goal_added">Цель добавлена</string>
     <string name="msg_goal_deleted">Цель удалена</string>
     <string name="empty_goals_title">Нет целей</string>
-    <string name="empty_goals_hint">Нажмите + внизу экрана, чтобы создать цель</string>
     <string name="delete_goal_title">Удалить цель?</string>
     <string name="delete_goal_message">Цель «%1$s» будет удалена без возможности восстановления.</string>
     <string name="goal_remaining">Осталось: %1$s из %2$s</string>
@@ -322,19 +308,15 @@
     <string name="voice_settings_title">Голосовые отчёты</string>
     <string name="voice_settings_menu">Голосовые отчёты</string>
     <string name="voice_settings_enabled_label">Ежедневный голосовой отчёт</string>
-    <string name="voice_settings_enabled_hint">Озвучивает прогресс целей в заданное время</string>
     <string name="voice_settings_time_title">Время отчёта</string>
     <string name="voice_settings_time_value">Время: %1$s</string>
     <string name="voice_settings_language_label">Язык отчёта</string>
-    <string name="voice_settings_language_hint">Текст и голос TTS для ежедневного отчёта</string>
     <string name="voice_settings_language_ru">RU</string>
     <string name="voice_settings_language_en">EN</string>
     <string name="voice_settings_gender_label">Голос</string>
-    <string name="voice_settings_gender_hint">Выбор мужского или женского системного голоса</string>
     <string name="voice_settings_gender_male">Мужской</string>
     <string name="voice_settings_gender_female">Женский</string>
     <string name="voice_settings_force_silent_label">Воспроизводить в беззвучном режиме</string>
-    <string name="voice_settings_force_silent_hint">Использует поток будильника и повышает громкость на время отчёта</string>
     <string name="voice_settings_test_button">Проверить голос</string>
     <string name="voice_settings_test_running">Воспроизведение…</string>
     <string name="voice_settings_test_title">Голосовой отчёт</string>
@@ -344,7 +326,6 @@
     <string name="voice_settings_test_focus_denied">Не удалось получить аудиофокус.</string>
     <string name="voice_settings_test_unavailable">Синтез речи недоступен на устройстве.</string>
     <string name="voice_settings_test_error">Ошибка воспроизведения.</string>
-    <string name="voice_settings_footer">Отчёт не повторяется, если вы уже открывали приложение сегодня. При подключённой Bluetooth-магнитоле звук идёт через неё. Голос использует системный TTS без интернета.</string>
     <string name="voice_report_no_goals">Привет. У вас пока нет активных целей. Добавьте цель в приложении.</string>
     <string name="voice_report_all_complete">Привет. Все %1$d целей завершены. Отличная работа.</string>
     <string name="voice_report_summary">Привет. Выполнено %1$d%% целей. Накоплено %2$s из %3$s. Осталось %4$s.</string>
@@ -352,16 +333,12 @@
 
     <!-- Privacy (Phase 2) -->
     <string name="privacy_settings_title">Приватность</string>
-    <string name="privacy_settings_hint">Скрывайте суммы на экране и в виджете — никто не увидит цифры без вашего согласия.</string>
     <string name="privacy_hide_amounts">Скрывать суммы в приложении</string>
-    <string name="privacy_hide_amounts_hint">Вместо сумм показывается •••</string>
     <string name="privacy_hide_widget">Скрывать суммы в виджете</string>
-    <string name="privacy_hide_widget_hint">Виджет покажет прогресс без конкретных цифр</string>
     <string name="msg_payment_neutral">Операция сохранена</string>
 
     <!-- Advisor (Phase 3) -->
     <string name="advisor_title">Финансовый советник</string>
-    <string name="advisor_hint">Локальный консультант по вашим данным — без интернета и без API-ключей.</string>
     <string name="advisor_open">Советник</string>
     <string name="advisor_prompt_first">С чего начать?</string>
     <string name="advisor_prompt_extra">Что если +$50?</string>
@@ -370,7 +347,7 @@
     <string name="advisor_prompt_overdue">Просрочки</string>
     <string name="advisor_prompt_goals">Цели</string>
     <string name="advisor_prompt_budget">Бюджет</string>
-    <string name="advisor_input_hint">Спросите советника…</string>
+    <string name="advisor_input_hint">Вопрос</string>
     <string name="advisor_send">Отправить</string>
     <string name="advisor_clear_history">Очистить историю</string>
     <string name="cd_more_options">Ещё</string>
@@ -379,9 +356,9 @@
 
     <!-- Gamification (Phase 4) -->
     <string name="gamification_streak">Серия платежей: %1$d</string>
-    <string name="gamification_win_closed">Долг закрыт — отличная победа!</string>
-    <string name="gamification_win_milestone">До вехи %1$d%% осталось немного. Вы справляетесь.</string>
-    <string name="gamification_win_streak">Серия платежей: %1$d. Так держать.</string>
+    <string name="gamification_win_closed">Долг закрыт</string>
+    <string name="gamification_win_milestone">До %1$d%% немного</string>
+    <string name="gamification_win_streak">Серия: %1$d</string>
     <string name="gamification_badge_first_step">Первый шаг</string>
     <string name="gamification_badge_half_way">Полпути</string>
     <string name="gamification_badge_freedom">Долги закрыты</string>
@@ -390,7 +367,6 @@
     <!-- Autopilot (Phase 5) -->
     <string name="autopilot_settings_title">Автопилот</string>
     <string name="autopilot_enabled">Ежедневные микроплатежи</string>
-    <string name="autopilot_enabled_hint">Напоминание внести небольшую сумму в выбранный долг</string>
     <string name="autopilot_daily_amount">Сумма в день</string>
     <string name="autopilot_strategy">Стратегия</string>
     <string name="autopilot_strategy_current">Сейчас: %1$s</string>
@@ -403,7 +379,6 @@
     <string name="autopilot_notification_title">Микроплатёж по долгу</string>
     <string name="autopilot_notification_body">Сегодня можно внести %1$s</string>
     <string name="autopilot_round_to_ten">Округлять платёж до $10</string>
-    <string name="autopilot_round_to_ten_hint">Лишние $2–$5 автоматически пойдут на основной долг</string>
 
     <!-- Loan categories (Article integration) -->
     <string name="loan_category_label">Тип долга</string>
@@ -413,39 +388,34 @@
     <string name="loan_category_mortgage">Ипотека</string>
     <string name="loan_category_education">Обучение</string>
     <string name="loan_category_other">Другое</string>
-    <string name="loan_category_priority_hint">Приоритетный — закрывайте в первую очередь</string>
     <string name="loan_interest_rate_label">Процентная ставка (%)</string>
 
     <!-- Debt overview -->
-    <string name="debt_overview_title">Ваша отправная точка</string>
+    <string name="debt_overview_title">Сводка</string>
     <string name="debt_overview_owes_me_title">Вам должны</string>
     <string name="debt_overview_count_short">%1$d акт.</string>
 
     <!-- Celebration -->
     <string name="celebration_title">Долг закрыт!</string>
-    <string name="celebration_body">Поздравляем! Вы закрыли долг «%1$s». Выберите бесплатную награду:</string>
-    <string name="celebration_reward_prompt">Как отпразднуете?</string>
+    <string name="celebration_body">Долг «%1$s» закрыт.</string>
+    <string name="celebration_reward_prompt">Награда</string>
     <string name="celebration_reward_walk">Прогулка</string>
     <string name="celebration_reward_movie">Фильм</string>
     <string name="celebration_reward_meal">Любимое блюдо</string>
     <string name="celebration_postcard_title">Я закрыл(а) долг!</string>
-    <string name="celebration_postcard_body">Ещё один шаг сделан — без цифр, только победа.</string>
     <string name="celebration_share">Поделиться</string>
     <string name="celebration_share_text">Я закрыл(а) долг! 🎉</string>
 
     <!-- Weekly check-in -->
     <string name="weekly_checkin_title">Еженедельный чек-ин</string>
-    <string name="weekly_checkin_body">Сводка по долгам «Я должен»:</string>
     <string name="weekly_checkin_remaining">Осталось: %1$s</string>
     <string name="weekly_checkin_closed_count">Закрыто долгов: %1$d</string>
     <string name="weekly_checkin_enabled">Еженедельный чек-ин</string>
-    <string name="weekly_checkin_enabled_hint">Каждое воскресенье — напоминание посмотреть прогресс</string>
     <string name="weekly_checkin_notification_title">Чек-ин по долгам</string>
-    <string name="weekly_checkin_notification_body">Посмотрите, как снизился ваш общий долг на этой неделе</string>
+    <string name="weekly_checkin_notification_body">Итог по долгам</string>
 
     <!-- Income ideas -->
     <string name="income_ideas_title">Идеи для дохода</string>
-    <string name="income_ideas_subtitle">Проверенные ресурсы для подработки:</string>
     <string name="income_calculator_hint">Чтобы закрыть все долги на %2$d мес. быстрее, нужно ~%1$s/мес дополнительного дохода.</string>
 
     <!-- Goal Hub (Phase 7) -->
@@ -453,9 +423,6 @@
     <string name="goal_hub_open">Моя цель</string>
     <string name="goal_hub_psychotype">Ваш психотип: %1$s</string>
     <string name="goal_hub_payday">До зарплаты: %1$d дней</string>
-    <string name="goal_hub_autosave_hint">Автосбережение: отложите $5 сегодня — маленький шаг крупной цели.</string>
-    <string name="goal_hub_treat_title">Разрешите себе</string>
-    <string name="goal_hub_treat_body">$10 на маленькую радость — вы это заслужили.</string>
     <string name="goal_hub_remaining_positive">Осталось инвестировать в себя: %1$s</string>
     <string name="goal_hub_plan_title">Ваш план погашения</string>
     <string name="goal_hub_close_soon">скоро</string>
@@ -463,24 +430,20 @@
     <string name="goal_hub_no_payment_data">Нет данных. Внесите первую оплату для прогноза.</string>
     <string name="goal_hub_fears_title">Ваши внутренние барьеры</string>
     <string name="goal_hub_motivation_title">Моя мотивация</string>
-    <string name="goal_hub_motivation_hint">Что вы сделаете, когда закроете все долги?</string>
-    <string name="goal_hub_motivation_placeholder">Например: поеду в путешествие мечты</string>
+    <string name="goal_hub_motivation_placeholder">Цель</string>
     <string name="goal_hub_luck_add">Добавить запись</string>
     <string name="goal_hub_luck_monthly">За месяц: %1$s · записей: %2$d</string>
     <string name="goal_hub_luck_what">Что произошло?</string>
     <string name="goal_hub_luck_amount">Сумма (необязательно)</string>
     <string name="goal_hub_checklist_title">Еженедельный чек-лист</string>
     <string name="goal_hub_word_power">Сила слов</string>
-    <string name="goal_hub_word_power_hint">Позитивные формулировки вместо «должен» и «просрочено»</string>
     <string name="goal_hub_badges_title">Ваши достижения</string>
     <string name="goal_hub_player_title">Очки к победе</string>
     <string name="goal_hub_player_challenges">Активных челленджей: %1$d</string>
     <string name="goal_hub_vision_title">Доска мечты</string>
-    <string name="goal_hub_vision_hint">Добавьте фото цели — путешествие или дом</string>
     <string name="goal_hub_vision_pick">Выбрать фото</string>
     <string name="goal_hub_vision_clear">Убрать фото</string>
     <string name="goal_hub_challenges_add">Новый челлендж</string>
-    <string name="goal_hub_challenges_empty">Выберите челлендж — маленькие победы ведут к большой цели</string>
     <string name="goal_hub_challenge_progress">Прогресс: %1$d / %2$d</string>
     <string name="goal_hub_challenge_done">Выполнено!</string>
     <string name="goal_hub_challenge_mark_day">+1 день</string>
@@ -543,7 +506,7 @@
     <string name="goal_hub_challenges_title_personal">%1$s, ваши челленджи</string>
 
     <!-- Calendar integration -->
-    <string name="debt_search_hint">Поиск по имени, заметке, телефону или email</string>
+    <string name="debt_search_hint">Поиск</string>
     <string name="debt_search_clear">Очистить поиск</string>
     <string name="debt_action_call">Позвонить</string>
     <string name="debt_action_whatsapp">WhatsApp</string>
@@ -601,11 +564,10 @@
     <string name="debt_remind_channel_unavailable">Недоступно на этом устройстве</string>
 
     <string name="debt_notification_settings_title">Уведомления о долгах</string>
-    <string name="debt_notification_settings_subtitle">Напоминания, авто-сообщения и каналы связи</string>
     <string name="debt_notification_advance_3d">Уведомление за 3 дня до срока</string>
     <string name="debt_notification_advance_1d">Уведомление за 1 день до срока</string>
     <string name="debt_auto_message_title">Авто-сообщения</string>
-    <string name="debt_auto_message_enabled">Автоматические напоминания (WorkManager)</string>
+    <string name="debt_auto_message_enabled">Автосообщения</string>
     <string name="debt_auto_message_sms">Авто-SMS</string>
     <string name="debt_auto_message_whatsapp">Авто WhatsApp</string>
     <string name="debt_auto_message_telegram">Авто Telegram</string>
@@ -628,11 +590,9 @@
     <!-- Backup and restore -->
     <string name="backup_settings_title">Резервные копии</string>
     <string name="backup_local_title">Локальная копия</string>
-    <string name="backup_local_hint">Экспорт и восстановление работают без Google и подключения к интернету.</string>
     <string name="backup_local_export">Сохранить в файл</string>
     <string name="backup_local_import">Выбрать файл для восстановления</string>
     <string name="backup_google_title">Google Диск</string>
-    <string name="backup_google_hint">Подключение необязательно. Копии хранятся в закрытой папке приложения.</string>
     <string name="backup_google_connected">Google Диск подключён</string>
     <string name="backup_google_disconnected">Google Диск не подключён</string>
     <string name="backup_google_reconnect">Требуется повторное подключение Google Диска</string>
@@ -640,7 +600,6 @@
     <string name="backup_reconnect_action">Подключить снова</string>
     <string name="backup_disconnect_action">Отключить Google Диск</string>
     <string name="backup_automatic_title">Автоматическое копирование</string>
-    <string name="backup_automatic_hint">Зашифрованная копия создаётся один раз в день при достаточном заряде.</string>
     <string name="backup_automatic_enabled">Автоматическая копия</string>
     <string name="backup_wifi_only">Только безлимитная сеть Wi‑Fi</string>
     <string name="backup_now">Создать копию сейчас</string>
@@ -701,11 +660,10 @@
     <string name="backup_message_local_data_deleted">Все локальные данные удалены.</string>
     <string name="backup_message_local_data_deleted_with_warnings">Локальные данные удалены, но часть системной очистки не завершена.</string>
     <string name="sync_settings_title">Синхронизация</string>
-    <string name="sync_settings_hint">Сервер включается только здесь. Устройства согласуют ключ по QR или PIN и дальше шифруют обмен.</string>
     <string name="sync_show_qr">Показать QR и PIN</string>
     <string name="sync_pin_label">PIN: %1$s</string>
     <string name="sync_qr_content_description">QR-код привязки</string>
-    <string name="sync_pair_input_label">QR-текст или PIN другого устройства</string>
+    <string name="sync_pair_input_label">QR или PIN</string>
     <string name="sync_pair_action">Привязать устройство</string>
     <string name="sync_pair_saved">Код принят. Обмен начнётся, когда устройство будет в сети.</string>
     <string name="sync_pair_rejected">Код не распознан.</string>
@@ -715,7 +673,7 @@
     <string name="mode_personal_short">Личный</string>
     <string name="mode_professional_short">Работа</string>
     <string name="clients_title">Клиенты</string>
-    <string name="clients_search">Поиск по имени, компании, телефону или почте</string>
+    <string name="clients_search">Поиск</string>
     <string name="clients_sort_name">Имя</string>
     <string name="clients_sort_debt">Сумма долга</string>
     <string name="clients_sort_meeting">Последняя встреча</string>
