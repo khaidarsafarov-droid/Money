@@ -143,6 +143,17 @@
     <string name="debt_date_received_label">Date received</string>
     <string name="debt_note_label">Note</string>
     <string name="debt_payment_dialog_title">Add payment</string>
+    <string name="debt_history_title">History · %1$s</string>
+    <string name="debt_history_remaining">Remaining %1$s</string>
+    <string name="debt_history_advance">Borrowed %1$s</string>
+    <string name="debt_history_payment">Returned %1$s</string>
+    <string name="debt_history_empty">No operations yet</string>
+    <string name="debt_history_add">Add to this debt</string>
+    <string name="debt_advance_amount_label">Amount</string>
+    <string name="debt_advance_date_label">Date</string>
+    <string name="debt_advance_note_label">Note</string>
+    <string name="msg_debt_advance_saved">Amount added to this debt</string>
+    <string name="error_debt_advance_failed">Could not add the amount</string>
     <string name="debt_payment_max">Maximum</string>
     <string name="debt_dashboard_owes_me">Owed to me</string>
     <string name="debt_dashboard_i_owe">I owe</string>

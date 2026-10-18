@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import {
   addDebt as addDebtToState,
+  addDebtAdvance as addDebtAdvanceToState,
   addGoal as addGoalToState,
   computeDashboardTotals,
   filterByType,
@@ -135,6 +136,13 @@ export function useFinanceManager() {
     [persist, enrichedState],
   );
 
+  const addDebtAdvance = useCallback(
+    (debtId: string, amountCents: number, givenAt: string, note = "") => {
+      persist(addDebtAdvanceToState(enrichedState, debtId, amountCents, givenAt, note));
+    },
+    [persist, enrichedState],
+  );
+
   const addDebt = useCallback(
     (input: {
       name: string;
@@ -170,6 +178,7 @@ export function useFinanceManager() {
     addExpense,
     addGoal,
     addDebt,
+    addDebtAdvance,
     removeItem: removeFinancialItem,
     replaceState,
     formatUsd,

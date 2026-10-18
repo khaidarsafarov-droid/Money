@@ -27,6 +27,7 @@ data class Debtor(
     val email: String = "",
     val mode: AppMode = AppMode.PERSONAL,
     val clientId: Long? = null,
+    val advances: List<DebtAdvance> = emptyList(),
 ) {
     val remainingAmountCents: Long
         get() = com.example.money.domain.util.MoneyMath.remainingCents(

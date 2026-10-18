@@ -1,5 +1,6 @@
 package com.example.money.data.sync
 
+import com.example.money.data.local.entity.DebtAdvanceEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
@@ -12,6 +13,7 @@ import com.example.money.domain.sync.FinanceSnapshot
 import com.example.money.data.local.entity.ClientEntity
 import com.example.money.domain.sync.SnapshotClient
 import com.example.money.domain.sync.SnapshotDebt
+import com.example.money.domain.sync.SnapshotDebtAdvance
 import com.example.money.domain.sync.SnapshotDebtPayment
 import com.example.money.domain.sync.SnapshotGoal
 import com.example.money.domain.sync.SnapshotGoalAction
@@ -46,6 +48,7 @@ object FinanceSnapshotCodec {
         snapshot.notes?.let { put("notes", encodeNotes(it)) }
         snapshot.noteLines?.let { put("noteLines", encodeNoteLines(it)) }
         snapshot.clients?.let { put("clients", encodeClients(it)) }
+        snapshot.debtAdvances?.let { put("debtAdvances", encodeDebtAdvances(it)) }
     }.toString()
 
     fun decode(raw: String): FinanceSnapshot {
@@ -84,7 +87,7 @@ object FinanceSnapshotCodec {
                 throw IllegalArgumentException("Snapshot field \"$key\" exceeds maximum record count")
             }
         }
-        listOf("goalActions", "notes", "noteLines", "clients").forEach { key ->
+        listOf("goalActions", "notes", "noteLines", "clients", "debtAdvances").forEach { key ->
             val array = json.optJSONArray(key) ?: return@forEach
             if (array.length() > MAX_RECORD_COUNT) {
                 throw IllegalArgumentException("Snapshot field \"$key\" exceeds maximum record count")
@@ -193,6 +196,9 @@ object FinanceSnapshotCodec {
     fun encodeDebtPayment(record: SnapshotDebtPayment): String =
         encodeDebtPaymentRecord(record).toString()
 
+    fun encodeDebtAdvance(record: SnapshotDebtAdvance): String =
+        encodeDebtAdvanceRecord(record).toString()
+
     fun encodeTransaction(record: SnapshotTransaction): String =
         encodeTransactionRecord(record).toString()
 
@@ -230,6 +236,9 @@ object FinanceSnapshotCodec {
 
     fun decodeDebtPayment(raw: String): SnapshotDebtPayment =
         decodeDebtPayments(JSONArray().put(JSONObject(raw))).single()
+
+    fun decodeDebtAdvance(raw: String): SnapshotDebtAdvance =
+        decodeDebtAdvances(JSONArray().put(JSONObject(raw))).single()
 
     fun decodeTransaction(raw: String): SnapshotTransaction =
         decodeTransactions(JSONArray().put(JSONObject(raw))).single()
@@ -290,6 +299,18 @@ object FinanceSnapshotCodec {
             syncUpdatedAt = syncUpdatedAt,
             mode = entity.mode,
             clientSyncId = clientSyncId,
+        )
+
+    fun toSnapshotDebtAdvance(entity: DebtAdvanceEntity, debtorSyncId: String): SnapshotDebtAdvance =
+        SnapshotDebtAdvance(
+            id = entity.syncId,
+            debtorId = debtorSyncId,
+            amountCents = entity.amountCents,
+            givenAt = SyncDates.formatDateTime(entity.givenAt),
+            note = entity.note,
+            currency = entity.currency,
+            syncUpdatedAt = entity.updatedAt,
+            mode = entity.mode,
         )
 
     fun toSnapshotDebtPayment(entity: DebtPaymentEntity, debtorSyncId: String): SnapshotDebtPayment =
@@ -361,6 +382,7 @@ object FinanceSnapshotCodec {
             notes = json.optJSONArray("notes")?.let(::decodeNotes),
             noteLines = json.optJSONArray("noteLines")?.let(::decodeNoteLines),
             clients = json.optJSONArray("clients")?.let(::decodeClients),
+            debtAdvances = json.optJSONArray("debtAdvances")?.let(::decodeDebtAdvances),
         )
 
     /** Accepts legacy Android v1 snapshots (Long ids, transfers/expenses). */
@@ -516,6 +538,22 @@ object FinanceSnapshotCodec {
             debt.clientSyncId?.let { put("clientSyncId", it) }
         }
 
+    private fun encodeDebtAdvances(advances: List<SnapshotDebtAdvance>): JSONArray =
+        JSONArray().apply { advances.forEach { put(encodeDebtAdvanceRecord(it)) } }
+
+    private fun encodeDebtAdvanceRecord(advance: SnapshotDebtAdvance): JSONObject =
+        JSONObject().apply {
+            put("id", advance.id)
+            put("debtorId", advance.debtorId)
+            put("amountCents", advance.amountCents)
+            put("givenAt", advance.givenAt)
+            put("note", advance.note)
+            advance.currency?.let { put("currency", it) }
+            put("syncUpdatedAt", advance.syncUpdatedAt)
+            put("deleted", advance.deleted)
+            put("mode", advance.mode)
+        }
+
     private fun encodeDebtPaymentRecord(payment: SnapshotDebtPayment): JSONObject =
         JSONObject().apply {
             put("id", payment.id)
@@ -602,6 +640,26 @@ object FinanceSnapshotCodec {
                         deleted = item.optBoolean("deleted", false),
                         mode = item.optMode(),
                         clientSyncId = item.optString("clientSyncId").takeIf { item.has("clientSyncId") && it.isNotBlank() },
+                    ),
+                )
+            }
+        }
+
+    private fun decodeDebtAdvances(array: JSONArray): List<SnapshotDebtAdvance> =
+        buildList {
+            for (index in 0 until array.length()) {
+                val item = array.getJSONObject(index)
+                add(
+                    SnapshotDebtAdvance(
+                        id = item.getString("id"),
+                        debtorId = item.getString("debtorId"),
+                        amountCents = item.getLong("amountCents"),
+                        givenAt = item.getString("givenAt"),
+                        note = item.optString("note", ""),
+                        currency = item.optString("currency").takeIf { item.has("currency") && it.isNotBlank() },
+                        syncUpdatedAt = item.getLong("syncUpdatedAt"),
+                        deleted = item.optBoolean("deleted", false),
+                        mode = item.optMode(),
                     ),
                 )
             }

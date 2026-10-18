@@ -3,6 +3,7 @@ package com.example.money.data.backup
 import androidx.room.withTransaction
 import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.entity.ClientEntity
+import com.example.money.data.local.entity.DebtAdvanceEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
@@ -14,6 +15,7 @@ import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncQueueEntity
 import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
+import com.example.money.data.sync.DebtAdvanceIds
 import com.example.money.data.sync.FinanceSnapshotCodec
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupBundle
@@ -38,6 +40,7 @@ class BackupRoomApplier(
                 val clientLocalIds = insertClients(bundle)
                 val debtorLocalIds = insertDebtors(bundle, clientLocalIds)
                 val paymentLocalIds = insertDebtPayments(bundle, debtorLocalIds)
+                val keptAdvanceIds = insertDebtAdvances(bundle, debtorLocalIds)
                 insertTransfers(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
                 insertExpenses(bundle, goalLocalIds, debtorLocalIds, paymentLocalIds)
                 insertLuckDiaryEntries(bundle)
@@ -46,7 +49,7 @@ class BackupRoomApplier(
                 insertNoteLines(bundle, noteLocalIds)
                 database.syncQueueDao().clearAll()
                 database.syncTombstoneDao().clearAll()
-                writeRestoreTombstones(bundle, prior)
+                writeRestoreTombstones(bundle, prior, keptAdvanceIds)
             }
         }
     }
@@ -56,6 +59,7 @@ class BackupRoomApplier(
             goals = database.savingsGoalDao().getAllGoalsOnce(),
             debtors = database.debtorDao().getAllDebtorsOnce(),
             debtPayments = database.debtPaymentDao().getAllPaymentsOnce(),
+            debtAdvances = database.debtAdvanceDao().getAllOnce(),
             transfers = database.transferDao().getAllOnce(),
             expenses = database.expenseDao().getAllOnce(),
             goalActions = database.goalActionDao().getAllOnce(),
@@ -65,11 +69,16 @@ class BackupRoomApplier(
             tombstones = database.syncTombstoneDao().getAll(),
         )
 
-    private suspend fun writeRestoreTombstones(bundle: BackupBundle, prior: PriorSyncState) {
+    private suspend fun writeRestoreTombstones(
+        bundle: BackupBundle,
+        prior: PriorSyncState,
+        keptAdvanceIds: Set<String>,
+    ) {
         val now = System.currentTimeMillis()
         val goalIds = bundle.goals.map { it.syncId }.toSet()
         val debtorIds = bundle.debtors.map { it.syncId }.toSet()
         val paymentIds = bundle.debtPayments.map { it.syncId }.toSet()
+        val advanceIds = keptAdvanceIds
         val transactionIds = bundle.transfers.map { it.syncId }.toSet() +
             bundle.expenses.map { it.syncId }.toSet()
         val actionIds = bundle.goalActions.map { it.syncId }.toSet()
@@ -94,6 +103,20 @@ class BackupRoomApplier(
                 SyncEntityType.DEBT,
                 debtor.syncId,
                 FinanceSnapshotCodec.encodeDebt(debtor, now, deleted = true),
+                now,
+            )
+        }
+        prior.debtAdvances.filter { it.syncId !in advanceIds }.forEach { advance ->
+            val debtorSyncId = debtorSyncByLocal[advance.debtorId] ?: return@forEach
+            upsertDeleted(
+                SyncEntityType.DEBT_ADVANCE,
+                advance.syncId,
+                FinanceSnapshotCodec.encodeDebtAdvance(
+                    FinanceSnapshotCodec.toSnapshotDebtAdvance(advance, debtorSyncId).copy(
+                        deleted = true,
+                        syncUpdatedAt = now,
+                    ),
+                ),
                 now,
             )
         }
@@ -219,6 +242,7 @@ class BackupRoomApplier(
         val goals: List<SavingsGoalEntity>,
         val debtors: List<DebtorEntity>,
         val debtPayments: List<DebtPaymentEntity>,
+        val debtAdvances: List<DebtAdvanceEntity>,
         val transfers: List<TransferEntity>,
         val expenses: List<ExpenseEntity>,
         val goalActions: List<GoalActionEntity>,
@@ -233,6 +257,7 @@ class BackupRoomApplier(
             goals = database.savingsGoalDao().getAllGoalsOnce(),
             debtors = database.debtorDao().getAllDebtorsOnce(),
             debtPayments = database.debtPaymentDao().getAllPaymentsOnce(),
+            debtAdvances = database.debtAdvanceDao().getAllOnce(),
             transfers = database.transferDao().getAllOnce(),
             expenses = database.expenseDao().getAllOnce(),
             luckDiaryEntries = database.luckDiaryDao().getAllOnce(),
@@ -251,6 +276,7 @@ class BackupRoomApplier(
                 snapshot.clients.forEach { database.clientDao().insert(it) }
                 snapshot.goals.forEach { database.savingsGoalDao().insert(it) }
                 snapshot.debtors.forEach { database.debtorDao().insert(it) }
+                snapshot.debtAdvances.forEach { database.debtAdvanceDao().insert(it) }
                 snapshot.debtPayments.forEach { database.debtPaymentDao().insert(it) }
                 snapshot.transfers.forEach { database.transferDao().insert(it) }
                 snapshot.expenses.forEach { database.expenseDao().insert(it) }
@@ -272,6 +298,7 @@ class BackupRoomApplier(
         database.goalActionDao().clearAll()
         database.transferDao().clearAll()
         database.expenseDao().clearAll()
+        database.debtAdvanceDao().clearAll()
         database.debtPaymentDao().clearAll()
         database.luckDiaryDao().clearAll()
         database.savingsGoalDao().clearAll()
@@ -428,6 +455,51 @@ class BackupRoomApplier(
             }
         }
 
+    private suspend fun insertDebtAdvances(
+        bundle: BackupBundle,
+        debtorLocalIds: Map<String, Long>,
+    ): Set<String> {
+        if (bundle.debtAdvances.isEmpty()) {
+            val seeded = mutableSetOf<String>()
+            database.debtorDao().getAllDebtorsOnce().forEach { debtor ->
+                val syncId = DebtAdvanceIds.opening(debtor.syncId)
+                database.debtAdvanceDao().insert(
+                    DebtAdvanceEntity(
+                        syncId = syncId,
+                        debtorId = debtor.id,
+                        amountCents = debtor.targetAmountCents,
+                        currency = debtor.currency,
+                        givenAt = debtor.dateGiven,
+                        note = "",
+                        mode = debtor.mode,
+                        updatedAt = debtor.dateGiven,
+                    ),
+                )
+                seeded += syncId
+            }
+            return seeded
+        }
+        return bundle.debtAdvances.map { advance ->
+            database.debtAdvanceDao().insert(
+                DebtAdvanceEntity(
+                    syncId = advance.syncId,
+                    debtorId = debtorLocalIds.requireReference(
+                        advance.debtorSyncId,
+                        "Debt advance ${advance.syncId}",
+                        "debtor",
+                    ),
+                    amountCents = advance.amountCents,
+                    currency = advance.currency,
+                    givenAt = advance.givenAtEpochMillis,
+                    note = advance.note,
+                    mode = advance.mode,
+                    updatedAt = advance.updatedAtEpochMillis,
+                ),
+            )
+            advance.syncId
+        }.toSet()
+    }
+
     private suspend fun insertDebtPayments(
         bundle: BackupBundle,
         debtorLocalIds: Map<String, Long>,
@@ -555,6 +627,7 @@ class BackupRoomApplier(
         val goals: List<SavingsGoalEntity>,
         val debtors: List<DebtorEntity>,
         val debtPayments: List<DebtPaymentEntity>,
+        val debtAdvances: List<DebtAdvanceEntity> = emptyList(),
         val transfers: List<TransferEntity>,
         val expenses: List<ExpenseEntity>,
         val luckDiaryEntries: List<LuckDiaryEntryEntity>,

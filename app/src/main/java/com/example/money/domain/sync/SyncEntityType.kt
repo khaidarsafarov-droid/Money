@@ -5,6 +5,7 @@ enum class SyncEntityType {
     GOAL_ACTION,
     DEBT,
     DEBT_PAYMENT,
+    DEBT_ADVANCE,
     TRANSACTION,
     NOTE,
     NOTE_LINE,

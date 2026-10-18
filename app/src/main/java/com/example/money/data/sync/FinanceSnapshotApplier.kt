@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.data.local.AppDatabase
 import com.example.money.data.local.entity.ClientEntity
+import com.example.money.data.local.entity.DebtAdvanceEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.ExpenseEntity
@@ -14,6 +15,7 @@ import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.sync.FinanceSnapshot
+import com.example.money.domain.util.MoneyMath
 import com.example.money.domain.sync.SnapshotClient
 import com.example.money.domain.sync.SnapshotGoalAction
 import com.example.money.domain.sync.SnapshotNote
@@ -38,6 +40,7 @@ class FinanceSnapshotApplier(
                 applyDebts(snapshot, clientLocalIds)
                 val debtorLocalIds = buildDebtorSyncIdMap(snapshot)
                 applyDebtPayments(snapshot, debtorLocalIds)
+                snapshot.debtAdvances?.let { applyDebtAdvances(it, debtorLocalIds) }
                 val paymentLocalIds = buildDebtPaymentSyncIdMap(snapshot, debtorLocalIds)
                 applyTransactions(snapshot, goalLocalIds, debtorLocalIds, paymentLocalIds)
                 snapshot.goalActions?.let { applyGoalActions(it, goalLocalIds) }
@@ -224,6 +227,50 @@ class FinanceSnapshotApplier(
         }
     }
 
+    private suspend fun applyDebtAdvances(
+        advances: List<com.example.money.domain.sync.SnapshotDebtAdvance>,
+        debtorLocalIds: Map<String, Long>,
+    ) {
+        val dao = database.debtAdvanceDao()
+        val linkable = advances.filterNot { it.deleted }.filter { it.debtorId in debtorLocalIds }
+        val keepIds = linkable.map { it.id }.toSet()
+        dao.getAllOnce()
+            .filter { it.syncId !in keepIds }
+            .forEach { dao.deleteById(it.id) }
+        linkable.forEach { advance ->
+            val debtorId = debtorLocalIds.getValue(advance.debtorId)
+            val existing = dao.getBySyncId(advance.id)
+            val entity = DebtAdvanceEntity(
+                id = existing?.id ?: 0L,
+                syncId = advance.id,
+                debtorId = debtorId,
+                amountCents = advance.amountCents,
+                currency = advance.currency ?: existing?.currency ?: "USD",
+                givenAt = SyncDates.parseDateTime(advance.givenAt),
+                note = advance.note,
+                mode = advance.mode,
+                updatedAt = advance.syncUpdatedAt,
+            )
+            if (existing == null) {
+                dao.insert(entity)
+            } else {
+                dao.upsert(entity)
+            }
+        }
+        val sums = dao.getAllOnce().groupBy { it.debtorId }
+        sums.forEach { (debtorId, rows) ->
+            val debtor = database.debtorDao().getDebtorById(debtorId) ?: return@forEach
+            val sum = rows.sumOf { it.amountCents }
+            if (sum == debtor.targetAmountCents) return@forEach
+            database.debtorDao().update(
+                debtor.copy(
+                    targetAmountCents = sum,
+                    status = MoneyMath.resolveDebtStatus(sum, debtor.currentAmountCents).name,
+                ),
+            )
+        }
+    }
+
     private suspend fun buildDebtPaymentSyncIdMap(
         snapshot: FinanceSnapshot,
         debtorLocalIds: Map<String, Long>,
@@ -310,6 +357,15 @@ class FinanceSnapshotApplier(
                 syncUpdatedAt = payment.syncUpdatedAt,
                 deleted = payment.deleted,
                 payloadJson = FinanceSnapshotCodec.encodeDebtPayment(payment),
+            )
+        }
+        snapshot.debtAdvances?.forEach { advance ->
+            reconcileTombstone(
+                entityType = SyncEntityType.DEBT_ADVANCE,
+                entityId = advance.id,
+                syncUpdatedAt = advance.syncUpdatedAt,
+                deleted = advance.deleted,
+                payloadJson = FinanceSnapshotCodec.encodeDebtAdvance(advance),
             )
         }
         snapshot.transactions.forEach { transaction ->

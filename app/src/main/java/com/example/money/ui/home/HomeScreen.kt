@@ -223,6 +223,7 @@ fun HomeScreen(
     var editDebtor by editDebtorState
     val showDebtPaymentDialogState = remember { mutableStateOf<Debtor?>(null) }
     var showDebtPaymentDialog by showDebtPaymentDialogState
+    val historyDebtorState = remember { mutableStateOf<Debtor?>(null) }
     val debtPaymentPrefillCentsState = remember { mutableLongStateOf(0L) }
     var debtPaymentPrefillCents by debtPaymentPrefillCentsState
     val showTransferDialogState = remember { mutableStateOf(false) }
@@ -449,6 +450,7 @@ fun HomeScreen(
         contactHistoryTargetState = contactHistoryTargetState,
         remindDebtorState = remindDebtorState,
         showDebtPaymentDialogState = showDebtPaymentDialogState,
+        historyDebtorState = historyDebtorState,
         debtPaymentPrefillCentsState = debtPaymentPrefillCentsState,
         showIncomeIdeasState = showIncomeIdeasState,
         showTransferDialogState = showTransferDialogState,
@@ -638,6 +640,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
                 },
+                onOpenDebtor = { historyDebtorState.value = it },
                 onAccelerateDebtPayment = { debtor, prefillCents ->
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
@@ -767,6 +770,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
                 },
+                onOpenDebtor = { historyDebtorState.value = it },
                 onAccelerateDebtPayment = { debtor, prefillCents ->
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor

@@ -6,13 +6,18 @@ import com.example.money.data.local.dao.DebtPaymentDao
 import com.example.money.data.local.dao.DebtorDao
 import com.example.money.data.local.dao.ExpenseDao
 import com.example.money.data.local.dao.TransferDao
+import com.example.money.data.local.entity.DebtAdvanceEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
+import com.example.money.data.local.entity.SyncTombstoneEntity
 import com.example.money.data.local.entity.ExpenseEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.data.mapper.toDomain
 import com.example.money.data.mapper.toEntity
+import com.example.money.data.sync.DebtAdvanceIds
+import com.example.money.data.sync.FinanceSnapshotCodec
 import com.example.money.data.sync.SyncQueueRecorder
 import com.example.money.data.sync.SyncWriteGuard
+import com.example.money.domain.sync.SyncEntityType
 import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Expense
@@ -88,7 +93,21 @@ class DebtorRepositoryImpl(
             var newId = 0L
             database.withTransaction {
                 val stamped = debtor.copy(mode = appMode.first())
-                newId = debtorDao.insert(stamped.toEntity())
+                val entity = stamped.toEntity()
+                newId = debtorDao.insert(entity)
+                val stored = debtorDao.getDebtorById(newId) ?: return@withTransaction
+                database.debtAdvanceDao().insert(
+                    DebtAdvanceEntity(
+                        syncId = DebtAdvanceIds.opening(stored.syncId),
+                        debtorId = newId,
+                        amountCents = stored.targetAmountCents,
+                        currency = stored.currency,
+                        givenAt = stored.dateGiven,
+                        note = "",
+                        mode = stored.mode,
+                        updatedAt = stored.dateGiven,
+                    ),
+                )
                 if (stamped.affectsBalance) {
                     recordCreationOperation(stamped.copy(id = newId), syncAt)
                 }
@@ -114,6 +133,7 @@ class DebtorRepositoryImpl(
                     status = resolvedStatus.name,
                 )
                 debtorDao.update(updated)
+                alignAdvances(updated, syncAt)
 
                 if (previousAffectsBalance && !debtor.affectsBalance) {
                     removeAllLinkedOperations(debtor.id)
@@ -130,7 +150,53 @@ class DebtorRepositoryImpl(
     override suspend fun getDebtorById(id: Long): com.example.money.domain.model.Debtor? {
         val entity = debtorDao.getDebtorById(id) ?: return null
         val payments = debtPaymentDao.getPaymentsForDebtor(entity.mode, id)
-        return entity.toDomain(payments)
+        val advances = database.debtAdvanceDao().getForDebtor(id)
+        return entity.toDomain(payments, advances)
+    }
+
+    override suspend fun addDebtAdvance(
+        debtId: Long,
+        amountCents: Long,
+        givenAt: Long,
+        note: String,
+    ): Boolean = SyncWriteGuard.withWriteLock {
+        if (amountCents <= 0L) return@withWriteLock false
+        var applied = false
+        val recordedAt = System.currentTimeMillis()
+        database.withTransaction {
+            val debtor = debtorDao.getDebtorById(debtId) ?: return@withTransaction
+            database.debtAdvanceDao().insert(
+                DebtAdvanceEntity(
+                    debtorId = debtId,
+                    amountCents = amountCents,
+                    currency = debtor.currency,
+                    givenAt = givenAt,
+                    note = note.trim(),
+                    mode = debtor.mode,
+                    updatedAt = recordedAt,
+                ),
+            )
+            val newTarget = debtor.targetAmountCents + amountCents
+            val updated = debtor.copy(
+                targetAmountCents = newTarget,
+                status = MoneyMath.resolveDebtStatus(newTarget, debtor.currentAmountCents).name,
+            )
+            debtorDao.update(updated)
+            if (updated.affectsBalance) {
+                recordCreationOperation(
+                    updated.toDomain().copy(
+                        targetAmountCents = amountCents,
+                        currentAmountCents = 0L,
+                    ),
+                    givenAt,
+                )
+            }
+            applied = true
+        }
+        if (applied) {
+            debtorDao.getDebtorById(debtId)?.let { syncQueueRecorder.recordDebt(it, recordedAt) }
+        }
+        applied
     }
 
     override suspend fun markAsPaid(id: Long, affectsBalance: Boolean) {
@@ -288,6 +354,86 @@ class DebtorRepositoryImpl(
         }
         deletedPayment?.let { syncQueueRecorder.recordDebtPayment(it, deleted = true) }
         debtorDao.getDebtorById(debtId)?.let { syncQueueRecorder.recordDebt(it, System.currentTimeMillis()) }
+    }
+
+    private suspend fun alignAdvances(
+        debtor: com.example.money.data.local.entity.DebtorEntity,
+        at: Long,
+    ) {
+        val dao = database.debtAdvanceDao()
+        val existing = dao.getForDebtor(debtor.id).toMutableList()
+        existing.filter { it.mode != debtor.mode }.forEach { advance ->
+            val updated = advance.copy(mode = debtor.mode, updatedAt = at)
+            dao.update(updated)
+            val index = existing.indexOfFirst { it.id == advance.id }
+            if (index >= 0) existing[index] = updated
+        }
+        val sum = existing.sumOf { it.amountCents }
+        val diff = debtor.targetAmountCents - sum
+        if (diff == 0L) return
+        if (existing.isEmpty()) {
+            dao.insert(
+                DebtAdvanceEntity(
+                    syncId = DebtAdvanceIds.opening(debtor.syncId),
+                    debtorId = debtor.id,
+                    amountCents = debtor.targetAmountCents,
+                    currency = debtor.currency,
+                    givenAt = debtor.dateGiven,
+                    note = "",
+                    mode = debtor.mode,
+                    updatedAt = at,
+                ),
+            )
+            return
+        }
+        if (diff > 0L) {
+            dao.insert(
+                DebtAdvanceEntity(
+                    debtorId = debtor.id,
+                    amountCents = diff,
+                    currency = debtor.currency,
+                    givenAt = at,
+                    note = "",
+                    mode = debtor.mode,
+                    updatedAt = at,
+                ),
+            )
+            return
+        }
+        var cut = -diff
+        val ordered = existing.sortedWith(
+            compareByDescending<DebtAdvanceEntity> { it.givenAt }.thenByDescending { it.id },
+        )
+        for (advance in ordered) {
+            if (cut <= 0L) break
+            val nextAmount = (advance.amountCents - cut).coerceAtLeast(0L)
+            cut -= advance.amountCents - nextAmount
+            if (nextAmount == 0L) {
+                dao.deleteById(advance.id)
+                tombstoneAdvance(advance, debtor.syncId, at)
+            } else {
+                dao.update(advance.copy(amountCents = nextAmount, updatedAt = at))
+            }
+        }
+    }
+
+    private suspend fun tombstoneAdvance(
+        advance: DebtAdvanceEntity,
+        debtorSyncId: String,
+        at: Long,
+    ) {
+        val snapshot = FinanceSnapshotCodec.toSnapshotDebtAdvance(advance, debtorSyncId).copy(
+            deleted = true,
+            syncUpdatedAt = at,
+        )
+        database.syncTombstoneDao().upsert(
+            SyncTombstoneEntity(
+                entityType = SyncEntityType.DEBT_ADVANCE.name,
+                entityId = advance.syncId,
+                payloadJson = FinanceSnapshotCodec.encodeDebtAdvance(snapshot),
+                syncUpdatedAt = at,
+            ),
+        )
     }
 
     private suspend fun recordCreationOperation(debtor: com.example.money.domain.model.Debtor, at: Long) {

@@ -365,6 +365,11 @@ export function DashboardPage() {
                           item={item}
                           hideAmounts={hideAmounts}
                           onAddPayment={openPayment}
+                          onAddAdvance={(amountCents, givenAt, note) => {
+                            finance.addDebtAdvance(item.id, amountCents, givenAt, note);
+                            showToast("Сумма добавлена в этот долг");
+                          }}
+                          showHistory={item.type === "DEBT"}
                           onGoalTransfer={setTransferGoal}
                           onGoalExpense={() => setExpenseGoal(item)}
                           onDelete={setPendingDelete}
@@ -400,6 +405,11 @@ export function DashboardPage() {
                         item={selectedRecord}
                         hideAmounts={hideAmounts}
                         onAddPayment={openPayment}
+                        showHistory={selectedRecord.type === "DEBT"}
+                        onAddAdvance={(amountCents, givenAt, note) => {
+                          finance.addDebtAdvance(selectedRecord.id, amountCents, givenAt, note);
+                          showToast("Сумма добавлена в этот долг");
+                        }}
                         onGoalTransfer={setTransferGoal}
                         onGoalExpense={() => setExpenseGoal(selectedRecord)}
                         onDelete={setPendingDelete}

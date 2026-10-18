@@ -116,6 +116,17 @@
     <string name="debt_date_received_label">Дата получения</string>
     <string name="debt_note_label">Примечание</string>
     <string name="debt_payment_dialog_title">Добавить оплату</string>
+    <string name="debt_history_title">История · %1$s</string>
+    <string name="debt_history_remaining">Остаток %1$s</string>
+    <string name="debt_history_advance">Взял %1$s</string>
+    <string name="debt_history_payment">Вернул %1$s</string>
+    <string name="debt_history_empty">Пока нет операций</string>
+    <string name="debt_history_add">Добавить в долг</string>
+    <string name="debt_advance_amount_label">Сумма</string>
+    <string name="debt_advance_date_label">Дата</string>
+    <string name="debt_advance_note_label">Заметка</string>
+    <string name="msg_debt_advance_saved">Сумма добавлена в этот долг</string>
+    <string name="error_debt_advance_failed">Не удалось добавить сумму</string>
     <string name="debt_payment_max">Максимум</string>
     <string name="debt_dashboard_owes_me">Мне должны</string>
     <string name="debt_dashboard_i_owe">Я должен</string>

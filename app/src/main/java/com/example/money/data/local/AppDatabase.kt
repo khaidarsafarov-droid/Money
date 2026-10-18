@@ -9,6 +9,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import com.example.money.data.local.dao.ClientDao
+import com.example.money.data.local.dao.DebtAdvanceDao
 import com.example.money.data.local.dao.FinanceNoteDao
 import com.example.money.data.local.dao.GoalActionDao
 import com.example.money.data.local.dao.DebtorDao
@@ -20,6 +21,7 @@ import com.example.money.data.local.dao.SyncQueueDao
 import com.example.money.data.local.dao.SyncTombstoneDao
 import com.example.money.data.local.dao.TransferDao
 import com.example.money.data.local.entity.ClientEntity
+import com.example.money.data.local.entity.DebtAdvanceEntity
 import com.example.money.data.local.entity.FinanceNoteEntity
 import com.example.money.data.local.entity.FinanceNoteLineEntity
 import com.example.money.data.local.entity.GoalActionEntity
@@ -59,12 +61,14 @@ import com.example.money.data.local.migration.MIGRATION_25_26
 import com.example.money.data.local.migration.MIGRATION_26_27
 import com.example.money.data.local.migration.MIGRATION_27_28
 import com.example.money.data.local.migration.MIGRATION_28_29
+import com.example.money.data.local.migration.MIGRATION_29_30
 
 @Database(
     entities = [
         ClientEntity::class,
         DebtorEntity::class,
         DebtPaymentEntity::class,
+        DebtAdvanceEntity::class,
         TransferEntity::class,
         ExpenseEntity::class,
         SavingsGoalEntity::class,
@@ -75,7 +79,7 @@ import com.example.money.data.local.migration.MIGRATION_28_29
         FinanceNoteEntity::class,
         FinanceNoteLineEntity::class,
     ],
-    version = 29,
+    version = 30,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -86,6 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun clientDao(): ClientDao
     abstract fun debtorDao(): DebtorDao
     abstract fun debtPaymentDao(): DebtPaymentDao
+    abstract fun debtAdvanceDao(): DebtAdvanceDao
     abstract fun transferDao(): TransferDao
     abstract fun expenseDao(): ExpenseDao
     abstract fun savingsGoalDao(): SavingsGoalDao
@@ -132,6 +137,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_26_27,
                     MIGRATION_27_28,
                     MIGRATION_28_29,
+                    MIGRATION_29_30,
                 ).build().also { instance = it }
             }
         }

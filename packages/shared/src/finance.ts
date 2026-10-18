@@ -25,6 +25,23 @@ export interface Transaction {
   deleted?: boolean;
 }
 
+/** One time money was given on a debt. Amount in USD cents. */
+export interface DebtAdvance {
+  id: string;
+  amount: number;
+  givenAt: string;
+  note?: string;
+  syncUpdatedAt?: number;
+  deleted?: boolean;
+}
+
+/** Remaining principal: money given minus money returned. Never negative. */
+export function debtRemainingCents(advanceCents: number[], paymentCents: number[]): number {
+  const given = advanceCents.reduce((sum, cents) => sum + Math.max(cents, 0), 0);
+  const returned = paymentCents.reduce((sum, cents) => sum + Math.max(cents, 0), 0);
+  return Math.max(given - returned, 0);
+}
+
 /** Single payment / contribution entry for debts. Amount in USD cents. */
 export interface Payment {
   id: string;
@@ -49,6 +66,8 @@ export interface FinancialItem {
   amount: number;
   target: number;
   history: Payment[];
+  /** Disbursements. Missing on older records: the target is the first one, dated dateGiven. */
+  advances?: DebtAdvance[];
   dateGiven?: string;
   dateDue?: string;
   /** ISO date (YYYY-MM-DD) — goal deadline for daily savings hint */

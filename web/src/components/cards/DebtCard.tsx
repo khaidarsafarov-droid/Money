@@ -6,15 +6,25 @@ import { shareDebtReminder } from "@/lib/debtRemind";
 import { AppIcon } from "@/components/ui/SurfaceCard";
 import { FinanceCardShell } from "@/components/cards/FinanceCardShell";
 import type { FinancialItem } from "@/types/finance";
+import { debtRemainingCents } from "@/types/finance";
 
 interface DebtCardProps {
   item: FinancialItem;
   hideAmounts?: boolean;
   onAddPayment?: (item: FinancialItem, prefillCents?: number) => void;
+  onAddAdvance?: (amountCents: number, givenAt: string, note: string) => void;
+  showHistory?: boolean;
   onDelete?: (item: FinancialItem) => void;
 }
 
-export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: DebtCardProps) {
+export function DebtCard({
+  item,
+  hideAmounts = false,
+  onAddPayment,
+  onAddAdvance,
+  showHistory = false,
+  onDelete,
+}: DebtCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const canPay = item.status !== "COMPLETED" && onAddPayment;
   const overdue = isDebtOverdue(item);
@@ -22,6 +32,7 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
   const accelerateCents = suggestAcceleratePaymentCents(remaining, item.target, item.amount);
 
   return (
+    <div className="space-y-2">
     <FinanceCardShell
       item={item}
       typeLabel="Долг"
@@ -100,5 +111,118 @@ export function DebtCard({ item, hideAmounts = false, onAddPayment, onDelete }: 
         ) : null
       }
     />
+    {showHistory ? <DebtHistory item={item} hideAmounts={hideAmounts} onAddAdvance={onAddAdvance} /> : null}
+    </div>
+  );
+}
+
+function DebtHistory({
+  item,
+  hideAmounts,
+  onAddAdvance,
+}: {
+  item: FinancialItem;
+  hideAmounts: boolean;
+  onAddAdvance?: (amountCents: number, givenAt: string, note: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [givenAt, setGivenAt] = useState(() => new Date().toISOString().slice(0, 10));
+  const [note, setNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const advances = (item.advances ?? []).filter((advance) => !advance.deleted && advance.amount > 0);
+  const payments = item.history.filter((payment) => !payment.deleted && payment.amount > 0);
+  const remaining = debtRemainingCents(
+    advances.map((advance) => advance.amount),
+    payments.map((payment) => payment.amount),
+  );
+  const rows = [
+    ...advances.map((advance) => ({
+      id: advance.id,
+      label: "Взял",
+      amount: advance.amount,
+      at: advance.givenAt,
+      note: advance.note,
+    })),
+    ...payments.map((payment) => ({
+      id: payment.id,
+      label: "Вернул",
+      amount: payment.amount,
+      at: payment.paidAt,
+      note: "",
+    })),
+  ].sort((a, b) => a.at.localeCompare(b.at));
+
+  return (
+    <div className="rounded-2xl bg-surface-container-lowest px-4 py-2">
+      <button
+        type="button"
+        className="flex min-h-12 w-full items-center justify-between text-left text-sm font-medium"
+        onClick={() => setOpen((value) => !value)}
+      >
+        История
+        <span className="text-on-surface-variant">
+          {hideAmounts ? "••••" : `${(remaining / 100).toFixed(2)} $`}
+        </span>
+      </button>
+      {open ? (
+        <div className="space-y-2 pb-3">
+          {rows.length === 0 ? <p className="text-sm text-on-surface-variant">Пока нет операций</p> : null}
+          {rows.map((row) => (
+            <div key={row.id} className="flex items-baseline justify-between gap-3 text-sm">
+              <span>
+                {row.label} {hideAmounts ? "••••" : `${(row.amount / 100).toFixed(2)} $`}
+                {row.note ? <span className="block text-xs text-on-surface-variant">{row.note}</span> : null}
+              </span>
+              <span className="text-on-surface-variant">{new Date(row.at).toLocaleDateString("ru-RU")}</span>
+            </div>
+          ))}
+          {onAddAdvance ? (
+            <form
+              className="grid gap-2 pt-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const cents = Math.round(Number(amount.replace(",", ".")) * 100);
+                if (!Number.isFinite(cents) || cents <= 0) {
+                  setError("Сумма должна быть больше 0");
+                  return;
+                }
+                onAddAdvance(cents, givenAt, note.trim());
+                setAmount("");
+                setNote("");
+                setError(null);
+              }}
+            >
+              <input
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                inputMode="decimal"
+                placeholder="Сумма"
+                aria-label="Сумма"
+                className="min-h-12 rounded-xl border border-outline-variant bg-transparent px-3"
+              />
+              <input
+                type="date"
+                value={givenAt}
+                onChange={(event) => setGivenAt(event.target.value)}
+                aria-label="Дата"
+                className="min-h-12 rounded-xl border border-outline-variant bg-transparent px-3"
+              />
+              <input
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Заметка"
+                aria-label="Заметка"
+                className="min-h-12 rounded-xl border border-outline-variant bg-transparent px-3"
+              />
+              {error ? <p className="text-sm text-error">{error}</p> : null}
+              <button type="submit" className="pill-btn-primary min-h-12">
+                Добавить в долг
+              </button>
+            </form>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
