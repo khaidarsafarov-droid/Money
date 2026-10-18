@@ -63,14 +63,8 @@
     <string name="calendar_day_with_debts">Day %1$d, has debts</string>
     <string name="calendar_has_debt_mark">due</string>
     <string name="calendar_day_empty_cd">Day %1$d</string>
-    <string name="widget_remaining_empty">No goal</string>
-    <string name="widget_quick_add">Quick add</string>
     <string name="widget_pending_badge">%1$d pending</string>
     <string name="widget_overdue_debts">%1$d overdue</string>
-    <string name="widget_active_items_title">Up next</string>
-    <string name="widget_item_type_goal">Goal</string>
-    <string name="widget_item_type_debt">Debt</string>
-    <string name="widget_item_progress">%1$d%% · %2$s left</string>
 
     <string name="tab_debts">Debts</string>
     <string name="nav_home">Home</string>
@@ -402,7 +396,6 @@
     <string name="action_next">Next</string>
     <string name="action_done">Done</string>
     <string name="action_close">Close</string>
-    <string name="widget_goal_fallback">Goal</string>
     <string name="autopilot_round_to_ten">Round payment to $10</string>
     <string name="loan_category_label">Debt type</string>
     <string name="loan_category_credit_card">Credit card</string>

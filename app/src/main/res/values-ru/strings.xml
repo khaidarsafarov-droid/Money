@@ -49,10 +49,6 @@
     <string name="widget_preview_i_owe">0,00 $</string>
     <string name="widget_preview_saved">33 000,00 $</string>
     <string name="widget_preview_long_amount">122 115,00 $</string>
-    <string name="widget_remaining_empty">Нет цели</string>
-    <string name="widget_quick_add">Быстрое добавление</string>
-    <string name="widget_active_items_title">Активные цели и долги</string>
-    <string name="widget_item_progress">Прогресс: %1$d%% · осталось %2$s</string>
     <string name="tab_debts">Долги</string>
     <string name="nav_home">Главная</string>
     <string name="nav_more">Ещё</string>
@@ -421,10 +417,7 @@
     <string name="calendar_day_empty_cd">День %1$d</string>
     <string name="widget_pending_badge">%1$d ждут</string>
     <string name="widget_overdue_debts">%1$d просроч. долг.</string>
-    <string name="widget_item_type_goal">Цель</string>
-    <string name="widget_item_type_debt">Долг</string>
     <string name="debt_accelerate">Ускорить</string>
-    <string name="widget_goal_fallback">Цель</string>
     <string name="calendar_debts_name">Долги</string>
     <string name="calendar_event_title_owes_me">%1$s должен(на) мне %2$s</string>
     <string name="calendar_event_title_i_owe">Я должен(на) %1$s %2$s</string>

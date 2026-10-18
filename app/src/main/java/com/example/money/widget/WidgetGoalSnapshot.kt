@@ -2,22 +2,6 @@ package com.example.money.widget
 
 import com.example.money.settings.CurrencyRegion
 
-data class WidgetFinanceItem(
-    val id: Long,
-    /** String key for React web ?pay= deep links. */
-    val payKey: String,
-    val type: WidgetItemType,
-    val name: String,
-    val remainingLabel: String,
-    val progressFraction: Float,
-    val isOverdue: Boolean = false,
-)
-
-enum class WidgetItemType {
-    GOAL,
-    DEBT,
-}
-
 /** Снимок целей и долгов для Glance-виджета. Только локальные данные телефона. */
 data class WidgetGoalSnapshot(
     val currentAmount: Double,
@@ -28,7 +12,6 @@ data class WidgetGoalSnapshot(
     val pendingCount: Int,
     val updatedAt: Long,
     val currencyRegion: CurrencyRegion,
-    val activeItems: List<WidgetFinanceItem> = emptyList(),
     val totalAccumulated: Double = 0.0,
     val totalRemainingToGoal: Double = 0.0,
     val owedToMeCents: Long = 0L,
@@ -53,7 +36,6 @@ data class WidgetGoalSnapshot(
             pendingCount = 0,
             updatedAt = 0L,
             currencyRegion = CurrencyRegion.US,
-            activeItems = emptyList(),
         )
     }
 }

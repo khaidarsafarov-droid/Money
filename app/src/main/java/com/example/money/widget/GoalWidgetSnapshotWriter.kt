@@ -1,19 +1,15 @@
 package com.example.money.widget
 
-import android.content.Context
-import com.example.money.R
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.settings.CurrencyRegion
-import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 class GoalWidgetSnapshotWriter(
-    private val context: Context,
     private val goalRepository: GoalRepository,
     private val debtorRepository: DebtorRepository,
     private val pendingTransactionCount: kotlinx.coroutines.flow.Flow<Int>,
@@ -44,13 +40,6 @@ class GoalWidgetSnapshotWriter(
                 streakCount = 0,
                 lastWinMessage = null,
                 now = System.currentTimeMillis(),
-                goalFallbackName = context.getString(R.string.widget_goal_fallback),
-                formatCents = { cents ->
-                    Formatters.currencyFromCents(cents, region, hide = hideWidget)
-                },
-                actionStepsLabel = { done, total ->
-                    context.getString(R.string.goal_action_progress, done, total)
-                },
             )
         }.distinctUntilChanged()
 
