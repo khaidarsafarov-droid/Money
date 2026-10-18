@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="widget_background">#FFF5FBF7</color>
+    <color name="widget_preview_hero">#FF0B6B59</color>
+    <color name="widget_preview_on_hero">#FFFFFFFF</color>
+    <color name="widget_preview_alert">#FFFFDAD6</color>
+    <color name="widget_preview_mint">#FFA1F2DB</color>
+    <color name="widget_preview_on_mint">#FF005142</color>
+    <color name="widget_preview_peach">#FFFFDAD6</color>
+    <color name="widget_preview_on_peach">#FF93000A</color>
+    <color name="widget_preview_lilac">#FFC6E7FF</color>
+    <color name="widget_preview_on_lilac">#FF294A5F</color>
+    <color name="widget_preview_sand">#FFCDE9DF</color>
+    <color name="widget_preview_on_sand">#FF334B44</color>
 </resources>

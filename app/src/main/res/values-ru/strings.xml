@@ -43,6 +43,12 @@
     <string name="widget_goal_description">Доступный остаток, долги, цели и быстрое добавление</string>
     <string name="widget_score_chip_debts">Долги · %1$d%%</string>
     <string name="widget_score_chip_goals">Цели · %1$d%%</string>
+    <string name="widget_preview_score">Цели · 33%</string>
+    <string name="widget_preview_overdue">1 просроч. долг.</string>
+    <string name="widget_preview_owes">22 115,00 $</string>
+    <string name="widget_preview_i_owe">0,00 $</string>
+    <string name="widget_preview_saved">33 000,00 $</string>
+    <string name="widget_preview_long_amount">122 115,00 $</string>
     <string name="widget_remaining_empty">Задайте цель в приложении</string>
     <string name="widget_quick_add">Быстрое добавление</string>
     <string name="widget_active_items_title">Активные цели и долги</string>

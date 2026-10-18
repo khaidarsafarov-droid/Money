@@ -6,9 +6,9 @@
     android:minHeight="@dimen/widget_min_height"
     android:minResizeWidth="@dimen/widget_min_resize_width"
     android:minResizeHeight="@dimen/widget_min_resize_height"
-    android:previewLayout="@layout/widget_loading"
+    android:previewLayout="@layout/widget_preview"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="4"
-    android:targetCellHeight="3"
+    android:targetCellHeight="2"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />
