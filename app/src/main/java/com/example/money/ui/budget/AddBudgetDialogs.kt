@@ -22,7 +22,6 @@ import com.example.money.ui.util.InputValidators
 
 @Composable
 fun AddTransferDialog(
-    availableBalanceCents: Long? = null,
     goalRemainingCents: Long? = null,
     onDismiss: () -> Unit,
     onConfirm: (amountCents: Long, date: Long) -> Unit,
@@ -33,13 +32,8 @@ fun AddTransferDialog(
     var showOverGoalConfirm by remember { mutableStateOf(false) }
     var pendingAmount by remember { mutableStateOf<Long?>(null) }
     val context = LocalContext.current
-    val insufficientFunds = stringResource(R.string.msg_insufficient_funds)
 
     fun submitAmount(amountCents: Long) {
-        if (availableBalanceCents != null && amountCents > availableBalanceCents) {
-            amountError = insufficientFunds
-            return
-        }
         if (goalRemainingCents != null && amountCents > goalRemainingCents) {
             pendingAmount = amountCents
             showOverGoalConfirm = true

@@ -8,13 +8,13 @@ data class BudgetSummary(
     val totalAccumulatedCents: Long
         get() = totalGoalAllocatedCents
 
-    /** Deposits minus wallet expenses. Goal allocations stay visible in [totalGoalAllocatedCents]. */
+    /** Deposits minus wallet expenses. Goal savings stay on each goal. */
     val globalBalanceCents: Long
         get() = totalDepositsCents - totalExpensesCents
 
-    /** Free wallet: deposits minus net goal transfers minus wallet expenses. */
+    /** Free wallet only. A goal's own balance does not reduce this figure. */
     val availableBalanceCents: Long
-        get() = totalDepositsCents - totalGoalAllocatedCents - totalExpensesCents
+        get() = globalBalanceCents
 
     /** Legacy alias used in older UI copy. */
     val totalTransfersCents: Long

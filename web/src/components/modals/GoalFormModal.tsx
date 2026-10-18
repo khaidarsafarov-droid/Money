@@ -83,7 +83,7 @@ export function GoalFormModal({ open, onClose, onSubmit }: GoalFormModalProps) {
         />
       </FormField>
       <p className="text-xs text-on-surface-variant">
-        Накопления начинаются с нуля. Пополните общий баланс и переведите средства на цель.
+        Накопления начинаются с нуля. Сумма записывается только в эту цель.
       </p>
       <FormField label="Срок цели">
         <label className="flex items-center gap-3 text-sm text-on-surface-variant">

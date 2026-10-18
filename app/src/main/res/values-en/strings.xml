@@ -243,7 +243,7 @@
     <string name="msg_debtor_deleted">Debt deleted</string>
     <string name="msg_transfer_added">Transfer saved and applied to balance.</string>
     <string name="msg_expense_added">Expense saved and applied to balance.</string>
-    <string name="msg_insufficient_funds">Insufficient funds in overall balance.</string>
+    <string name="msg_insufficient_funds">Not enough free funds.</string>
     <string name="msg_save_failed">Could not save the operation.</string>
     <string name="msg_goal_insufficient">Not enough saved on this goal.</string>
     <string name="msg_goal_expense_added">Expense from the goal saved.</string>
