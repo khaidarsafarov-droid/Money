@@ -131,7 +131,6 @@ import com.example.money.ui.debtors.DebtListViewModel
 import com.example.money.ui.debtors.DebtMessageChannelSheet
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtTab
-import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.debtors.IncomeIdeasDialog

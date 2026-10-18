@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Canonical type scale: 32 / 24 / 18 / 16 / 14 / 12.
+ * Canonical type scale: 32 / 24 / 18 / 16 / 12.
  * Digits use tabular figures so amounts stay aligned.
  */
 object MoneyTypeScale {
@@ -41,13 +41,6 @@ object MoneyTypeScale {
         letterSpacing = 0.sp,
         fontFeatureSettings = tabular,
     )
-    val label = TextStyle(
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        fontWeight = FontWeight.Medium,
-        letterSpacing = 0.sp,
-        fontFeatureSettings = tabular,
-    )
     val caption = TextStyle(
         fontSize = 12.sp,
         lineHeight = 16.sp,
@@ -74,11 +67,6 @@ fun moneySubheadingStyle(): TextStyle = MoneyTypeScale.subheading.copy(
 
 @Composable
 fun moneyBodyStyle(): TextStyle = MoneyTypeScale.body.copy(
-    color = MaterialTheme.colorScheme.onSurface,
-)
-
-@Composable
-fun moneyLabelStyle(): TextStyle = MoneyTypeScale.label.copy(
     color = MaterialTheme.colorScheme.onSurface,
 )
 

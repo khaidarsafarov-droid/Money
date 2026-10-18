@@ -441,36 +441,6 @@ fun DebtorFormDialog(
     )
 }
 
-@Composable
-fun AddDebtorDialog(
-    debtType: DebtType,
-    availableBalance: Long,
-    allDebtors: List<Debtor> = emptyList(),
-    onDismiss: () -> Unit,
-    onConfirm: (
-        name: String,
-        amountCents: Long,
-        dateGiven: Long,
-        dateDue: Long,
-        affectsBalance: Boolean,
-        note: String,
-        loanCategory: LoanCategory,
-        interestRateBps: Int,
-        contactLookupKey: String?,
-        contactUri: String?,
-        contactPhotoUri: String?,
-        phone: String,
-        email: String,
-    ) -> Unit,
-) = DebtorFormDialog(
-    debtType = debtType,
-    existingDebtor = null,
-    availableBalance = availableBalance,
-    allDebtors = allDebtors,
-    onDismiss = onDismiss,
-    onConfirm = onConfirm,
-)
-
 private fun defaultDueDateMillis(): Long {
     val calendar = java.util.Calendar.getInstance().apply {
         add(java.util.Calendar.DAY_OF_YEAR, 30)
