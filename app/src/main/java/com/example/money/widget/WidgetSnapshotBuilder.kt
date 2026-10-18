@@ -6,13 +6,12 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.GlobalFinanceEngine
-import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.CurrencyRegion
 /**
  * Builds the home-screen numbers the widget shows.
- * The widget score still prefers open «I owe» debts, then goals.
- * The in-app ring uses [GoalPsychologyEngines.planProgressPercent].
+ * The percent is goal savings only and is labeled as goals.
+ * Debt amounts stay in their own cells and do not move the percent.
  */
 internal fun buildWidgetGoalSnapshot(
     goals: List<SavingsGoal>,
@@ -32,19 +31,14 @@ internal fun buildWidgetGoalSnapshot(
     val totalTargetCents = moneyGoals.sumOf { it.targetAmountCents }
     val goalMetrics = GlobalFinanceEngine.activeGoalMetrics(goals)
     val debtMetrics = DebtMetricsEngine.computeMetrics(debts)
-    val debtPercent = GoalPsychologyEngines.totalDebtProgressPercent(debts).coerceIn(0, 100)
     val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
     val goalPercent = if (goalPool > 0L) {
         ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
     } else {
         0
     }
-    val scoreUsesDebts = debtMetrics.iOweActiveCount > 0
-    val score = GoalPsychologyEngines.displayedHomeProgressPercent(
-        iOweActiveCount = debtMetrics.iOweActiveCount,
-        debtPercent = debtPercent,
-        goalPercent = goalPercent,
-    )
+    val scoreUsesDebts = false
+    val score = goalPercent
     val overdueDebtCount = debts.count { !it.isPaid && DebtDueDateUtils.isOverdue(it.dateDue, now) }
 
     return WidgetGoalSnapshot(

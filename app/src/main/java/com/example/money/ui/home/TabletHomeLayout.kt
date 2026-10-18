@@ -69,7 +69,6 @@ import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.HomePreviewCards
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.debtors.DebtTab
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalProgress
 import com.example.money.settings.AppMode
 import com.example.money.settings.AutopilotSettings
@@ -77,7 +76,6 @@ import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
-import com.example.money.ui.debtors.DebtFreedomTab
 import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
@@ -123,9 +121,6 @@ fun TabletHomeLayout(
     onOpenDebtor: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
     onMarkDebtPaid: (Debtor) -> Unit = {},
-    freedomProjection: DebtFreedomEngine.FreedomProjection,
-    extraMonthlyCents: Long,
-    onExtraMonthlyChange: (Long) -> Unit,
     gamificationState: GamificationState = GamificationState(),
     privacySettings: PrivacySettings = PrivacySettings(),
     autopilotSettings: AutopilotSettings = AutopilotSettings(),
@@ -519,16 +514,6 @@ fun TabletHomeLayout(
                                     calendarPermissionGranted = calendarPermissionGranted,
                                     onOpenCalendarSettings = onOpenCalendarSettings,
                                     onRequestCalendarPermission = onRequestCalendarPermission,
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                )
-                            }
-                        } else if (debtTab == DebtTab.Freedom) {
-                            item {
-                                DebtFreedomTab(
-                                    projection = freedomProjection,
-                                    extraMonthlyCents = extraMonthlyCents,
-                                    onExtraMonthlyChange = onExtraMonthlyChange,
-                                    hideAmounts = privacySettings.hideAmounts,
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }

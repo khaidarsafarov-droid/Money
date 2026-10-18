@@ -14,12 +14,12 @@ object DebtorListFilter {
         searchQuery: String,
         now: Long = System.currentTimeMillis(),
     ): List<Debtor> {
-        if (tab == DebtTab.Freedom || tab == DebtTab.Calendar) return emptyList()
+        if (tab == DebtTab.Calendar) return emptyList()
 
         val debtType = when (tab) {
             DebtTab.OwesMe -> DebtType.CREDITOR
             DebtTab.IOwe -> DebtType.DEBTOR
-            DebtTab.Freedom, DebtTab.Calendar -> DebtType.DEBTOR
+            DebtTab.Calendar -> DebtType.DEBTOR
         }
 
         val byType = debtors.filter { it.debtType == debtType }

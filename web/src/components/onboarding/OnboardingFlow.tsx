@@ -104,7 +104,7 @@ export function OnboardingFlow() {
             <FinOrb className="mb-5" />
             <h1 className="text-xl font-semibold text-on-surface">Добро пожаловать в Финансовый Контроль</h1>
             <p className="mt-3 text-sm text-on-surface-variant">
-              Здесь вы не просто считаете долги — вы строите путь к финансовой свободе.
+              Здесь вы ведёте долги и цели. Давайте познакомимся.
             </p>
             <button type="button" className="pill-btn-primary mt-6 w-full" onClick={() => setStep(1)}>
               Начать
@@ -282,7 +282,7 @@ export function OnboardingFlow() {
                 autoComplete="off"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                placeholder="Спокойствие, свобода…"
+                placeholder="Например: поездка"
               />
             </label>
             <p className="mt-3 text-sm text-on-surface-variant">

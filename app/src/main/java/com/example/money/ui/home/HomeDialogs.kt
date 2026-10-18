@@ -144,7 +144,7 @@ internal fun HomeDialogs(
             debtType = when (debtTab) {
                 DebtTab.OwesMe -> DebtType.CREDITOR
                 DebtTab.IOwe -> DebtType.DEBTOR
-                DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
+                DebtTab.Calendar -> DebtType.CREDITOR
             },
             availableBalance = availableBalanceCents,
             allDebtors = allDebtors,
@@ -159,7 +159,7 @@ internal fun HomeDialogs(
                     debtType = when (debtTab) {
                         DebtTab.OwesMe -> DebtType.CREDITOR
                         DebtTab.IOwe -> DebtType.DEBTOR
-                        DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
+                        DebtTab.Calendar -> DebtType.CREDITOR
                     },
                     affectsBalance = affectsBalance,
                     note = note,

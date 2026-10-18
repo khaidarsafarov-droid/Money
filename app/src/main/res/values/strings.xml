@@ -95,7 +95,7 @@
     <string name="widget_goals_debts_title">Цели и долги</string>
     <string name="home_only_goals_debts">На главной только цели и долги</string>
     <string name="home_score_title">Прогресс</string>
-    <string name="home_score_plan">Доля закрытых долгов и накоплений</string>
+    <string name="home_score_plan">Цели</string>
 
     <!-- P2P sync -->
     <string name="sync_status_offline">Синхронизация: нет сети</string>
@@ -122,18 +122,6 @@
     <string name="empty_debtors_overdue_hint">Просроченные долги отображаются здесь автоматически</string>
     <string name="debt_tab_owes_me">Мне должны</string>
     <string name="debt_tab_i_owe">Я должен</string>
-    <string name="debt_tab_freedom">Прогноз</string>
-    <string name="debt_freedom_title">Дата свободы</string>
-    <string name="debt_freedom_empty">Нет активных долгов «Я должен» — отличная работа!</string>
-    <string name="debt_freedom_date">Выход из долгов: %1$s</string>
-    <string name="debt_freedom_unknown">скоро</string>
-    <string name="debt_freedom_remaining_total">Осталось погасить: %1$s</string>
-    <string name="debt_freedom_monthly_pace">При темпе %1$s/мес · ~%2$d мес.</string>
-    <string name="debt_freedom_extra_slider_label">Дополнительный платёж в месяц</string>
-    <string name="debt_freedom_extra_change">Изменить во вкладке «Долги»</string>
-    <string name="debt_freedom_extra_amount">+ %1$s к ежемесячному темпу</string>
-    <string name="debt_freedom_months_saved">Станете свободны на %1$d мес. раньше</string>
-    <string name="debt_freedom_hint">Прогноз по вашим платежам — только на устройстве.</string>
     <string name="debt_accelerate">Ускорить</string>
     <string name="debt_filter_all">Все</string>
     <string name="debt_filter_active">Активные</string>
@@ -376,7 +364,6 @@
     <string name="advisor_prompt_overdue">Просрочки</string>
     <string name="advisor_prompt_goals">Цели</string>
     <string name="advisor_prompt_budget">Бюджет</string>
-    <string name="advisor_prompt_freedom">Свобода</string>
     <string name="advisor_input_hint">Спросите советника…</string>
     <string name="advisor_send">Отправить</string>
     <string name="advisor_clear_history">Очистить историю</string>
@@ -391,7 +378,7 @@
     <string name="gamification_win_streak">Серия платежей: %1$d. Так держать.</string>
     <string name="gamification_badge_first_step">Первый шаг</string>
     <string name="gamification_badge_half_way">Полпути</string>
-    <string name="gamification_badge_freedom">Свобода</string>
+    <string name="gamification_badge_freedom">Долги закрыты</string>
     <string name="gamification_badge_streak_3">Серия ×3</string>
 
     <!-- Autopilot (Phase 5) -->
@@ -408,7 +395,7 @@
     <string name="autopilot_applied">Микроплатёж %1$s внесён в «%2$s»</string>
     <string name="autopilot_apply_failed">Не удалось применить микроплатёж</string>
     <string name="autopilot_notification_title">Микроплатёж по долгу</string>
-    <string name="autopilot_notification_body">Сегодня можно внести %1$s — один шаг к свободе</string>
+    <string name="autopilot_notification_body">Сегодня можно внести %1$s</string>
     <string name="autopilot_round_to_ten">Округлять платёж до $10</string>
     <string name="autopilot_round_to_ten_hint">Лишние $2–$5 автоматически пойдут на основной долг</string>
 
@@ -436,14 +423,13 @@
     <string name="celebration_reward_movie">Фильм</string>
     <string name="celebration_reward_meal">Любимое блюдо</string>
     <string name="celebration_postcard_title">Я закрыл(а) долг!</string>
-    <string name="celebration_postcard_body">Ещё один шаг к финансовой свободе — без цифр, только победа.</string>
+    <string name="celebration_postcard_body">Ещё один шаг сделан — без цифр, только победа.</string>
     <string name="celebration_share">Поделиться</string>
-    <string name="celebration_share_text">Я закрыл(а) долг! Ещё один шаг к финансовой свободе 🎉</string>
+    <string name="celebration_share_text">Я закрыл(а) долг! 🎉</string>
 
     <!-- Weekly check-in -->
     <string name="weekly_checkin_title">Еженедельный чек-ин</string>
-    <string name="weekly_checkin_body">Ваш прогресс по снижению долгов:</string>
-    <string name="weekly_checkin_progress">Погашено %1$d%% от общей суммы</string>
+    <string name="weekly_checkin_body">Сводка по долгам «Я должен»:</string>
     <string name="weekly_checkin_remaining">Осталось: %1$s</string>
     <string name="weekly_checkin_closed_count">Закрыто долгов: %1$d</string>
     <string name="weekly_checkin_enabled">Еженедельный чек-ин</string>
@@ -457,17 +443,16 @@
     <string name="income_calculator_hint">Чтобы закрыть все долги на %2$d мес. быстрее, нужно ~%1$s/мес дополнительного дохода.</string>
 
     <!-- Goal Hub (Phase 7) -->
-    <string name="goal_hub_title">Моя цель — Свобода</string>
+    <string name="goal_hub_title">Моя цель</string>
     <string name="goal_hub_open">Моя цель</string>
     <string name="goal_hub_psychotype">Ваш психотип: %1$s</string>
     <string name="goal_hub_payday">До зарплаты: %1$d дней</string>
     <string name="goal_hub_autosave_hint">Автосбережение: отложите $5 сегодня — маленький шаг крупной цели.</string>
     <string name="goal_hub_treat_title">Разрешите себе</string>
     <string name="goal_hub_treat_body">$10 на маленькую радость — вы это заслужили.</string>
-    <string name="goal_hub_freedom_project">Ваш проект «Свобода»</string>
     <string name="goal_hub_remaining_positive">Осталось инвестировать в себя: %1$s</string>
-    <string name="goal_hub_new_date">Новая дата: %1$s</string>
     <string name="goal_hub_plan_title">Ваш план погашения</string>
+    <string name="goal_hub_close_soon">скоро</string>
     <string name="goal_hub_no_debts">Нет активных долгов «Я должен»</string>
     <string name="goal_hub_no_payment_data">Нет данных. Внесите первую оплату для прогноза.</string>
     <string name="goal_hub_fears_title">Ваши внутренние барьеры</string>
@@ -483,10 +468,9 @@
     <string name="goal_hub_word_power_hint">Позитивные формулировки вместо «должен» и «просрочено»</string>
     <string name="goal_hub_badges_title">Ваши достижения</string>
     <string name="goal_hub_player_title">Очки к победе</string>
-    <string name="goal_hub_player_points">Ваш счёт: %1$d очков (прогресс погашения)</string>
     <string name="goal_hub_player_challenges">Активных челленджей: %1$d</string>
     <string name="goal_hub_vision_title">Доска мечты</string>
-    <string name="goal_hub_vision_hint">Добавьте фото цели — путешествие, дом, свобода</string>
+    <string name="goal_hub_vision_hint">Добавьте фото цели — путешествие или дом</string>
     <string name="goal_hub_vision_pick">Выбрать фото</string>
     <string name="goal_hub_vision_clear">Убрать фото</string>
     <string name="goal_hub_challenges_add">Новый челлендж</string>
@@ -542,7 +526,7 @@
     <!-- Onboarding -->
     <string name="onboarding_step">Шаг %1$d из %2$d</string>
     <string name="onboarding_welcome_title">Добро пожаловать в Финансовый Контроль!</string>
-    <string name="onboarding_welcome_body">Здесь вы не просто считаете долги — вы строите путь к финансовой свободе. Советник подскажет следующий шаг, Автопилот напомнит о микроплатеже, а Goal Hub соберёт план. Давайте познакомимся.</string>
+    <string name="onboarding_welcome_body">Здесь вы ведёте долги и цели. Давайте познакомимся.</string>
     <string name="onboarding_start">Начать знакомство</string>
     <string name="onboarding_name_title">Как вас зовут?</string>
     <string name="onboarding_name_label">Ваше имя</string>
@@ -568,7 +552,7 @@
     <string name="onboarding_priority_label">Что для вас самое важное в избавлении от долгов?</string>
     <string name="onboarding_goal_thanks">Спасибо, %1$s! Мы запомнили вашу цель и поможем к ней прийти.</string>
     <string name="onboarding_default_name">Друг</string>
-    <string name="onboarding_default_goal">Стать финансово свободным</string>
+    <string name="onboarding_default_goal">Накопить на важную цель</string>
     <string name="onboarding_summary_greeting">%1$s, здравствуйте!</string>
     <string name="onboarding_summary_intro">Мы подготовили для вас план, основанный на вашем психотипе и целях. Советник, Автопилот и Goal Hub уже рядом. Вы не один(а).</string>
     <string name="onboarding_summary_psychotype">Ваш психотип</string>
@@ -585,8 +569,7 @@
     <string name="fear_money_corrupts_short">Страх испортиться</string>
     <string name="fear_rich_bad_short">Негатив к богатым</string>
     <string name="fear_afraid_numbers_short">Страх цифр</string>
-    <string name="home_greeting_simple">Привет, %1$s! Давайте сделаем первый шаг к свободе.</string>
-    <string name="home_greeting_progress">Привет, %1$s! Сегодня вы на %2$d%% ближе к свободе.</string>
+    <string name="home_greeting_simple">Привет, %1$s!</string>
     <string name="goal_hub_greeting">%1$s, вы — %2$s</string>
     <string name="goal_hub_luck_title_personal">Дневник удач %1$s</string>
     <string name="goal_hub_challenges_title_personal">%1$s, ваши челленджи</string>

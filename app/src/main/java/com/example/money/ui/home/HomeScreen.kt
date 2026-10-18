@@ -95,7 +95,6 @@ import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.debtors.DebtListViewModel
@@ -202,8 +201,6 @@ fun HomeScreen(
     val debtorFilter by debtListViewModel.filter.collectAsStateWithLifecycle()
     val debtSearchQuery by debtListViewModel.searchQuery.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
-    val freedomProjection by debtListViewModel.freedomProjection.collectAsStateWithLifecycle()
-    val extraMonthlyCents by debtListViewModel.extraMonthlyCents.collectAsStateWithLifecycle()
     val privacySettings by debtorsViewModel.privacySettings.collectAsStateWithLifecycle()
     val gamificationState by debtorsViewModel.gamificationState.collectAsStateWithLifecycle()
     val autopilotSettings by debtorsViewModel.autopilotSettings.collectAsStateWithLifecycle()
@@ -212,8 +209,9 @@ fun HomeScreen(
     val availableBalanceCents = budgetSummary.availableBalanceCents
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
-    val planProgressPercent = remember(allDebtors, goalMetrics) {
-        GoalPsychologyEngines.planProgressPercent(allDebtors, goalMetrics)
+    val goalProgressPercent = remember(goalMetrics) {
+        val pool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
+        if (pool <= 0L) 0 else ((goalMetrics.totalAccumulatedCents * 100L) / pool).toInt().coerceIn(0, 100)
     }
 
     var selectedTab by remember { mutableIntStateOf(launchConfig.initialTab.ordinal) }
@@ -627,7 +625,7 @@ fun HomeScreen(
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
-                planProgressPercent = planProgressPercent,
+                planProgressPercent = goalProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },
@@ -646,9 +644,6 @@ fun HomeScreen(
                     showDebtPaymentDialog = debtor
                 },
                 onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
-                freedomProjection = freedomProjection,
-                extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
                 gamificationState = gamificationState,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
@@ -756,7 +751,7 @@ fun HomeScreen(
                 greetingName = userProfile.resolvedDisplayName(
                     stringResource(R.string.onboarding_default_name),
                 ),
-                planProgressPercent = planProgressPercent,
+                planProgressPercent = goalProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
@@ -776,9 +771,6 @@ fun HomeScreen(
                     showDebtPaymentDialog = debtor
                 },
                 onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
-                freedomProjection = freedomProjection,
-                extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onViewContactHistory = { debtor ->

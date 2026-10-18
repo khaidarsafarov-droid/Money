@@ -16,7 +16,7 @@ export const USER_FEAR_OPTIONS: UserFearOption[] = [
   {
     id: "wont_escape",
     label: "Боюсь, что у меня не получится выбраться из долгов",
-    affirmation: "Каждый платёж приближает вас к свободе. Вы уже сделали первый шаг.",
+    affirmation: "Каждый платёж приближает вас к цели. Вы уже сделали первый шаг.",
   },
   {
     id: "earn_more_than_parents",
@@ -36,7 +36,7 @@ export const USER_FEAR_OPTIONS: UserFearOption[] = [
   {
     id: "rich_are_bad",
     label: "Думаю, что богатые — это плохие люди",
-    affirmation: "Финансовая свобода может служить вам и близким.",
+    affirmation: "Деньги могут служить вам и близким.",
   },
   {
     id: "afraid_of_numbers",
@@ -59,7 +59,7 @@ export function affirmationsForFears(
     });
 
   if (base.length === 0) {
-    return ["Каждый шаг к свободе имеет значение."];
+    return ["Каждый шаг имеет значение."];
   }
   return base;
 }

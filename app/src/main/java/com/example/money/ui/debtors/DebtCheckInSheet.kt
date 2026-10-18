@@ -3,11 +3,9 @@ package com.example.money.ui.debtors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,13 +27,6 @@ fun DebtCheckInSheet(
     val iOweActive = debtors.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }
     val iOwePaid = debtors.filter { it.debtType == DebtType.DEBTOR && it.isPaid }
     val totalRemaining = iOweActive.sumOf { it.remainingAmountCents }
-    val totalOriginal = (iOweActive + iOwePaid).sumOf { it.targetAmountCents }
-    val totalPaid = (iOweActive + iOwePaid).sumOf { it.currentAmountCents }
-    val progress = if (totalOriginal > 0L) {
-        (totalPaid.toFloat() / totalOriginal).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -54,22 +45,6 @@ fun DebtCheckInSheet(
                 text = stringResource(R.string.weekly_checkin_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-            )
-            Text(
-                text = stringResource(
-                    R.string.weekly_checkin_progress,
-                    (progress * 100).toInt(),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = stringResource(

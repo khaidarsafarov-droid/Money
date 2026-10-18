@@ -11,7 +11,7 @@ const POSITIVE: ReframingLabels = {
   remainingToPay: "Осталось инвестировать в себя",
   overdueDebts: "Долги, требующие внимания",
   myObligations: "Мои обязательства",
-  freedomProject: "Ваш проект «Свобода» требует",
+  freedomProject: "Ваш план требует",
 };
 
 const STANDARD: ReframingLabels = {

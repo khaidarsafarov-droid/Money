@@ -12,7 +12,6 @@ import {
 import { useCallback, useState } from "react";
 import { personalizedGreeting } from "@money/shared";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
-import { FreedomForecastCard } from "@/components/debt/FreedomForecastCard";
 import { FinanceCard } from "@/components/cards/FinanceCard";
 import { GoalSectionSummary } from "@/components/cards/GoalSectionSummary";
 import { NotesPanel } from "@/components/notes/NotesPanel";
@@ -38,7 +37,7 @@ import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
 import { usePaymentDeepLink } from "@/hooks/usePaymentDeepLink";
 import { formatMoney, parseMoneyInput } from "@/lib/money";
-import { planProgressPercent, remainingAmount } from "@/lib/financeEngine";
+import { remainingAmount } from "@/lib/financeEngine";
 import type { FinancialItem } from "@/types/finance";
 
 export function DashboardPage() {
@@ -119,17 +118,16 @@ export function DashboardPage() {
     if (!recordQueryNormalized) return true;
     return item.name.toLowerCase().includes(recordQueryNormalized);
   });
-  const visibleDebts = finance.state.items.filter((item) => item.type === "DEBT" && !item.deleted);
-  const score = planProgressPercent({
-    debtPaidCents: visibleDebts.reduce((sum, item) => sum + item.amount, 0),
-    debtTargetCents: visibleDebts.reduce((sum, item) => sum + item.target, 0),
-    goalAccumulatedCents: finance.globalFinance.totalAccumulatedCents,
-    goalRemainingCents: finance.globalFinance.totalRemainingToGoalCents,
-  });
+  const goalPool =
+    finance.globalFinance.totalAccumulatedCents + finance.globalFinance.totalRemainingToGoalCents;
+  const score =
+    goalPool > 0
+      ? Math.floor((finance.globalFinance.totalAccumulatedCents * 100) / goalPool)
+      : 0;
   const selectedRecord =
     listedItems.find((item) => item.id === selectedRecordId) ?? listedItems[0] ?? null;
   const debtRemainingCents = activeDebts.reduce((sum, debt) => sum + remainingAmount(debt), 0);
-  const ringCaption = "Доля закрытых долгов и накоплений";
+  const ringCaption = "Цели";
 
   return (
     <>
@@ -247,7 +245,6 @@ export function DashboardPage() {
 
                 {activeDebts.length > 0 ? (
                   <>
-                    <FreedomForecastCard debts={activeDebts} hideAmounts={hideAmounts} />
                     <GamificationBanner state={psychology.gamification} />
                     {psychology.autopilot.enabled ? (
                       <button type="button" onClick={applyAutopilot} className="pill-btn-primary w-full">

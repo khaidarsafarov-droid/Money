@@ -142,7 +142,7 @@ export function badgeLabel(badgeId: string, locale = "ru"): string {
     case BADGE_HALF_WAY:
       return english ? "Halfway" : "Полпути";
     case BADGE_FREEDOM:
-      return english ? "Freedom" : "Свобода";
+      return english ? "Debts closed" : "Долги закрыты";
     case BADGE_STREAK_3:
       return english ? "Streak ×3" : "Серия ×3";
     default:

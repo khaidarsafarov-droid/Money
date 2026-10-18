@@ -4,7 +4,6 @@ import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
-import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.CurrencyRegion
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -52,8 +51,8 @@ class WidgetSnapshotBuilderTest {
 
         val snapshot = build(goals = emptyList(), debts = debts)
 
-        assertTrue(snapshot.scoreUsesDebts)
-        assertEquals(GoalPsychologyEngines.totalDebtProgressPercent(debts), snapshot.progressPercent)
+        assertFalse(snapshot.scoreUsesDebts)
+        assertEquals(0, snapshot.progressPercent)
         assertEquals(8_000L, snapshot.owedToMeCents)
         assertEquals(11_000L, snapshot.iOweCents)
         assertEquals(1, snapshot.overdueDebtCount)

@@ -23,7 +23,6 @@ import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
 import com.example.money.ui.debtors.DebtContactActions
-import com.example.money.ui.debtors.DebtFreedomTab
 import com.example.money.ui.debtors.DebtOverviewCard
 import com.example.money.ui.debtors.DebtSearchField
 import com.example.money.ui.debtors.DebtTab
@@ -42,9 +41,6 @@ fun LazyListScope.homeDebtsSection(
     onDebtorFilterChange: (DebtorFilter) -> Unit,
     debtSearchQuery: String,
     onDebtSearchQueryChange: (String) -> Unit,
-    freedomProjection: DebtFreedomEngine.FreedomProjection,
-    extraMonthlyCents: Long,
-    onExtraMonthlyChange: (Long) -> Unit,
     showCheckIn: Boolean,
     onDismissCheckIn: () -> Unit,
     gamificationState: GamificationState,
@@ -86,7 +82,7 @@ fun LazyListScope.homeDebtsSection(
             }
         }
     }
-    if (debtTab != DebtTab.Freedom && debtTab != DebtTab.Calendar) {
+    if (debtTab != DebtTab.Calendar) {
         if (debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe) {
             item {
                 DebtOverviewCard(
@@ -133,16 +129,6 @@ fun LazyListScope.homeDebtsSection(
                 calendarPermissionGranted = calendarPermissionGranted,
                 onOpenCalendarSettings = onOpenCalendarSettings,
                 onRequestCalendarPermission = onRequestCalendarPermission,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
-    } else if (debtTab == DebtTab.Freedom) {
-        item {
-            DebtFreedomTab(
-                projection = freedomProjection,
-                extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = onExtraMonthlyChange,
-                hideAmounts = privacySettings.hideAmounts,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }

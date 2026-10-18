@@ -97,7 +97,7 @@
     <string name="widget_goals_debts_title">Goals and debts</string>
     <string name="home_only_goals_debts">Home shows only goals and debts</string>
     <string name="home_score_title">Progress</string>
-    <string name="home_score_plan">Share of paid debts and savings</string>
+    <string name="home_score_plan">Goals</string>
 
     <!-- P2P sync -->
     <string name="sync_status_offline">Sync: offline</string>
@@ -120,18 +120,6 @@
     <string name="empty_debtors_overdue_hint">Overdue debts appear here automatically</string>
     <string name="debt_tab_owes_me">Owed to me</string>
     <string name="debt_tab_i_owe">I owe</string>
-    <string name="debt_tab_freedom">Forecast</string>
-    <string name="debt_freedom_title">Freedom date</string>
-    <string name="debt_freedom_empty">No active \"I owe\" debts — great work!</string>
-    <string name="debt_freedom_date">Debt-free by: %1$s</string>
-    <string name="debt_freedom_unknown">soon</string>
-    <string name="debt_freedom_remaining_total">Remaining: %1$s</string>
-    <string name="debt_freedom_monthly_pace">At %1$s/mo · ~%2$d mo.</string>
-    <string name="debt_freedom_extra_slider_label">Extra monthly payment</string>
-    <string name="debt_freedom_extra_change">Change on the Debts tab</string>
-    <string name="debt_freedom_extra_amount">+ %1$s to monthly pace</string>
-    <string name="debt_freedom_months_saved">Become debt-free %1$d mo. sooner</string>
-    <string name="debt_freedom_hint">Forecast from your payments — on-device only.</string>
     <string name="debt_accelerate">Boost</string>
     <string name="debt_filter_all">All</string>
     <string name="debt_filter_active">Active</string>
@@ -368,7 +356,6 @@
     <string name="advisor_prompt_overdue">Overdue</string>
     <string name="advisor_prompt_goals">Goals</string>
     <string name="advisor_prompt_budget">Budget</string>
-    <string name="advisor_prompt_freedom">Freedom</string>
     <string name="advisor_input_hint">Ask the advisor…</string>
     <string name="advisor_send">Send</string>
     <string name="advisor_clear_history">Clear history</string>
@@ -382,7 +369,7 @@
     <string name="gamification_win_streak">Payment streak: %1$d. Keep going.</string>
     <string name="gamification_badge_first_step">First step</string>
     <string name="gamification_badge_half_way">Halfway</string>
-    <string name="gamification_badge_freedom">Freedom</string>
+    <string name="gamification_badge_freedom">Debts closed</string>
     <string name="gamification_badge_streak_3">Streak ×3</string>
 
     <string name="autopilot_settings_title">Autopilot</string>
@@ -398,7 +385,7 @@
     <string name="autopilot_applied">Micro-payment %1$s applied to «%2$s»</string>
     <string name="autopilot_apply_failed">Could not apply micro-payment</string>
     <string name="autopilot_notification_title">Debt micro-payment</string>
-    <string name="autopilot_notification_body">You can pay %1$s today — one step toward freedom</string>
+    <string name="autopilot_notification_body">You can pay %1$s today</string>
 
     <string name="messaging_channel_sms">SMS</string>
     <string name="messaging_channel_whatsapp">WhatsApp</string>
@@ -462,12 +449,11 @@
     <string name="celebration_reward_movie">A movie</string>
     <string name="celebration_reward_meal">A favorite meal</string>
     <string name="celebration_postcard_title">I closed a debt!</string>
-    <string name="celebration_postcard_body">Another step toward financial freedom — no numbers, just the win.</string>
+    <string name="celebration_postcard_body">Another step done — no numbers, just the win.</string>
     <string name="celebration_share">Share</string>
-    <string name="celebration_share_text">I closed a debt! Another step toward financial freedom 🎉</string>
+    <string name="celebration_share_text">I closed a debt! 🎉</string>
     <string name="weekly_checkin_title">Weekly check-in</string>
-    <string name="weekly_checkin_body">Your progress paying debts down:</string>
-    <string name="weekly_checkin_progress">%1$d%% of the total paid off</string>
+    <string name="weekly_checkin_body">Summary of debts you owe:</string>
     <string name="weekly_checkin_remaining">Remaining: %1$s</string>
     <string name="weekly_checkin_closed_count">Debts closed: %1$d</string>
     <string name="weekly_checkin_enabled">Weekly check-in</string>
@@ -477,17 +463,16 @@
     <string name="income_ideas_title">Income ideas</string>
     <string name="income_ideas_subtitle">Trusted ways to earn extra:</string>
     <string name="income_calculator_hint">To close every debt %2$d mo. sooner, you need about %1$s/mo of extra income.</string>
-    <string name="goal_hub_title">My goal — Freedom</string>
+    <string name="goal_hub_title">My goal</string>
     <string name="goal_hub_open">My goal</string>
     <string name="goal_hub_psychotype">Your psychotype: %1$s</string>
     <string name="goal_hub_payday">Days until payday: %1$d</string>
     <string name="goal_hub_autosave_hint">Autosave: set aside $5 today — a small step toward a big goal.</string>
     <string name="goal_hub_treat_title">Allow yourself</string>
     <string name="goal_hub_treat_body">$10 for a small treat — you earned it.</string>
-    <string name="goal_hub_freedom_project">Your Freedom project</string>
     <string name="goal_hub_remaining_positive">Still to invest in yourself: %1$s</string>
-    <string name="goal_hub_new_date">New date: %1$s</string>
     <string name="goal_hub_plan_title">Your payoff plan</string>
+    <string name="goal_hub_close_soon">soon</string>
     <string name="goal_hub_no_debts">No active \"I owe\" debts</string>
     <string name="goal_hub_no_payment_data">No data yet. Add the first payment for a forecast.</string>
     <string name="goal_hub_fears_title">Your inner barriers</string>
@@ -503,10 +488,9 @@
     <string name="goal_hub_word_power_hint">Positive wording instead of \"owe\" and \"overdue\"</string>
     <string name="goal_hub_badges_title">Your achievements</string>
     <string name="goal_hub_player_title">Points toward the win</string>
-    <string name="goal_hub_player_points">Your score: %1$d points (payoff progress)</string>
     <string name="goal_hub_player_challenges">Active challenges: %1$d</string>
     <string name="goal_hub_vision_title">Vision board</string>
-    <string name="goal_hub_vision_hint">Add a photo of the goal — a trip, a home, freedom</string>
+    <string name="goal_hub_vision_hint">Add a photo of the goal — a trip or a home</string>
     <string name="goal_hub_vision_pick">Choose photo</string>
     <string name="goal_hub_vision_clear">Remove photo</string>
     <string name="goal_hub_challenges_add">New challenge</string>
@@ -560,7 +544,7 @@
     <string name="checklist_luck_diary">Luck diary entry</string>
     <string name="onboarding_step">Step %1$d of %2$d</string>
     <string name="onboarding_welcome_title">Welcome to Financial Control!</string>
-    <string name="onboarding_welcome_body">You are not just tracking debts — you are building a path to financial freedom. Advisor suggests the next step, Autopilot reminds you of a micro-payment, and Goal Hub keeps the plan. Let\'s get acquainted.</string>
+    <string name="onboarding_welcome_body">This is where you keep debts and goals. Let\'s get acquainted.</string>
     <string name="onboarding_start">Start</string>
     <string name="onboarding_name_title">What is your name?</string>
     <string name="onboarding_name_label">Your name</string>
@@ -586,7 +570,7 @@
     <string name="onboarding_priority_label">What matters most as you get out of debt?</string>
     <string name="onboarding_goal_thanks">Thank you, %1$s! We saved your goal and will help you reach it.</string>
     <string name="onboarding_default_name">Friend</string>
-    <string name="onboarding_default_goal">Become financially free</string>
+    <string name="onboarding_default_goal">Save for an important goal</string>
     <string name="onboarding_summary_greeting">Hello, %1$s!</string>
     <string name="onboarding_summary_intro">We prepared a plan from your psychotype and goals. Advisor, Autopilot, and Goal Hub are ready when you are. You are not alone.</string>
     <string name="onboarding_summary_psychotype">Your psychotype</string>
@@ -603,8 +587,7 @@
     <string name="fear_money_corrupts_short">Fear of changing</string>
     <string name="fear_rich_bad_short">Negativity toward the rich</string>
     <string name="fear_afraid_numbers_short">Fear of numbers</string>
-    <string name="home_greeting_simple">Hi, %1$s! Let\'s take the first step toward freedom.</string>
-    <string name="home_greeting_progress">Hi, %1$s! Today you are %2$d%% closer to freedom.</string>
+    <string name="home_greeting_simple">Hi, %1$s!</string>
     <string name="goal_hub_greeting">%1$s, you are %2$s</string>
     <string name="goal_hub_luck_title_personal">%1$s\'s luck diary</string>
     <string name="goal_hub_challenges_title_personal">%1$s, your challenges</string>

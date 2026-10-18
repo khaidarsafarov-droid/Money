@@ -63,13 +63,13 @@ class DebtorRepositoryImpl(
         searchQuery: String,
         now: Long,
     ): Flow<List<com.example.money.domain.model.Debtor>> {
-        if (tab == DebtTab.Freedom || tab == DebtTab.Calendar) {
+        if (tab == DebtTab.Calendar) {
             return kotlinx.coroutines.flow.flowOf(emptyList())
         }
         val debtType = when (tab) {
             DebtTab.OwesMe -> DebtType.CREDITOR
             DebtTab.IOwe -> DebtType.DEBTOR
-            DebtTab.Freedom, DebtTab.Calendar -> DebtType.DEBTOR
+            DebtTab.Calendar -> DebtType.DEBTOR
         }
         val searchPattern = searchQuery.trim().let { query ->
             if (query.isBlank()) "%" else "%$query%"

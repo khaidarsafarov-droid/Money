@@ -6,8 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.repository.DebtorRepository
-import com.example.money.domain.util.DebtFreedomEngine
-import com.example.money.domain.model.DebtType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -54,28 +52,6 @@ class DebtListViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),
-    )
-
-    val freedomProjection: StateFlow<DebtFreedomEngine.FreedomProjection> = combine(
-        allDebtorsList,
-        extraMonthlyCents,
-    ) { debtors, extra ->
-        DebtFreedomEngine.calculateFreedomProjection(
-            debts = debtors,
-            debtType = DebtType.DEBTOR,
-            extraMonthlyCents = extra,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = DebtFreedomEngine.FreedomProjection(
-            freedomDateMillis = null,
-            monthsRemaining = null,
-            totalRemainingCents = 0L,
-            monthlyPaymentCents = 0L,
-            monthsSavedWithExtra = null,
-            hasActiveDebts = false,
-        ),
     )
 
     fun setDebtTab(tab: DebtTab) {

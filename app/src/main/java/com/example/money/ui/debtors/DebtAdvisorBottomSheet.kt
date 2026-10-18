@@ -142,7 +142,6 @@ private enum class AdvisorPrompt(val id: String, val labelRes: Int) {
     OVERDUE("overdue", R.string.advisor_prompt_overdue),
     GOALS("goals", R.string.advisor_prompt_goals),
     BUDGET("budget", R.string.advisor_prompt_budget),
-    FREEDOM("freedom", R.string.advisor_prompt_freedom),
     MOTIVATION("motivation", R.string.advisor_prompt_motivation),
 }
 

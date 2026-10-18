@@ -119,7 +119,6 @@ import com.example.money.ui.components.HomePreviewCards
 import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalProgress
 import com.example.money.domain.util.GoalPsychologyEngines
@@ -184,9 +183,6 @@ internal fun PhoneHomeLayout(
     onOpenDebtor: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
     onMarkDebtPaid: (Debtor) -> Unit,
-    freedomProjection: DebtFreedomEngine.FreedomProjection,
-    extraMonthlyCents: Long,
-    onExtraMonthlyChange: (Long) -> Unit,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onViewContactHistory: (Debtor) -> Unit,
@@ -490,11 +486,7 @@ internal fun PhoneHomeLayout(
                 if (page == HomeTab.Home) {
                 item {
                     Text(
-                        text = if (planProgressPercent > 0) {
-                            stringResource(R.string.home_greeting_progress, greetingName, planProgressPercent)
-                        } else {
-                            stringResource(R.string.home_greeting_simple, greetingName)
-                        },
+                        text = stringResource(R.string.home_greeting_simple, greetingName),
                         modifier = Modifier.padding(
                             horizontal = MoneySpacing.lg,
                             vertical = MoneySpacing.sm,
@@ -641,9 +633,6 @@ internal fun PhoneHomeLayout(
                         onDebtorFilterChange = onDebtorFilterChange,
                         debtSearchQuery = debtSearchQuery,
                         onDebtSearchQueryChange = onDebtSearchQueryChange,
-                        freedomProjection = freedomProjection,
-                        extraMonthlyCents = extraMonthlyCents,
-                        onExtraMonthlyChange = onExtraMonthlyChange,
                         showCheckIn = showCheckIn,
                         onDismissCheckIn = onDismissCheckIn,
                         gamificationState = gamificationState,
