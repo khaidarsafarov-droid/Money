@@ -13,14 +13,12 @@
     <string name="action_cancel">Отмена</string>
     <string name="action_edit">Изменить</string>
     <string name="action_delete">Удалить</string>
-    <string name="action_set_goal">Задать цель</string>
     <string name="action_mark_paid">Погашено</string>
     <string name="mark_debt_paid_title">Отметить долг погашенным?</string>
     <string name="mark_debt_paid_message">«%1$s»: остаток %2$s будет отмечен погашенным. Это действие может изменить общий баланс.</string>
     <string name="action_add_payment">Добавить оплату</string>
     <string name="action_make_payment">Внести оплату</string>
     <string name="action_confirm">Подтвердить</string>
-    <string name="action_remind_me">Напомнить</string>
     <string name="action_got_it">Понятно</string>
     <string name="action_save">Сохранить</string>
     <string name="action_next">Далее</string>
@@ -36,19 +34,15 @@
     <string name="notification_debt_overdue_i_owe">Вы просрочили возврат %1$s %2$s на %3$d дн.</string>
     <string name="notification_action_mark_paid">Погашено</string>
     <string name="notification_action_snooze">Напомнить позже</string>
-    <string name="notification_snoozed">Напоминание через 1 час</string>
     <string name="notification_permission_needed">Разрешите уведомления в настройках, чтобы получать напоминания</string>
     <string name="notification_permission_action">Разрешить уведомления</string>
     <string name="notification_permission_later">Не сейчас</string>
-    <string name="notification_sent">Напоминание показано</string>
 
     <!-- Widget -->
     <string name="widget_goal_title">Мои финансы</string>
     <string name="widget_goal_description">Доступный остаток, долги, цели и быстрое добавление</string>
-    <string name="widget_progress_percent">%1$d%% выполнено</string>
     <string name="widget_score_chip_debts">Долги · %1$d%%</string>
     <string name="widget_score_chip_goals">Цели · %1$d%%</string>
-    <string name="gauge_percent_complete">%1$d%% выполнено</string>
     <string name="operation_pending_suffix"> · Ожидает</string>
     <string name="calendar_prev_month">Предыдущий месяц</string>
     <string name="calendar_next_month">Следующий месяц</string>
@@ -62,21 +56,15 @@
     <string name="calendar_day_with_debts">День %1$d, есть долги</string>
     <string name="calendar_has_debt_mark">долг</string>
     <string name="calendar_day_empty_cd">День %1$d</string>
-    <string name="widget_remaining">Осталось: %1$s из %2$s</string>
     <string name="widget_remaining_empty">Задайте цель в приложении</string>
     <string name="widget_quick_add">Быстрое добавление</string>
-    <string name="widget_pending_count">Не подтверждено на телефоне: %1$d</string>
     <string name="widget_pending_badge">%1$d ждут</string>
     <string name="widget_overdue_debts">%1$d просроч. долг.</string>
-    <string name="widget_goals_section">Цели · %1$d</string>
     <string name="widget_active_items_title">Ближайшие</string>
     <string name="widget_item_type_goal">Цель</string>
     <string name="widget_item_type_debt">Долг</string>
-    <string name="widget_item_remaining">Осталось: %1$s</string>
     <string name="widget_item_progress">%1$d%% · %2$s</string>
     <string name="tab_debts">Долги</string>
-    <string name="tab_debtors">Должники</string>
-    <string name="tab_operations">Операции</string>
     <string name="nav_home">Главная</string>
     <string name="nav_more">Ещё</string>
     <string name="tab_notes">Заметки</string>
@@ -90,7 +78,6 @@
     <string name="note_line_label">За что</string>
     <string name="note_line_amount">Сумма</string>
     <string name="note_add_line">Добавить строку</string>
-    <string name="note_total">Итог</string>
     <string name="note_total_amount">Итог: %1$s</string>
     <string name="note_deleted">Удалено</string>
     <string name="note_delete_line_cd">Удалить строку %1$s</string>
@@ -109,8 +96,6 @@
     <string name="home_only_goals_debts">На главной только цели и долги</string>
     <string name="home_score_title">Прогресс</string>
     <string name="home_score_plan">Доля закрытых долгов и накоплений</string>
-    <string name="menu_add_goal">Новая цель</string>
-    <string name="menu_add_debt">Новый долг</string>
 
     <!-- P2P sync -->
     <string name="sync_status_offline">Синхронизация: нет сети</string>
@@ -122,16 +107,9 @@
     <string name="sync_web_url_copied">URL скопирован</string>
 
     <string name="section_goals">Цели</string>
-    <string name="quick_add_title">Быстрое добавление</string>
-    <string name="quick_add_deposit">Пополнить остаток</string>
-    <string name="quick_add_expense">Добавить расход</string>
-    <string name="quick_add_debt_payment">Оплата по долгу</string>
     <string name="tablet_detail_overview_hint">Выберите элемент слева, чтобы увидеть детали и действия.</string>
     <string name="tablet_detail_goal">Цель</string>
     <string name="tablet_detail_debtor">Должник</string>
-    <string name="tablet_detail_transfer">Операция</string>
-    <string name="tablet_detail_expense">Расход</string>
-    <string name="tablet_detail_goal_deadline">До дедлайна: %1$d дн.</string>
     <string name="tablet_list_goal_subtitle">%1$s / %2$s · %3$d%%</string>
     <string name="tablet_list_debtor_subtitle">Осталось %1$s из %2$s</string>
     <!-- Base URL of the React web app for widget payment deep links (?pay=itemId). Empty = native payment flow. -->
@@ -156,10 +134,6 @@
     <string name="debt_freedom_extra_amount">+ %1$s к ежемесячному темпу</string>
     <string name="debt_freedom_months_saved">Станете свободны на %1$d мес. раньше</string>
     <string name="debt_freedom_hint">Прогноз по вашим платежам — только на устройстве.</string>
-    <string name="debt_freedom_open_goal_hub">План погашения и советы</string>
-    <string name="debt_journey_progress">Вы прошли %1$d%% пути к закрытию</string>
-    <string name="debt_next_milestone">До вехи %1$d%%: %2$s</string>
-    <string name="debt_small_win_hint">Можно закрыть примерно за %1$d платеж(а)</string>
     <string name="debt_accelerate">Ускорить</string>
     <string name="debt_filter_all">Все</string>
     <string name="debt_filter_active">Активные</string>
@@ -169,20 +143,14 @@
     <string name="debt_add_title_i_owe">Новый долг: Я должен</string>
     <string name="debt_creditor_name_label">Имя кредитора</string>
     <string name="debt_date_received_label">Дата получения</string>
-    <string name="debt_received_date">Получено: %1$s</string>
     <string name="debt_note_label">Примечание</string>
-    <string name="debt_deduct_from_budget">Списать с общего бюджета</string>
-    <string name="debt_credit_to_budget">Зачислить в общий бюджет</string>
-    <string name="debt_balance_available">Доступно: %1$s</string>
     <string name="debt_payment_dialog_title">Добавить оплату</string>
     <string name="debt_payment_max">Максимум</string>
     <string name="debt_dashboard_owes_me">Мне должны</string>
     <string name="debt_dashboard_i_owe">Я должен</string>
-    <string name="debt_dashboard_active_count">%1$d актив.</string>
     <string name="error_amount_positive">Сумма должна быть больше 0</string>
     <string name="error_amount_below_paid">Сумма не может быть меньше уже внесённого</string>
     <string name="error_payment_exceeds_remaining">Сумма превышает остаток долга</string>
-    <string name="voice_play_report">Прослушать отчёт</string>
     <string name="widget_goal_fallback">Цель</string>
     <string name="calendar_debts_name">Долги</string>
     <string name="calendar_event_title_owes_me">%1$s должен(на) мне %2$s</string>
@@ -219,7 +187,6 @@
     <string name="empty_budget_hint">Нажмите + внизу экрана, чтобы добавить операцию</string>
     <string name="debtor_not_found">Должник не найден</string>
     <string name="error_payment_failed">Не удалось применить платёж</string>
-    <string name="debtor_add_title">Новый долг</string>
     <string name="debtor_edit_title">Изменить — %1$s</string>
     <string name="debtor_name_label">Имя должника</string>
     <string name="debtor_amount_label">Сумма долга</string>
@@ -227,14 +194,10 @@
     <string name="debtor_date_due_label">Срок возврата</string>
     <string name="debtor_add_confirm">Добавить</string>
     <string name="debtor_edit_paid_hint">Уже внесено: %1$s — сумма долга не может быть меньше</string>
-    <string name="debtor_given_date">Выдан: %1$s</string>
-    <string name="debtor_overdue">Просрочено</string>
     <string name="debtor_paid">Погашен</string>
     <string name="debtor_due_date">Срок: %1$s</string>
     <string name="debtor_due_short">Срок: %1$s</string>
-    <string name="debtor_target_amount">Сумма долга: %1$s</string>
     <string name="debtor_remaining">Осталось: %1$s</string>
-    <string name="debtor_paid_progress">Внесено %1$s из %2$s</string>
     <string name="action_remind">Напомнить</string>
     <string name="action_more">Ещё</string>
     <string name="action_close">Закрыть</string>
@@ -246,13 +209,8 @@
     <string name="transfer_over_goal_message">Перевод больше, чем осталось накопить по активным целям. Продолжить?</string>
     <string name="action_continue">Продолжить</string>
     <string name="debt_status_active">Активный</string>
-    <string name="debt_status_partial">Частично</string>
-    <string name="debt_payment_title">Оплата — %1$s</string>
     <string name="debt_payment_remaining">Остаток долга: %1$s</string>
     <string name="debt_payment_amount_label">Сумма платежа</string>
-    <string name="debt_payment_hint">Частичный платёж (например, 50 из 100) переведёт долг в статус «Частично». Полное погашение — в «Погашенные».</string>
-    <string name="debt_payment_submit">Внести</string>
-    <string name="msg_debt_payment_applied">Платёж учтён</string>
 
     <!-- Feedback -->
     <string name="msg_debtor_added">Долг добавлен</string>
@@ -266,12 +224,6 @@
     <string name="msg_goal_insufficient">Недостаточно средств на цели.</string>
     <string name="msg_goal_expense_added">Расход из цели сохранён.</string>
     <string name="msg_goal_transfer_added">Перевод в цель выполнен.</string>
-    <string name="global_balance_available">Доступно: %1$s</string>
-    <string name="global_balance_label">Доступный остаток</string>
-    <string name="global_balance_widget_formula_hint">Пополнения %1$s − расходы %2$s. В целях %3$s</string>
-    <string name="dashboard_see_more">Подробнее</string>
-    <string name="dashboard_see_less">Свернуть</string>
-    <string name="drawer_group_goals">Цели</string>
     <string name="drawer_group_data">Данные</string>
     <string name="drawer_group_autopilot">Автопилот</string>
     <string name="drawer_group_settings">Настройки</string>
@@ -281,16 +233,8 @@
     <string name="goal_deadline_passed_short">Просрочена</string>
     <string name="empty_goals_action">Создать цель</string>
     <string name="empty_debtors_action">Добавить долг</string>
-    <string name="empty_budget_action">Добавить операцию</string>
-    <string name="dashboard_debts_section">Долги и операции</string>
-    <string name="dashboard_debts_summary">%1$d активных долгов · %2$d операций в бюджете</string>
-    <string name="global_balance_available_hint">Пополнения − расходы. В целях: %1$s</string>
-    <string name="global_balance_goal_allocated_label">В цели</string>
-    <string name="global_balance_income_minus_expenses">Доходы − расходы</string>
     <string name="global_balance_accumulated_label">В целях</string>
     <string name="home_preview_accumulated">Накоплено</string>
-    <string name="home_preview_progress">Прогресс</string>
-    <string name="home_preview_progress_value">%1$d%%</string>
     <string name="add_sheet_title">Добавить</string>
     <string name="add_sheet_expense">Расход</string>
     <string name="add_sheet_deposit">Пополнение</string>
@@ -298,15 +242,6 @@
     <string name="add_sheet_goal_contribution">Взнос в цель</string>
     <string name="add_sheet_new_goal">Новая цель</string>
     <string name="global_balance_remaining_label">До целей</string>
-    <string name="global_balance_remaining_hint">До 100%% по активным целям осталось %1$s</string>
-    <string name="global_balance_deposits_label">Пополнения</string>
-    <string name="global_balance_expenses_label">Расходы</string>
-    <string name="metric_sign_saved">★</string>
-    <string name="metric_sign_to_goal">→</string>
-    <string name="metric_sign_owes_me">+</string>
-    <string name="metric_sign_i_owe">−</string>
-    <string name="metric_sign_deposit">+</string>
-    <string name="metric_sign_expense">−</string>
     <string name="operations_section_title">Операции</string>
     <string name="history_title">История</string>
     <string name="history_readonly_hint">Только просмотр</string>
@@ -321,25 +256,17 @@
     <string name="operation_goal_transfer">Перевод · %1$s</string>
     <string name="goal_action_transfer">Перевод</string>
     <string name="goal_action_expense">Расход</string>
-    <string name="goal_transfer_title">Перевод в цель</string>
     <string name="goal_current_readonly">Накоплено: %1$s (из операций)</string>
     <string name="goal_expense_title">Расход из цели</string>
     <string name="goal_starts_at_zero_hint">Накопления начинаются с нуля. Запишите сумму прямо в цель — свободные деньги от этого не уменьшатся.</string>
     <string name="msg_goal_saved">Цель сохранена</string>
-    <string name="msg_item_deleted">Запись удалена</string>
 
     <!-- Dialogs -->
     <string name="delete_debtor_title">Удалить долг?</string>
     <string name="delete_debtor_message">Долг %1$s будет удалён без возможности восстановления.</string>
-    <string name="delete_item_title">Удалить запись?</string>
-    <string name="delete_item_message">Это действие нельзя отменить.</string>
-    <string name="brother_add_title">Что добавить?</string>
-    <string name="brother_add_transfer">Перевод</string>
-    <string name="brother_add_expense">Расход</string>
 
     <!-- Welcome -->
     <string name="welcome_title">Добро пожаловать!</string>
-    <string name="welcome_body">1. Создайте личную цель кнопкой «Новая цель»\n2. Добавьте перевод или расход на карточке «Личные цели»\n3. Ведите список должников на вкладке ниже</string>
 
     <!-- Goals -->
     <string name="goals_section_title">Мои цели (%1$d)</string>
@@ -366,15 +293,11 @@
     <string name="goal_name_label">Для чего цель?</string>
     <string name="goal_name_hint">Например: ремонт грузовика, отпуск, резерв на рейс</string>
     <string name="goal_purpose_error">Укажите, для чего эта цель</string>
-    <string name="goal_purpose_card_label">Для чего</string>
     <string name="goal_target_label">Сумма цели</string>
-    <string name="goal_current_label">Уже накоплено</string>
     <string name="goal_deadline_toggle">Срок цели</string>
     <string name="goal_deadline_hint">Рассчитать ежедневный взнос до дедлайна</string>
     <string name="goal_deadline_label">Дата окончания</string>
     <string name="goal_deadline_date">Срок: %1$s</string>
-    <string name="goal_deadline_passed">Срок цели прошёл</string>
-    <string name="goal_daily_target">Ежедневно: %1$s</string>
     <string name="goal_pace_line">Ежедневно: %1$s · осталось %2$d дн.</string>
     <string name="goals_summary_saved">Накоплено %1$s из %2$s</string>
     <string name="goals_summary_daily">В день до сроков: %1$s</string>
@@ -388,10 +311,7 @@
     <string name="empty_goals_hint">Нажмите + внизу экрана, чтобы создать цель</string>
     <string name="delete_goal_title">Удалить цель?</string>
     <string name="delete_goal_message">Цель «%1$s» будет удалена без возможности восстановления.</string>
-    <string name="goal_card_title">Личные цели</string>
-    <string name="goal_set_prompt">Укажите сумму, которую хотите накопить</string>
     <string name="goal_remaining">Осталось: %1$s из %2$s</string>
-    <string name="goal_balance_label">Накоплено: %1$s</string>
 
     <!-- Voice Reporter -->
     <string name="voice_settings_title">Голосовые отчёты</string>
@@ -449,10 +369,7 @@
     <string name="advisor_input_hint">Спросите советника…</string>
     <string name="advisor_send">Отправить</string>
     <string name="advisor_clear_history">Очистить историю</string>
-    <string name="cd_open_drawer">Открыть меню</string>
     <string name="cd_more_options">Ещё</string>
-    <string name="cd_expand_debts">Развернуть долги и операции</string>
-    <string name="cd_collapse_debts">Свернуть долги и операции</string>
     <string name="cd_navigate_up">Назад</string>
     <string name="settings_open">Настройки</string>
 
@@ -483,7 +400,6 @@
     <string name="autopilot_notification_body">Сегодня можно внести %1$s — один шаг к свободе</string>
     <string name="autopilot_round_to_ten">Округлять платёж до $10</string>
     <string name="autopilot_round_to_ten_hint">Лишние $2–$5 автоматически пойдут на основной долг</string>
-    <string name="autopilot_strategy_avalanche_hint">Лавина: сначала долг с самой высокой процентной ставкой</string>
 
     <!-- Loan categories (Article integration) -->
     <string name="loan_category_label">Тип долга</string>
@@ -494,16 +410,11 @@
     <string name="loan_category_education">Обучение</string>
     <string name="loan_category_other">Другое</string>
     <string name="loan_category_priority_hint">Приоритетный — закрывайте в первую очередь</string>
-    <string name="loan_priority_badge">Приоритет</string>
     <string name="loan_interest_rate_label">Процентная ставка (%)</string>
 
     <!-- Debt overview -->
     <string name="debt_overview_title">Ваша отправная точка</string>
     <string name="debt_overview_owes_me_title">Вам должны</string>
-    <string name="debt_overview_owes_me_subtitle">Сумма активных долгов, которые ещё не вернули</string>
-    <string name="global_balance_debts_hint">Суммы «Мне должны» и «Я должен» не входят в доступный остаток</string>
-    <string name="debt_overview_subtitle">Это ваша отправная точка. Мы всё исправим.</string>
-    <string name="debt_overview_count">Активных долгов: %1$d</string>
     <string name="debt_overview_count_short">%1$d акт.</string>
 
     <!-- Celebration -->
@@ -543,7 +454,6 @@
     <string name="goal_hub_treat_title">Разрешите себе</string>
     <string name="goal_hub_treat_body">$10 на маленькую радость — вы это заслужили.</string>
     <string name="goal_hub_freedom_project">Ваш проект «Свобода»</string>
-    <string name="goal_hub_days_left">Осталось ~%1$d дней</string>
     <string name="goal_hub_remaining_positive">Осталось инвестировать в себя: %1$s</string>
     <string name="goal_hub_new_date">Новая дата: %1$s</string>
     <string name="goal_hub_plan_title">Ваш план погашения</string>
@@ -553,7 +463,6 @@
     <string name="goal_hub_motivation_title">Моя мотивация</string>
     <string name="goal_hub_motivation_hint">Что вы сделаете, когда закроете все долги?</string>
     <string name="goal_hub_motivation_placeholder">Например: поеду в путешествие мечты</string>
-    <string name="goal_hub_luck_title">Дневник удач</string>
     <string name="goal_hub_luck_add">Добавить запись</string>
     <string name="goal_hub_luck_monthly">За месяц: %1$s · записей: %2$d</string>
     <string name="goal_hub_luck_what">Что произошло?</string>
@@ -569,7 +478,6 @@
     <string name="goal_hub_vision_hint">Добавьте фото цели — путешествие, дом, свобода</string>
     <string name="goal_hub_vision_pick">Выбрать фото</string>
     <string name="goal_hub_vision_clear">Убрать фото</string>
-    <string name="goal_hub_challenges_title">Челленджи</string>
     <string name="goal_hub_challenges_add">Новый челлендж</string>
     <string name="goal_hub_challenges_empty">Выберите челлендж — маленькие победы ведут к большой цели</string>
     <string name="goal_hub_challenge_progress">Прогресс: %1$d / %2$d</string>
@@ -694,7 +602,6 @@
     <string name="calendar_removed">Событие удалено из календаря</string>
     <string name="calendar_action_add">Добавить в календарь</string>
     <string name="calendar_action_remove">Удалить из календаря</string>
-    <string name="calendar_action_update">Удалить из календаря</string>
     <string name="calendar_close_title">Долг закрыт</string>
     <string name="calendar_close_body">Удалить событие из календаря?</string>
     <string name="calendar_close_remove">Удалить</string>
@@ -718,7 +625,6 @@
     <string name="contact_history_i_owe">Я должен</string>
     <string name="contact_history_debt_dates">%1$s — срок %2$s</string>
 
-    <string name="branch_personal">Личное</string>
     <string name="messaging_channel_sms">SMS</string>
     <string name="messaging_channel_whatsapp">WhatsApp</string>
     <string name="messaging_channel_telegram">Telegram</string>
@@ -734,7 +640,6 @@
 
     <string name="debt_notification_settings_title">Уведомления о долгах</string>
     <string name="debt_notification_settings_subtitle">Напоминания, авто-сообщения и каналы связи</string>
-    <string name="debt_notification_enabled">Push-уведомления о долгах</string>
     <string name="debt_notification_advance_3d">Уведомление за 3 дня до срока</string>
     <string name="debt_notification_advance_1d">Уведомление за 1 день до срока</string>
     <string name="debt_auto_message_title">Авто-сообщения</string>

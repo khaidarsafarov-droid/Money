@@ -958,19 +958,3 @@ private fun encodeLongMap(map: Map<String, Long>): String {
     map.forEach { (key, value) -> objectJson.put(key, value) }
     return objectJson.toString()
 }
-
-private fun encodeLongIdSet(ids: Set<Long>): String {
-    val array = JSONArray()
-    ids.forEach { array.put(it) }
-    return array.toString()
-}
-
-private fun decodeLongIdSet(json: String?): Set<Long> = runCatching {
-    if (json.isNullOrBlank()) return emptySet()
-    val array = JSONArray(json)
-    buildSet {
-        for (index in 0 until array.length()) {
-            add(array.getLong(index))
-        }
-    }
-}.getOrDefault(emptySet())

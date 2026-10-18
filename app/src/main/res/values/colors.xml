@@ -1,28 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-
-    <!-- Light scheme from seed #0F6E5C. Widget night mode is out of scope. -->
-    <color name="cream_background">#FFF5FBF7</color>
-    <color name="cream_surface">#FFFFFFFF</color>
-    <color name="gold_primary">#FF0B6B59</color>
-    <color name="brown_text">#FF171D1B</color>
-    <color name="brown_muted">#FF3F4945</color>
-    <color name="gauge_track">#FFDBE5E0</color>
-
     <color name="widget_background">#FFF5FBF7</color>
-    <color name="widget_surface">#FFFFFFFF</color>
-    <color name="widget_primary">#FF0B6B59</color>
-    <color name="widget_on_surface">#FF171D1B</color>
-    <color name="widget_on_surface_variant">#FF3F4945</color>
-    <color name="widget_progress_track">#FFDBE5E0</color>
-    <color name="finance_positive">#FF0B6B59</color>
-    <color name="finance_negative">#FFBA1A1A</color>
-    <color name="overdue_red">#FFBA1A1A</color>
 </resources>
