@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_background">#FF0E1513</color>
+    <color name="widget_preview_hero">#FF85D6C0</color>
+    <color name="widget_preview_on_hero">#FF00382D</color>
+    <color name="widget_preview_alert">#FF93000A</color>
+    <color name="widget_preview_mint">#FF005142</color>
+    <color name="widget_preview_on_mint">#FFA1F2DB</color>
+    <color name="widget_preview_peach">#FF93000A</color>
+    <color name="widget_preview_on_peach">#FFFFDAD6</color>
+    <color name="widget_preview_lilac">#FF294A5F</color>
+    <color name="widget_preview_on_lilac">#FFC6E7FF</color>
+    <color name="widget_preview_sand">#FF334B44</color>
+    <color name="widget_preview_on_sand">#FFCDE9DF</color>
+</resources>
