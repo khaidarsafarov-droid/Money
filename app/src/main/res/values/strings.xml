@@ -140,7 +140,9 @@
     <string name="debt_history_advance">Взял %1$s</string>
     <string name="debt_history_payment">Вернул %1$s</string>
     <string name="debt_history_empty">Пока нет операций</string>
-    <string name="debt_history_add">Добавить в долг</string>
+    <string name="debt_history_took">Взял</string>
+    <string name="debt_history_returned">Отдал</string>
+    <string name="debt_history_pay_all">Весь остаток</string>
     <string name="debt_advance_amount_label">Сумма</string>
     <string name="debt_advance_date_label">Дата</string>
     <string name="debt_advance_note_label">Заметка</string>

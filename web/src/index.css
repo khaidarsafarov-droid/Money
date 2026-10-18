@@ -67,6 +67,11 @@
     @apply min-h-12 rounded-full px-4 py-2.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98];
   }
 
+  .history-took {
+    background: var(--color-error);
+    color: var(--color-on-error);
+  }
+
   .pill-btn-primary {
     @apply min-h-12 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors duration-150 hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
   }
@@ -163,5 +168,10 @@
     --color-hero-end: #00382d;
     --color-on-hero: #a1f2db;
     --color-hero-progress: #a1f2db;
+  }
+
+  .history-took {
+    background: var(--color-error-container);
+    color: var(--color-on-error-container);
   }
 }

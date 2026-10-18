@@ -137,6 +137,7 @@ export function processPayment(
   state: FinanceState,
   id: string,
   paymentCents: number,
+  paidAt?: string,
 ): FinanceState {
   if (paymentCents <= 0) return state;
 
@@ -162,7 +163,12 @@ export function processPayment(
     const payment: Payment = {
       id: createId(),
       amount: capped,
-      paidAt: new Date().toISOString(),
+      paidAt: paidAt
+        ? paidAt.includes("T")
+          ? paidAt
+          : `${paidAt}T00:00:00.000Z`
+        : new Date().toISOString(),
+      syncUpdatedAt: Date.now(),
     };
 
     return {

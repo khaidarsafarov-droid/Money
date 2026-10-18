@@ -244,6 +244,16 @@ internal fun HomeDialogs(
                     )
                 }
             },
+            onAddPayment = { amountCents, paidAt ->
+                scope.launch {
+                    val ok = debtorsViewModel.processPaymentSync(debtor.id, amountCents, false, paidAt)
+                    showMessage(
+                        context.getString(
+                            if (ok) R.string.msg_payment_neutral else R.string.error_payment_failed,
+                        ),
+                    )
+                }
+            },
         )
     }
     showDebtPaymentDialog?.let { debtor ->

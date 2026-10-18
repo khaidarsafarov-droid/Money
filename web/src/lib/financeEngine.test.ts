@@ -99,6 +99,24 @@ describe("processPayment", () => {
     expect(remainingAmount(item)).toBe(3_000);
   });
 
+  it("stores the chosen payment date and lowers the same debt", () => {
+    const withDebt = addDebt(emptyState, {
+      name: "Alex",
+      target: 5_000,
+      dateGiven: "2026-01-01",
+      dateDue: "2026-06-01",
+    });
+    const debtId = withDebt.items[0]!.id;
+    const grown = addDebtAdvance(withDebt, debtId, 2_000, "2026-02-01", "");
+    const paid = processPayment(grown, debtId, 1_000, "2026-03-04");
+    const item = paid.items[0]!;
+
+    expect(item.target).toBe(7_000);
+    expect(item.amount).toBe(1_000);
+    expect(remainingAmount(item)).toBe(6_000);
+    expect(item.history[0]?.paidAt).toBe("2026-03-04T00:00:00.000Z");
+  });
+
   it("caps payment at remaining balance", () => {
     const withDebt = addDebt(emptyState, {
       name: "Alex",

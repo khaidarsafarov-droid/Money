@@ -348,7 +348,11 @@ export function DashboardPage() {
                           onAddPayment={openPayment}
                           onAddAdvance={(amountCents, givenAt, note) => {
                             finance.addDebtAdvance(item.id, amountCents, givenAt, note);
-                            showToast("Сумма добавлена в этот долг");
+                            showToast("Добавлено");
+                          }}
+                          onRecordPayment={(amountCents, paidAt) => {
+                            const result = finance.recordDebtPayment(item.id, amountCents, paidAt);
+                            showToast(result.ok ? "Операция сохранена" : (result.error ?? "Не удалось применить платёж"));
                           }}
                           showHistory={item.type === "DEBT"}
                           onGoalTransfer={setTransferGoal}
@@ -389,7 +393,11 @@ export function DashboardPage() {
                         showHistory={selectedRecord.type === "DEBT"}
                         onAddAdvance={(amountCents, givenAt, note) => {
                           finance.addDebtAdvance(selectedRecord.id, amountCents, givenAt, note);
-                          showToast("Сумма добавлена в этот долг");
+                          showToast("Добавлено");
+                        }}
+                        onRecordPayment={(amountCents, paidAt) => {
+                          const result = finance.recordDebtPayment(selectedRecord.id, amountCents, paidAt);
+                          showToast(result.ok ? "Операция сохранена" : (result.error ?? "Не удалось применить платёж"));
                         }}
                         onGoalTransfer={setTransferGoal}
                         onGoalExpense={() => setExpenseGoal(selectedRecord)}

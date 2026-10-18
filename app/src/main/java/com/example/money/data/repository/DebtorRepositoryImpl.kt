@@ -209,13 +209,21 @@ class DebtorRepositoryImpl(
         }
     }
 
-    override suspend fun processDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Boolean =
-        recordDebtPayment(debtId, paymentCents, affectsBalance) != null
+    override suspend fun processDebtPayment(
+        debtId: Long,
+        paymentCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long,
+    ): Boolean = recordDebtPayment(debtId, paymentCents, affectsBalance, paidAt) != null
 
-    override suspend fun recordDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Long? =
-        SyncWriteGuard.withWriteLock {
-            processDebtPaymentInternal(debtId, paymentCents, affectsBalance)
-        }
+    override suspend fun recordDebtPayment(
+        debtId: Long,
+        paymentCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long,
+    ): Long? = SyncWriteGuard.withWriteLock {
+        processDebtPaymentInternal(debtId, paymentCents, affectsBalance, paidAt)
+    }
 
     override suspend fun undoDebtPayment(debtId: Long, paymentId: Long) {
         SyncWriteGuard.withWriteLock {
@@ -227,6 +235,7 @@ class DebtorRepositoryImpl(
         debtId: Long,
         paymentCents: Long,
         affectsBalance: Boolean,
+        paidAt: Long = System.currentTimeMillis(),
     ): Long? {
         if (paymentCents <= 0L) return null
 
@@ -242,14 +251,14 @@ class DebtorRepositoryImpl(
 
             val newCurrent = debtor.currentAmountCents + cappedPayment
             val newStatus = MoneyMath.resolveDebtStatus(debtor.targetAmountCents, newCurrent)
-            val syncAt = System.currentTimeMillis()
+            val recordedAt = System.currentTimeMillis()
 
             val insertedPaymentId = debtPaymentDao.insert(
                 DebtPaymentEntity(
                     debtorId = debtId,
                     amountCents = cappedPayment,
                     currency = debtor.currency,
-                    paidAt = syncAt,
+                    paidAt = paidAt,
                     affectsBalance = affectsBalance,
                     mode = debtor.mode,
                 ),
@@ -267,20 +276,26 @@ class DebtorRepositoryImpl(
                     debtor = updatedDebtor,
                     paymentCents = cappedPayment,
                     paymentId = insertedPaymentId,
-                    paidAt = syncAt,
+                    paidAt = paidAt,
                 )
             }
             applied = true
         }
 
         if (applied) {
+            val recordedAt = System.currentTimeMillis()
             paymentId?.let { id ->
-                debtPaymentDao.getById(id)?.let { syncQueueRecorder.recordDebtPayment(it) }
+                debtPaymentDao.getById(id)?.let { payment ->
+                    syncQueueRecorder.recordDebtPayment(
+                        payment,
+                        syncUpdatedAt = maxOf(payment.paidAt, recordedAt),
+                    )
+                }
             }
             debtorDao.getDebtorById(debtId)?.let { debtor ->
-                val syncAt = debtPaymentDao.getPaymentsForDebtor(debtor.mode, debtId)
-                    .maxOfOrNull { it.paidAt } ?: System.currentTimeMillis()
-                syncQueueRecorder.recordDebt(debtor, syncAt)
+                val latestPaidAt = debtPaymentDao.getPaymentsForDebtor(debtor.mode, debtId)
+                    .maxOfOrNull { it.paidAt } ?: recordedAt
+                syncQueueRecorder.recordDebt(debtor, maxOf(latestPaidAt, recordedAt))
             }
         }
         return if (applied) paymentId else null

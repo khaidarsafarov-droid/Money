@@ -384,11 +384,20 @@ class DebtorsViewModel(
         return saved
     }
 
-    suspend fun processPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Boolean =
-        recordPaymentSync(debtorId, amountCents, affectsBalance) != null
+    suspend fun processPaymentSync(
+        debtorId: Long,
+        amountCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long = System.currentTimeMillis(),
+    ): Boolean = recordPaymentSync(debtorId, amountCents, affectsBalance, paidAt) != null
 
-    suspend fun recordPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Long? {
-        val paymentId = debtorRepository.recordDebtPayment(debtorId, amountCents, affectsBalance)
+    suspend fun recordPaymentSync(
+        debtorId: Long,
+        amountCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long = System.currentTimeMillis(),
+    ): Long? {
+        val paymentId = debtorRepository.recordDebtPayment(debtorId, amountCents, affectsBalance, paidAt)
         val debtor = debtorRepository.getDebtorById(debtorId)
         if (debtor?.isPaid == true) {
             debtReminderScheduler.cancel(debtorId)

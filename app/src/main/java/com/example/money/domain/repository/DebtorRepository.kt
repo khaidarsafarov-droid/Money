@@ -29,10 +29,20 @@ interface DebtorRepository {
 
     suspend fun updateDebtor(debtor: Debtor, previousAffectsBalance: Boolean)
 
-    suspend fun processDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Boolean
+    suspend fun processDebtPayment(
+        debtId: Long,
+        paymentCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long = System.currentTimeMillis(),
+    ): Boolean
 
     /** Same write as [processDebtPayment]. Returns the stored payment id so the caller can undo it. */
-    suspend fun recordDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Long?
+    suspend fun recordDebtPayment(
+        debtId: Long,
+        paymentCents: Long,
+        affectsBalance: Boolean,
+        paidAt: Long = System.currentTimeMillis(),
+    ): Long?
 
     suspend fun undoDebtPayment(debtId: Long, paymentId: Long)
 

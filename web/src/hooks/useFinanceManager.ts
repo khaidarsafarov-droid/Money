@@ -136,6 +136,17 @@ export function useFinanceManager() {
     [persist, enrichedState],
   );
 
+  const recordDebtPayment = useCallback(
+    (id: string, amountCents: number, paidAt?: string): { ok: boolean; error?: string } => {
+      if (!Number.isFinite(amountCents) || amountCents <= 0) {
+        return { ok: false, error: "Сумма должна быть больше 0" };
+      }
+      persist(applyPayment(enrichedState, id, amountCents, paidAt));
+      return { ok: true };
+    },
+    [persist, enrichedState],
+  );
+
   const addDebtAdvance = useCallback(
     (debtId: string, amountCents: number, givenAt: string, note = "") => {
       persist(addDebtAdvanceToState(enrichedState, debtId, amountCents, givenAt, note));
@@ -179,6 +190,7 @@ export function useFinanceManager() {
     addGoal,
     addDebt,
     addDebtAdvance,
+    recordDebtPayment,
     removeItem: removeFinancialItem,
     replaceState,
     formatUsd,

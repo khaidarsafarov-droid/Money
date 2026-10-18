@@ -7,6 +7,7 @@ interface FinanceCardProps {
   hideAmounts?: boolean;
   onAddPayment?: (item: FinancialItem, prefillCents?: number) => void;
   onAddAdvance?: (amountCents: number, givenAt: string, note: string) => void;
+  onRecordPayment?: (amountCents: number, paidAt: string) => void;
   showHistory?: boolean;
   onGoalTransfer?: (item: FinancialItem) => void;
   onGoalExpense?: () => void;
@@ -18,6 +19,7 @@ export function FinanceCard({
   hideAmounts = false,
   onAddPayment,
   onAddAdvance,
+  onRecordPayment,
   showHistory = false,
   onGoalTransfer,
   onGoalExpense,
@@ -30,6 +32,7 @@ export function FinanceCard({
         hideAmounts={hideAmounts}
         onAddPayment={onAddPayment}
         onAddAdvance={onAddAdvance}
+        onRecordPayment={onRecordPayment}
         showHistory={showHistory}
         onDelete={onDelete}
       />
