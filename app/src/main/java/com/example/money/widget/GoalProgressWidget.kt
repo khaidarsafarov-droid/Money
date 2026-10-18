@@ -3,7 +3,6 @@ package com.example.money.widget
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -20,8 +19,11 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
+import androidx.glance.layout.ColumnScope
 import androidx.glance.layout.Row
+import androidx.glance.layout.RowScope
 import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
@@ -76,30 +78,22 @@ private val OverdueText = dayNight(LightColorScheme.error, DarkColorScheme.error
 private val ChipOverdue = dayNight(LightColorScheme.errorContainer, DarkColorScheme.errorContainer)
 private val OnChipOverdue = dayNight(LightColorScheme.onErrorContainer, DarkColorScheme.onErrorContainer)
 private val OnChip = dayNight(LightColorScheme.onPrimaryContainer, DarkColorScheme.onPrimaryContainer)
+private val OnPastelMint = dayNight(LightColorScheme.onPrimaryContainer, DarkColorScheme.onPrimaryContainer)
+private val OnPastelPeach = dayNight(LightColorScheme.onErrorContainer, DarkColorScheme.onErrorContainer)
+private val OnPastelLilac = dayNight(LightColorScheme.onTertiaryContainer, DarkColorScheme.onTertiaryContainer)
+private val OnPastelSand = dayNight(LightColorScheme.onSecondaryContainer, DarkColorScheme.onSecondaryContainer)
 
 private val WidgetColorProviders = ColorProviders(
     light = LightColorScheme,
     dark = DarkColorScheme,
 )
 
-private enum class WidgetDensity {
-    Compact,
-    Standard,
-    Expanded,
-}
-
-private fun widgetDensity(height: Dp): WidgetDensity = when {
-    height < 150.dp -> WidgetDensity.Compact
-    height < 260.dp -> WidgetDensity.Standard
-    else -> WidgetDensity.Expanded
-}
-
 @Composable
 private fun GoalWidgetContent(
     context: Context,
     snapshot: WidgetGoalSnapshot,
 ) {
-    val density = widgetDensity(LocalSize.current.height)
+    val showList = showsWidgetActiveList(LocalSize.current.height)
     val region = snapshot.currencyRegion
     val hide = snapshot.hideAmounts
     val goalsIntent = AppIntents.openGoalsIntent(context)
@@ -113,31 +107,21 @@ private fun GoalWidgetContent(
             .fillMaxSize()
             .cornerRadius(24.dp)
             .background(PageBackground)
-            .padding(8.dp),
+            .padding(if (showList) 8.dp else 0.dp),
     ) {
-        BalanceHero(
+        SummaryCard(
             context = context,
             snapshot = snapshot,
             region = region,
             hide = hide,
-            showFormula = density != WidgetDensity.Compact,
-            onClick = actionStartActivity(goalsIntent),
+            expand = !showList,
+            onCardClick = actionStartActivity(goalsIntent),
+            owesMe = actionStartActivity(owesMeIntent),
+            iOwe = actionStartActivity(iOweIntent),
+            goals = actionStartActivity(goalsIntent),
         )
 
-        if (density != WidgetDensity.Compact) {
-            Spacer(modifier = GlanceModifier.height(8.dp))
-            StatGrid(
-                context = context,
-                snapshot = snapshot,
-                region = region,
-                hide = hide,
-                owesMe = actionStartActivity(owesMeIntent),
-                iOwe = actionStartActivity(iOweIntent),
-                goals = actionStartActivity(goalsIntent),
-            )
-        }
-
-        if (density == WidgetDensity.Expanded) {
+        if (showList) {
             if (snapshot.activeItems.isNotEmpty()) {
                 Spacer(modifier = GlanceModifier.height(8.dp))
                 Text(
@@ -147,6 +131,7 @@ private fun GoalWidgetContent(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                     ),
+                    maxLines = 1,
                 )
                 snapshot.activeItems.take(2).forEach { item ->
                     Spacer(modifier = GlanceModifier.height(8.dp))
@@ -162,6 +147,7 @@ private fun GoalWidgetContent(
                 Text(
                     text = context.getString(R.string.widget_remaining_empty),
                     style = TextStyle(color = InkMuted, fontSize = 12.sp),
+                    maxLines = 1,
                 )
             }
 
@@ -176,27 +162,29 @@ private fun GoalWidgetContent(
 }
 
 @Composable
-private fun BalanceHero(
+private fun SummaryCard(
     context: Context,
     snapshot: WidgetGoalSnapshot,
     region: com.example.money.settings.CurrencyRegion,
     hide: Boolean,
-    showFormula: Boolean,
-    onClick: androidx.glance.action.Action,
+    expand: Boolean,
+    onCardClick: androidx.glance.action.Action,
+    owesMe: androidx.glance.action.Action,
+    iOwe: androidx.glance.action.Action,
+    goals: androidx.glance.action.Action,
 ) {
-    val amountColor = OnHero
     val scoreLabel = context.getString(
         if (snapshot.scoreUsesDebts) R.string.widget_score_chip_debts else R.string.widget_score_chip_goals,
         snapshot.progressPercent,
     )
+    val cardModifier = if (expand) GlanceModifier.fillMaxSize() else GlanceModifier.fillMaxWidth()
 
     Column(
-        modifier = GlanceModifier
-            .fillMaxWidth()
+        modifier = cardModifier
             .cornerRadius(22.dp)
             .background(Hero)
-            .clickable(onClick)
-            .padding(16.dp),
+            .clickable(onCardClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
@@ -206,6 +194,7 @@ private fun BalanceHero(
                 text = context.getString(R.string.widget_goals_debts_title),
                 modifier = GlanceModifier.defaultWeight(),
                 style = TextStyle(color = OnHero, fontSize = 12.sp),
+                maxLines = 1,
             )
             Text(
                 text = scoreLabel,
@@ -214,129 +203,134 @@ private fun BalanceHero(
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
                 ),
-            )
-        }
-        Spacer(modifier = GlanceModifier.height(8.dp))
-        Text(
-            text = Formatters.currency(snapshot.totalAccumulated, region, hide),
-            style = TextStyle(
-                color = amountColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 26.sp,
-            ),
-            maxLines = 1,
-        )
-        if (showFormula) {
-            Spacer(modifier = GlanceModifier.height(8.dp))
-            Text(
-                text = context.getString(R.string.debt_dashboard_owes_me) +
-                    " " + Formatters.currencyFromCents(snapshot.owedToMeCents, region, hide) +
-                    " · " + context.getString(R.string.debt_dashboard_i_owe) +
-                    " " + Formatters.currencyFromCents(snapshot.iOweCents, region, hide),
-                style = TextStyle(color = OnHero, fontSize = 12.sp),
-                maxLines = 2,
+                maxLines = 1,
             )
         }
         if (snapshot.overdueDebtCount > 0 || snapshot.pendingCount > 0) {
-            Spacer(modifier = GlanceModifier.height(8.dp))
+            Spacer(modifier = GlanceModifier.height(2.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (snapshot.overdueDebtCount > 0) {
                     Text(
                         text = context.getString(R.string.widget_overdue_debts, snapshot.overdueDebtCount),
                         style = TextStyle(
                             color = HeroAlert,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
                         ),
+                        maxLines = 1,
                     )
                 }
                 if (snapshot.overdueDebtCount > 0 && snapshot.pendingCount > 0) {
-                    Spacer(modifier = GlanceModifier.width(8.dp))
+                    Text(
+                        text = " · ",
+                        style = TextStyle(color = OnHero, fontSize = 11.sp),
+                        maxLines = 1,
+                    )
                 }
                 if (snapshot.pendingCount > 0) {
                     Text(
                         text = context.getString(R.string.widget_pending_badge, snapshot.pendingCount),
-                        style = TextStyle(color = OnHero, fontSize = 12.sp),
+                        style = TextStyle(color = OnHero, fontSize = 11.sp),
+                        maxLines = 1,
                     )
                 }
             }
+        }
+        Spacer(modifier = GlanceModifier.height(6.dp))
+        StatRow(expand = expand) {
+            PastelStat(
+                label = context.getString(R.string.debt_dashboard_owes_me),
+                value = maskFromCents(snapshot.owedToMeCents, region, hide),
+                container = PastelMint,
+                content = OnPastelMint,
+                onClick = owesMe,
+                expand = expand,
+            )
+            Spacer(modifier = GlanceModifier.width(4.dp))
+            PastelStat(
+                label = context.getString(R.string.debt_dashboard_i_owe),
+                value = maskFromCents(snapshot.iOweCents, region, hide),
+                container = PastelPeach,
+                content = OnPastelPeach,
+                onClick = iOwe,
+                expand = expand,
+            )
+        }
+        Spacer(modifier = GlanceModifier.height(4.dp))
+        StatRow(expand = expand) {
+            PastelStat(
+                label = context.getString(R.string.global_balance_accumulated_label),
+                value = maskCompact(snapshot.totalAccumulated, region, hide),
+                container = PastelLilac,
+                content = OnPastelLilac,
+                onClick = goals,
+                expand = expand,
+            )
+            Spacer(modifier = GlanceModifier.width(4.dp))
+            PastelStat(
+                label = context.getString(R.string.global_balance_remaining_label),
+                value = maskCompact(snapshot.totalRemainingToGoal, region, hide),
+                container = PastelSand,
+                content = OnPastelSand,
+                onClick = goals,
+                expand = expand,
+            )
         }
     }
 }
 
 @Composable
-private fun StatGrid(
-    context: Context,
-    snapshot: WidgetGoalSnapshot,
-    region: com.example.money.settings.CurrencyRegion,
-    hide: Boolean,
-    owesMe: androidx.glance.action.Action,
-    iOwe: androidx.glance.action.Action,
-    goals: androidx.glance.action.Action,
+private fun ColumnScope.StatRow(
+    expand: Boolean,
+    content: @Composable RowScope.() -> Unit,
 ) {
-    Row(modifier = GlanceModifier.fillMaxWidth()) {
-        PastelStat(
-            label = context.getString(R.string.debt_dashboard_owes_me),
-            value = maskFromCents(snapshot.owedToMeCents, region, hide),
-            container = PastelMint,
-            onClick = owesMe,
-            modifier = GlanceModifier.defaultWeight(),
-        )
-        Spacer(modifier = GlanceModifier.width(8.dp))
-        PastelStat(
-            label = context.getString(R.string.debt_dashboard_i_owe),
-            value = maskFromCents(snapshot.iOweCents, region, hide),
-            container = PastelPeach,
-            onClick = iOwe,
-            modifier = GlanceModifier.defaultWeight(),
-        )
+    val modifier = if (expand) {
+        GlanceModifier.fillMaxWidth().defaultWeight()
+    } else {
+        GlanceModifier.fillMaxWidth()
     }
-    Spacer(modifier = GlanceModifier.height(8.dp))
-    Row(modifier = GlanceModifier.fillMaxWidth()) {
-        PastelStat(
-            label = context.getString(R.string.global_balance_accumulated_label),
-            value = maskCompact(snapshot.totalAccumulated, region, hide),
-            container = PastelLilac,
-            onClick = goals,
-            modifier = GlanceModifier.defaultWeight(),
-        )
-        Spacer(modifier = GlanceModifier.width(8.dp))
-        PastelStat(
-            label = context.getString(R.string.global_balance_remaining_label),
-            value = maskCompact(snapshot.totalRemainingToGoal, region, hide),
-            container = PastelSand,
-            onClick = goals,
-            modifier = GlanceModifier.defaultWeight(),
-        )
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        content()
     }
 }
 
 @Composable
-private fun PastelStat(
+private fun RowScope.PastelStat(
     label: String,
     value: String,
     container: ColorProvider,
+    content: ColorProvider,
     onClick: androidx.glance.action.Action,
-    modifier: GlanceModifier,
+    expand: Boolean,
 ) {
+    val amountSize = widgetAmountFontSize(LocalSize.current.width, value.length)
+    var modifier = GlanceModifier
+        .defaultWeight()
+        .cornerRadius(12.dp)
+        .background(container)
+        .clickable(onClick)
+        .padding(horizontal = 8.dp, vertical = 4.dp)
+    if (expand) {
+        modifier = modifier.fillMaxHeight()
+    }
     Column(
-        modifier = modifier
-            .cornerRadius(18.dp)
-            .background(container)
-            .clickable(onClick)
-            .padding(8.dp),
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
-            style = TextStyle(color = InkMuted, fontSize = 12.sp),
+            style = TextStyle(color = content, fontSize = 11.sp),
             maxLines = 1,
         )
         Text(
             text = value,
             style = TextStyle(
-                color = Ink,
+                color = content,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                fontSize = amountSize,
             ),
             maxLines = 1,
         )

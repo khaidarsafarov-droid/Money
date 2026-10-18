@@ -44,6 +44,12 @@
     <string name="widget_goal_description">Available balance, debts, goals, and quick add</string>
     <string name="widget_score_chip_debts">Debts · %1$d%%</string>
     <string name="widget_score_chip_goals">Goals · %1$d%%</string>
+    <string name="widget_preview_score">Goals · 33%</string>
+    <string name="widget_preview_overdue">1 overdue</string>
+    <string name="widget_preview_owes">$22,115.00</string>
+    <string name="widget_preview_i_owe">$0.00</string>
+    <string name="widget_preview_saved">$33,000.00</string>
+    <string name="widget_preview_long_amount">$122,115.00</string>
     <string name="operation_pending_suffix"> · Pending</string>
     <string name="calendar_prev_month">Previous month</string>
     <string name="calendar_next_month">Next month</string>
