@@ -61,6 +61,26 @@ class WidgetSnapshotBuilderTest {
         assertTrue(snapshot.activeItems.first().isOverdue)
     }
 
+    @Test
+    fun moneyOwedToMeDoesNotReplaceTheGoalScore() {
+        val snapshot = build(
+            goals = listOf(moneyGoal(id = 1, target = 10_000, current = 4_000)),
+            debts = listOf(
+                debt(
+                    id = 3,
+                    name = "Owes me",
+                    type = DebtType.CREDITOR,
+                    target = 8_000,
+                    current = 0,
+                    due = now + 86_400_000L,
+                ),
+            ),
+        )
+
+        assertFalse(snapshot.scoreUsesDebts)
+        assertEquals(40, snapshot.progressPercent)
+    }
+
     private fun build(
         goals: List<SavingsGoal>,
         debts: List<Debtor>,

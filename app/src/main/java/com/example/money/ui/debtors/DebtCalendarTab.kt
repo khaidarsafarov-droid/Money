@@ -2,13 +2,16 @@ package com.example.money.ui.debtors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,14 +30,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 import java.util.Calendar
 
@@ -58,7 +60,7 @@ fun DebtCalendarTab(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!calendarPermissionGranted && (onRequestCalendarPermission != null || onOpenCalendarSettings != null)) {
@@ -83,94 +85,108 @@ fun DebtCalendarTab(
             }
             val prevMonthCd = stringResource(R.string.calendar_prev_month)
             val nextMonthCd = stringResource(R.string.calendar_next_month)
+            val debtMark = stringResource(R.string.calendar_has_debt_mark)
+            val weekdayLabels = listOf(
+                R.string.calendar_weekday_mon,
+                R.string.calendar_weekday_tue,
+                R.string.calendar_weekday_wed,
+                R.string.calendar_weekday_thu,
+                R.string.calendar_weekday_fri,
+                R.string.calendar_weekday_sat,
+                R.string.calendar_weekday_sun,
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    "◀",
+                Box(
                     modifier = Modifier
+                        .size(48.dp)
                         .semantics { contentDescription = prevMonthCd }
                         .clickable { monthAnchor = shiftMonth(monthAnchor, -1) },
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("◀", fontSize = 16.sp)
+                }
                 Text(monthLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(
-                    "▶",
+                Box(
                     modifier = Modifier
+                        .size(48.dp)
                         .semantics { contentDescription = nextMonthCd }
                         .clickable { monthAnchor = shiftMonth(monthAnchor, 1) },
-                )
-            }
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                listOf(
-                    R.string.calendar_weekday_mon,
-                    R.string.calendar_weekday_tue,
-                    R.string.calendar_weekday_wed,
-                    R.string.calendar_weekday_thu,
-                    R.string.calendar_weekday_fri,
-                    R.string.calendar_weekday_sat,
-                    R.string.calendar_weekday_sun,
-                ).forEach { labelRes ->
-                    Text(
-                        stringResource(labelRes),
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("▶", fontSize = 16.sp)
                 }
             }
 
-            days.chunked(7).forEach { week ->
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    week.forEach { dayMillis ->
-                        val inMonth = isSameMonth(dayMillis, monthAnchor)
-                        val hasDebts = dayHasDebts(activeDebts, dayMillis)
-                        val dayNumber = Calendar.getInstance().apply { timeInMillis = dayMillis }
-                            .get(Calendar.DAY_OF_MONTH)
-                        val dayCd = stringResource(
-                            if (hasDebts) R.string.calendar_day_with_debts else R.string.calendar_day_empty_cd,
-                            dayNumber,
+            Column(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    weekdayLabels.forEach { labelRes ->
+                        Text(
+                            stringResource(labelRes),
+                            modifier = Modifier.width(48.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .padding(2.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    when {
-                                        dayMillis == selectedDay -> GoldPrimary.copy(alpha = 0.2f)
-                                        hasDebts -> FinancePositive.copy(alpha = 0.15f)
-                                        else -> MaterialTheme.colorScheme.surface
-                                    },
-                                )
-                                .semantics { contentDescription = dayCd }
-                                .clickable(enabled = inMonth) {
-                                    if (inMonth) selectedDay = dayMillis
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    if (inMonth) dayNumber.toString() else "",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = if (hasDebts) FontWeight.Bold else FontWeight.Normal,
-                                )
-                                if (hasDebts && inMonth) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(CircleShape)
-                                            .background(FinanceNegative)
-                                            .padding(2.dp),
+                    }
+                }
+
+                days.chunked(7).forEach { week ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        week.forEach { dayMillis ->
+                            val inMonth = isSameMonth(dayMillis, monthAnchor)
+                            val hasDebts = dayHasDebts(activeDebts, dayMillis)
+                            val dayNumber = Calendar.getInstance().apply { timeInMillis = dayMillis }
+                                .get(Calendar.DAY_OF_MONTH)
+                            val dayCd = stringResource(
+                                if (hasDebts) R.string.calendar_day_with_debts else R.string.calendar_day_empty_cd,
+                                dayNumber,
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        when {
+                                            dayMillis == selectedDay -> MaterialTheme.colorScheme.primaryContainer
+                                            else -> MaterialTheme.colorScheme.surface
+                                        },
                                     )
+                                    .semantics { contentDescription = dayCd }
+                                    .clickable(enabled = inMonth) {
+                                        if (inMonth) selectedDay = dayMillis
+                                    },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        if (inMonth) dayNumber.toString() else "",
+                                        fontSize = 14.sp,
+                                        lineHeight = 16.sp,
+                                        fontWeight = if (hasDebts) FontWeight.Bold else FontWeight.Normal,
+                                        textDecoration = if (hasDebts && inMonth) TextDecoration.Underline else null,
+                                    )
+                                    if (hasDebts && inMonth) {
+                                        Text(
+                                            debtMark,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontSize = 12.sp,
+                                            lineHeight = 14.sp,
+                                            maxLines = 1,
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                    repeat(7 - week.size) {
-                        Box(modifier = Modifier.weight(1f).aspectRatio(1f))
+                        repeat(7 - week.size) {
+                            Box(modifier = Modifier.size(48.dp))
+                        }
                     }
                 }
             }
@@ -181,7 +197,7 @@ fun DebtCalendarTab(
                 Text(stringResource(R.string.calendar_day_empty), style = MaterialTheme.typography.bodySmall)
             } else {
                 dayDebts.forEach { debtor ->
-                    val color = if (debtor.debtType == DebtType.CREDITOR) FinancePositive else FinanceNegative
+                    val color = if (debtor.debtType == DebtType.CREDITOR) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                     Text(
                         text = "• ${debtor.name} · ${Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency, hide = hideAmounts)}",
                         color = color,

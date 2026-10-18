@@ -1,7 +1,6 @@
 package com.example.money.widget
 
 import android.content.Context
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -35,14 +34,8 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.money.R
 import com.example.money.navigation.AppIntents
-import com.example.money.ui.theme.BrownMuted
-import com.example.money.ui.theme.BrownText
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinanceNegative
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GaugeTrack
-import com.example.money.ui.theme.GoldPrimary
+import com.example.money.ui.theme.DarkColorScheme
+import com.example.money.ui.theme.LightColorScheme
 import com.example.money.ui.util.Formatters
 import kotlinx.coroutines.flow.first
 
@@ -65,34 +58,28 @@ class GoalProgressWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = GoalProgressWidget()
 }
 
-private val MintPage = Color(0xFFE7F6EF)
-private val HeroTeal = Color(0xFF0F6E5C)
-private val HeroText = Color(0xFFFFFFFF)
-private val HeroMuted = Color(0xC7FFFFFF)
-private val HeroAlert = Color(0xFFFFE4CC)
-private val Ink = Color(0xFF12352C)
-private val InkMuted = Color(0xFF5C7D72)
-private val PastelMint = Color(0xFFD9F6E6)
-private val PastelPeach = Color(0xFFFFE4CC)
-private val PastelLilac = Color(0xFFECE3FB)
-private val PastelSand = Color(0xFFFFF4CF)
-private val CardSurface = Color(0xFFF7FCF9)
+private fun dayNight(day: Color, night: Color): ColorProvider =
+    androidx.glance.color.ColorProvider(day, night)
+
+private val PageBackground = dayNight(LightColorScheme.background, DarkColorScheme.background)
+private val Hero = dayNight(LightColorScheme.primary, DarkColorScheme.primary)
+private val OnHero = dayNight(LightColorScheme.onPrimary, DarkColorScheme.onPrimary)
+private val HeroAlert = dayNight(LightColorScheme.errorContainer, DarkColorScheme.errorContainer)
+private val Ink = dayNight(LightColorScheme.onSurface, DarkColorScheme.onSurface)
+private val InkMuted = dayNight(LightColorScheme.onSurfaceVariant, DarkColorScheme.onSurfaceVariant)
+private val PastelMint = dayNight(LightColorScheme.primaryContainer, DarkColorScheme.primaryContainer)
+private val PastelPeach = dayNight(LightColorScheme.errorContainer, DarkColorScheme.errorContainer)
+private val PastelLilac = dayNight(LightColorScheme.tertiaryContainer, DarkColorScheme.tertiaryContainer)
+private val PastelSand = dayNight(LightColorScheme.secondaryContainer, DarkColorScheme.secondaryContainer)
+private val CardSurface = dayNight(LightColorScheme.surfaceContainerLowest, DarkColorScheme.surfaceContainerLowest)
+private val OverdueText = dayNight(LightColorScheme.error, DarkColorScheme.error)
+private val ChipOverdue = dayNight(LightColorScheme.errorContainer, DarkColorScheme.errorContainer)
+private val OnChipOverdue = dayNight(LightColorScheme.onErrorContainer, DarkColorScheme.onErrorContainer)
+private val OnChip = dayNight(LightColorScheme.onPrimaryContainer, DarkColorScheme.onPrimaryContainer)
 
 private val WidgetColorProviders = ColorProviders(
-    lightColorScheme(
-        primary = GoldPrimary,
-        onPrimary = Color.White,
-        background = CreamBackground,
-        onBackground = BrownText,
-        surface = CreamSurface,
-        onSurface = BrownText,
-        onSurfaceVariant = BrownMuted,
-        surfaceVariant = GaugeTrack,
-        tertiary = FinancePositive,
-        onTertiary = Color.White,
-        error = FinanceNegative,
-        onError = Color.White,
-    ),
+    light = LightColorScheme,
+    dark = DarkColorScheme,
 )
 
 private enum class WidgetDensity {
@@ -125,8 +112,8 @@ private fun GoalWidgetContent(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(24.dp)
-            .background(ColorProvider(MintPage))
-            .padding(10.dp),
+            .background(PageBackground)
+            .padding(8.dp),
     ) {
         BalanceHero(
             context = context,
@@ -156,13 +143,13 @@ private fun GoalWidgetContent(
                 Text(
                     text = context.getString(R.string.widget_active_items_title),
                     style = TextStyle(
-                        color = ColorProvider(InkMuted),
-                        fontSize = 11.sp,
+                        color = InkMuted,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                     ),
                 )
                 snapshot.activeItems.take(2).forEach { item ->
-                    Spacer(modifier = GlanceModifier.height(6.dp))
+                    Spacer(modifier = GlanceModifier.height(8.dp))
                     NextItemRow(
                         context = context,
                         item = item,
@@ -174,7 +161,7 @@ private fun GoalWidgetContent(
                 Spacer(modifier = GlanceModifier.height(8.dp))
                 Text(
                     text = context.getString(R.string.widget_remaining_empty),
-                    style = TextStyle(color = ColorProvider(InkMuted), fontSize = 12.sp),
+                    style = TextStyle(color = InkMuted, fontSize = 12.sp),
                 )
             }
 
@@ -197,7 +184,7 @@ private fun BalanceHero(
     showFormula: Boolean,
     onClick: androidx.glance.action.Action,
 ) {
-    val amountColor = ColorProvider(HeroText)
+    val amountColor = OnHero
     val scoreLabel = context.getString(
         if (snapshot.scoreUsesDebts) R.string.widget_score_chip_debts else R.string.widget_score_chip_goals,
         snapshot.progressPercent,
@@ -207,9 +194,9 @@ private fun BalanceHero(
         modifier = GlanceModifier
             .fillMaxWidth()
             .cornerRadius(22.dp)
-            .background(ColorProvider(HeroTeal))
+            .background(Hero)
             .clickable(onClick)
-            .padding(12.dp),
+            .padding(16.dp),
     ) {
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
@@ -218,18 +205,18 @@ private fun BalanceHero(
             Text(
                 text = context.getString(R.string.widget_goals_debts_title),
                 modifier = GlanceModifier.defaultWeight(),
-                style = TextStyle(color = ColorProvider(HeroMuted), fontSize = 12.sp),
+                style = TextStyle(color = OnHero, fontSize = 12.sp),
             )
             Text(
                 text = scoreLabel,
                 style = TextStyle(
-                    color = ColorProvider(HeroText),
+                    color = OnHero,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
                 ),
             )
         }
-        Spacer(modifier = GlanceModifier.height(2.dp))
+        Spacer(modifier = GlanceModifier.height(8.dp))
         Text(
             text = Formatters.currency(snapshot.totalAccumulated, region, hide),
             style = TextStyle(
@@ -240,25 +227,25 @@ private fun BalanceHero(
             maxLines = 1,
         )
         if (showFormula) {
-            Spacer(modifier = GlanceModifier.height(2.dp))
+            Spacer(modifier = GlanceModifier.height(8.dp))
             Text(
                 text = context.getString(R.string.debt_dashboard_owes_me) +
                     " " + Formatters.currencyFromCents(snapshot.owedToMeCents, region, hide) +
                     " · " + context.getString(R.string.debt_dashboard_i_owe) +
                     " " + Formatters.currencyFromCents(snapshot.iOweCents, region, hide),
-                style = TextStyle(color = ColorProvider(HeroMuted), fontSize = 11.sp),
+                style = TextStyle(color = OnHero, fontSize = 12.sp),
                 maxLines = 2,
             )
         }
         if (snapshot.overdueDebtCount > 0 || snapshot.pendingCount > 0) {
-            Spacer(modifier = GlanceModifier.height(4.dp))
+            Spacer(modifier = GlanceModifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (snapshot.overdueDebtCount > 0) {
                     Text(
                         text = context.getString(R.string.widget_overdue_debts, snapshot.overdueDebtCount),
                         style = TextStyle(
-                            color = ColorProvider(HeroAlert),
-                            fontSize = 11.sp,
+                            color = HeroAlert,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                         ),
                     )
@@ -269,7 +256,7 @@ private fun BalanceHero(
                 if (snapshot.pendingCount > 0) {
                     Text(
                         text = context.getString(R.string.widget_pending_badge, snapshot.pendingCount),
-                        style = TextStyle(color = ColorProvider(HeroText), fontSize = 11.sp),
+                        style = TextStyle(color = OnHero, fontSize = 12.sp),
                     )
                 }
             }
@@ -328,26 +315,26 @@ private fun StatGrid(
 private fun PastelStat(
     label: String,
     value: String,
-    container: Color,
+    container: ColorProvider,
     onClick: androidx.glance.action.Action,
     modifier: GlanceModifier,
 ) {
     Column(
         modifier = modifier
             .cornerRadius(18.dp)
-            .background(ColorProvider(container))
+            .background(container)
             .clickable(onClick)
             .padding(8.dp),
     ) {
         Text(
             text = label,
-            style = TextStyle(color = ColorProvider(InkMuted), fontSize = 11.sp),
+            style = TextStyle(color = InkMuted, fontSize = 12.sp),
             maxLines = 1,
         )
         Text(
             text = value,
             style = TextStyle(
-                color = ColorProvider(Ink),
+                color = Ink,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
             ),
@@ -375,14 +362,14 @@ private fun NextItemRow(
         WidgetItemType.GOAL -> context.getString(R.string.widget_item_type_goal)
         WidgetItemType.DEBT -> context.getString(R.string.widget_item_type_debt)
     }
-    val chipColor = if (item.isOverdue) Color(0xFFFDE8E4) else PastelMint
-    val chipText = if (item.isOverdue) Color(0xFF8B3A32) else HeroTeal
+    val chipColor = if (item.isOverdue) ChipOverdue else PastelMint
+    val chipText = if (item.isOverdue) OnChipOverdue else OnChip
 
     Column(
         modifier = GlanceModifier
             .fillMaxWidth()
             .cornerRadius(16.dp)
-            .background(ColorProvider(CardSurface))
+            .background(CardSurface)
             .clickable(actionStartActivity(openIntent))
             .padding(8.dp),
     ) {
@@ -394,20 +381,20 @@ private fun NextItemRow(
                 text = typeLabel,
                 modifier = GlanceModifier
                     .cornerRadius(8.dp)
-                    .background(ColorProvider(chipColor))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                    .background(chipColor)
+                    .padding(8.dp),
                 style = TextStyle(
-                    color = ColorProvider(chipText),
-                    fontSize = 10.sp,
+                    color = chipText,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                 ),
             )
-            Spacer(modifier = GlanceModifier.width(6.dp))
+            Spacer(modifier = GlanceModifier.width(8.dp))
             Text(
                 text = item.name,
                 modifier = GlanceModifier.defaultWeight(),
                 style = TextStyle(
-                    color = ColorProvider(if (item.isOverdue) Color(0xFF8B3A32) else Ink),
+                    color = if (item.isOverdue) OverdueText else Ink,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                 ),
@@ -420,7 +407,7 @@ private fun NextItemRow(
                 (item.progressFraction * 100).toInt().coerceIn(0, 100),
                 item.remainingLabel,
             ),
-            style = TextStyle(color = ColorProvider(InkMuted), fontSize = 11.sp),
+            style = TextStyle(color = InkMuted, fontSize = 12.sp),
             maxLines = 1,
         )
     }
@@ -435,16 +422,16 @@ private fun QuickAddPill(
         modifier = GlanceModifier
             .fillMaxWidth()
             .cornerRadius(50.dp)
-            .background(ColorProvider(HeroTeal))
+            .background(Hero)
             .clickable(onClick)
-            .padding(vertical = 10.dp),
+            .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             style = TextStyle(
-                color = ColorProvider(HeroText),
+                color = OnHero,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
             ),

@@ -24,7 +24,7 @@ import { PaymentModal } from "@/components/modals/PaymentModal";
 import { AdvisorConversation } from "@/components/psychology/DebtAdvisorSheet";
 import { GamificationBanner } from "@/components/psychology/GamificationBanner";
 import { PsychologySettingsPanel } from "@/components/psychology/PsychologySettingsPanel";
-import { AppTabBar, type AppTab } from "@/components/ui/AppTabBar";
+import { AppSideRail, AppTabBar, type AppTab } from "@/components/ui/AppTabBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ScoreRing } from "@/components/ui/ScoreRing";
 import { AppIcon } from "@/components/ui/SurfaceCard";
@@ -37,7 +37,8 @@ import { useAppPsychology } from "@/hooks/useAppPsychology";
 import { useFinanceManager } from "@/hooks/useFinanceManager";
 import { useWebSync } from "@/hooks/useWebSync";
 import { usePaymentDeepLink } from "@/hooks/usePaymentDeepLink";
-import { formatMoney, formatUsd, parseMoneyInput } from "@/lib/money";
+import { formatMoney, parseMoneyInput } from "@/lib/money";
+import { planProgressPercent, remainingAmount } from "@/lib/financeEngine";
 import type { FinancialItem } from "@/types/finance";
 
 export function DashboardPage() {
@@ -56,14 +57,11 @@ export function DashboardPage() {
   const [tab, setTab] = useState<AppTab>("home");
   const [recordQuery, setRecordQuery] = useState("");
   const [showAdvisor, setShowAdvisor] = useState(false);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
   const hideAmounts = psychology.privacy.hideAmounts;
   const money = useCallback(
     (cents: number) => formatMoney(cents, { hidden: hideAmounts }),
-    [hideAmounts],
-  );
-  const usd = useCallback(
-    (amount: number) => formatUsd(amount, { hidden: hideAmounts }),
     [hideAmounts],
   );
 
@@ -121,38 +119,39 @@ export function DashboardPage() {
     if (!recordQueryNormalized) return true;
     return item.name.toLowerCase().includes(recordQueryNormalized);
   });
-  const debtProgressPercent =
-    activeDebts.length > 0
-      ? Math.min(
-          100,
-          Math.floor(
-            (activeDebts.reduce((sum, d) => sum + d.amount, 0) /
-              Math.max(
-                1,
-                activeDebts.reduce((sum, d) => sum + d.target, 0),
-              )) *
-              100,
-          ),
-        )
-      : 0;
-  const goalPoolCents =
-    finance.globalFinance.totalAccumulatedCents + finance.globalFinance.totalRemainingToGoalCents;
-  const goalProgressPercent =
-    goalPoolCents > 0
-      ? Math.round((finance.globalFinance.totalAccumulatedCents / goalPoolCents) * 100)
-      : 0;
-  const score = activeDebts.length > 0 ? debtProgressPercent : goalProgressPercent;
+  const visibleDebts = finance.state.items.filter((item) => item.type === "DEBT" && !item.deleted);
+  const score = planProgressPercent({
+    debtPaidCents: visibleDebts.reduce((sum, item) => sum + item.amount, 0),
+    debtTargetCents: visibleDebts.reduce((sum, item) => sum + item.target, 0),
+    goalAccumulatedCents: finance.globalFinance.totalAccumulatedCents,
+    goalRemainingCents: finance.globalFinance.totalRemainingToGoalCents,
+  });
+  const selectedRecord =
+    listedItems.find((item) => item.id === selectedRecordId) ?? listedItems[0] ?? null;
+  const debtRemainingCents = activeDebts.reduce((sum, debt) => sum + remainingAmount(debt), 0);
+  const ringCaption = "Доля закрытых долгов и накоплений";
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-32 pt-6">
+    <>
+    <div className="mx-auto flex min-h-dvh w-full min-[600px]:max-w-[1104px]">
+    <AppSideRail
+      tab={tab}
+      onTabChange={setTab}
+      actions={[
+        { label: "Новая цель", icon: Target, onClick: () => { setTab("goals"); setShowAddGoal(true); } },
+        { label: "Новый долг", icon: HandCoins, onClick: () => { setTab("debts"); setShowAddDebt(true); } },
+        { label: "Новая заметка", icon: Sparkles, onClick: () => setTab("notes") },
+      ]}
+    />
+    <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-6 min-[600px]:max-w-[840px] min-[600px]:pb-10">
       {tab === "more" ? (
         <section className="space-y-4">
           <button
             type="button"
             onClick={() => setTab("home")}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-milk-accent"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
           >
-            <AppIcon icon={ArrowLeft} size={16} className="text-milk-accent" />
+            <AppIcon icon={ArrowLeft} size={16} className="text-primary" />
             Назад
           </button>
           <h1 className="text-2xl font-semibold tracking-tight">Настройки</h1>
@@ -195,22 +194,18 @@ export function DashboardPage() {
         <>
           <header className="mb-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-milk-muted">Финансовый контроль</p>
-              <h1 className="text-2xl font-semibold tracking-tight text-milk-text">
-                {personalizedGreeting(
-                  userProfile.displayName,
-                  debtProgressPercent,
-                  navigator.language,
-                )}
+              <p className="text-sm font-medium text-on-surface-variant">Финансовый контроль</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-on-surface">
+                {personalizedGreeting(userProfile.displayName, score, "ru")}
               </h1>
             </div>
             <button
               type="button"
               aria-label="Настройки"
               onClick={() => setTab("more")}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_8px_20px_rgb(15_110_92_/_0.08)]"
+              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgb(15_110_92_/_0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <AppIcon icon={Settings} size={18} className="text-milk-accent" />
+              <AppIcon icon={Settings} size={18} className="text-primary" />
             </button>
           </header>
 
@@ -221,11 +216,11 @@ export function DashboardPage() {
                   <h2 className="text-base font-semibold">Сводка</h2>
                   <div className="grid grid-cols-2 gap-3">
                     <StatCard
-                      label="Долги"
-                      value={usd(finance.dashboardTotals.totalDebtRemainingUsd)}
+                      label="Я должен"
+                      value={money(debtRemainingCents)}
                       icon={HandCoins}
                       hint="Осталось закрыть"
-                      tone="mint"
+                      tone="peach"
                     />
                     <StatCard
                       label="Накоплено"
@@ -241,24 +236,13 @@ export function DashboardPage() {
                       hint="Сколько ещё собрать"
                       tone="sand"
                     />
-                    <StatCard
-                      label="Счёт"
-                      value={`${score}`}
-                      icon={Sparkles}
-                      hint={activeDebts.length > 0 ? "По долгам" : "По целям"}
-                      tone="peach"
-                    />
                   </div>
                 </section>
 
                 <ScoreRing
                   value={score}
-                  label={activeDebts.length > 0 ? "Погашение долгов" : "Накопления"}
-                  caption={
-                    activeDebts.length > 0
-                      ? "Доля уже закрытой суммы долгов"
-                      : "Доля накоплений от суммы целей"
-                  }
+                  label="Прогресс"
+                  caption={ringCaption}
                 />
 
                 {activeDebts.length > 0 ? (
@@ -313,14 +297,23 @@ export function DashboardPage() {
                   <h2 className="text-base font-semibold">
                     {tab === "goals" ? "Цели" : "Долги"} ({listedItems.length})
                   </h2>
-                  <label className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
-                    <AppIcon icon={Search} size={16} />
-                    <input
-                      value={recordQuery}
-                      onChange={(event) => setRecordQuery(event.target.value)}
-                      placeholder={tab === "goals" ? "Поиск целей" : "Поиск долгов"}
-                      className="w-full bg-transparent text-sm outline-none placeholder:text-milk-muted"
-                    />
+                  <label className="block space-y-1.5">
+                    <span className="text-sm text-on-surface-variant">
+                      {tab === "goals" ? "Поиск целей" : "Поиск долгов"}
+                    </span>
+                    <span className="flex min-h-12 items-center gap-2 rounded-full bg-surface-container-lowest px-4 shadow-[0_8px_20px_rgb(15_110_92_/_0.06)]">
+                      <AppIcon icon={Search} size={16} />
+                      <input
+                        name="q"
+                        type="search"
+                        autoComplete="off"
+                        value={recordQuery}
+                        onChange={(event) => setRecordQuery(event.target.value)}
+                        placeholder={tab === "goals" ? "Название цели" : "Имя или название"}
+                        aria-describedby={recordQueryNormalized && listedItems.length === 0 ? "search-empty" : undefined}
+                        className="w-full bg-transparent py-3 text-sm text-on-surface placeholder:text-on-surface-variant focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      />
+                    </span>
                   </label>
                   <StatusFilterTabs value={finance.statusFilter} onChange={finance.setStatusFilter} />
                 </div>
@@ -330,6 +323,7 @@ export function DashboardPage() {
                 ) : null}
 
                 {listedItems.length === 0 ? (
+                  <div id={recordQueryNormalized ? "search-empty" : undefined}>
                   <EmptyState
                     icon={Inbox}
                     title={recordQueryNormalized ? "Ничего не найдено" : "Пока пусто"}
@@ -344,7 +338,7 @@ export function DashboardPage() {
                             onClick={() => setShowAddGoal(true)}
                             className="pill-btn-primary inline-flex items-center gap-1.5"
                           >
-                            <AppIcon icon={Target} size={14} className="text-white" />
+                            <AppIcon icon={Target} size={14} className="text-on-primary" />
                             Новая цель
                           </button>
                         ) : (
@@ -360,8 +354,10 @@ export function DashboardPage() {
                       ) : undefined
                     }
                   />
+                  </div>
                 ) : (
-                  <div className="grid gap-3">
+                  <>
+                  <div className="grid gap-3 min-[600px]:hidden">
                     <AnimatePresence mode="popLayout">
                       {listedItems.map((item) => (
                         <FinanceCard
@@ -376,6 +372,41 @@ export function DashboardPage() {
                       ))}
                     </AnimatePresence>
                   </div>
+                  <div className="hidden gap-6 min-[600px]:grid min-[600px]:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]">
+                    <ul className="space-y-2">
+                      {listedItems.map((item) => {
+                        const selected = selectedRecord?.id === item.id;
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedRecordId(item.id)}
+                              aria-current={selected ? "true" : undefined}
+                              className={`flex min-h-12 w-full items-center rounded-2xl px-4 text-left text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                                selected
+                                  ? "bg-primary-container text-on-primary-container"
+                                  : "bg-surface-container-lowest text-on-surface"
+                              }`}
+                            >
+                              {item.name}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    {selectedRecord ? (
+                      <FinanceCard
+                        key={selectedRecord.id}
+                        item={selectedRecord}
+                        hideAmounts={hideAmounts}
+                        onAddPayment={openPayment}
+                        onGoalTransfer={setTransferGoal}
+                        onGoalExpense={() => setExpenseGoal(selectedRecord)}
+                        onDelete={setPendingDelete}
+                      />
+                    ) : null}
+                  </div>
+                  </>
                 )}
               </section>
             ) : null}
@@ -472,7 +503,10 @@ export function DashboardPage() {
         }}
       />
 
-      <AppTabBar
+    </div>
+    </div>
+
+    <AppTabBar
         tab={tab}
         onTabChange={setTab}
         actions={[
@@ -481,7 +515,7 @@ export function DashboardPage() {
           { label: "Новая заметка", icon: Sparkles, onClick: () => setTab("notes") },
         ]}
       />
-    </div>
+    </>
   );
 }
 
@@ -506,7 +540,11 @@ function PreviewList({
 }) {
   return (
     <section className="space-y-3">
-      <button type="button" onClick={onOpen} className="text-base font-semibold">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="inline-flex min-h-12 items-center rounded-full bg-surface-container-lowest px-4 text-base font-semibold text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
         {title}
       </button>
       <div className="grid gap-3">

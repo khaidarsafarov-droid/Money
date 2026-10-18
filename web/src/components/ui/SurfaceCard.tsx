@@ -7,7 +7,7 @@ interface IconProps {
   size?: number;
 }
 
-export function AppIcon({ icon: Icon, className = "text-milk-muted", size = 16 }: IconProps) {
+export function AppIcon({ icon: Icon, className = "text-on-surface-variant", size = 16 }: IconProps) {
   return <Icon className={className} size={size} strokeWidth={1.25} />;
 }
 

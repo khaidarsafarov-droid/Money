@@ -8,22 +8,21 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- App & widget milky palette -->
-    <color name="cream_background">#FFF5F0E8</color>
-    <color name="cream_surface">#FFFFFAF4</color>
-    <color name="gold_primary">#FFC9A24D</color>
-    <color name="brown_text">#FF3E2C18</color>
-    <color name="brown_muted">#FF6B5A48</color>
-    <color name="gauge_track">#FFE8DFD0</color>
+    <!-- Light scheme from seed #0F6E5C. Widget night mode is out of scope. -->
+    <color name="cream_background">#FFF5FBF7</color>
+    <color name="cream_surface">#FFFFFFFF</color>
+    <color name="gold_primary">#FF0B6B59</color>
+    <color name="brown_text">#FF171D1B</color>
+    <color name="brown_muted">#FF3F4945</color>
+    <color name="gauge_track">#FFDBE5E0</color>
 
-    <!-- Glance widget, same mint palette as the home screen -->
-    <color name="widget_background">#FFE7F6EF</color>
-    <color name="widget_surface">#FFF7FCF9</color>
-    <color name="widget_primary">#FF0F6E5C</color>
-    <color name="widget_on_surface">#FF12352C</color>
-    <color name="widget_on_surface_variant">#FF5C7D72</color>
-    <color name="widget_progress_track">#FFD3EEE3</color>
-    <color name="finance_positive">#FF4A7C59</color>
-    <color name="finance_negative">#FFB35D5D</color>
-    <color name="overdue_red">#FFB85450</color>
+    <color name="widget_background">#FFF5FBF7</color>
+    <color name="widget_surface">#FFFFFFFF</color>
+    <color name="widget_primary">#FF0B6B59</color>
+    <color name="widget_on_surface">#FF171D1B</color>
+    <color name="widget_on_surface_variant">#FF3F4945</color>
+    <color name="widget_progress_track">#FFDBE5E0</color>
+    <color name="finance_positive">#FF0B6B59</color>
+    <color name="finance_negative">#FFBA1A1A</color>
+    <color name="overdue_red">#FFBA1A1A</color>
 </resources>

@@ -37,7 +37,7 @@ export function ConfirmDeleteModal({
         </>
       }
     >
-      <p className="text-sm text-milk-muted">{message}</p>
+      <p className="text-sm text-on-surface-variant">{message}</p>
     </Modal>
   );
 }

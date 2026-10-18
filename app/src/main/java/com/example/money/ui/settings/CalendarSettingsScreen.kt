@@ -40,10 +40,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.ui.util.withLightHaptic
 import com.example.money.R
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.OverdueRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +70,7 @@ fun CalendarSettingsScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.calendar_settings_title)) },
@@ -83,7 +79,7 @@ fun CalendarSettingsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_navigate_up))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
     ) { padding ->
@@ -96,7 +92,7 @@ fun CalendarSettingsScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = CreamSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.calendar_settings_title), fontWeight = FontWeight.Bold)
@@ -107,7 +103,7 @@ fun CalendarSettingsScreen(
                             stringResource(R.string.calendar_permission_denied)
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (hasCalendarPermissions) FinancePositive else OverdueRed,
+                        color = if (hasCalendarPermissions) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                     )
                     SettingSwitch(
                         label = stringResource(R.string.calendar_auto_sync),

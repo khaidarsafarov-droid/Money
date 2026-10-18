@@ -36,7 +36,6 @@ import com.example.money.R
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.LocalFinancialAdvisor
 import com.example.money.settings.AutopilotStrategy
-import com.example.money.ui.theme.CreamSurface
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,7 +152,7 @@ private fun AdvisorBubble(message: AdvisorChatMessage) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isAdvisor) CreamSurface else MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = if (isAdvisor) MaterialTheme.colorScheme.surfaceContainerLowest else MaterialTheme.colorScheme.surfaceVariant,
         ),
     ) {
         Text(

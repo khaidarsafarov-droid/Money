@@ -21,8 +21,8 @@ export function PsychologySettingsPanel({
     <div className="grid gap-3 lg:grid-cols-2">
       <SurfaceCard className="space-y-3">
         <div>
-          <h3 className="text-sm font-medium text-milk-text">Приватность</h3>
-          <p className="mt-0.5 text-sm text-milk-muted">
+          <h3 className="text-sm font-medium text-on-surface">Приватность</h3>
+          <p className="mt-0.5 text-sm text-on-surface-variant">
             Скрывайте суммы — вместо цифр показывается •••
           </p>
         </div>
@@ -32,11 +32,11 @@ export function PsychologySettingsPanel({
             type="checkbox"
             checked={privacy.hideAmounts}
             onChange={(event) => onPrivacyChange({ hideAmounts: event.target.checked })}
-            className="mt-0.5 accent-milk-text"
+            className="mt-0.5 accent-on-surface"
           />
           <span>
-            <span className="text-milk-text">Скрывать суммы в веб-приложении</span>
-            <span className="mt-0.5 block text-milk-muted">
+            <span className="text-on-surface">Скрывать суммы в веб-приложении</span>
+            <span className="mt-0.5 block text-on-surface-variant">
               Пример: {formatMoney(12_500, { hidden: privacy.hideAmounts })}
             </span>
           </span>
@@ -45,8 +45,8 @@ export function PsychologySettingsPanel({
 
       <SurfaceCard className="space-y-3">
         <div>
-          <h3 className="text-sm font-medium text-milk-text">Автопилот</h3>
-          <p className="mt-0.5 text-sm text-milk-muted">
+          <h3 className="text-sm font-medium text-on-surface">Автопилот</h3>
+          <p className="mt-0.5 text-sm text-on-surface-variant">
             Ежедневный микроплатёж в выбранный долг одной кнопкой.
           </p>
         </div>
@@ -56,13 +56,13 @@ export function PsychologySettingsPanel({
             type="checkbox"
             checked={autopilot.enabled}
             onChange={(event) => onAutopilotChange({ enabled: event.target.checked })}
-            className="accent-milk-text"
+            className="accent-on-surface"
           />
-          <span className="text-milk-text">Включить автопилот</span>
+          <span className="text-on-surface">Включить автопилот</span>
         </label>
 
         <label className="block space-y-1.5 text-sm">
-          <span className="text-milk-text">
+          <span className="text-on-surface">
             Сумма в день: {formatMoney(autopilot.dailyAmountCents, { hidden: hideAmounts })}
           </span>
           <input
@@ -74,7 +74,7 @@ export function PsychologySettingsPanel({
             onChange={(event) =>
               onAutopilotChange({ dailyAmountCents: Number(event.target.value) })
             }
-            className="w-full accent-milk-text"
+            className="w-full accent-on-surface"
           />
         </label>
 

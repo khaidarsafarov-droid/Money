@@ -41,7 +41,6 @@ import com.example.money.MoneyApplication
 import com.example.money.ui.util.withLightHaptic
 import com.example.money.R
 import com.example.money.data.sync.PairingOffer
-import com.example.money.ui.theme.CreamBackground
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.launch
@@ -64,7 +63,7 @@ fun SyncPairingScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.sync_settings_title)) },
@@ -76,7 +75,7 @@ fun SyncPairingScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
     ) { padding ->

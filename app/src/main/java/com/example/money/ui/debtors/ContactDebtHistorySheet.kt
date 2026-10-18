@@ -28,9 +28,6 @@ import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.ContactDebtHistoryEngine
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +60,7 @@ fun ContactDebtHistorySheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(Icons.Outlined.History, contentDescription = null, tint = GoldPrimary)
+                Icon(Icons.Outlined.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(
                     text = stringResource(R.string.contact_history_title, history.displayName),
                     style = MaterialTheme.typography.titleLarge,
@@ -72,7 +69,7 @@ fun ContactDebtHistorySheet(
             }
 
             Card(
-                colors = CardDefaults.cardColors(containerColor = CreamSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
             ) {
                 Column(
                     modifier = Modifier
@@ -112,7 +109,7 @@ fun ContactDebtHistorySheet(
                 history.debts.forEach { debtor ->
                     Card(
                         onClick = { onOpenDebt(debtor) },
-                        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
                     ) {
                         Column(
                             modifier = Modifier
@@ -131,7 +128,7 @@ fun ContactDebtHistorySheet(
                                         DebtType.DEBTOR -> stringResource(R.string.contact_history_i_owe)
                                     },
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = GoldPrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                 )
                                 Text(
                                     text = if (debtor.isPaid) {
@@ -140,7 +137,7 @@ fun ContactDebtHistorySheet(
                                         stringResource(R.string.debt_status_active)
                                     },
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (debtor.isPaid) FinancePositive else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = if (debtor.isPaid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             Text(

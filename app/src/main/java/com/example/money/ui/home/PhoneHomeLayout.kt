@@ -24,6 +24,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -84,6 +88,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
@@ -137,13 +142,9 @@ import com.example.money.settings.AppMode
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
-import com.example.money.ui.theme.StatusActiveBg
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.util.systemMotionEnabled
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.launch
 
@@ -170,7 +171,7 @@ internal fun PhoneHomeLayout(
     goalMetrics: com.example.money.domain.model.DashboardGoalMetrics,
     debtMetrics: com.example.money.domain.model.DashboardDebtMetrics,
     greetingName: String,
-    debtProgressPercent: Int,
+    planProgressPercent: Int,
     highlightedDebtorId: Long?,
     onAddGoal: () -> Unit,
     onEditGoal: (SavingsGoal) -> Unit,
@@ -399,7 +400,7 @@ internal fun PhoneHomeLayout(
         },
     ) {
         Scaffold(
-            containerColor = CreamBackground,
+            containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
             floatingActionButton = floatingActionButton,
@@ -425,11 +426,16 @@ internal fun PhoneHomeLayout(
             val motionEnabled = systemMotionEnabled(LocalContext.current)
             val tabSlide = tween<IntOffset>(durationMillis = 250)
             val tabFade = tween<Float>(durationMillis = 250)
+            val layoutDirection = LocalLayoutDirection.current
+            val listPadding = PaddingValues(
+                start = innerPadding.calculateStartPadding(layoutDirection),
+                top = innerPadding.calculateTopPadding(),
+                end = innerPadding.calculateEndPadding(layoutDirection),
+                bottom = innerPadding.calculateBottomPadding() + 24.dp,
+            )
             AnimatedContent(
                 targetState = selectedTab,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = Modifier.fillMaxSize(),
                 transitionSpec = {
                     if (!motionEnabled) {
                         EnterTransition.None togetherWith ExitTransition.None
@@ -463,7 +469,11 @@ internal fun PhoneHomeLayout(
                     onNoteBodyChange = onNoteBodyChange,
                     onFlushNoteDraft = onFlushNoteDraft,
                     noteDraftBlocksRemote = noteDraftBlocksRemote,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .consumeWindowInsets(innerPadding)
+                        .imePadding(),
                 )
             } else LazyColumn(
                 state = when (page) {
@@ -472,14 +482,17 @@ internal fun PhoneHomeLayout(
                     HomeTab.Debts -> listState
                     HomeTab.Notes -> listState
                 },
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
+                contentPadding = listPadding,
             ) {
                 if (page == HomeTab.Home) {
                 item {
                     Text(
-                        text = if (debtProgressPercent > 0) {
-                            stringResource(R.string.home_greeting_progress, greetingName, debtProgressPercent)
+                        text = if (planProgressPercent > 0) {
+                            stringResource(R.string.home_greeting_progress, greetingName, planProgressPercent)
                         } else {
                             stringResource(R.string.home_greeting_simple, greetingName)
                         },
@@ -489,7 +502,7 @@ internal fun PhoneHomeLayout(
                         ),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = GoldPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 }
@@ -506,30 +519,22 @@ internal fun PhoneHomeLayout(
                     }
                 }
                 if (page == HomeTab.Home) {
-                    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
                     item {
                         HomePreviewCards(
                             goalMetrics = goalMetrics,
                             debtMetrics = debtMetrics,
                             hideAmounts = privacySettings.hideAmounts,
-                            progressPercent = debtProgressPercent,
-                            onDebtsClick = {
-                                onDebtTabChange(
-                                    if (debtMetrics.iOweCents > debtMetrics.owedToMeCents) {
-                                        DebtTab.IOwe
-                                    } else {
-                                        DebtTab.OwesMe
-                                    },
-                                )
+                            progressPercent = planProgressPercent,
+                            onOwesMeClick = {
+                                onDebtTabChange(DebtTab.OwesMe)
+                                onTabSelected(HomeTab.Debts.ordinal)
+                            },
+                            onIOweClick = {
+                                onDebtTabChange(DebtTab.IOwe)
                                 onTabSelected(HomeTab.Debts.ordinal)
                             },
                             onAccumulatedClick = { onTabSelected(HomeTab.Goals.ordinal) },
                             onRemainingClick = { onTabSelected(HomeTab.Goals.ordinal) },
-                            onProgressClick = {
-                                onTabSelected(
-                                    if (debtActive > 0) HomeTab.Debts.ordinal else HomeTab.Goals.ordinal,
-                                )
-                            },
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
                                 vertical = MoneySpacing.sm,
@@ -679,7 +684,7 @@ internal fun NotificationPermissionBanner(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         shape = MaterialTheme.shapes.medium,
     ) {
         Column(

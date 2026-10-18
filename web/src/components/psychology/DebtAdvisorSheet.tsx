@@ -30,8 +30,8 @@ export function AdvisorConversation({
       <div className="space-y-3 text-center">
         <FinOrb />
         <div>
-          <h2 className="text-lg font-semibold text-milk-text">Советник</h2>
-          <p className="mt-1 text-sm text-milk-muted">
+          <h2 className="text-lg font-semibold text-on-surface">Советник</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">
             Подсказки на основе ваших данных — без интернета и без осуждения.
           </p>
         </div>
@@ -57,7 +57,7 @@ export function AdvisorConversation({
 
       <div className="max-h-[28rem] space-y-2 overflow-y-auto">
         {messages.length === 0 ? (
-          <p className="rounded-[22px] bg-white px-4 py-3 text-center text-sm text-milk-muted shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]">
+          <p className="rounded-[22px] bg-surface-container-lowest px-4 py-3 text-center text-sm text-on-surface-variant shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]">
             Чем я могу помочь?
           </p>
         ) : null}
@@ -66,8 +66,8 @@ export function AdvisorConversation({
             key={`${message.atMs}-${index}`}
             className={`max-w-[90%] rounded-[22px] px-4 py-3 text-sm ${
               message.role === "advisor"
-                ? "bg-white text-milk-text shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]"
-                : "ml-auto bg-milk-accent text-white"
+                ? "bg-surface-container-lowest text-on-surface shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]"
+                : "ml-auto bg-primary text-on-primary"
             }`}
           >
             {message.text}

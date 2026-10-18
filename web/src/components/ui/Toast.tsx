@@ -68,17 +68,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
               transition={{ duration: 0.15 }}
-              className="pointer-events-auto flex items-center gap-2 rounded-md border border-milk-surface bg-white px-3 py-2.5 text-sm text-milk-text"
+              className="pointer-events-auto flex items-center gap-2 rounded-md border border-outline-variant bg-surface-container-lowest px-3 py-2.5 text-sm text-on-surface"
             >
               <AppIcon
                 icon={toast.tone === "success" ? CheckCircle2 : Info}
                 size={14}
-                className="shrink-0 text-milk-muted"
+                className="shrink-0 text-on-surface-variant"
               />
               <span className="flex-1">{toast.text}</span>
               <button
                 type="button"
-                className="rounded p-0.5 text-milk-muted hover:text-milk-text"
+                className="rounded p-0.5 text-on-surface-variant hover:text-on-surface"
                 onClick={() => dismissToast(toast.id)}
                 aria-label="Закрыть"
               >

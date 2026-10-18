@@ -9,13 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.ui.debtors.DebtDueStatus
-import com.example.money.ui.theme.GoldPrimary
-import com.example.money.ui.theme.StatusActiveBg
-import com.example.money.ui.theme.StatusActiveText
-import com.example.money.ui.theme.StatusOverdueBg
-import com.example.money.ui.theme.StatusOverdueText
-import com.example.money.ui.theme.StatusPaidBg
-import com.example.money.ui.theme.StatusPaidText
 
 enum class DebtStatusVisual {
     Active,
@@ -30,9 +23,9 @@ fun DebtStatusBadge(
     modifier: Modifier = Modifier,
 ) {
     val (background, foreground) = when (status) {
-        DebtStatusVisual.Active -> StatusActiveBg to StatusActiveText
-        DebtStatusVisual.Overdue -> StatusOverdueBg to StatusOverdueText
-        DebtStatusVisual.Paid -> StatusPaidBg to StatusPaidText
+        DebtStatusVisual.Active -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+        DebtStatusVisual.Overdue -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        DebtStatusVisual.Paid -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
     }
     Text(
         text = label,
@@ -59,9 +52,9 @@ fun GoalStatusBadge(
     modifier: Modifier = Modifier,
 ) {
     val (background, foreground) = when {
-        isCompleted -> StatusPaidBg to StatusPaidText
-        isOverdue -> StatusOverdueBg to StatusOverdueText
-        else -> StatusActiveBg to GoldPrimary
+        isCompleted -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+        isOverdue -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.primary
     }
     Text(
         text = label,
