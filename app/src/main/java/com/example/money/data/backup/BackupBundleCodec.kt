@@ -97,6 +97,7 @@ class BackupBundleCodec(
                 notes = decodeOptionalArray(data, KEY_NOTES, ::decodeNote),
                 noteLines = decodeOptionalArray(data, KEY_NOTE_LINES, ::decodeNoteLine),
                 clients = decodeOptionalArray(data, KEY_CLIENTS, ::decodeClient),
+                debtAdvances = decodeOptionalArray(data, KEY_DEBT_ADVANCES, ::decodeDebtAdvance),
             )
 
             val actualCounts = BackupRecordCounts.from(decoded)
@@ -144,6 +145,7 @@ class BackupBundleCodec(
             goalActions = bundle.goalActions.sortedBy { it.syncId },
             notes = bundle.notes.sortedBy { it.syncId },
             noteLines = bundle.noteLines.sortedBy { it.syncId },
+            debtAdvances = bundle.debtAdvances.sortedBy { it.syncId },
         )
         validateBundle(sorted)
         val hash = sha256(
@@ -186,6 +188,7 @@ class BackupBundleCodec(
         validateUniqueSyncIds(KEY_NOTES, bundle.notes.map { it.syncId })
         validateUniqueSyncIds(KEY_NOTE_LINES, bundle.noteLines.map { it.syncId })
         validateUniqueSyncIds(KEY_CLIENTS, bundle.clients.map { it.syncId })
+        validateUniqueSyncIds(KEY_DEBT_ADVANCES, bundle.debtAdvances.map { it.syncId })
         validateRelations(bundle)
 
         bundle.transfers.forEach {
@@ -221,6 +224,9 @@ class BackupBundleCodec(
 
         bundle.debtPayments.forEach { payment ->
             validateReference("Debt payment ${payment.syncId}", "debtor", payment.debtorSyncId, debtorIds)
+        }
+        bundle.debtAdvances.forEach { advance ->
+            validateReference("Debt advance ${advance.syncId}", "debtor", advance.debtorSyncId, debtorIds)
         }
         bundle.transfers.forEach { transfer ->
             validateOptionalReference("Transfer ${transfer.syncId}", "goal", transfer.goalSyncId, goalIds)
@@ -376,6 +382,7 @@ class BackupBundleCodec(
             if (counts.notes > 0) put(KEY_NOTES, counts.notes)
             if (counts.noteLines > 0) put(KEY_NOTE_LINES, counts.noteLines)
             if (counts.clients > 0) put(KEY_CLIENTS, counts.clients)
+            if (counts.debtAdvances > 0) put(KEY_DEBT_ADVANCES, counts.debtAdvances)
             put(KEY_TOTAL, counts.total)
         }
 
@@ -398,6 +405,9 @@ class BackupBundleCodec(
             }
             if (bundle.clients.isNotEmpty()) {
                 put(KEY_CLIENTS, encodeArray(bundle.clients, ::encodeClient))
+            }
+            if (bundle.debtAdvances.isNotEmpty()) {
+                put(KEY_DEBT_ADVANCES, encodeArray(bundle.debtAdvances, ::encodeDebtAdvance))
             }
             put(KEY_PREFERENCES, encodePreferences(bundle.preferences))
         }
@@ -469,6 +479,18 @@ class BackupBundleCodec(
             put(KEY_EMAIL, debtor.email)
             putMode(debtor.mode)
             putOptional(KEY_CLIENT_SYNC_ID, debtor.clientSyncId)
+        }
+
+    private fun encodeDebtAdvance(advance: com.example.money.domain.backup.BackupDebtAdvance): JSONObject =
+        JSONObject().apply {
+            put(KEY_SYNC_ID, advance.syncId)
+            put(KEY_DEBTOR_SYNC_ID, advance.debtorSyncId)
+            put(KEY_AMOUNT_CENTS, advance.amountCents)
+            put(KEY_CURRENCY, advance.currency)
+            put(KEY_GIVEN_AT, advance.givenAtEpochMillis)
+            put(KEY_NOTE, advance.note)
+            put(KEY_UPDATED_AT, advance.updatedAtEpochMillis)
+            putMode(advance.mode)
         }
 
     private fun encodeDebtPayment(payment: BackupDebtPayment): JSONObject =
@@ -647,6 +669,7 @@ class BackupBundleCodec(
             notes = json.optInt(KEY_NOTES, 0),
             noteLines = json.optInt(KEY_NOTE_LINES, 0),
             clients = json.optInt(KEY_CLIENTS, 0),
+            debtAdvances = json.optInt(KEY_DEBT_ADVANCES, 0),
         )
         if (json.getInt(KEY_TOTAL) != counts.total) {
             throw BackupIntegrityException("Backup manifest total record count is invalid")
@@ -719,6 +742,18 @@ class BackupBundleCodec(
             email = json.getString(KEY_EMAIL),
             mode = json.optMode(),
             clientSyncId = json.optionalString(KEY_CLIENT_SYNC_ID),
+        )
+
+    private fun decodeDebtAdvance(json: JSONObject): com.example.money.domain.backup.BackupDebtAdvance =
+        com.example.money.domain.backup.BackupDebtAdvance(
+            syncId = json.getString(KEY_SYNC_ID),
+            debtorSyncId = json.getString(KEY_DEBTOR_SYNC_ID),
+            amountCents = json.getLong(KEY_AMOUNT_CENTS),
+            currency = json.getString(KEY_CURRENCY),
+            givenAtEpochMillis = json.getLong(KEY_GIVEN_AT),
+            note = json.optString(KEY_NOTE, ""),
+            updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
+            mode = json.optMode(),
         )
 
     private fun decodeDebtPayment(json: JSONObject): BackupDebtPayment =
@@ -1035,6 +1070,8 @@ class BackupBundleCodec(
         private const val KEY_NOTES = "notes"
         private const val KEY_NOTE_LINES = "noteLines"
         private const val KEY_CLIENTS = "clients"
+        private const val KEY_DEBT_ADVANCES = "debtAdvances"
+        private const val KEY_GIVEN_AT = "givenAtEpochMillis"
         private const val KEY_MODE = "mode"
         private const val KEY_CLIENT_SYNC_ID = "clientSyncId"
         private const val KEY_COMPANY = "company"

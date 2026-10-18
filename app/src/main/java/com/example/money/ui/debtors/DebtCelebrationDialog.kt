@@ -100,12 +100,6 @@ fun DebtCelebrationDialog(
                                 color = MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.Center,
                             )
-                            Text(
-                                text = stringResource(R.string.celebration_postcard_body),
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
                         }
                     }
                 }

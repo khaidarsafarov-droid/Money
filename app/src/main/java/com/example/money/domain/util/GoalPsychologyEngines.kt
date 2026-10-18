@@ -64,13 +64,13 @@ object GoalPsychologyEngines {
         FinancialPsychotype.SAVER -> "Деньги — это энергия, дайте ей течь"
         FinancialPsychotype.INDIFFERENT -> "План важнее эмоций"
         FinancialPsychotype.PLAYER -> "Каждый платёж — очко к победе"
-        FinancialPsychotype.BALANCED -> "Шаг за шагом к свободе"
+        FinancialPsychotype.BALANCED -> "Шаг за шагом к цели"
     }
 
     fun psychotypeOnboardingDescription(type: FinancialPsychotype): String = when (type) {
         FinancialPsychotype.SPENDER -> "Вы любите тратить — это даёт вам энергию. Давайте направим её в нужное русло."
         FinancialPsychotype.SAVER -> "Вы умеете копить — это ваша суперсила. Научимся тратить с удовольствием."
-        FinancialPsychotype.INDIFFERENT -> "Деньги не ваша страсть, но контроль над ними даст вам свободу."
+        FinancialPsychotype.INDIFFERENT -> "Деньги не ваша страсть, но контроль над ними даст вам спокойствие."
         FinancialPsychotype.PLAYER -> "Риск — ваше топливо. Используем его для роста, а не для потерь."
         FinancialPsychotype.BALANCED -> "Вы на верном пути — сохраняйте баланс."
     }
@@ -82,17 +82,17 @@ object GoalPsychologyEngines {
         goalText: String? = null,
     ): String {
         val base = when (fearId) {
-            "wont_escape" -> "Каждый платёж приближает вас к свободе. Вы уже сделали первый шаг."
+            "wont_escape" -> "Каждый платёж приближает вас к цели. Вы уже сделали первый шаг."
             "earn_more_than_parents" -> "Ваш успех — это благодарность, а не предательство."
             "ashamed_of_debt" -> "Долги — это опыт, а не приговор. Вы справитесь."
             "money_corrupts" -> "Вы решаете, каким человеком быть — деньги лишь инструмент."
-            "rich_are_bad" -> "Финансовая свобода может служить вам и близким."
+            "rich_are_bad" -> "Деньги могут служить вам и близким."
             "afraid_of_numbers" -> if (progressPercent > 0) {
                 "Сегодня посмотрите на свой прогресс. Вы стали ближе на $progressPercent%."
             } else {
                 "Сегодня посмотрите на свой прогресс — вы на правильном пути."
             }
-            else -> "Каждый шаг к свободе имеет значение."
+            else -> "Каждый шаг имеет значение."
         }
         val who = displayName?.trim()?.takeIf { it.length >= 2 } ?: return base
         val goal = goalText?.trim()?.takeIf { it.isNotEmpty() }

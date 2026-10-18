@@ -25,7 +25,8 @@ object SyncSnapshotGuard {
             snapshot.transactions.size +
             (snapshot.goalActions?.size ?: 0) +
             (snapshot.notes?.size ?: 0) +
-            (snapshot.noteLines?.size ?: 0)
+            (snapshot.noteLines?.size ?: 0) +
+            (snapshot.debtAdvances?.size ?: 0)
         if (recordCount > MAX_RECORDS) {
             throw IllegalArgumentException("Snapshot has too many records")
         }

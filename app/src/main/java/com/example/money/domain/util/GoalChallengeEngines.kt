@@ -199,7 +199,7 @@ object GoalChallengeEngines {
         BADGE_FIRST_PAYMENT -> "Первый платёж"
         BADGE_SNOWBALL -> "Снежный ком"
         BADGE_HERO -> "Герой"
-        BADGE_FREEDOM -> "Свобода"
+        BADGE_FREEDOM -> "Долги закрыты"
         else -> badgeId
     }
 

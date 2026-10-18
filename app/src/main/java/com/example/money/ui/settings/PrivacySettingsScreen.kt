@@ -68,20 +68,13 @@ fun PrivacySettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = stringResource(R.string.privacy_settings_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             PrivacyToggleCard(
                 title = stringResource(R.string.privacy_hide_amounts),
-                subtitle = stringResource(R.string.privacy_hide_amounts_hint),
                 checked = settings.hideAmounts,
                 onCheckedChange = { checked -> viewModel.update { it.copy(hideAmounts = checked) } },
             )
             PrivacyToggleCard(
                 title = stringResource(R.string.privacy_hide_widget),
-                subtitle = stringResource(R.string.privacy_hide_widget_hint),
                 checked = settings.hideOnWidget,
                 onCheckedChange = { checked -> viewModel.update { it.copy(hideOnWidget = checked) } },
             )
@@ -92,7 +85,6 @@ fun PrivacySettingsScreen(
 @Composable
 private fun PrivacyToggleCard(
     title: String,
-    subtitle: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
@@ -106,10 +98,11 @@ private fun PrivacyToggleCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(text = title, fontWeight = FontWeight.SemiBold)
-                Text(text = subtitle, style = MaterialTheme.typography.bodySmall)
-            }
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.SemiBold,
+            )
             Switch(
                 checked = checked,
                 onCheckedChange = withLightHaptic(LocalContext.current, onCheckedChange = onCheckedChange),

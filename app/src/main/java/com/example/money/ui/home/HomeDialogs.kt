@@ -29,6 +29,7 @@ import com.example.money.ui.debtors.ContactDebtHistorySheet
 import com.example.money.ui.debtors.DebtAdvisorBottomSheet
 import com.example.money.ui.debtors.DebtCelebrationDialog
 import com.example.money.ui.debtors.DebtMessageChannelSheet
+import com.example.money.ui.debtors.DebtHistorySheet
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtorFormDialog
@@ -76,6 +77,7 @@ internal fun HomeDialogs(
     contactHistoryTargetState: MutableState<Pair<String, String>?>,
     remindDebtorState: MutableState<Debtor?>,
     showDebtPaymentDialogState: MutableState<Debtor?>,
+    historyDebtorState: MutableState<Debtor?>,
     debtPaymentPrefillCentsState: MutableLongState,
     showIncomeIdeasState: MutableState<Boolean>,
     showTransferDialogState: MutableState<Boolean>,
@@ -100,6 +102,7 @@ internal fun HomeDialogs(
     var contactHistoryTarget by contactHistoryTargetState
     var remindDebtor by remindDebtorState
     var showDebtPaymentDialog by showDebtPaymentDialogState
+    var historyDebtor by historyDebtorState
     var debtPaymentPrefillCents by debtPaymentPrefillCentsState
     var showIncomeIdeas by showIncomeIdeasState
     var showTransferDialog by showTransferDialogState
@@ -141,7 +144,7 @@ internal fun HomeDialogs(
             debtType = when (debtTab) {
                 DebtTab.OwesMe -> DebtType.CREDITOR
                 DebtTab.IOwe -> DebtType.DEBTOR
-                DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
+                DebtTab.Calendar -> DebtType.CREDITOR
             },
             availableBalance = availableBalanceCents,
             allDebtors = allDebtors,
@@ -156,7 +159,7 @@ internal fun HomeDialogs(
                     debtType = when (debtTab) {
                         DebtTab.OwesMe -> DebtType.CREDITOR
                         DebtTab.IOwe -> DebtType.DEBTOR
-                        DebtTab.Freedom, DebtTab.Calendar -> DebtType.CREDITOR
+                        DebtTab.Calendar -> DebtType.CREDITOR
                     },
                     affectsBalance = affectsBalance,
                     note = note,
@@ -223,6 +226,24 @@ internal fun HomeDialogs(
             debtor = debtor,
             settings = personalBranchSettings,
             onDismiss = { remindDebtor = null },
+        )
+    }
+    historyDebtor?.let { selected ->
+        val debtor = allDebtors.find { it.id == selected.id } ?: selected
+        DebtHistorySheet(
+            debtor = debtor,
+            hideAmounts = privacySettings.hideAmounts,
+            onDismiss = { historyDebtor = null },
+            onAddAdvance = { amountCents, givenAt, note ->
+                scope.launch {
+                    val ok = debtorsViewModel.addDebtAdvanceSync(debtor.id, amountCents, givenAt, note)
+                    showMessage(
+                        context.getString(
+                            if (ok) R.string.msg_debt_advance_saved else R.string.error_debt_advance_failed,
+                        ),
+                    )
+                }
+            },
         )
     }
     showDebtPaymentDialog?.let { debtor ->

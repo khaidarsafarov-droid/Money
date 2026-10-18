@@ -119,9 +119,6 @@ export function PaymentModal({
           }}
         />
       </FormField>
-      <p className="text-xs text-on-surface-variant">
-        Частичный платёж переведёт запись в «Частично». Полное закрытие — в «Завершённые».
-      </p>
     </Modal>
   );
 }

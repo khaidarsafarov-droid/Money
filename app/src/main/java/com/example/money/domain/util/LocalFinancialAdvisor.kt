@@ -145,9 +145,9 @@ object LocalFinancialAdvisor {
         )
         val saved = projection.monthsSavedWithExtra ?: 0
         return if (en) {
-            "An extra $100/mo could shorten debt freedom by ~$saved months. Open Income ideas for freelance options."
+            "An extra $100/mo could shorten the payoff by ~$saved months. Open Income ideas for freelance options."
         } else {
-            "Лишние $100/мес могут сократить путь к свободе примерно на $saved мес. Откройте «Идеи дохода»."
+            "Лишние $100/мес могут сократить срок погашения примерно на $saved мес. Откройте «Идеи дохода»."
         }
     }
 
@@ -203,9 +203,9 @@ object LocalFinancialAdvisor {
         val list = debts.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }
         val total = list.sumOf { it.remainingAmountCents } / 100.0
         return if (en) {
-            "You owe ~$${total.toInt()} across ${list.size} debts. Open Forecast to see your freedom date."
+            "You owe ~$${total.toInt()} across ${list.size} debts."
         } else {
-            "Вы должны ~$${total.toInt()} по ${list.size} долг(ам). Откройте «Прогноз», чтобы увидеть дату свободы."
+            "Вы должны ~$${total.toInt()} по ${list.size} долг(ам)."
         }
     }
 
@@ -217,12 +217,12 @@ object LocalFinancialAdvisor {
         )
         val date = projection.freedomDateMillis?.let { DebtFreedomEngine.isoDateLabel(it) }
         return if (date == null) {
-            if (en) "Not enough payment history yet for a freedom date. Log a few payments first."
-            else "Пока мало данных для даты свободы. Внесите несколько платежей."
+            if (en) "Not enough payment history yet for a payoff date. Log a few payments first."
+            else "Пока мало данных для даты погашения. Внесите несколько платежей."
         } else if (en) {
-            "At your current pace, debt freedom is around $date. Ask «what if +$50» to see acceleration."
+            "At your current pace, the debts close around $date. Ask «what if +$50» to see acceleration."
         } else {
-            "При текущем темпе свобода около $date. Спросите «что если +$50», чтобы увидеть ускорение."
+            "При текущем темпе долги закроются около $date. Спросите «что если +$50», чтобы увидеть ускорение."
         }
     }
 
@@ -250,7 +250,7 @@ object LocalFinancialAdvisor {
             "budget" -> if (en) "Budget health?" else "Как бюджет?"
             "income" -> if (en) "Need more income?" else "Нужен доход?"
             "autopilot" -> if (en) "About Autopilot" else "Про автопилот"
-            "freedom" -> if (en) "When am I free?" else "Когда свобода?"
+            "freedom" -> if (en) "When are the debts paid off?" else "Когда закроются долги?"
             "overview" -> if (en) "Give me an overview" else "Дай сводку"
             else -> promptId
         }

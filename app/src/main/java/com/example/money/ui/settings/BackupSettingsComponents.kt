@@ -39,7 +39,6 @@ internal fun GoogleConnectionCard(
     val reconnect = state.connection == GoogleBackupConnection.RECONNECT_REQUIRED
     BackupSectionCard(
         title = stringResource(R.string.backup_google_title),
-        body = stringResource(R.string.backup_google_hint),
     ) {
         Text(
             text = stringResource(
@@ -148,7 +147,7 @@ internal fun RemoteBackupCard(
 @Composable
 internal fun BackupSectionCard(
     title: String,
-    body: String,
+    body: String = "",
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
@@ -160,11 +159,13 @@ internal fun BackupSectionCard(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(title, fontWeight = FontWeight.SemiBold)
-            Text(
-                body,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (body.isNotBlank()) {
+                Text(
+                    body,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             content()
         }
     }

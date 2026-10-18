@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   addDebt,
+  addDebtAdvance,
   addGoal,
+  debtRemainingCents,
   filterByType,
   filterItems,
   isDebtOverdue,
@@ -187,5 +189,29 @@ describe("removeItem", () => {
     expect(next.items).toHaveLength(1);
     expect(next.items[0]?.deleted).toBe(true);
     expect(filterItems(next.items, "all")).toHaveLength(0);
+  });
+});
+
+describe("addDebtAdvance", () => {
+  it("adds another disbursement to the same debt and keeps the remaining balance", () => {
+    const created = addDebt(emptyState, {
+      name: "Isrofil",
+      target: 150_000,
+      dateGiven: "2026-10-24",
+      dateDue: "2026-11-24",
+    });
+    const debtId = created.items[0]!.id;
+    const next = addDebtAdvance(created, debtId, 20_000, "2026-11-01", "ещё");
+    const debt = next.items[0]!;
+    expect(debt.id).toBe(debtId);
+    expect(debt.target).toBe(170_000);
+    expect(debt.advances).toHaveLength(2);
+    expect(debt.advances?.[1]?.note).toBe("ещё");
+    expect(
+      debtRemainingCents(
+        debt.advances!.map((advance) => advance.amount),
+        debt.history.map((payment) => payment.amount),
+      ),
+    ).toBe(170_000);
   });
 });

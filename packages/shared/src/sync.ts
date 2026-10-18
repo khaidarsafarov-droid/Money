@@ -72,6 +72,16 @@ export interface SnapshotDebt extends LwwRecord {
   clientSyncId?: string;
 }
 
+export interface SnapshotDebtAdvance extends LwwRecord {
+  id: string;
+  debtorId: string;
+  amountCents: number;
+  givenAt: string;
+  note?: string;
+  currency?: string;
+  mode?: string;
+}
+
 export interface SnapshotDebtPayment extends LwwRecord {
   id: string;
   debtorId: string;
@@ -125,6 +135,8 @@ export interface FinanceSnapshot {
   noteLines?: SnapshotNoteLine[];
   /** Absent on snapshots written before clients existed. */
   clients?: SnapshotClient[];
+  /** Absent on snapshots written before disbursement history existed. */
+  debtAdvances?: SnapshotDebtAdvance[];
 }
 
 export type SyncEntityType =
@@ -132,6 +144,7 @@ export type SyncEntityType =
   | "GOAL_ACTION"
   | "DEBT"
   | "DEBT_PAYMENT"
+  | "DEBT_ADVANCE"
   | "TRANSACTION"
   | "NOTE"
   | "NOTE_LINE"

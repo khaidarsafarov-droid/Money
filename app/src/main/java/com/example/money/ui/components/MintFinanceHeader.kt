@@ -201,7 +201,7 @@ private fun ScoreCard(score: Int, caption: String) {
 
 /**
  * Phone and tablet list preview: the two debt sides stay separate tiles.
- * The ring shows [progressPercent] from [com.example.money.domain.util.GoalPsychologyEngines.planProgressPercent].
+ * The ring shows goal savings only. Debt balances stay in their own tiles.
  */
 @Composable
 fun HomePreviewCards(

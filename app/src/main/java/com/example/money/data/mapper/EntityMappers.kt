@@ -1,6 +1,7 @@
 package com.example.money.data.mapper
 
 import com.example.money.data.local.entity.GoalActionEntity
+import com.example.money.data.local.entity.DebtAdvanceEntity
 import com.example.money.data.local.entity.DebtPaymentEntity
 import com.example.money.data.local.entity.DebtorEntity
 import com.example.money.data.local.entity.DebtorWithPayments
@@ -9,6 +10,7 @@ import com.example.money.data.local.entity.SavingsGoalEntity
 import com.example.money.data.local.entity.TransferEntity
 import com.example.money.domain.model.GoalAction
 import com.example.money.domain.model.GoalKind
+import com.example.money.domain.model.DebtAdvance
 import com.example.money.domain.model.DebtPayment
 import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.model.DebtType
@@ -20,9 +22,12 @@ import com.example.money.domain.model.Transfer
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.AppMode
 
-fun DebtorWithPayments.toDomain(): Debtor = debtor.toDomain(payments)
+fun DebtorWithPayments.toDomain(): Debtor = debtor.toDomain(payments, advances)
 
-fun DebtorEntity.toDomain(payments: List<DebtPaymentEntity> = emptyList()): Debtor = Debtor(
+fun DebtorEntity.toDomain(
+    payments: List<DebtPaymentEntity> = emptyList(),
+    advances: List<DebtAdvanceEntity> = emptyList(),
+): Debtor = Debtor(
     id = id,
     syncId = syncId,
     name = name,
@@ -47,6 +52,7 @@ fun DebtorEntity.toDomain(payments: List<DebtPaymentEntity> = emptyList()): Debt
     email = email,
     mode = AppMode.fromStored(mode),
     clientId = clientId,
+    advances = advances.map { it.toDomain() },
 )
 
 fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
@@ -73,6 +79,18 @@ fun Debtor.toEntity(): DebtorEntity = DebtorEntity(
     email = email,
     mode = mode.name,
     clientId = clientId,
+)
+
+fun DebtAdvanceEntity.toDomain(): DebtAdvance = DebtAdvance(
+    id = id,
+    syncId = syncId,
+    debtorId = debtorId,
+    amountCents = amountCents,
+    currency = currency,
+    givenAt = givenAt,
+    note = note,
+    mode = AppMode.fromStored(mode),
+    updatedAt = updatedAt,
 )
 
 fun DebtPaymentEntity.toDomain(): DebtPayment = DebtPayment(

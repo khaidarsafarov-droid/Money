@@ -369,6 +369,21 @@ class DebtorsViewModel(
         debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
     }
 
+    suspend fun addDebtAdvanceSync(
+        debtorId: Long,
+        amountCents: Long,
+        givenAt: Long,
+        note: String,
+    ): Boolean {
+        val saved = debtorRepository.addDebtAdvance(debtorId, amountCents, givenAt, note)
+        val debtor = debtorRepository.getDebtorById(debtorId)
+        if (saved && debtor != null && !debtor.isPaid) {
+            scheduleDebtReminders(debtor)
+            syncDebtToCalendar(debtor, force = true)
+        }
+        return saved
+    }
+
     suspend fun processPaymentSync(debtorId: Long, amountCents: Long, affectsBalance: Boolean): Boolean =
         recordPaymentSync(debtorId, amountCents, affectsBalance) != null
 

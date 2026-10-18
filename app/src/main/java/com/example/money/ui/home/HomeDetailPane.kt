@@ -41,7 +41,7 @@ fun HomeDetailPane(
     onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
-    onQuickPayment: (Debtor) -> Unit = {},
+    onOpenDebtor: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit = { _, _ -> },
     onMarkDebtPaid: (Debtor) -> Unit = {},
     hideAmounts: Boolean = false,
@@ -67,11 +67,6 @@ fun HomeDetailPane(
                     debtMetrics = debtMetrics,
                     hideAmounts = hideAmounts,
                     progressPercent = progressPercent,
-                )
-                Text(
-                    text = stringResource(R.string.tablet_detail_overview_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             is HomeListSelection.GoalItem -> {
@@ -111,7 +106,7 @@ fun HomeDetailPane(
                     debtor = selection.debtor,
                     onRemind = { onRemindDebtor(selection.debtor) },
                     onAddPayment = { onAddDebtPayment(selection.debtor) },
-                    onQuickPayment = { onQuickPayment(selection.debtor) },
+                    onOpen = { onOpenDebtor(selection.debtor) },
                     onAccelerate = { onAccelerateDebtPayment(selection.debtor, accelerateCents) },
                     onMarkPaid = if (!selection.debtor.isPaid) {
                         { onMarkDebtPaid(selection.debtor) }

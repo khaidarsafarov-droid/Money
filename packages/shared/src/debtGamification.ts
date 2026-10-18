@@ -108,28 +108,24 @@ function isEnglish(locale: string): boolean {
 }
 
 export function streakLabel(count: number, locale = "ru"): string {
-  return isEnglish(locale) ? `Payment streak: ${count}` : `Серия платежей: ${count}`;
+  return isEnglish(locale) ? `Streak: ${count}` : `Серия: ${count}`;
 }
 
 export function resolveWinMessage(code: string | null, locale = "ru"): string | null {
   if (!code) return null;
   const english = isEnglish(locale);
   if (code === "win.closed") {
-    return english ? "Debt closed — a real win!" : "Долг закрыт — отличная победа!";
+    return english ? "Debt closed" : "Долг закрыт";
   }
   const milestone = /^win\.milestone\.(\d+)$/.exec(code);
   if (milestone) {
     const percent = milestone[1];
-    return english
-      ? `A little left to the ${percent}% milestone. You are doing it.`
-      : `До вехи ${percent}% осталось немного. Вы справляетесь.`;
+    return english ? `A little left to ${percent}%` : `До ${percent}% немного`;
   }
   const streak = /^win\.streak\.(\d+)$/.exec(code);
   if (streak) {
     const count = streak[1];
-    return english
-      ? `Payment streak: ${count}. Keep going.`
-      : `Серия платежей: ${count}. Так держать.`;
+    return english ? `Streak: ${count}` : `Серия: ${count}`;
   }
   return code;
 }
@@ -142,7 +138,7 @@ export function badgeLabel(badgeId: string, locale = "ru"): string {
     case BADGE_HALF_WAY:
       return english ? "Halfway" : "Полпути";
     case BADGE_FREEDOM:
-      return english ? "Freedom" : "Свобода";
+      return english ? "Debts closed" : "Долги закрыты";
     case BADGE_STREAK_3:
       return english ? "Streak ×3" : "Серия ×3";
     default:

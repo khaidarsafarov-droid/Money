@@ -119,7 +119,6 @@ import com.example.money.ui.components.HomePreviewCards
 import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalProgress
 import com.example.money.domain.util.GoalPsychologyEngines
@@ -181,12 +180,9 @@ internal fun PhoneHomeLayout(
     onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
-    onQuickPayment: (Debtor) -> Unit,
+    onOpenDebtor: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
     onMarkDebtPaid: (Debtor) -> Unit,
-    freedomProjection: DebtFreedomEngine.FreedomProjection,
-    extraMonthlyCents: Long,
-    onExtraMonthlyChange: (Long) -> Unit,
     onEditDebtor: (Debtor) -> Unit,
     onDeleteDebtor: (Debtor) -> Unit,
     onViewContactHistory: (Debtor) -> Unit,
@@ -234,7 +230,6 @@ internal fun PhoneHomeLayout(
     onApplyAutopilot: () -> Unit,
     scope: kotlinx.coroutines.CoroutineScope,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
-    emptyDebtorsHint: @Composable (DebtorFilter) -> String,
     appMode: AppMode = AppMode.PERSONAL,
     onOpenClients: () -> Unit = {},
 ) {
@@ -490,11 +485,7 @@ internal fun PhoneHomeLayout(
                 if (page == HomeTab.Home) {
                 item {
                     Text(
-                        text = if (planProgressPercent > 0) {
-                            stringResource(R.string.home_greeting_progress, greetingName, planProgressPercent)
-                        } else {
-                            stringResource(R.string.home_greeting_simple, greetingName)
-                        },
+                        text = stringResource(R.string.home_greeting_simple, greetingName),
                         modifier = Modifier.padding(
                             horizontal = MoneySpacing.lg,
                             vertical = MoneySpacing.sm,
@@ -587,7 +578,6 @@ internal fun PhoneHomeLayout(
                     item {
                         EmptyStateMessage(
                             title = stringResource(R.string.empty_goals_title),
-                            hint = stringResource(R.string.empty_goals_hint),
                             illustration = EmptyIllustration.Goals,
                             modifier = Modifier.padding(
                                 horizontal = MoneySpacing.lg,
@@ -641,9 +631,6 @@ internal fun PhoneHomeLayout(
                         onDebtorFilterChange = onDebtorFilterChange,
                         debtSearchQuery = debtSearchQuery,
                         onDebtSearchQueryChange = onDebtSearchQueryChange,
-                        freedomProjection = freedomProjection,
-                        extraMonthlyCents = extraMonthlyCents,
-                        onExtraMonthlyChange = onExtraMonthlyChange,
                         showCheckIn = showCheckIn,
                         onDismissCheckIn = onDismissCheckIn,
                         gamificationState = gamificationState,
@@ -657,7 +644,7 @@ internal fun PhoneHomeLayout(
                         contactContext = contactContext,
                         onRemindDebtor = onRemindDebtor,
                         onAddDebtPayment = onAddDebtPayment,
-                        onQuickPayment = onQuickPayment,
+                        onOpenDebtor = onOpenDebtor,
                         onAccelerateDebtPayment = onAccelerateDebtPayment,
                         onMarkDebtPaid = onMarkDebtPaid,
                         onEditDebtor = onEditDebtor,
@@ -666,7 +653,6 @@ internal fun PhoneHomeLayout(
                         onSyncCalendar = onSyncCalendar,
                         onRemoveCalendar = onRemoveCalendar,
                         emptyDebtorsTitle = emptyDebtorsTitle,
-                        emptyDebtorsHint = emptyDebtorsHint,
                     )
                 }
             }
@@ -746,12 +732,4 @@ internal fun emptyDebtorsTitle(filter: DebtorFilter): String = when (filter) {
     DebtorFilter.ACTIVE -> stringResource(R.string.empty_debtors_active)
     DebtorFilter.OVERDUE -> stringResource(R.string.empty_debtors_overdue)
     DebtorFilter.PAID -> stringResource(R.string.empty_debtors_paid)
-}
-
-@Composable
-internal fun emptyDebtorsHint(filter: DebtorFilter): String = when (filter) {
-    DebtorFilter.ALL -> stringResource(R.string.empty_debtors_all_hint)
-    DebtorFilter.ACTIVE -> stringResource(R.string.empty_debtors_active_hint)
-    DebtorFilter.OVERDUE -> stringResource(R.string.empty_debtors_overdue_hint)
-    DebtorFilter.PAID -> stringResource(R.string.empty_debtors_paid_hint)
 }

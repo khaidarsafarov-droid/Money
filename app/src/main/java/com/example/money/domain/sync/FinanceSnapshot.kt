@@ -36,6 +36,18 @@ data class SnapshotDebt(
     val clientSyncId: String? = null,
 ) : LwwRecord
 
+data class SnapshotDebtAdvance(
+    val id: String,
+    val debtorId: String,
+    val amountCents: Long,
+    val givenAt: String,
+    val note: String = "",
+    val currency: String? = null,
+    override val syncUpdatedAt: Long,
+    override val deleted: Boolean = false,
+    val mode: String = "PERSONAL",
+) : LwwRecord
+
 data class SnapshotDebtPayment(
     val id: String,
     val debtorId: String,
@@ -144,6 +156,8 @@ data class FinanceSnapshot(
     val noteLines: List<SnapshotNoteLine>? = null,
     /** Null means an older snapshot that did not carry clients. */
     val clients: List<SnapshotClient>? = null,
+    /** Null means an older snapshot that did not carry disbursements. Apply must leave local rows alone. */
+    val debtAdvances: List<SnapshotDebtAdvance>? = null,
 ) {
     companion object {
         const val CURRENT_SCHEMA_VERSION = 4

@@ -81,6 +81,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -91,12 +92,10 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.ui.budget.BudgetViewModel
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
-import com.example.money.ui.components.QuickPaymentSheet
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.components.SwipeToDeleteContainer
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.debtors.DebtListViewModel
@@ -192,9 +191,6 @@ fun HomeScreen(
     } else {
         MaterialTheme.colorScheme.onPrimary
     }
-    val modeLabel = stringResource(
-        if (appMode == AppMode.PROFESSIONAL) R.string.mode_professional else R.string.mode_personal,
-    )
     SideEffect { Formatters.activeRegion = currencyRegion }
     val goalActions by goalViewModel.actions.collectAsStateWithLifecycle()
     val allDebtors by debtorsViewModel.allDebtorsList.collectAsStateWithLifecycle()
@@ -203,8 +199,6 @@ fun HomeScreen(
     val debtorFilter by debtListViewModel.filter.collectAsStateWithLifecycle()
     val debtSearchQuery by debtListViewModel.searchQuery.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
-    val freedomProjection by debtListViewModel.freedomProjection.collectAsStateWithLifecycle()
-    val extraMonthlyCents by debtListViewModel.extraMonthlyCents.collectAsStateWithLifecycle()
     val privacySettings by debtorsViewModel.privacySettings.collectAsStateWithLifecycle()
     val gamificationState by debtorsViewModel.gamificationState.collectAsStateWithLifecycle()
     val autopilotSettings by debtorsViewModel.autopilotSettings.collectAsStateWithLifecycle()
@@ -213,8 +207,9 @@ fun HomeScreen(
     val availableBalanceCents = budgetSummary.availableBalanceCents
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
-    val planProgressPercent = remember(allDebtors, goalMetrics) {
-        GoalPsychologyEngines.planProgressPercent(allDebtors, goalMetrics)
+    val goalProgressPercent = remember(goalMetrics) {
+        val pool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
+        if (pool <= 0L) 0 else ((goalMetrics.totalAccumulatedCents * 100L) / pool).toInt().coerceIn(0, 100)
     }
 
     var selectedTab by remember { mutableIntStateOf(launchConfig.initialTab.ordinal) }
@@ -224,9 +219,9 @@ fun HomeScreen(
     var editDebtor by editDebtorState
     val showDebtPaymentDialogState = remember { mutableStateOf<Debtor?>(null) }
     var showDebtPaymentDialog by showDebtPaymentDialogState
+    val historyDebtorState = remember { mutableStateOf<Debtor?>(null) }
     val debtPaymentPrefillCentsState = remember { mutableLongStateOf(0L) }
     var debtPaymentPrefillCents by debtPaymentPrefillCentsState
-    var quickPayDebtorId by remember { mutableLongStateOf(0L) }
     val showTransferDialogState = remember { mutableStateOf(false) }
     var showTransferDialog by showTransferDialogState
     val showExpenseDialogState = remember { mutableStateOf(false) }
@@ -451,6 +446,7 @@ fun HomeScreen(
         contactHistoryTargetState = contactHistoryTargetState,
         remindDebtorState = remindDebtorState,
         showDebtPaymentDialogState = showDebtPaymentDialogState,
+        historyDebtorState = historyDebtorState,
         debtPaymentPrefillCentsState = debtPaymentPrefillCentsState,
         showIncomeIdeasState = showIncomeIdeasState,
         showTransferDialogState = showTransferDialogState,
@@ -480,18 +476,12 @@ fun HomeScreen(
         val topBar: @Composable () -> Unit = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = modeLabel,
-                            color = modeAccent,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.home_screen_title),
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 },
                 actions = {
                     SingleChoiceSegmentedButtonRow {
@@ -627,7 +617,7 @@ fun HomeScreen(
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
-                planProgressPercent = planProgressPercent,
+                planProgressPercent = goalProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },
@@ -640,15 +630,12 @@ fun HomeScreen(
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
                 },
-                onQuickPayment = { debtor -> quickPayDebtorId = debtor.id },
+                onOpenDebtor = { historyDebtorState.value = it },
                 onAccelerateDebtPayment = { debtor, prefillCents ->
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
                 onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
-                freedomProjection = freedomProjection,
-                extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
                 gamificationState = gamificationState,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
@@ -724,7 +711,6 @@ fun HomeScreen(
                 onRemoveCalendar = debtorsViewModel::removeDebtFromCalendarManually,
                 onAddDebt = { showAddDebtorDialog = true },
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
-                emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
                 appMode = appMode,
                 onOpenClients = onOpenClients,
             )
@@ -756,7 +742,7 @@ fun HomeScreen(
                 greetingName = userProfile.resolvedDisplayName(
                     stringResource(R.string.onboarding_default_name),
                 ),
-                planProgressPercent = planProgressPercent,
+                planProgressPercent = goalProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
@@ -770,15 +756,12 @@ fun HomeScreen(
                     debtPaymentPrefillCents = 0L
                     showDebtPaymentDialog = debtor
                 },
-                onQuickPayment = { debtor -> quickPayDebtorId = debtor.id },
+                onOpenDebtor = { historyDebtorState.value = it },
                 onAccelerateDebtPayment = { debtor, prefillCents ->
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
                 onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
-                freedomProjection = freedomProjection,
-                extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = debtListViewModel::setExtraMonthlyCents,
                 onEditDebtor = { editDebtor = it },
                 onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
                 onViewContactHistory = { debtor ->
@@ -860,40 +843,8 @@ fun HomeScreen(
                 },
                 scope = scope,
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
-                emptyDebtorsHint = { filter -> emptyDebtorsHint(filter) },
                 appMode = appMode,
                 onOpenClients = onOpenClients,
-            )
-        }
-        val quickDebtor = allDebtors.firstOrNull { it.id == quickPayDebtorId && !it.isPaid }
-        val paymentSavedMessage = stringResource(R.string.msg_payment_saved)
-        val undoLabel = stringResource(R.string.action_undo)
-        val paymentFailedMessage = stringResource(R.string.error_payment_failed)
-        if (quickDebtor != null) {
-            QuickPaymentSheet(
-                remainingCents = quickDebtor.remainingAmountCents,
-                currencyRegion = currencyRegion,
-                onDismiss = { quickPayDebtorId = 0L },
-                onSave = { cents ->
-                    val debtorId = quickDebtor.id
-                    scope.launch {
-                        val paymentId = debtorsViewModel.recordPaymentSync(debtorId, cents, false)
-                        quickPayDebtorId = 0L
-                        if (paymentId != null) {
-                            vibrateShort(context)
-                            val result = snackbarHostState.showSnackbar(
-                                message = paymentSavedMessage,
-                                actionLabel = undoLabel,
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                vibrate(context, HapticStrength.MEDIUM)
-                                debtorsViewModel.undoPaymentSync(debtorId, paymentId)
-                            }
-                        } else {
-                            showMessage(paymentFailedMessage)
-                        }
-                    }
-                },
             )
         }
     }

@@ -5,9 +5,11 @@ import {
   filterByType,
   filterItems,
   isDebtOverdue,
+  addDebtAdvance,
   processPayment,
   removeItem,
   sortItems,
+  withOpeningAdvance,
 } from "@/lib/financeEngine";
 import { enrichFinanceState, migrateLegacyGoalHistory } from "@/lib/globalFinanceEngine";
 import { createId } from "@/lib/money";
@@ -40,7 +42,7 @@ interface LegacyStateV3 {
 }
 
 function createInitialState(): FinanceState {
-  return {
+  return seedStoredDebts({
     currency: "USD",
     items: [
       {
@@ -67,7 +69,11 @@ function createInitialState(): FinanceState {
       },
     ],
     transactions: [],
-  };
+  });
+}
+
+function seedStoredDebts(state: FinanceState): FinanceState {
+  return { ...state, items: state.items.map(withOpeningAdvance) };
 }
 
 function migrateFromV3(raw: LegacyStateV3): FinanceState {
@@ -107,11 +113,11 @@ function migrateFromV3(raw: LegacyStateV3): FinanceState {
     };
   });
 
-  return migrateLegacyGoalHistory({
+  return seedStoredDebts(migrateLegacyGoalHistory({
     currency: "USD",
     items: [...goalItems, ...debtItems],
     transactions: [],
-  });
+  }));
 }
 
 function normalizeState(parsed: FinanceState): FinanceState {
@@ -120,7 +126,7 @@ function normalizeState(parsed: FinanceState): FinanceState {
     items: parsed.items,
     transactions: parsed.transactions ?? [],
   };
-  return enrichFinanceState(migrateLegacyGoalHistory(withTransactions));
+  return seedStoredDebts(enrichFinanceState(migrateLegacyGoalHistory(withTransactions)));
 }
 
 function parseStoredState(raw: string): FinanceState | null {
@@ -177,6 +183,7 @@ export {
   filterByType,
   filterItems,
   isDebtOverdue,
+  addDebtAdvance,
   processPayment,
   removeItem,
   sortItems,

@@ -80,6 +80,17 @@ data class BackupClient(
     val mode: String = "PROFESSIONAL",
 )
 
+data class BackupDebtAdvance(
+    val syncId: String,
+    val debtorSyncId: String,
+    val amountCents: Long,
+    val currency: String,
+    val givenAtEpochMillis: Long,
+    val note: String = "",
+    val updatedAtEpochMillis: Long,
+    val mode: String = "PERSONAL",
+)
+
 data class BackupDebtPayment(
     val syncId: String,
     val debtorSyncId: String,
@@ -244,10 +255,11 @@ data class BackupRecordCounts(
     val notes: Int = 0,
     val noteLines: Int = 0,
     val clients: Int = 0,
+    val debtAdvances: Int = 0,
 ) {
     val total: Int
         get() = goals + debtors + debtPayments + transfers + expenses + luckDiaryEntries +
-            goalActions + notes + noteLines + clients
+            goalActions + notes + noteLines + clients + debtAdvances
 
     companion object {
         val EMPTY = BackupRecordCounts(
@@ -271,6 +283,7 @@ data class BackupRecordCounts(
                 notes = bundle.notes.size,
                 noteLines = bundle.noteLines.size,
                 clients = bundle.clients.size,
+                debtAdvances = bundle.debtAdvances.size,
             )
     }
 }
@@ -306,6 +319,7 @@ data class BackupBundle(
     val notes: List<BackupNote> = emptyList(),
     val noteLines: List<BackupNoteLine> = emptyList(),
     val clients: List<BackupClient> = emptyList(),
+    val debtAdvances: List<BackupDebtAdvance> = emptyList(),
 ) {
     companion object {
         const val CURRENT_FORMAT_VERSION = 1

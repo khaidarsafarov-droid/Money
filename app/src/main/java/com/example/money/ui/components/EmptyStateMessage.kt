@@ -41,7 +41,7 @@ enum class EmptyIllustration {
 @Composable
 fun EmptyStateMessage(
     title: String,
-    hint: String,
+    hint: String = "",
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     illustration: EmptyIllustration = EmptyIllustration.General,
@@ -68,13 +68,15 @@ fun EmptyStateMessage(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Text(
-                text = hint,
-                style = moneyBodyStyle(),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            if (hint.isNotBlank()) {
+                Text(
+                    text = hint,
+                    style = moneyBodyStyle(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             if (actionLabel != null && onAction != null) {
                 MoneyButton(
                     text = actionLabel,

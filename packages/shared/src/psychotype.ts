@@ -122,7 +122,7 @@ export function psychotypeTaglineRu(type: Psychotype): string {
     case "PLAYER":
       return "Каждый платёж — очко к победе";
     case "BALANCED":
-      return "Шаг за шагом к свободе";
+      return "Шаг за шагом к цели";
     default: {
       const _exhaustive: never = type;
       return String(_exhaustive);

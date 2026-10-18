@@ -48,12 +48,14 @@ data class UserProfile(
         val trimmed = goalText.trim()
         val placeholder = trimmed.isEmpty() ||
             trimmed == DEFAULT_GOAL_TEXT ||
+            trimmed == LEGACY_GOAL_TEXT ||
             trimmed.equals("Become financially free", ignoreCase = true)
         return if (placeholder) fallback else trimmed
     }
 
     companion object {
         const val DEFAULT_DISPLAY_NAME = "Друг"
-        const val DEFAULT_GOAL_TEXT = "Стать финансово свободным"
+        const val DEFAULT_GOAL_TEXT = "Накопить на важную цель"
+        const val LEGACY_GOAL_TEXT = "Стать финансово свободным"
     }
 }

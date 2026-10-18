@@ -59,7 +59,7 @@ export function goalBadgeLabelRu(badgeId: string): string {
     case GOAL_BADGE_HERO:
       return "Герой";
     case GOAL_BADGE_FREEDOM:
-      return "Свобода";
+      return "Долги закрыты";
     default:
       return badgeId;
   }

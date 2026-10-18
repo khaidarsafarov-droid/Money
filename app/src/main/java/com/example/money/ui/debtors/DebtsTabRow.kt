@@ -58,17 +58,6 @@ fun DebtTabRow(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm)) {
-            TextButton(onClick = { onTabSelected(DebtTab.Freedom) }) {
-                Text(
-                    text = stringResource(DebtTab.Freedom.titleRes),
-                    fontWeight = if (selectedTab == DebtTab.Freedom) FontWeight.SemiBold else FontWeight.Medium,
-                    color = if (selectedTab == DebtTab.Freedom) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
             TextButton(onClick = { onTabSelected(DebtTab.Calendar) }) {
                 Text(
                     text = stringResource(DebtTab.Calendar.titleRes),

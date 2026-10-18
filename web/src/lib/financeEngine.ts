@@ -1,6 +1,7 @@
 import { isGoalDeadlinePassed } from "@/lib/goalProgress";
 import { createId } from "@/lib/money";
-import type { DashboardTotals, FinanceState, FinancialItem, FinancialStatus, Payment, StatusFilter, TypeFilter } from "@/types/finance";
+import type { DashboardTotals, DebtAdvance, FinanceState, FinancialItem, FinancialStatus, Payment, StatusFilter, TypeFilter } from "@/types/finance";
+import { debtRemainingCents } from "@/types/finance";
 import { computeGlobalFinanceSummary, enrichFinanceState, addTransaction } from "@/lib/globalFinanceEngine";
 
 export function resolveStatus(target: number, amount: number): FinancialStatus {
@@ -194,24 +195,84 @@ export function addGoal(
   return enrichFinanceState({ ...state, items: [item, ...state.items] });
 }
 
+export function openingDebtAdvance(debt: {
+  id: string;
+  target: number;
+  dateGiven?: string;
+}): DebtAdvance {
+  const givenAt = debt.dateGiven?.includes("T")
+    ? debt.dateGiven
+    : `${debt.dateGiven ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+  return {
+    id: `open-${debt.id}`,
+    amount: debt.target,
+    givenAt,
+    note: "",
+  };
+}
+
+export function withOpeningAdvance(item: FinancialItem): FinancialItem {
+  if (item.type !== "DEBT" || item.deleted) return item;
+  const live = item.advances?.filter((advance) => !advance.deleted && advance.amount > 0) ?? [];
+  if (live.length > 0) return { ...item, advances: item.advances };
+  if (item.target <= 0) return { ...item, advances: item.advances ?? [] };
+  return { ...item, advances: [openingDebtAdvance(item)] };
+}
+
 export function addDebt(
   state: FinanceState,
   input: { name: string; target: number; dateGiven: string; dateDue: string },
 ): FinanceState {
+  const id = createId();
   const item: FinancialItem = {
-    id: createId(),
+    id,
     type: "DEBT",
     name: input.name,
     target: input.target,
     amount: 0,
     status: "ACTIVE",
     history: [],
+    advances: [openingDebtAdvance({ id, target: input.target, dateGiven: input.dateGiven })],
     dateGiven: input.dateGiven,
     dateDue: input.dateDue,
     updatedAt: new Date().toISOString(),
   };
   return { ...state, items: [item, ...state.items] };
 }
+
+export function addDebtAdvance(
+  state: FinanceState,
+  debtId: string,
+  amountCents: number,
+  givenAt: string,
+  note = "",
+): FinanceState {
+  if (amountCents <= 0) return state;
+  return {
+    ...state,
+    items: state.items.map((item) => {
+      if (item.id !== debtId || item.type !== "DEBT" || item.deleted) return item;
+      const seeded = withOpeningAdvance(item);
+      const advance: DebtAdvance = {
+        id: createId(),
+        amount: amountCents,
+        givenAt: givenAt.includes("T") ? givenAt : `${givenAt}T00:00:00.000Z`,
+        note,
+        syncUpdatedAt: Date.now(),
+      };
+      const target = item.target + amountCents;
+      return {
+        ...seeded,
+        target,
+        advances: [...(seeded.advances ?? []), advance],
+        status: resolveStatus(target, item.amount),
+        updatedAt: new Date().toISOString(),
+      };
+    }),
+  };
+}
+
+export { debtRemainingCents };
 
 export function removeItem(state: FinanceState, id: string): FinanceState {
   const now = new Date().toISOString();

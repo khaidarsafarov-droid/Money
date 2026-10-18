@@ -23,7 +23,6 @@ import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
 import com.example.money.ui.debtors.DebtContactActions
-import com.example.money.ui.debtors.DebtFreedomTab
 import com.example.money.ui.debtors.DebtOverviewCard
 import com.example.money.ui.debtors.DebtSearchField
 import com.example.money.ui.debtors.DebtTab
@@ -42,9 +41,6 @@ fun LazyListScope.homeDebtsSection(
     onDebtorFilterChange: (DebtorFilter) -> Unit,
     debtSearchQuery: String,
     onDebtSearchQueryChange: (String) -> Unit,
-    freedomProjection: DebtFreedomEngine.FreedomProjection,
-    extraMonthlyCents: Long,
-    onExtraMonthlyChange: (Long) -> Unit,
     showCheckIn: Boolean,
     onDismissCheckIn: () -> Unit,
     gamificationState: GamificationState,
@@ -58,7 +54,7 @@ fun LazyListScope.homeDebtsSection(
     contactContext: Context,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
-    onQuickPayment: (Debtor) -> Unit,
+    onOpenDebtor: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
     onMarkDebtPaid: (Debtor) -> Unit = {},
     onEditDebtor: (Debtor) -> Unit,
@@ -67,7 +63,6 @@ fun LazyListScope.homeDebtsSection(
     onSyncCalendar: (Debtor) -> Unit,
     onRemoveCalendar: (Debtor) -> Unit,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
-    emptyDebtorsHint: @Composable (DebtorFilter) -> String,
 ) {
     item {
         DebtTabRow(
@@ -86,7 +81,7 @@ fun LazyListScope.homeDebtsSection(
             }
         }
     }
-    if (debtTab != DebtTab.Freedom && debtTab != DebtTab.Calendar) {
+    if (debtTab != DebtTab.Calendar) {
         if (debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe) {
             item {
                 DebtOverviewCard(
@@ -136,16 +131,6 @@ fun LazyListScope.homeDebtsSection(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
-    } else if (debtTab == DebtTab.Freedom) {
-        item {
-            DebtFreedomTab(
-                projection = freedomProjection,
-                extraMonthlyCents = extraMonthlyCents,
-                onExtraMonthlyChange = onExtraMonthlyChange,
-                hideAmounts = privacySettings.hideAmounts,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-        }
     } else {
         item {
             DebtorFilterRow(
@@ -165,7 +150,6 @@ fun LazyListScope.homeDebtsSection(
             item {
                 EmptyStateMessage(
                     title = emptyDebtorsTitle(debtorFilter),
-                    hint = emptyDebtorsHint(debtorFilter),
                     illustration = if (debtSearchQuery.isNotBlank()) {
                         EmptyIllustration.Search
                     } else {
@@ -191,7 +175,7 @@ fun LazyListScope.homeDebtsSection(
                     highlighted = isHighlighted,
                     onRemind = { onRemindDebtor(debtor) },
                     onAddPayment = { onAddDebtPayment(debtor) },
-                    onQuickPayment = { onQuickPayment(debtor) },
+                    onOpen = { onOpenDebtor(debtor) },
                     onAccelerate = { onAccelerateDebtPayment(debtor, accelerateCents) },
                     onMarkPaid = { onMarkDebtPaid(debtor) },
                     onEdit = { onEditDebtor(debtor) },

@@ -69,7 +69,6 @@ import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.HomePreviewCards
 import com.example.money.ui.components.SyncStatusIndicator
 import com.example.money.ui.debtors.DebtTab
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalProgress
 import com.example.money.settings.AppMode
 import com.example.money.settings.AutopilotSettings
@@ -77,7 +76,6 @@ import com.example.money.settings.GamificationState
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
-import com.example.money.ui.debtors.DebtFreedomTab
 import com.example.money.ui.debtors.GamificationBanner
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
@@ -120,12 +118,9 @@ fun TabletHomeLayout(
     onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
-    onQuickPayment: (Debtor) -> Unit = {},
+    onOpenDebtor: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
     onMarkDebtPaid: (Debtor) -> Unit = {},
-    freedomProjection: DebtFreedomEngine.FreedomProjection,
-    extraMonthlyCents: Long,
-    onExtraMonthlyChange: (Long) -> Unit,
     gamificationState: GamificationState = GamificationState(),
     privacySettings: PrivacySettings = PrivacySettings(),
     autopilotSettings: AutopilotSettings = AutopilotSettings(),
@@ -169,7 +164,6 @@ fun TabletHomeLayout(
     onSyncCalendar: (Debtor) -> Unit = {},
     onRemoveCalendar: (Debtor) -> Unit = {},
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
-    emptyDebtorsHint: @Composable (DebtorFilter) -> String,
     appMode: AppMode = AppMode.PERSONAL,
     onOpenClients: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -451,7 +445,6 @@ fun TabletHomeLayout(
                             item {
                                 EmptyStateMessage(
                                     title = stringResource(R.string.empty_goals_title),
-                                    hint = stringResource(R.string.empty_goals_hint),
                                     illustration = EmptyIllustration.Goals,
                                 )
                             }
@@ -522,16 +515,6 @@ fun TabletHomeLayout(
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }
-                        } else if (debtTab == DebtTab.Freedom) {
-                            item {
-                                DebtFreedomTab(
-                                    projection = freedomProjection,
-                                    extraMonthlyCents = extraMonthlyCents,
-                                    onExtraMonthlyChange = onExtraMonthlyChange,
-                                    hideAmounts = privacySettings.hideAmounts,
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                )
-                            }
                         } else {
                             if (showCheckIn) {
                                 item {
@@ -571,7 +554,6 @@ fun TabletHomeLayout(
                                 item {
                                     EmptyStateMessage(
                                         title = emptyDebtorsTitle(debtorFilter),
-                                        hint = emptyDebtorsHint(debtorFilter),
                                         illustration = if (debtSearchQuery.isNotBlank()) {
                                             EmptyIllustration.Search
                                         } else {
@@ -590,11 +572,9 @@ fun TabletHomeLayout(
                                         ),
                                         selected = selection is HomeListSelection.DebtorItem &&
                                             selection.debtor.id == debtor.id,
-                                        onClick = { onSelectionChange(HomeListSelection.DebtorItem(debtor)) },
-                                        onQuickPayment = if (debtor.isPaid) {
-                                            null
-                                        } else {
-                                            { onQuickPayment(debtor) }
+                                        onClick = {
+                                            onSelectionChange(HomeListSelection.DebtorItem(debtor))
+                                            onOpenDebtor(debtor)
                                         },
                                         modifier = Modifier.padding(vertical = 4.dp),
                                     )
@@ -621,7 +601,7 @@ fun TabletHomeLayout(
                 onExpense = onExpense,
                 onRemindDebtor = onRemindDebtor,
                 onAddDebtPayment = onAddDebtPayment,
-                onQuickPayment = onQuickPayment,
+                onOpenDebtor = onOpenDebtor,
                 onAccelerateDebtPayment = onAccelerateDebtPayment,
                 onMarkDebtPaid = onMarkDebtPaid,
                 hideAmounts = privacySettings.hideAmounts,

@@ -24,6 +24,9 @@ interface DebtorRepository {
 
     suspend fun addDebtor(debtor: Debtor): Long
 
+    /** Gives more money to an existing debt. Increases that debt instead of creating another one. */
+    suspend fun addDebtAdvance(debtId: Long, amountCents: Long, givenAt: Long, note: String): Boolean
+
     suspend fun updateDebtor(debtor: Debtor, previousAffectsBalance: Boolean)
 
     suspend fun processDebtPayment(debtId: Long, paymentCents: Long, affectsBalance: Boolean): Boolean

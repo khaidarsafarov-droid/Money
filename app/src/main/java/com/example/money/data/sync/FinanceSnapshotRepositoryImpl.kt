@@ -28,12 +28,19 @@ class FinanceSnapshotRepositoryImpl(
         val clientsById = database.clientDao().getAllOnce().associateBy { it.id }
         val debtors = database.debtorDao().getAllDebtorsOnce()
         val payments = database.debtPaymentDao().getAllPaymentsOnce()
+        val advances = database.debtAdvanceDao().getAllOnce()
         val debtorSyncIds = debtors.associate { it.id to it.syncId }
         val paymentSyncIds = payments.associate { it.id to it.syncId }
         val paymentsByDebtor = payments.groupBy { it.debtorId }
+        val advancesByDebtor = advances.groupBy { it.debtorId }
         val liveDebts = debtors.map { debtor ->
             val latestPayment = paymentsByDebtor[debtor.id]?.maxOfOrNull { it.paidAt }
-            val syncUpdatedAt = maxOf(debtor.dateGiven, latestPayment ?: debtor.dateGiven)
+            val latestAdvance = advancesByDebtor[debtor.id]?.maxOfOrNull { it.updatedAt }
+            val syncUpdatedAt = maxOf(
+                debtor.dateGiven,
+                latestPayment ?: debtor.dateGiven,
+                latestAdvance ?: debtor.dateGiven,
+            )
             FinanceSnapshotCodec.toSnapshotDebt(
                 debtor,
                 syncUpdatedAt,
@@ -54,6 +61,18 @@ class FinanceSnapshotRepositoryImpl(
                 tombstones,
                 SyncEntityType.DEBT_PAYMENT,
                 FinanceSnapshotCodec::decodeDebtPayment,
+            ),
+        ) { it.id }
+        val liveDebtAdvances = advances.mapNotNull { advance ->
+            val debtorSyncId = debtorSyncIds[advance.debtorId] ?: return@mapNotNull null
+            FinanceSnapshotCodec.toSnapshotDebtAdvance(advance, debtorSyncId)
+        }
+        val debtAdvances = SyncEngine.mergeRecords(
+            liveDebtAdvances,
+            decodeTombstones(
+                tombstones,
+                SyncEntityType.DEBT_ADVANCE,
+                FinanceSnapshotCodec::decodeDebtAdvance,
             ),
         ) { it.id }
         val transferTransactions = database.transferDao().getAllOnce()
@@ -123,6 +142,7 @@ class FinanceSnapshotRepositoryImpl(
             goals.maxOfOrNull { it.syncUpdatedAt },
             debts.maxOfOrNull { it.syncUpdatedAt },
             debtPayments.maxOfOrNull { it.syncUpdatedAt },
+            debtAdvances.maxOfOrNull { it.syncUpdatedAt },
             transactions.maxOfOrNull { it.syncUpdatedAt },
             goalActions.maxOfOrNull { it.syncUpdatedAt },
             notes.maxOfOrNull { it.syncUpdatedAt },
@@ -144,6 +164,7 @@ class FinanceSnapshotRepositoryImpl(
             notes = notes,
             noteLines = noteLines,
             clients = clients,
+            debtAdvances = debtAdvances,
         )
     }
 

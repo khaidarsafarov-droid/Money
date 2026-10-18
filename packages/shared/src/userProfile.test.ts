@@ -26,10 +26,9 @@ describe("userProfile", () => {
   });
 
   it("builds personalized greeting", () => {
-    expect(personalizedGreeting("Иван", 20)).toContain("Иван");
-    expect(personalizedGreeting("Иван", 20)).toContain("20%");
+    expect(personalizedGreeting("Иван", 20)).toBe("Привет, Иван!");
     expect(personalizedGreeting("", 0, "en")).toContain("Friend");
-    expect(personalizedGreeting("Ivan", 20, "en-US")).toContain("closer to freedom");
+    expect(personalizedGreeting("Ivan", 20, "en-US")).toBe("Hi, Ivan!");
   });
 
   it("returns psychotype onboarding copy", () => {

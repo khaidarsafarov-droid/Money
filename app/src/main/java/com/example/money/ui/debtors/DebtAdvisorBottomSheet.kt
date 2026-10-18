@@ -67,12 +67,6 @@ fun DebtAdvisorBottomSheet(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
-            Text(
-                text = stringResource(R.string.advisor_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AdvisorPrompt.entries.forEach { prompt ->
                     FilterChip(
@@ -142,7 +136,6 @@ private enum class AdvisorPrompt(val id: String, val labelRes: Int) {
     OVERDUE("overdue", R.string.advisor_prompt_overdue),
     GOALS("goals", R.string.advisor_prompt_goals),
     BUDGET("budget", R.string.advisor_prompt_budget),
-    FREEDOM("freedom", R.string.advisor_prompt_freedom),
     MOTIVATION("motivation", R.string.advisor_prompt_motivation),
 }
 

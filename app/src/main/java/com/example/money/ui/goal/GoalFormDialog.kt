@@ -168,19 +168,6 @@ fun GoalFormDialog(
                     isError = targetError != null,
                     supportingText = targetError,
                 )
-            } else {
-                Text(
-                    text = stringResource(R.string.goal_action_kind_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (kind == GoalKind.MONEY) {
-                Text(
-                    text = stringResource(R.string.goal_kind_money_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
             if (kind == GoalKind.MONEY && isEdit) {
                 Text(
@@ -191,26 +178,16 @@ fun GoalFormDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            } else if (kind == GoalKind.MONEY) {
-                Text(
-                    text = stringResource(R.string.goal_starts_at_zero_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = stringResource(R.string.goal_deadline_toggle))
-                    Text(
-                        text = stringResource(R.string.goal_deadline_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.goal_deadline_toggle),
+                    modifier = Modifier.weight(1f),
+                )
                 Switch(
                     checked = hasDeadline,
                     onCheckedChange = withLightHaptic(LocalContext.current) { hasDeadline = it },

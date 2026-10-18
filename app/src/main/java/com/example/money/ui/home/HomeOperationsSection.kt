@@ -134,9 +134,6 @@ fun LazyListScope.homeOperationsSection(
         item {
             EmptyStateMessage(
                 title = stringResource(R.string.empty_budget),
-                hint = stringResource(
-                    if (onOpenAll != null) R.string.empty_budget_hint else R.string.history_empty_hint,
-                ),
                 modifier = Modifier.padding(
                     horizontal = MoneySpacing.lg,
                     vertical = MoneySpacing.sm,

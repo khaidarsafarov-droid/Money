@@ -1,12 +1,27 @@
 import { SYNC_SCHEMA_VERSION } from "./constants";
-import type { FinanceState, FinancialItem, Payment, Transaction } from "./finance";
+import type { DebtAdvance, FinanceState, FinancialItem, Payment, Transaction } from "./finance";
 import type {
   FinanceSnapshot,
   SnapshotDebt,
+  SnapshotDebtAdvance,
   SnapshotDebtPayment,
   SnapshotGoal,
   SnapshotTransaction,
 } from "./sync";
+
+function toInstant(value: string | undefined): string {
+  if (!value) return new Date().toISOString();
+  return value.includes("T") ? value : `${value}T00:00:00.000Z`;
+}
+
+function openingAdvance(debt: { id: string; target: number; dateGiven?: string; updatedAt?: string }): DebtAdvance {
+  return {
+    id: `open-${debt.id}`,
+    amount: debt.target,
+    givenAt: toInstant(debt.dateGiven ?? debt.updatedAt),
+    note: "",
+  };
+}
 
 function debtStatusToFinancialStatus(status: string): FinancialItem["status"] {
   if (status === "COMPLETED") return "COMPLETED";
@@ -54,6 +69,22 @@ export function financeStateToSnapshot(
       deleted: debt.deleted,
     }));
 
+  const debtAdvances: SnapshotDebtAdvance[] = state.items
+    .filter((item) => item.type === "DEBT")
+    .flatMap((debt) => {
+      const advances = debt.advances?.filter((advance) => advance.amount > 0) ?? [];
+      const source = advances.length > 0 ? advances : debt.target > 0 ? [openingAdvance(debt)] : [];
+      return source.map((advance) => ({
+        id: advance.id,
+        debtorId: debt.id,
+        amountCents: advance.amount,
+        givenAt: toInstant(advance.givenAt),
+        note: advance.note ?? "",
+        syncUpdatedAt: advance.syncUpdatedAt ?? (Date.parse(toInstant(advance.givenAt)) || updatedAt),
+        deleted: advance.deleted,
+      }));
+    });
+
   const debtPayments: SnapshotDebtPayment[] = state.items
     .filter((item) => item.type === "DEBT")
     .flatMap((debt) =>
@@ -91,10 +122,25 @@ export function financeStateToSnapshot(
     debts,
     debtPayments,
     transactions,
+    debtAdvances,
   };
 }
 
 export function snapshotToFinanceState(snapshot: FinanceSnapshot): FinanceState {
+  const advancesByDebtor = new Map<string, DebtAdvance[]>();
+  for (const advance of snapshot.debtAdvances ?? []) {
+    const list = advancesByDebtor.get(advance.debtorId) ?? [];
+    list.push({
+      id: advance.id,
+      amount: advance.amountCents,
+      givenAt: advance.givenAt,
+      note: advance.note,
+      syncUpdatedAt: advance.syncUpdatedAt,
+      deleted: advance.deleted,
+    });
+    advancesByDebtor.set(advance.debtorId, list);
+  }
+
   const paymentsByDebtor = new Map<string, Payment[]>();
   for (const payment of snapshot.debtPayments) {
     const list = paymentsByDebtor.get(payment.debtorId) ?? [];
@@ -134,6 +180,16 @@ export function snapshotToFinanceState(snapshot: FinanceSnapshot): FinanceState 
       amount: debt.currentAmountCents,
       target: debt.targetAmountCents,
       history: paymentsByDebtor.get(debt.id) ?? [],
+      advances: (advancesByDebtor.get(debt.id) ?? []).filter((advance) => !advance.deleted).length > 0
+        ? advancesByDebtor.get(debt.id)
+        : debt.targetAmountCents > 0
+          ? [openingAdvance({
+              id: debt.id,
+              target: debt.targetAmountCents,
+              dateGiven: debt.dateGiven,
+              updatedAt: new Date(debt.syncUpdatedAt).toISOString(),
+            })]
+          : [],
       dateGiven: debt.dateGiven,
       dateDue: debt.dateDue,
       updatedAt: new Date(debt.syncUpdatedAt).toISOString(),

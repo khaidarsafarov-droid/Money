@@ -32,7 +32,8 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
 };
 
 export const DEFAULT_DISPLAY_NAME = "Друг";
-export const DEFAULT_GOAL_TEXT = "Стать финансово свободным";
+export const DEFAULT_GOAL_TEXT = "Накопить на важную цель";
+const LEGACY_GOAL_TEXT = "Стать финансово свободным";
 
 const NAME_PATTERN = /^[\p{L}][\p{L}\s'-]{1,}$/u;
 
@@ -63,25 +64,24 @@ export function resolveDisplayName(name: string, locale = "ru"): string {
 
 export function resolveGoalText(goal: string): string {
   const trimmed = goal.trim();
-  return trimmed.length > 0 ? trimmed : DEFAULT_GOAL_TEXT;
+  const placeholder =
+    trimmed.length === 0 ||
+    trimmed === DEFAULT_GOAL_TEXT ||
+    trimmed === LEGACY_GOAL_TEXT ||
+    trimmed.toLowerCase() === "become financially free";
+  return placeholder ? DEFAULT_GOAL_TEXT : trimmed;
 }
 
 export function personalizedGreeting(
   name: string,
-  progressPercent: number,
+  _progressPercent = 0,
   locale = "ru",
 ): string {
   const who = resolveDisplayName(name, locale);
   if (locale.toLowerCase().startsWith("en")) {
-    if (progressPercent > 0) {
-      return `Hi, ${who}! Today you are ${progressPercent}% closer to freedom.`;
-    }
-    return `Hi, ${who}! Let's take the first step toward freedom.`;
+    return `Hi, ${who}!`;
   }
-  if (progressPercent > 0) {
-    return `Привет, ${who}! Сегодня вы на ${progressPercent}% ближе к свободе.`;
-  }
-  return `Привет, ${who}! Давайте сделаем первый шаг к свободе.`;
+  return `Привет, ${who}!`;
 }
 
 export function psychotypeOnboardingDescription(type: Psychotype): string {
@@ -91,7 +91,7 @@ export function psychotypeOnboardingDescription(type: Psychotype): string {
     case "SAVER":
       return "Вы умеете копить — это ваша суперсила. Научимся тратить с удовольствием.";
     case "INDIFFERENT":
-      return "Деньги не ваша страсть, но контроль над ними даст вам свободу.";
+      return "Деньги не ваша страсть, но контроль над ними даст вам спокойствие.";
     case "PLAYER":
       return "Риск — ваше топливо. Используем его для роста, а не для потерь.";
     case "BALANCED":

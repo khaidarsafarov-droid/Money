@@ -89,14 +89,14 @@ export function buildAdvisorReply(
       const projection = calculateFreedomProjection(freedomInputs, 0, nowMs);
       const closed = debts.filter((d) => d.isCompleted).length;
       if (!projection.freedomDateMs) {
-        return `Вы уже закрыли ${closed} долг(ов). Продолжайте — каждый платёж приближает свободу.`;
+        return `Вы уже закрыли ${closed} долг(ов). Продолжайте — каждый платёж приближает цель.`;
       }
       const date = new Date(projection.freedomDateMs).toLocaleDateString("ru-RU", {
         day: "numeric",
         month: "long",
         year: "numeric",
       });
-      return `Вы на пути к свободе. При текущем темпе цель — ${date}. Каждый платёж сдвигает эту дату ближе.`;
+      return `При текущем темпе долги закроются ${date}. Каждый платёж сдвигает эту дату ближе.`;
     }
     default: {
       const _exhaustive: never = promptId;
@@ -118,7 +118,7 @@ function formatExtraPaymentReply(
   if (saved > 0) {
     return `+$${extra}/мес сократит путь примерно на ${saved} мес. Это ощутимый сдвиг без героических усилий.`;
   }
-  return `+$${extra}/мес ускорит погашение. Попробуйте один месяц — и посмотрите, как изменится дата свободы.`;
+  return `+$${extra}/мес ускорит погашение. Попробуйте один месяц — и посмотрите, как сдвинется дата.`;
 }
 
 export function appendAdvisorMessage(

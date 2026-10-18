@@ -54,7 +54,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
 import com.example.money.domain.model.LuckDiaryEntry
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalChallengeEngines
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.AutopilotStrategy
@@ -90,10 +89,8 @@ fun GoalScreen(
         initialValue = com.example.money.settings.PrivacySettings(),
     )
     val hideAmounts = privacySettings.hideAmounts
-    val freedom by viewModel.freedomProjection.collectAsStateWithLifecycle()
     val payoffPlan by viewModel.payoffPlan.collectAsStateWithLifecycle()
     val luckEntries by viewModel.luckEntries.collectAsStateWithLifecycle()
-    val extraMonthly by viewModel.extraMonthlyCents.collectAsStateWithLifecycle()
     val activeChallenges by viewModel.activeChallenges.collectAsStateWithLifecycle()
     val debtors by viewModel.debtors.collectAsStateWithLifecycle()
 
@@ -123,7 +120,6 @@ fun GoalScreen(
     }
 
     val psychotype = profile.psychotype ?: FinancialPsychotype.BALANCED
-    val progress = viewModel.progressPercent()
     val monthlyLuck = viewModel.monthlyLuckSumCents()
 
     if (showPsychotypeTest) {
@@ -221,19 +217,12 @@ fun GoalScreen(
                 Text(GoalPsychologyEngines.psychotypeTagline(psychotype), color = MaterialTheme.colorScheme.primary)
             }
 
-            FreedomHeroCard(
-                freedom = freedom,
-                progress = progress,
-                wordPower = profile.wordPowerEnabled,
-                hideAmounts = hideAmounts,
-            )
-
             if (profile.goalBadges.isNotEmpty()) {
                 BadgesCard(badgeIds = profile.goalBadges)
             }
 
             if (psychotype == FinancialPsychotype.PLAYER) {
-                PlayerPointsCard(progress = progress, challengeCount = activeChallenges.count { !it.completed })
+                PlayerPointsCard(challengeCount = activeChallenges.count { !it.completed })
             }
 
             VisionBoardCard(
@@ -247,23 +236,8 @@ fun GoalScreen(
                 val days = GoalPsychologyEngines.daysUntilPayday(profile.paydayDayOfMonth)
                 HubCard {
                     Text(stringResource(R.string.goal_hub_payday, days), fontWeight = FontWeight.SemiBold)
-                    Text(stringResource(R.string.goal_hub_autosave_hint))
                 }
             }
-
-            if (psychotype == FinancialPsychotype.SAVER || psychotype == FinancialPsychotype.BALANCED) {
-                HubCard {
-                    Text(stringResource(R.string.goal_hub_treat_title), fontWeight = FontWeight.SemiBold)
-                    Text(stringResource(R.string.goal_hub_treat_body))
-                }
-            }
-
-            ExtraMonthlySummary(
-                extraMonthly = extraMonthly,
-                freedom = freedom,
-                onOpenDebts = onOpenDebts,
-                hideAmounts = hideAmounts,
-            )
 
             PayoffPlanCard(
                 plan = payoffPlan,
@@ -292,7 +266,7 @@ fun GoalScreen(
                 }
                 profile.selectedFearIds.forEach { fearId ->
                     Text(
-                        text = "• ${GoalPsychologyEngines.affirmationForFear(fearId, progress, displayName, goalText)}",
+                        text = "• ${GoalPsychologyEngines.affirmationForFear(fearId, 0, displayName, goalText)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 4.dp),
@@ -348,7 +322,6 @@ fun GoalScreen(
                         onCheckedChange = withLightHaptic(context, onCheckedChange = viewModel::setWordPowerEnabled),
                     )
                 }
-                Text(stringResource(R.string.goal_hub_word_power_hint), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -361,67 +334,6 @@ private fun HubCard(content: @Composable ColumnScope.() -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
-    }
-}
-
-@Composable
-private fun FreedomHeroCard(
-    freedom: DebtFreedomEngine.FreedomProjection,
-    progress: Int,
-    wordPower: Boolean,
-    hideAmounts: Boolean = false,
-) {
-    HubCard {
-        Text(
-            if (wordPower) stringResource(R.string.goal_hub_freedom_project) else stringResource(R.string.debt_freedom_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-        )
-        val dateLabel = freedom.freedomDateMillis?.let { Formatters.shortDate(it) }
-            ?: stringResource(R.string.debt_freedom_unknown)
-        Text(dateLabel, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-        freedom.monthsRemaining?.let { months ->
-            Text(stringResource(R.string.debt_freedom_monthly_pace, Formatters.currencyFromCents(freedom.monthlyPaymentCents, hide = hideAmounts), months))
-        }
-        LinearProgressIndicator(
-            progress = { progress / 100f },
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(stringResource(R.string.weekly_checkin_progress, progress))
-        Text(
-            stringResource(
-                if (wordPower) R.string.goal_hub_remaining_positive else R.string.debt_freedom_remaining_total,
-                Formatters.currencyFromCents(freedom.totalRemainingCents, hide = hideAmounts),
-            ),
-        )
-    }
-}
-
-@Composable
-private fun ExtraMonthlySummary(
-    extraMonthly: Long,
-    freedom: DebtFreedomEngine.FreedomProjection,
-    onOpenDebts: () -> Unit,
-    hideAmounts: Boolean = false,
-) {
-    HubCard {
-        Text(stringResource(R.string.debt_freedom_extra_slider_label), fontWeight = FontWeight.SemiBold)
-        Text(
-            stringResource(
-                R.string.debt_freedom_extra_amount,
-                Formatters.currencyFromCents(extraMonthly, hide = hideAmounts),
-            ),
-        )
-        freedom.freedomDateMillis?.let { date ->
-            Text(
-                stringResource(R.string.goal_hub_new_date, Formatters.shortDate(date)),
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        TextButton(onClick = onOpenDebts) {
-            Text(stringResource(R.string.debt_freedom_extra_change))
-        }
     }
 }
 
@@ -466,7 +378,7 @@ private fun PayoffPlanCard(
                     val closeLabel = when {
                         !item.hasPaymentData -> stringResource(R.string.goal_hub_no_payment_data)
                         item.projectedCloseDateMs != null -> Formatters.shortDate(item.projectedCloseDateMs)
-                        else -> stringResource(R.string.debt_freedom_unknown)
+                        else -> stringResource(R.string.goal_hub_close_soon)
                     }
                     Text("→ $closeLabel", style = MaterialTheme.typography.bodySmall)
                     LinearProgressIndicator(
@@ -509,7 +421,6 @@ private fun MotivationCard(motivation: String, onMotivationChange: (String) -> U
     var text by remember(motivation) { mutableStateOf(motivation) }
     HubCard {
         Text(stringResource(R.string.goal_hub_motivation_title), fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.goal_hub_motivation_hint), style = MaterialTheme.typography.bodySmall)
         OutlinedTextField(
             value = text,
             onValueChange = {
@@ -574,10 +485,9 @@ private fun BadgesCard(badgeIds: Set<String>) {
 }
 
 @Composable
-private fun PlayerPointsCard(progress: Int, challengeCount: Int) {
+private fun PlayerPointsCard(challengeCount: Int) {
     HubCard {
         Text(stringResource(R.string.goal_hub_player_title), fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.goal_hub_player_points, progress), color = MaterialTheme.colorScheme.primary)
         Text(
             stringResource(R.string.goal_hub_player_challenges, challengeCount),
             style = MaterialTheme.typography.bodySmall,
@@ -594,7 +504,6 @@ private fun VisionBoardCard(
 ) {
     HubCard {
         Text(stringResource(R.string.goal_hub_vision_title), fontWeight = FontWeight.SemiBold)
-        Text(stringResource(R.string.goal_hub_vision_hint), style = MaterialTheme.typography.bodySmall)
         photoPath?.let { path ->
             val bitmap = remember(path) {
                 try {
@@ -645,9 +554,7 @@ private fun ChallengesCard(
                 Text(stringResource(R.string.goal_hub_challenges_add))
             }
         }
-        if (challenges.isEmpty()) {
-            Text(stringResource(R.string.goal_hub_challenges_empty), style = MaterialTheme.typography.bodySmall)
-        } else {
+        if (challenges.isNotEmpty()) {
             challenges.forEach { challenge ->
                 val template = GoalChallengeEngines.templateFor(challenge.templateId)
                 Column(Modifier.padding(vertical = 6.dp)) {

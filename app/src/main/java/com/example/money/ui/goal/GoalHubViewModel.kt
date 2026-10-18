@@ -8,7 +8,6 @@ import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.LuckDiaryEntry
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.LuckDiaryRepository
-import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.domain.util.GoalChallengeEngines
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.settings.AutopilotStrategy
@@ -41,12 +40,6 @@ class GoalHubViewModel(
     private val luckDiaryRepository: LuckDiaryRepository,
 ) : ViewModel() {
 
-    val extraMonthlyCents: StateFlow<Long> = preferencesStore.extraMonthlyCents.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = 0L,
-    )
-
     val profile: StateFlow<GoalPsychologyProfile> = preferencesStore.goalPsychologyProfile.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -73,24 +66,6 @@ class GoalHubViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),
-    )
-
-    val freedomProjection: StateFlow<DebtFreedomEngine.FreedomProjection> = combine(
-        debtors,
-        extraMonthlyCents,
-    ) { list, extra ->
-        GoalPsychologyEngines.freedomSummary(list, extra)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = DebtFreedomEngine.FreedomProjection(
-            freedomDateMillis = null,
-            monthsRemaining = null,
-            totalRemainingCents = 0L,
-            monthlyPaymentCents = 0L,
-            monthsSavedWithExtra = null,
-            hasActiveDebts = false,
-        ),
     )
 
     val payoffPlan: StateFlow<List<GoalPsychologyEngines.PayoffPlanItem>> = combine(
@@ -303,8 +278,6 @@ class GoalHubViewModel(
             }
             .sumOf { it.amountCents ?: 0L }
     }
-
-    fun progressPercent(): Int = GoalPsychologyEngines.totalDebtProgressPercent(debtors.value)
 
     private fun decodeChecklist(
         json: String,

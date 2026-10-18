@@ -5,6 +5,7 @@ import com.example.money.data.local.AppDatabase
 import com.example.money.data.sync.SyncWriteGuard
 import com.example.money.domain.backup.BackupBundle
 import com.example.money.domain.backup.BackupClient
+import com.example.money.domain.backup.BackupDebtAdvance
 import com.example.money.domain.backup.BackupDebtPayment
 import com.example.money.domain.backup.BackupDebtor
 import com.example.money.domain.backup.BackupExpense
@@ -41,6 +42,7 @@ class BackupExporter(
         val goals = database.savingsGoalDao().getAllGoalsOnce()
         val debtors = database.debtorDao().getAllDebtorsOnce()
         val debtPayments = database.debtPaymentDao().getAllPaymentsOnce()
+        val debtAdvances = database.debtAdvanceDao().getAllOnce()
         val transfers = database.transferDao().getAllOnce()
         val expenses = database.expenseDao().getAllOnce()
         val luckEntries = database.luckDiaryDao().getAllOnce()
@@ -136,6 +138,22 @@ class BackupExporter(
                         email = debtor.email,
                         mode = debtor.mode,
                         clientSyncId = debtor.clientId?.let { clientSyncIds[it] },
+                    )
+                },
+                debtAdvances = debtAdvances.map { advance ->
+                    BackupDebtAdvance(
+                        syncId = advance.syncId,
+                        debtorSyncId = debtorSyncIds.requireReference(
+                            advance.debtorId,
+                            "Debt advance ${advance.syncId}",
+                            "debtor",
+                        ),
+                        amountCents = advance.amountCents,
+                        currency = advance.currency,
+                        givenAtEpochMillis = advance.givenAt,
+                        note = advance.note,
+                        updatedAtEpochMillis = advance.updatedAt,
+                        mode = advance.mode,
                     )
                 },
                 debtPayments = debtPayments.map { payment ->

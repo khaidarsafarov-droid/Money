@@ -31,9 +31,6 @@ export function AdvisorConversation({
         <FinOrb />
         <div>
           <h2 className="text-lg font-semibold text-on-surface">Советник</h2>
-          <p className="mt-1 text-sm text-on-surface-variant">
-            Подсказки на основе ваших данных — без интернета и без осуждения.
-          </p>
         </div>
       </div>
 
@@ -56,11 +53,6 @@ export function AdvisorConversation({
       </div>
 
       <div className="max-h-[28rem] space-y-2 overflow-y-auto">
-        {messages.length === 0 ? (
-          <p className="rounded-[22px] bg-surface-container-lowest px-4 py-3 text-center text-sm text-on-surface-variant shadow-[0_8px_24px_rgb(15_110_92_/_0.05)]">
-            Чем я могу помочь?
-          </p>
-        ) : null}
         {messages.map((message, index) => (
           <div
             key={`${message.atMs}-${index}`}
@@ -80,7 +72,7 @@ export function AdvisorConversation({
 
 export function DebtAdvisorSheet({ open, messages, onPrompt, onClose }: DebtAdvisorSheetProps) {
   return (
-    <Modal open={open} title="Советник по долгам" onClose={onClose}>
+    <Modal open={open} title="Советник" onClose={onClose}>
       <AdvisorConversation messages={messages} onPrompt={onPrompt} />
     </Modal>
   );

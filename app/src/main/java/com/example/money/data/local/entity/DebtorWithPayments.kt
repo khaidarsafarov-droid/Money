@@ -10,4 +10,9 @@ data class DebtorWithPayments(
         entityColumn = "debtor_id",
     )
     val payments: List<DebtPaymentEntity>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "debtor_id",
+    )
+    val advances: List<DebtAdvanceEntity> = emptyList(),
 )
