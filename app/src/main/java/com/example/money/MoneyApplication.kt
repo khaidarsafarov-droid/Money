@@ -93,7 +93,6 @@ class MoneyApplication : Application() {
 
     private val goalWidgetSnapshotWriter: GoalWidgetSnapshotWriter by lazy {
         GoalWidgetSnapshotWriter(
-            context = this,
             goalRepository = goalRepository,
             debtorRepository = debtorRepository,
             pendingTransactionCount = budgetRepository.observePendingCount(),

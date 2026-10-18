@@ -62,14 +62,8 @@
     <string name="calendar_day_with_debts">День %1$d, есть долги</string>
     <string name="calendar_has_debt_mark">долг</string>
     <string name="calendar_day_empty_cd">День %1$d</string>
-    <string name="widget_remaining_empty">Нет цели</string>
-    <string name="widget_quick_add">Быстрое добавление</string>
     <string name="widget_pending_badge">%1$d ждут</string>
     <string name="widget_overdue_debts">%1$d просроч. долг.</string>
-    <string name="widget_active_items_title">Ближайшие</string>
-    <string name="widget_item_type_goal">Цель</string>
-    <string name="widget_item_type_debt">Долг</string>
-    <string name="widget_item_progress">%1$d%% · %2$s</string>
     <string name="tab_debts">Долги</string>
     <string name="nav_home">Главная</string>
     <string name="nav_more">Ещё</string>
@@ -154,7 +148,6 @@
     <string name="error_amount_positive">Сумма должна быть больше 0</string>
     <string name="error_amount_below_paid">Сумма не может быть меньше уже внесённого</string>
     <string name="error_payment_exceeds_remaining">Сумма превышает остаток долга</string>
-    <string name="widget_goal_fallback">Цель</string>
     <string name="calendar_debts_name">Долги</string>
     <string name="calendar_event_title_owes_me">%1$s должен(на) мне %2$s</string>
     <string name="calendar_event_title_i_owe">Я должен(на) %1$s %2$s</string>

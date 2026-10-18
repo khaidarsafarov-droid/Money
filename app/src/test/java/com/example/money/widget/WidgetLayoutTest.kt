@@ -3,24 +3,9 @@ package com.example.money.widget
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WidgetLayoutTest {
-
-    @Test
-    fun defaultTwoCellHeightStaysASingleCard() {
-        assertFalse(showsWidgetActiveList(110.dp))
-        assertFalse(showsWidgetActiveList(150.dp))
-        assertFalse(showsWidgetActiveList(179.dp))
-    }
-
-    @Test
-    fun stretchedWidgetShowsTheActiveList() {
-        assertTrue(showsWidgetActiveList(180.dp))
-        assertTrue(showsWidgetActiveList(260.dp))
-    }
 
     @Test
     fun longAmountsUseASmallerSingleLineSize() {

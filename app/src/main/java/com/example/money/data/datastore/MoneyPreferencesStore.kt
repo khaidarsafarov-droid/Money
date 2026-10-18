@@ -44,9 +44,7 @@ import com.example.money.ui.home.WelcomePreferences
 import com.example.money.voice.VoiceGender
 import com.example.money.voice.VoiceLanguage
 import com.example.money.voice.VoiceReportSettings
-import com.example.money.widget.WidgetFinanceItem
 import com.example.money.widget.WidgetGoalSnapshot
-import com.example.money.widget.WidgetItemType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -183,7 +181,6 @@ class MoneyPreferencesStore(
                 currencyRegion = CurrencyRegion.fromCode(
                     prefs[MoneyPreferenceKeys.CURRENCY_REGION] ?: CurrencyRegion.US.name,
                 ),
-                activeItems = decodeActiveItems(prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON]),
                 totalAccumulated = prefs[MoneyPreferenceKeys.TOTAL_ACCUMULATED] ?: 0.0,
                 totalRemainingToGoal = prefs[MoneyPreferenceKeys.TOTAL_REMAINING_TO_GOAL] ?: 0.0,
                 owedToMeCents = prefs[MoneyPreferenceKeys.OWED_TO_ME_CENTS] ?: 0L,
@@ -216,7 +213,7 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.PENDING_COUNT] = snapshot.pendingCount
             prefs[MoneyPreferenceKeys.UPDATED_AT] = snapshot.updatedAt
             prefs[MoneyPreferenceKeys.CURRENCY_REGION] = snapshot.currencyRegion.name
-            prefs[MoneyPreferenceKeys.ACTIVE_ITEMS_JSON] = encodeActiveItems(snapshot.activeItems)
+            prefs.remove(MoneyPreferenceKeys.ACTIVE_ITEMS_JSON)
             prefs.remove(MoneyPreferenceKeys.GLOBAL_BALANCE)
             prefs.remove(MoneyPreferenceKeys.AVAILABLE_BALANCE)
             prefs.remove(MoneyPreferenceKeys.TOTAL_DEPOSITS)
@@ -686,52 +683,6 @@ class MoneyPreferencesStore(
         channel: com.example.money.messaging.MessagingChannel,
     ): String = "${debtorId}_${channel.name}"
 
-    private fun encodeActiveItems(items: List<WidgetFinanceItem>): String {
-        val array = JSONArray()
-        items.forEach { item ->
-            array.put(
-                JSONObject()
-                    .put("id", item.id)
-                    .put("payKey", item.payKey)
-                    .put("type", item.type.name)
-                    .put("name", item.name)
-                    .put("remaining", item.remainingLabel)
-                    .put("progress", item.progressFraction.toDouble())
-                    .put("overdue", item.isOverdue),
-            )
-        }
-        return array.toString()
-    }
-
-    private fun decodeActiveItems(raw: String?): List<WidgetFinanceItem> {
-        if (raw.isNullOrBlank()) return emptyList()
-        return try {
-            val array = JSONArray(raw)
-            buildList {
-                for (index in 0 until array.length()) {
-                    val item = array.getJSONObject(index)
-                    add(
-                        WidgetFinanceItem(
-                            id = item.getLong("id"),
-                            payKey = if (item.has("payKey")) {
-                                item.getString("payKey")
-                            } else {
-                                val type = WidgetItemType.valueOf(item.getString("type"))
-                                "${type.name.lowercase()}-${item.getLong("id")}"
-                            },
-                            type = WidgetItemType.valueOf(item.getString("type")),
-                            name = item.getString("name"),
-                            remainingLabel = item.getString("remaining"),
-                            progressFraction = item.getDouble("progress").toFloat(),
-                            isOverdue = item.optBoolean("overdue", false),
-                        ),
-                    )
-                }
-            }
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
 }
 
 private fun Preferences.toVoiceReportSettings(): VoiceReportSettings =

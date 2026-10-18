@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 4×2 cells: (70 × n) − 30. Resize stays at least this wide so amounts are not clipped. -->
+    <!-- 4×2 cells: (70 × n) − 30. Height is capped so the card cannot grow into empty space. -->
     <dimen name="widget_min_width">250dp</dimen>
     <dimen name="widget_min_height">110dp</dimen>
     <dimen name="widget_min_resize_width">250dp</dimen>
     <dimen name="widget_min_resize_height">110dp</dimen>
+    <dimen name="widget_max_resize_height">160dp</dimen>
 </resources>

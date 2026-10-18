@@ -7,7 +7,6 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.settings.CurrencyRegion
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WidgetSnapshotBuilderTest {
@@ -37,12 +36,10 @@ class WidgetSnapshotBuilderTest {
         assertEquals(60.0, snapshot.totalRemainingToGoal, 0.001)
         assertFalse(snapshot.scoreUsesDebts)
         assertEquals(40, snapshot.progressPercent)
-        assertEquals(WidgetItemType.GOAL, snapshot.activeItems.first().type)
-        assertEquals("1/4", snapshot.activeItems.first().remainingLabel)
     }
 
     @Test
-    fun debtScoreMatchesHomeEngineAndOverdueDebtComesFirst() {
+    fun debtAmountsStaySeparateFromTheGoalScore() {
         val debts = listOf(
             debt(id = 1, name = "Later", type = DebtType.DEBTOR, target = 10_000, current = 2_000, due = now + 86_400_000L),
             debt(id = 2, name = "Late", type = DebtType.DEBTOR, target = 4_000, current = 1_000, due = now - 86_400_000L * 3),
@@ -56,8 +53,6 @@ class WidgetSnapshotBuilderTest {
         assertEquals(8_000L, snapshot.owedToMeCents)
         assertEquals(11_000L, snapshot.iOweCents)
         assertEquals(1, snapshot.overdueDebtCount)
-        assertEquals("Late", snapshot.activeItems.first().name)
-        assertTrue(snapshot.activeItems.first().isOverdue)
     }
 
     @Test
@@ -92,9 +87,6 @@ class WidgetSnapshotBuilderTest {
         streakCount = 0,
         lastWinMessage = null,
         now = now,
-        goalFallbackName = "Goal",
-        formatCents = { cents -> cents.toString() },
-        actionStepsLabel = { done, total -> "$done/$total" },
     )
 
     private fun moneyGoal(id: Long, target: Long, current: Long) = SavingsGoal(
