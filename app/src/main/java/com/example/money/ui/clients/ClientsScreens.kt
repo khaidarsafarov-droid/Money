@@ -58,7 +58,6 @@ import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.util.HapticStrength
 import com.example.money.ui.util.vibrate
 import com.example.money.ui.util.vibrateShort
-import com.example.money.ui.theme.FinanceInfo
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 import kotlinx.coroutines.flow.flowOf
@@ -148,7 +147,7 @@ fun ClientListScreen(
             Text(
                 text = pluralStringResource(R.plurals.clients_count, clients.size, clients.size),
                 style = MaterialTheme.typography.bodyMedium,
-                color = FinanceInfo,
+                color = MaterialTheme.colorScheme.tertiary,
             )
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(clients, key = { it.id }) { client ->
@@ -427,7 +426,7 @@ fun ClientDetailScreen(
                 return@Column
             }
             if (current.company.isNotBlank()) {
-                Text(current.company, style = MaterialTheme.typography.titleMedium, color = FinanceInfo)
+                Text(current.company, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.tertiary)
             }
             Text(
                 text = stringResource(

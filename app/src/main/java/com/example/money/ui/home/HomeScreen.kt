@@ -78,7 +78,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -111,17 +110,12 @@ import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.UserProfile
 import androidx.compose.runtime.rememberCoroutineScope
 import com.example.money.ui.theme.MoneySpacing
-import com.example.money.ui.theme.StatusActiveBg
-import com.example.money.ui.theme.CreamBackground
-import com.example.money.ui.theme.CreamSurface
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.isTabletWidth
 import com.example.money.ui.util.HapticStrength
 import com.example.money.ui.util.vibrate
 import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.navigation.NotificationPermissionReason
-import com.example.money.ui.theme.FinanceInfo
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.moneySubheadingStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -188,7 +182,16 @@ fun HomeScreen(
     val appMode by app.preferencesStore.appMode.collectAsStateWithLifecycle(
         initialValue = AppMode.PERSONAL,
     )
-    val modeAccent = if (appMode == AppMode.PROFESSIONAL) FinanceInfo else GoldPrimary
+    val modeAccent = if (appMode == AppMode.PROFESSIONAL) {
+        MaterialTheme.colorScheme.tertiary
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+    val modeOnAccent = if (appMode == AppMode.PROFESSIONAL) {
+        MaterialTheme.colorScheme.onTertiary
+    } else {
+        MaterialTheme.colorScheme.onPrimary
+    }
     val modeLabel = stringResource(
         if (appMode == AppMode.PROFESSIONAL) R.string.mode_professional else R.string.mode_personal,
     )
@@ -210,8 +213,8 @@ fun HomeScreen(
     val availableBalanceCents = budgetSummary.availableBalanceCents
     val goalMetrics = remember(goals) { GlobalFinanceEngine.activeGoalMetrics(goals) }
     val userProfile by app.preferencesStore.userProfile.collectAsStateWithLifecycle(initialValue = UserProfile())
-    val debtProgressPercent = remember(allDebtors) {
-        GoalPsychologyEngines.totalDebtProgressPercent(allDebtors)
+    val planProgressPercent = remember(allDebtors, goalMetrics) {
+        GoalPsychologyEngines.planProgressPercent(allDebtors, goalMetrics)
     }
 
     var selectedTab by remember { mutableIntStateOf(launchConfig.initialTab.ordinal) }
@@ -504,7 +507,7 @@ fun HomeScreen(
                                 shape = SegmentedButtonDefaults.itemShape(index, AppMode.entries.size),
                                 colors = SegmentedButtonDefaults.colors(
                                     activeContainerColor = modeAccent,
-                                    activeContentColor = Color.White,
+                                    activeContentColor = modeOnAccent,
                                 ),
                                 label = {
                                     Text(
@@ -566,7 +569,7 @@ fun HomeScreen(
                     }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CreamBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         }
 
@@ -589,7 +592,7 @@ fun HomeScreen(
                         }
                     }
                 },
-                containerColor = GoldPrimary,
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
                 Icon(
@@ -624,7 +627,7 @@ fun HomeScreen(
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
-                debtProgressPercent = debtProgressPercent,
+                planProgressPercent = planProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },
@@ -753,7 +756,7 @@ fun HomeScreen(
                 greetingName = userProfile.resolvedDisplayName(
                     stringResource(R.string.onboarding_default_name),
                 ),
-                debtProgressPercent = debtProgressPercent,
+                planProgressPercent = planProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },

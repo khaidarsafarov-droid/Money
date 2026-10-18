@@ -14,8 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.util.Formatters
@@ -36,8 +34,8 @@ fun DebtOverviewCard(
         DebtType.DEBTOR -> R.string.debt_overview_title
     }
     val amountColor = when (debtType) {
-        DebtType.CREDITOR -> FinancePositive
-        DebtType.DEBTOR -> GoldPrimary
+        DebtType.CREDITOR -> MaterialTheme.colorScheme.primary
+        DebtType.DEBTOR -> MaterialTheme.colorScheme.primary
     }
 
     Row(

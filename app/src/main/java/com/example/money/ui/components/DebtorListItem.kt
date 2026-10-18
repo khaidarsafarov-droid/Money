@@ -48,9 +48,7 @@ import com.example.money.domain.model.Debtor
 import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.initials
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
-import com.example.money.ui.theme.OverdueRed
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.util.Formatters
 
@@ -79,8 +77,8 @@ fun DebtorListItem(
     var showMenu by remember { mutableStateOf(false) }
 
     val rowBackground = when {
-        highlighted -> GoldPrimary.copy(alpha = 0.12f)
-        isOverdue -> OverdueRed.copy(alpha = 0.06f)
+        highlighted -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        isOverdue -> MaterialTheme.colorScheme.error.copy(alpha = 0.06f)
         else -> Color.Transparent
     }
 
@@ -123,7 +121,7 @@ fun DebtorListItem(
                 ),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isOverdue) OverdueRed else MaterialTheme.colorScheme.onSurface,
+                color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
             )
 
@@ -322,7 +320,7 @@ private fun DebtorAvatar(name: String, overdue: Boolean) {
                     .align(Alignment.TopEnd)
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(OverdueRed),
+                    .background(MaterialTheme.colorScheme.error),
             )
         }
     }
@@ -334,7 +332,7 @@ private fun DebtDueStatusLabel(status: DebtDueStatus, dateDue: Long) {
         DebtDueStatus.OVERDUE -> {
             Text(
                 text = stringResource(R.string.debtor_due_date, Formatters.dueDateCompact(dateDue)),
-                color = OverdueRed,
+                color = MaterialTheme.colorScheme.error,
                 style = moneyCaptionStyle(),
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -344,7 +342,7 @@ private fun DebtDueStatusLabel(status: DebtDueStatus, dateDue: Long) {
         DebtDueStatus.URGENT -> {
             Text(
                 text = stringResource(R.string.debtor_due_short, Formatters.dueDateCompact(dateDue)),
-                color = OverdueRed,
+                color = MaterialTheme.colorScheme.error,
                 style = moneyCaptionStyle(),
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
@@ -355,7 +353,7 @@ private fun DebtDueStatusLabel(status: DebtDueStatus, dateDue: Long) {
             Text(
                 text = stringResource(R.string.debtor_paid),
                 style = moneyCaptionStyle(),
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
             )
         }

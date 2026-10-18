@@ -11,19 +11,26 @@ export function ScoreRing({ value, label, caption }: ScoreRingProps) {
   const offset = circumference - (clamped / 100) * circumference;
 
   return (
-    <section className="flex items-center gap-4 rounded-[28px] bg-gradient-to-br from-[#127863] to-[#0a4a3e] p-5 text-white shadow-[0_18px_40px_rgb(11_83_70_/_0.22)]">
+    <section
+      className="flex items-center gap-4 rounded-[28px] bg-gradient-to-br from-hero to-hero-end p-5 text-on-hero shadow-[0_18px_40px_rgb(0_81_66_/_0.22)]"
+      role="progressbar"
+      aria-valuenow={clamped}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={caption}
+    >
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-white/75">{label}</p>
+        <p className="text-sm text-on-hero">{label}</p>
         <p className="mt-1 text-lg font-semibold leading-snug">{caption}</p>
       </div>
-      <svg width="92" height="92" viewBox="0 0 92 92" role="img" aria-label={`${clamped} из 100`}>
-        <circle cx="46" cy="46" r={radius} fill="none" stroke="rgb(255 255 255 / 0.2)" strokeWidth="8" />
+      <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">
+        <circle cx="46" cy="46" r={radius} fill="none" stroke="var(--color-on-hero)" strokeOpacity="0.22" strokeWidth="8" />
         <circle
           cx="46"
           cy="46"
           r={radius}
           fill="none"
-          stroke="#b7f5d4"
+          stroke="var(--color-hero-progress)"
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -34,7 +41,7 @@ export function ScoreRing({ value, label, caption }: ScoreRingProps) {
           x="46"
           y="52"
           textAnchor="middle"
-          fill="white"
+          fill="var(--color-on-hero)"
           fontSize="22"
           fontWeight="600"
           fontFamily="Plus Jakarta Sans, sans-serif"

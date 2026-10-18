@@ -10,11 +10,11 @@ interface AnimatedProgressBarProps {
 }
 
 const variantClasses: Record<ProgressVariant, string> = {
-  default: "bg-milk-accent",
-  success: "bg-milk-success",
-  warning: "bg-milk-warning",
-  danger: "bg-milk-error",
-  gold: "bg-milk-gold",
+  default: "bg-primary",
+  success: "bg-primary",
+  warning: "bg-tertiary",
+  danger: "bg-error",
+  gold: "bg-primary",
 };
 
 export function AnimatedProgressBar({
@@ -26,15 +26,15 @@ export function AnimatedProgressBar({
 
   return (
     <div
-      className={`h-1 overflow-hidden rounded-full bg-milk-surface ${className}`}
+      className={`h-1 overflow-hidden rounded-full bg-surface-variant ${className}`}
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(clamped * 100)}
     >
       <div
-        className={`h-full rounded-full transition-[width] duration-300 ease-out ${variantClasses[variant]}`}
-        style={{ width: `${clamped * 100}%` }}
+        className={`h-full origin-left rounded-full transition-transform duration-300 ease-out motion-reduce:transition-none ${variantClasses[variant]}`}
+        style={{ width: "100%", transform: `scaleX(${clamped})` }}
       />
     </div>
   );

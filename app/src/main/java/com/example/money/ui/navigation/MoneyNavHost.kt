@@ -35,7 +35,6 @@ import com.example.money.ui.home.HomeScreen
 import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.onboarding.OnboardingScreen
 import com.example.money.ui.onboarding.OnboardingSessionViewModel
-import com.example.money.ui.theme.CreamBackground
 import com.example.money.ui.settings.AppLanguageScreen
 import com.example.money.ui.settings.AutopilotSettingsScreen
 import com.example.money.ui.settings.BackupSettingsScreen
@@ -46,6 +45,7 @@ import com.example.money.ui.settings.SyncPairingScreen
 import com.example.money.ui.settings.VoiceSettingsScreen
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun MoneyNavHost(
@@ -235,7 +235,7 @@ fun MoneyNavHost(
 @Composable
 private fun StartupLoading(modifier: Modifier) {
     Box(
-        modifier = modifier.fillMaxSize().background(CreamBackground),
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()

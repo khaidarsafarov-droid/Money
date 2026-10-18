@@ -13,5 +13,5 @@ object MoneySpacing {
     val cardPadding = 16.dp
     val sectionGap = 24.dp
     val listItemGap = 12.dp
-    val minTouchTarget = 44.dp
+    val minTouchTarget = 48.dp
 }

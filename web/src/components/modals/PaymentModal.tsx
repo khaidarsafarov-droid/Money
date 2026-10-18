@@ -79,8 +79,8 @@ export function PaymentModal({
         </>
       }
     >
-      <p className="text-sm text-milk-muted">
-        Осталось: <span className="font-semibold text-milk-text">{formatMoney(remaining)}</span>
+      <p className="text-sm text-on-surface-variant">
+        Осталось: <span className="font-semibold text-on-surface">{formatMoney(remaining)}</span>
       </p>
 
       {quickAmounts.length > 0 && (
@@ -90,7 +90,7 @@ export function PaymentModal({
               key={option.label}
               type="button"
               onClick={() => applyQuickAmount(option.cents)}
-              className="pill-btn-ghost border border-milk-surface/80 px-3 py-1.5 text-xs"
+              className="pill-btn-ghost border border-outline-variant/80 px-3 py-1.5 text-xs"
             >
               {option.label} · {formatMoney(option.cents)}
             </button>
@@ -101,6 +101,8 @@ export function PaymentModal({
       <FormField label="Сумма (USD)" error={error}>
         <input
           className={inputClassName}
+          name="amount"
+          autoComplete="off"
           inputMode="decimal"
           placeholder="50.00"
           value={amount}
@@ -117,7 +119,7 @@ export function PaymentModal({
           }}
         />
       </FormField>
-      <p className="text-xs text-milk-muted">
+      <p className="text-xs text-on-surface-variant">
         Частичный платёж переведёт запись в «Частично». Полное закрытие — в «Завершённые».
       </p>
     </Modal>

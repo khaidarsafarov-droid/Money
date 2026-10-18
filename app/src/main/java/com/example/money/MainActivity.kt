@@ -50,6 +50,9 @@ class MainActivity : AppCompatActivity() {
         launchConfigState.value = AppIntents.parseLaunchConfig(intent)
         notificationsEnabledState.value = NotificationPermissions.areEnabled(this)
         enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         setContent {
             val localeTag = LocalConfiguration.current.locales[0].toLanguageTag()
             key(localeTag) {

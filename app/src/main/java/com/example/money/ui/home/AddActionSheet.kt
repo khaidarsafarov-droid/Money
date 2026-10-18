@@ -29,9 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.theme.MoneySpacing
-import com.example.money.ui.theme.StatusActiveBg
 
 /** Actions a page plus button can open from the add sheet. */
 enum class AddAction {
@@ -123,7 +121,7 @@ private fun AddActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(if (highlighted) StatusActiveBg else MaterialTheme.colorScheme.surface)
+            .background(if (highlighted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick)
             .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md),
         verticalAlignment = Alignment.CenterVertically,
@@ -132,14 +130,14 @@ private fun AddActionRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (highlighted) GoldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(22.dp),
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = if (highlighted) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (highlighted) GoldPrimary else MaterialTheme.colorScheme.onSurface,
+            color = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }

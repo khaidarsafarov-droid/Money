@@ -13,7 +13,7 @@ interface StatusFilterTabsProps {
 
 export function StatusFilterTabs({ value, onChange }: StatusFilterTabsProps) {
   return (
-    <div className="flex gap-1 rounded-full bg-white p-1" role="tablist" aria-label="Фильтр по статусу">
+    <div className="flex gap-1 rounded-full bg-surface-container-lowest p-1" role="tablist" aria-label="Фильтр по статусу">
       {filters.map((filter) => {
         const selected = value === filter.id;
         return (
@@ -25,8 +25,8 @@ export function StatusFilterTabs({ value, onChange }: StatusFilterTabsProps) {
             onClick={() => onChange(filter.id)}
             className={`rounded-full px-3 py-2 text-sm transition-colors ${
               selected
-                ? "bg-milk-accent font-semibold text-white"
-                : "text-milk-muted hover:bg-pastel-mint hover:text-milk-text"
+                ? "bg-primary font-semibold text-on-primary"
+                : "text-on-surface-variant hover:bg-primary-container hover:text-on-surface"
             }`}
           >
             {filter.label}

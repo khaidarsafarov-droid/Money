@@ -3,6 +3,7 @@ package com.example.money.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,8 +27,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,13 +40,6 @@ import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
-private val HeroEnd = Color(0xFF0B5346)
-private val PastelMint = Color(0xFFD9F6E6)
-private val PastelPeach = Color(0xFFFFE4CC)
-private val PastelLilac = Color(0xFFECE3FB)
-private val PastelSand = Color(0xFFFFF4CF)
-private val Ink = Color(0xFF12352C)
-private val InkMuted = Color(0xFF5C7D72)
 
 @Composable
 fun MintFinanceHeader(
@@ -53,16 +51,8 @@ fun MintFinanceHeader(
     progressPercent: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-    val goalPercent = if (goalPool > 0L) {
-        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-    } else {
-        0
-    }
-    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
-    val debtScore = if (debtActive > 0) progressPercent else null
-    val usesDebtScore = debtScore != null
-    val score = debtScore?.coerceIn(0, 100) ?: goalPercent
+    val score = homeScore(progressPercent)
+    val scheme = MaterialTheme.colorScheme
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -72,14 +62,14 @@ fun MintFinanceHeader(
             PastelStat(
                 label = stringResource(R.string.debt_dashboard_owes_me),
                 value = Formatters.currencyFromCents(debtMetrics.owedToMeCents, hide = hideAmounts),
-                container = PastelMint,
+                container = scheme.primaryContainer,
                 onClick = onOwesMeClick.takeIf { debtMetrics.owedToMeCents > 0L },
                 modifier = Modifier.weight(1f),
             )
             PastelStat(
                 label = stringResource(R.string.debt_dashboard_i_owe),
                 value = Formatters.currencyFromCents(debtMetrics.iOweCents, hide = hideAmounts),
-                container = PastelPeach,
+                container = scheme.errorContainer,
                 onClick = onIOweClick.takeIf { debtMetrics.iOweCents > 0L },
                 modifier = Modifier.weight(1f),
             )
@@ -88,22 +78,17 @@ fun MintFinanceHeader(
             PastelStat(
                 label = stringResource(R.string.global_balance_accumulated_label),
                 value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
-                container = PastelLilac,
+                container = scheme.tertiaryContainer,
                 modifier = Modifier.weight(1f),
             )
             PastelStat(
                 label = stringResource(R.string.global_balance_remaining_label),
                 value = Formatters.currencyFromCents(goalMetrics.totalRemainingToGoalCents, hide = hideAmounts),
-                container = PastelSand,
+                container = scheme.secondaryContainer,
                 modifier = Modifier.weight(1f),
             )
         }
-        ScoreCard(
-            score = score,
-            caption = stringResource(
-                if (usesDebtScore) R.string.home_score_debts else R.string.home_score_goals,
-            ),
-        )
+        ScoreCard(score = score.percent, caption = score.caption)
     }
 }
 
@@ -124,18 +109,33 @@ private fun PastelStat(
             .padding(MoneySpacing.md),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(text = label, color = InkMuted, fontSize = 12.sp, maxLines = 1)
-        Text(text = value, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, maxLines = 1)
+        val scheme = MaterialTheme.colorScheme
+        Text(text = label, color = scheme.onSurfaceVariant, fontSize = 12.sp, maxLines = 1)
+        Text(
+            text = value,
+            color = scheme.onSurface,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+            maxLines = 1,
+            style = TextStyle(fontFeatureSettings = "tnum"),
+        )
     }
 }
 
 @Composable
 private fun ScoreCard(score: Int, caption: String) {
+    val scheme = MaterialTheme.colorScheme
+    val dark = isSystemInDarkTheme()
+    val heroStart = if (dark) scheme.primaryContainer else scheme.primary
+    val heroEnd = if (dark) scheme.onPrimary else scheme.onPrimaryContainer
+    val onHero = if (dark) scheme.onPrimaryContainer else scheme.onPrimary
+    val progress = if (dark) scheme.onPrimaryContainer else scheme.primaryContainer
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF127863), HeroEnd)))
+            .background(Brush.linearGradient(listOf(heroStart, heroEnd)))
+            .semantics { contentDescription = caption }
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -143,24 +143,34 @@ private fun ScoreCard(score: Int, caption: String) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.home_score_title),
-                color = Color.White.copy(alpha = 0.75f),
+                color = onHero,
                 fontSize = 13.sp,
             )
             Text(
                 text = caption,
-                color = Color.White,
+                color = onHero,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
             )
         }
-        Box(modifier = Modifier.size(88.dp), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .semantics {
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        current = score.coerceIn(0, 100) / 100f,
+                        range = 0f..1f,
+                    )
+                },
+            contentAlignment = Alignment.Center,
+        ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val stroke = 8.dp.toPx()
                 val arcSize = Size(size.width - stroke, size.height - stroke)
                 val topLeft = Offset(stroke / 2f, stroke / 2f)
                 val style = Stroke(width = stroke, cap = StrokeCap.Round)
                 drawArc(
-                    color = Color.White.copy(alpha = 0.22f),
+                    color = onHero.copy(alpha = 0.22f),
                     startAngle = -90f,
                     sweepAngle = 360f,
                     useCenter = false,
@@ -169,7 +179,7 @@ private fun ScoreCard(score: Int, caption: String) {
                     style = style,
                 )
                 drawArc(
-                    color = Color(0xFFB7F5D4),
+                    color = progress,
                     startAngle = -90f,
                     sweepAngle = 360f * score / 100f,
                     useCenter = false,
@@ -180,17 +190,18 @@ private fun ScoreCard(score: Int, caption: String) {
             }
             Text(
                 text = score.toString(),
-                color = Color.White,
+                color = onHero,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 22.sp,
+                style = TextStyle(fontFeatureSettings = "tnum"),
             )
         }
     }
 }
 
 /**
- * Four tappable previews on the home screen. Net debt replaces the separate
- * "owes me" and "I owe" tiles; the breakdown stays inside the Debts section.
+ * Phone and tablet list preview: the two debt sides stay separate tiles.
+ * The ring shows [progressPercent] from [com.example.money.domain.util.GoalPsychologyEngines.planProgressPercent].
  */
 @Composable
 fun HomePreviewCards(
@@ -198,27 +209,14 @@ fun HomePreviewCards(
     debtMetrics: DashboardDebtMetrics,
     hideAmounts: Boolean,
     progressPercent: Int?,
-    onDebtsClick: () -> Unit,
+    onOwesMeClick: () -> Unit,
+    onIOweClick: () -> Unit,
     onAccumulatedClick: () -> Unit,
     onRemainingClick: () -> Unit,
-    onProgressClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val goalPool = goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents
-    val goalPercent = if (goalPool > 0L) {
-        ((goalMetrics.totalAccumulatedCents * 100L) / goalPool).toInt().coerceIn(0, 100)
-    } else {
-        0
-    }
-    val debtActive = debtMetrics.owedToMeActiveCount + debtMetrics.iOweActiveCount
-    val score = if (debtActive > 0) {
-        (progressPercent ?: 0).coerceIn(0, 100)
-    } else {
-        goalPercent
-    }
-    val net = debtMetrics.owedToMeCents - debtMetrics.iOweCents
-    val netAmount = Formatters.currencyFromCents(kotlin.math.abs(net), hide = hideAmounts)
-    val netText = if (!hideAmounts && net < 0L) "−$netAmount" else netAmount
+    val score = homeScore(progressPercent)
+    val scheme = MaterialTheme.colorScheme
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -226,47 +224,57 @@ fun HomePreviewCards(
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
-                label = stringResource(R.string.tab_debts),
-                value = netText,
-                container = PastelMint,
-                onClick = onDebtsClick,
+                label = stringResource(R.string.debt_dashboard_owes_me),
+                value = Formatters.currencyFromCents(debtMetrics.owedToMeCents, hide = hideAmounts),
+                container = scheme.tertiaryContainer,
+                onClick = onOwesMeClick,
                 modifier = Modifier.weight(1f),
             )
             PastelStat(
-                label = stringResource(R.string.home_preview_accumulated),
-                value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
-                container = PastelLilac,
-                onClick = onAccumulatedClick,
+                label = stringResource(R.string.debt_dashboard_i_owe),
+                value = Formatters.currencyFromCents(debtMetrics.iOweCents, hide = hideAmounts),
+                container = scheme.errorContainer,
+                onClick = onIOweClick,
                 modifier = Modifier.weight(1f),
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PastelStat(
-                label = stringResource(R.string.global_balance_remaining_label),
-                value = Formatters.currencyFromCents(goalMetrics.totalRemainingToGoalCents, hide = hideAmounts),
-                container = PastelSand,
-                onClick = onRemainingClick,
+                label = stringResource(R.string.home_preview_accumulated),
+                value = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts),
+                container = scheme.primaryContainer,
+                onClick = onAccumulatedClick,
                 modifier = Modifier.weight(1f),
             )
             PastelStat(
-                label = stringResource(R.string.home_preview_progress),
-                value = stringResource(R.string.home_preview_progress_value, score),
-                container = PastelPeach,
-                onClick = onProgressClick,
+                label = stringResource(R.string.global_balance_remaining_label),
+                value = Formatters.currencyFromCents(goalMetrics.totalRemainingToGoalCents, hide = hideAmounts),
+                container = scheme.secondaryContainer,
+                onClick = onRemainingClick,
                 modifier = Modifier.weight(1f),
             )
         }
+        ScoreCard(score = score.percent, caption = score.caption)
     }
+}
+
+private data class HomeScore(val percent: Int, val caption: String)
+
+@Composable
+private fun homeScore(progressPercent: Int?): HomeScore {
+    val percent = (progressPercent ?: 0).coerceIn(0, 100)
+    return HomeScore(percent, stringResource(R.string.home_score_plan))
 }
 
 @Composable
 fun FinOrb(modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
     Box(modifier = modifier.size(112.dp), contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
                 .size(112.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFB7F5D8)),
+                .background(scheme.primaryContainer),
         )
         Box(
             modifier = Modifier
@@ -274,7 +282,7 @@ fun FinOrb(modifier: Modifier = Modifier) {
                 .clip(CircleShape)
                 .background(
                     Brush.radialGradient(
-                        listOf(Color(0xFFF4FFF9), Color(0xFF5AD7A2), Color(0xFF0C6B56)),
+                        listOf(scheme.surfaceContainerLowest, scheme.primaryContainer, scheme.primary),
                     ),
                 ),
         )

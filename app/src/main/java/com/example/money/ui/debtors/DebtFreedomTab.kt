@@ -17,10 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.util.DebtFreedomEngine
-import com.example.money.ui.theme.CardBorder
-import com.example.money.ui.theme.CreamSurface
-import com.example.money.ui.theme.FinancePositive
-import com.example.money.ui.theme.GoldPrimary
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -33,8 +29,8 @@ fun DebtFreedomTab(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CreamSurface),
-        border = BorderStroke(1.dp, CardBorder),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shape = MaterialTheme.shapes.large,
     ) {
         Column(
@@ -64,7 +60,7 @@ fun DebtFreedomTab(
                 ),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
             )
 
             Text(
@@ -117,7 +113,7 @@ fun DebtFreedomTab(
                     text = stringResource(R.string.debt_freedom_months_saved, monthsSaved),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = FinancePositive,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
 

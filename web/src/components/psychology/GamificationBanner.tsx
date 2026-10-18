@@ -10,16 +10,16 @@ export function GamificationBanner({ state }: GamificationBannerProps) {
     return null;
   }
 
-  const locale = navigator.language;
+  const locale = "ru";
   const winMessage = resolveWinMessage(state.lastWinMessage, locale);
   return (
     <SurfaceCard className="space-y-1 text-sm">
       {state.streakCount > 0 ? (
-        <p className="text-milk-text">{streakLabel(state.streakCount, locale)}</p>
+        <p className="text-on-surface">{streakLabel(state.streakCount, locale)}</p>
       ) : null}
-      {winMessage ? <p className="text-milk-success">{winMessage}</p> : null}
+      {winMessage ? <p className="text-primary">{winMessage}</p> : null}
       {state.unlockedBadges.length > 0 ? (
-        <p className="text-xs text-milk-muted">
+        <p className="text-xs text-on-surface-variant">
           {state.unlockedBadges.map((badge) => badgeLabel(badge, locale)).join(" · ")}
         </p>
       ) : null}
