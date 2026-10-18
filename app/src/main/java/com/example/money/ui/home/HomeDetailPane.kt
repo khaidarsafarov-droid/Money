@@ -41,7 +41,6 @@ fun HomeDetailPane(
     onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
-    onQuickPayment: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit = { _, _ -> },
     onMarkDebtPaid: (Debtor) -> Unit = {},
     hideAmounts: Boolean = false,
@@ -111,7 +110,6 @@ fun HomeDetailPane(
                     debtor = selection.debtor,
                     onRemind = { onRemindDebtor(selection.debtor) },
                     onAddPayment = { onAddDebtPayment(selection.debtor) },
-                    onQuickPayment = { onQuickPayment(selection.debtor) },
                     onAccelerate = { onAccelerateDebtPayment(selection.debtor, accelerateCents) },
                     onMarkPaid = if (!selection.debtor.isPaid) {
                         { onMarkDebtPaid(selection.debtor) }

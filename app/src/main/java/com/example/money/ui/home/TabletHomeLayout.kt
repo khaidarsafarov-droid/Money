@@ -120,7 +120,6 @@ fun TabletHomeLayout(
     onExpense: (SavingsGoal) -> Unit,
     onRemindDebtor: (Debtor) -> Unit,
     onAddDebtPayment: (Debtor) -> Unit,
-    onQuickPayment: (Debtor) -> Unit = {},
     onAccelerateDebtPayment: (Debtor, Long) -> Unit,
     onMarkDebtPaid: (Debtor) -> Unit = {},
     freedomProjection: DebtFreedomEngine.FreedomProjection,
@@ -591,11 +590,6 @@ fun TabletHomeLayout(
                                         selected = selection is HomeListSelection.DebtorItem &&
                                             selection.debtor.id == debtor.id,
                                         onClick = { onSelectionChange(HomeListSelection.DebtorItem(debtor)) },
-                                        onQuickPayment = if (debtor.isPaid) {
-                                            null
-                                        } else {
-                                            { onQuickPayment(debtor) }
-                                        },
                                         modifier = Modifier.padding(vertical = 4.dp),
                                     )
                                 }
@@ -621,7 +615,6 @@ fun TabletHomeLayout(
                 onExpense = onExpense,
                 onRemindDebtor = onRemindDebtor,
                 onAddDebtPayment = onAddDebtPayment,
-                onQuickPayment = onQuickPayment,
                 onAccelerateDebtPayment = onAccelerateDebtPayment,
                 onMarkDebtPaid = onMarkDebtPaid,
                 hideAmounts = privacySettings.hideAmounts,
