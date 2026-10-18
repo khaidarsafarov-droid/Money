@@ -1,13 +1,11 @@
 import { useCallback, useState } from "react";
 import {
   appendAdvisorMessage,
-  applyPaymentGamification,
   buildAdvisorReply,
   planMicroPayment,
   type AdvisorPromptId,
   type AutopilotDebtInput,
   type AutopilotSettings,
-  type GamificationState,
   type PrivacyPreferences,
 } from "@money/shared";
 import type { FinancialItem } from "@/types/finance";
@@ -15,11 +13,9 @@ import { remainingAmount } from "@/lib/financeEngine";
 import {
   loadAdvisorHistory,
   loadAutopilotSettings,
-  loadGamificationState,
   loadPrivacyPreferences,
   saveAdvisorHistory,
   saveAutopilotSettings,
-  saveGamificationState,
   savePrivacyPreferences,
 } from "@/lib/appPsychologyStorage";
 
@@ -50,7 +46,6 @@ function toAutopilotDebts(items: FinancialItem[]): AutopilotDebtInput[] {
 
 export function useAppPsychology() {
   const [privacy, setPrivacy] = useState<PrivacyPreferences>(() => loadPrivacyPreferences());
-  const [gamification, setGamification] = useState<GamificationState>(() => loadGamificationState());
   const [autopilot, setAutopilot] = useState<AutopilotSettings>(() => loadAutopilotSettings());
   const [advisorHistory, setAdvisorHistory] = useState(() => loadAdvisorHistory());
 
@@ -85,24 +80,6 @@ export function useAppPsychology() {
     saveAdvisorHistory(next);
   }, [advisorHistory]);
 
-  const recordDebtPayment = useCallback((item: FinancialItem, paymentCents: number) => {
-    const nowMs = Date.now();
-    const next = applyPaymentGamification(
-      gamification,
-      {
-        paidAtMs: nowMs,
-        amountCents: paymentCents,
-        beforeDueMs: item.dateDue ? new Date(item.dateDue).getTime() : undefined,
-      },
-      item.amount + paymentCents,
-      item.target,
-      item.history.filter((payment) => !payment.deleted).length + 1,
-      nowMs,
-    );
-    setGamification(next);
-    saveGamificationState(next);
-  }, [gamification]);
-
   const planAutopilotPayment = useCallback((items: FinancialItem[]) => {
     return planMicroPayment(toAutopilotDebts(items), autopilot);
   }, [autopilot]);
@@ -110,12 +87,10 @@ export function useAppPsychology() {
   return {
     privacy,
     updatePrivacy,
-    gamification,
     autopilot,
     updateAutopilot,
     advisorHistory,
     askAdvisor,
-    recordDebtPayment,
     planAutopilotPayment,
   };
 }

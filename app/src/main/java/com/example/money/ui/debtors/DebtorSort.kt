@@ -3,7 +3,10 @@ package com.example.money.ui.debtors
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.DebtDueDateUtils
 
-/** Sort: active → overdue → paid; within groups nearest due date first. */
+/**
+ * Overdue first (oldest due date on top), then active by due date (nearest on top),
+ * then debts with no due date, then paid.
+ */
 object DebtorSort {
 
     fun sort(debtors: List<Debtor>, now: Long = System.currentTimeMillis()): List<Debtor> =
@@ -14,8 +17,9 @@ object DebtorSort {
         )
 
     internal fun rank(debtor: Debtor, now: Long): Int = when {
-        debtor.isPaid -> 2
-        DebtDueDateUtils.isOverdue(debtor.dateDue, now) -> 1
-        else -> 0
+        debtor.isPaid -> 3
+        debtor.dateDue <= 0L -> 2
+        DebtDueDateUtils.isOverdue(debtor.dateDue, now) -> 0
+        else -> 1
     }
 }

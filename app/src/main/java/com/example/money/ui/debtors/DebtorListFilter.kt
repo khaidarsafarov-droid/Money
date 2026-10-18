@@ -27,7 +27,9 @@ object DebtorListFilter {
             DebtorFilter.ALL -> byType
             // «Активные» = все непогашенные (включая просроченные)
             DebtorFilter.ACTIVE -> byType.filter { !it.isPaid }
-            DebtorFilter.OVERDUE -> byType.filter { !it.isPaid && DebtDueDateUtils.isOverdue(it.dateDue, now) }
+            DebtorFilter.OVERDUE -> byType.filter {
+                !it.isPaid && it.dateDue > 0L && DebtDueDateUtils.isOverdue(it.dateDue, now)
+            }
             DebtorFilter.PAID -> byType.filter { it.isPaid }
         }
 

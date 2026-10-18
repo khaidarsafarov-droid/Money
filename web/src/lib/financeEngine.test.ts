@@ -15,7 +15,7 @@ import {
   sortItems,
 } from "@/lib/financeEngine";
 import { addTransaction } from "@/lib/globalFinanceEngine";
-import type { FinanceState } from "@/types/finance";
+import type { FinanceState, FinancialItem } from "@/types/finance";
 
 const emptyState: FinanceState = { currency: "USD", items: [], transactions: [] };
 
@@ -190,6 +190,39 @@ describe("filterByType and sortItems", () => {
     const sorted = sortItems(fresh.items);
     expect(sorted[0]?.name).toBe("Late");
     expect(isDebtOverdue(sorted[0]!)).toBe(true);
+  });
+
+  it("sorts debts oldest overdue, then nearest active, then undated, then paid", () => {
+    const debt = (
+      name: string,
+      dateDue: string | undefined,
+      status: "ACTIVE" | "COMPLETED" = "ACTIVE",
+    ): FinancialItem => ({
+      id: name,
+      type: "DEBT",
+      name,
+      status,
+      amount: status === "COMPLETED" ? 100 : 0,
+      target: 100,
+      history: [],
+      dateDue,
+    });
+    const sorted = sortItems([
+      debt("Later", "2028-01-01"),
+      debt("Paid", "2024-06-01", "COMPLETED"),
+      debt("Nearest", "2027-01-01"),
+      debt("No date", undefined),
+      debt("Oldest overdue", "2024-01-01"),
+      debt("Newer overdue", "2025-06-01"),
+    ]);
+    expect(sorted.map((item) => item.name)).toEqual([
+      "Oldest overdue",
+      "Newer overdue",
+      "Nearest",
+      "Later",
+      "No date",
+      "Paid",
+    ]);
   });
 });
 

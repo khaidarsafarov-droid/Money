@@ -63,9 +63,13 @@ export function isDebtOverdue(item: FinancialItem): boolean {
 }
 
 function itemSortRank(item: FinancialItem): number {
-  if (isDebtOverdue(item)) return 0;
+  if (item.type === "DEBT") {
+    if (item.status === "COMPLETED") return 3;
+    if (!item.dateDue) return 2;
+    if (isDebtOverdue(item)) return 0;
+    return 1;
+  }
   if (
-    item.type === "GOAL" &&
     item.status !== "COMPLETED" &&
     item.dateDeadline &&
     isGoalDeadlinePassed(item.dateDeadline)

@@ -15,6 +15,7 @@ private const val URGENT_WINDOW_MS = 7L * 24 * 60 * 60 * 1000
 
 fun Debtor.dueStatus(now: Long = System.currentTimeMillis()): DebtDueStatus {
     if (isPaid) return DebtDueStatus.PAID
+    if (dateDue <= 0L) return DebtDueStatus.NORMAL
     if (DebtDueDateUtils.isOverdue(dateDue, now)) return DebtDueStatus.OVERDUE
     if (dateDue - now <= URGENT_WINDOW_MS) return DebtDueStatus.URGENT
     return DebtDueStatus.NORMAL

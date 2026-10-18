@@ -1,15 +1,12 @@
 import {
   DEFAULT_AUTOPILOT,
   DEFAULT_PRIVACY,
-  EMPTY_GAMIFICATION,
   type AdvisorMessage,
   type AutopilotSettings,
-  type GamificationState,
   type PrivacyPreferences,
 } from "@money/shared";
 
 const PRIVACY_KEY = "money.privacy.v1";
-const GAMIFICATION_KEY = "money.gamification.v1";
 const AUTOPILOT_KEY = "money.autopilot.v1";
 const ADVISOR_KEY = "money.advisor.v1";
 
@@ -35,14 +32,6 @@ export function loadPrivacyPreferences(): PrivacyPreferences {
 
 export function savePrivacyPreferences(value: PrivacyPreferences): void {
   writeJson(PRIVACY_KEY, value);
-}
-
-export function loadGamificationState(): GamificationState {
-  return readJson(GAMIFICATION_KEY, EMPTY_GAMIFICATION);
-}
-
-export function saveGamificationState(value: GamificationState): void {
-  writeJson(GAMIFICATION_KEY, value);
 }
 
 export function loadAutopilotSettings(): AutopilotSettings {

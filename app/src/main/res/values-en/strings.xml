@@ -348,15 +348,6 @@
     <string name="cd_navigate_up">Back</string>
     <string name="settings_open">Settings</string>
 
-    <string name="gamification_streak">Payment streak: %1$d</string>
-    <string name="gamification_win_closed">Debt closed</string>
-    <string name="gamification_win_milestone">A little left to %1$d%%</string>
-    <string name="gamification_win_streak">Streak: %1$d</string>
-    <string name="gamification_badge_first_step">First step</string>
-    <string name="gamification_badge_half_way">Halfway</string>
-    <string name="gamification_badge_freedom">Debts closed</string>
-    <string name="gamification_badge_streak_3">Streak ×3</string>
-
     <string name="autopilot_settings_title">Autopilot</string>
     <string name="autopilot_enabled">Daily micro-payments</string>
     <string name="autopilot_daily_amount">Daily amount</string>

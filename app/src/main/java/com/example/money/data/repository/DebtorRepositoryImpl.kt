@@ -51,11 +51,11 @@ class DebtorRepositoryImpl(
 
     override fun getAllDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
         scoped { mode -> debtorDao.getAllDebtorsWithPayments(mode) }
-            .map { rows -> rows.map { it.toDomain() } }
+            .map { rows -> DebtorSort.sort(rows.map { it.toDomain() }) }
 
     override fun getActiveDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
         scoped { mode -> debtorDao.getActiveDebtorsWithPayments(mode) }
-            .map { rows -> rows.map { it.toDomain() } }
+            .map { rows -> DebtorSort.sort(rows.map { it.toDomain() }) }
 
     override fun observeFilteredDebtors(
         tab: DebtTab,

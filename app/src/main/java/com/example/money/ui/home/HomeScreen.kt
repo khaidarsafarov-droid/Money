@@ -200,7 +200,6 @@ fun HomeScreen(
     val debtSearchQuery by debtListViewModel.searchQuery.collectAsStateWithLifecycle()
     val debtMetrics by debtorsViewModel.debtMetrics.collectAsStateWithLifecycle()
     val privacySettings by debtorsViewModel.privacySettings.collectAsStateWithLifecycle()
-    val gamificationState by debtorsViewModel.gamificationState.collectAsStateWithLifecycle()
     val autopilotSettings by debtorsViewModel.autopilotSettings.collectAsStateWithLifecycle()
     val advisorMessages by debtorsViewModel.advisorMessages.collectAsStateWithLifecycle()
     val budgetSummary by budgetViewModel.budgetSummary.collectAsStateWithLifecycle()
@@ -636,7 +635,6 @@ fun HomeScreen(
                     showDebtPaymentDialog = debtor
                 },
                 onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
-                gamificationState = gamificationState,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
                 showCheckIn = showCheckIn,
@@ -819,7 +817,6 @@ fun HomeScreen(
                 onDismissNotificationPrompt = onDismissNotificationPrompt,
                 showCheckIn = showCheckIn,
                 onDismissCheckIn = debtorsViewModel::dismissCheckIn,
-                gamificationState = gamificationState,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
                 onOpenAdvisor = { showAdvisorSheet = true },

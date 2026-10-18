@@ -32,8 +32,7 @@ class GoalWidgetSnapshotWriter(
                 SnapshotCoreInputs(goals, debts, pendingCount, region)
             },
             preferencesStore.privacySettings,
-            preferencesStore.gamificationState,
-        ) { core, privacy, gamification ->
+        ) { core, privacy ->
             val region = core.region
             val hideWidget = privacy.hideOnWidget || privacy.hideAmounts
             buildWidgetGoalSnapshot(
@@ -42,8 +41,8 @@ class GoalWidgetSnapshotWriter(
                 pendingCount = core.pendingCount,
                 region = region,
                 hideAmounts = hideWidget,
-                streakCount = gamification.streakCount,
-                lastWinMessage = gamification.lastWinMessage,
+                streakCount = 0,
+                lastWinMessage = null,
                 now = System.currentTimeMillis(),
                 goalFallbackName = context.getString(R.string.widget_goal_fallback),
                 formatCents = { cents ->

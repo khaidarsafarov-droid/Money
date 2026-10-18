@@ -4,71 +4,8 @@ import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.DebtType
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.AutopilotStrategy
-import com.example.money.settings.GamificationBadges
-import com.example.money.settings.GamificationState
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
 import kotlin.math.max
-
-object DebtGamificationEngine {
-
-    fun isoDateFromMillis(millis: Long): String =
-        Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString()
-
-    fun applyPayment(
-        previous: GamificationState,
-        paidAtMillis: Long,
-        dateDueMillis: Long,
-        currentCents: Long,
-        targetCents: Long,
-        paymentCount: Int,
-        now: Long = System.currentTimeMillis(),
-    ): GamificationState {
-        val streak = computeStreak(previous, paidAtMillis, dateDueMillis, now)
-        val badges = mutableSetOf<String>()
-        badges.addAll(previous.unlockedBadges)
-        if (paymentCount >= 1) badges.add(GamificationBadges.FIRST_STEP)
-
-        val milestones = DebtFreedomEngine.computeMilestones(currentCents, targetCents)
-        if (milestones.milestones.any { it.percent >= 50 && it.reached }) {
-            badges.add(GamificationBadges.HALF_WAY)
-        }
-        if (milestones.milestones.any { it.percent == 100 && it.reached }) {
-            badges.add(GamificationBadges.FREEDOM)
-        }
-        if (streak >= 3) badges.add(GamificationBadges.STREAK_3)
-
-        val lastWin = when {
-            badges.contains(GamificationBadges.FREEDOM) -> "win.closed"
-            milestones.nextMilestone != null -> "win.milestone.${milestones.nextMilestone.percent}"
-            else -> "win.streak.$streak"
-        }
-
-        return GamificationState(
-            streakCount = streak,
-            lastPaymentIsoDate = isoDateFromMillis(paidAtMillis),
-            unlockedBadges = badges,
-            lastWinMessage = lastWin,
-        )
-    }
-
-    private fun computeStreak(
-        previous: GamificationState,
-        paidAtMillis: Long,
-        dateDueMillis: Long,
-        now: Long,
-    ): Int {
-        if (paidAtMillis > dateDueMillis && dateDueMillis > 0L) return 1
-        val paymentDay = isoDateFromMillis(paidAtMillis)
-        val last = previous.lastPaymentIsoDate ?: return 1
-        if (paymentDay == last) return previous.streakCount
-        val gap = ChronoUnit.DAYS.between(LocalDate.parse(last), LocalDate.parse(paymentDay))
-        return if (gap == 1L) previous.streakCount + 1 else 1
-    }
-}
 
 object DebtAutopilotEngine {
 

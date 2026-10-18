@@ -26,7 +26,25 @@ class DebtorListFilterTest {
             now = now,
         )
 
-        assertEquals(listOf(2L, 1L), result.map { it.id })
+        assertEquals(listOf(1L, 2L), result.map { it.id })
+    }
+
+    @Test
+    fun overdueFilter_ordersOldestFirstAndSkipsUndated() {
+        val oldest = debtor(id = 1, due = now - 172_800_000L)
+        val newer = debtor(id = 2, due = now - 86_400_000L)
+        val undated = debtor(id = 3, due = 0L)
+        val future = debtor(id = 4, due = now + 86_400_000L)
+
+        val result = DebtorListFilter.apply(
+            debtors = listOf(future, undated, newer, oldest),
+            tab = DebtTab.OwesMe,
+            filter = DebtorFilter.OVERDUE,
+            searchQuery = "",
+            now = now,
+        )
+
+        assertEquals(listOf(1L, 2L), result.map { it.id })
     }
 
     @Test
