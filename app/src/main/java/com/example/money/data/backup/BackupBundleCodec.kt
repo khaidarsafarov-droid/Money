@@ -648,6 +648,8 @@ class BackupBundleCodec(
             put(KEY_DEBT_AUTO_MESSAGE_TELEGRAM, preferences.debtAutoMessageTelegram)
             put(KEY_DEBT_AUTO_MESSAGE_EMAIL, preferences.debtAutoMessageEmail)
             put(KEY_DEBT_DIRECT_SMS_ENABLED, preferences.debtDirectSmsEnabled)
+            put(KEY_DEBT_REMINDER_HOUR, preferences.reminderHour)
+            put(KEY_DEBT_REMINDER_MINUTE, preferences.reminderMinute)
         }
 
     private fun encodeVisionImage(image: BackupVisionImage): JSONObject =
@@ -909,6 +911,8 @@ class BackupBundleCodec(
             debtAutoMessageTelegram = json.getBoolean(KEY_DEBT_AUTO_MESSAGE_TELEGRAM),
             debtAutoMessageEmail = json.getBoolean(KEY_DEBT_AUTO_MESSAGE_EMAIL),
             debtDirectSmsEnabled = json.getBoolean(KEY_DEBT_DIRECT_SMS_ENABLED),
+            reminderHour = json.optInt(KEY_DEBT_REMINDER_HOUR, 9).coerceIn(0, 23),
+            reminderMinute = json.optInt(KEY_DEBT_REMINDER_MINUTE, 0).coerceIn(0, 59),
         )
 
     private fun decodeVisionImage(json: JSONObject): BackupVisionImage =
@@ -1179,6 +1183,8 @@ class BackupBundleCodec(
         private const val KEY_DEBT_AUTO_MESSAGE_TELEGRAM = "debtAutoMessageTelegram"
         private const val KEY_DEBT_AUTO_MESSAGE_EMAIL = "debtAutoMessageEmail"
         private const val KEY_DEBT_DIRECT_SMS_ENABLED = "debtDirectSmsEnabled"
+        private const val KEY_DEBT_REMINDER_HOUR = "debtReminderHour"
+        private const val KEY_DEBT_REMINDER_MINUTE = "debtReminderMinute"
         private const val KEY_FILE_NAME = "fileName"
         private const val KEY_MIME_TYPE = "mimeType"
         private const val KEY_BASE64_DATA = "base64Data"

@@ -88,7 +88,12 @@ class DebtNotificationActionReceiver : BroadcastReceiver() {
         if (debtorId <= 0L) return
 
         val debtor = app.debtorRepository.getDebtorById(debtorId) ?: return
-        app.debtReminderScheduler.snooze(debtor)
+        val settings = app.preferencesStore.personalBranchSettings.first()
+        app.debtReminderScheduler.snooze(
+            debtor,
+            reminderHour = settings.reminderHour,
+            reminderMinute = settings.reminderMinute,
+        )
         DebtNotificationHelper.cancel(context, debtorId)
     }
 

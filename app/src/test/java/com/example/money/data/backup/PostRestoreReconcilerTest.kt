@@ -117,13 +117,23 @@ class DebtReminderRestoreReconcilerTest {
     private class RecordingDebtReminderScheduler : DebtReminderScheduler {
         val calls = mutableListOf<String>()
 
-        override fun schedule(debtor: Debtor) {
+        override fun schedule(
+            debtor: Debtor,
+            reminderHour: Int,
+            reminderMinute: Int,
+            preserveSnooze: Boolean,
+        ) {
             calls += "schedule_${debtor.id}"
         }
 
         override fun showNow(debtor: Debtor) = false
 
-        override fun snooze(debtor: Debtor, delayMillis: Long) = Unit
+        override fun snooze(
+            debtor: Debtor,
+            delayMillis: Long,
+            reminderHour: Int,
+            reminderMinute: Int,
+        ) = Unit
 
         override fun cancel(debtorId: Long) = Unit
 
@@ -131,7 +141,11 @@ class DebtReminderRestoreReconcilerTest {
             calls += "cancel_all"
         }
 
-        override fun scheduleDailyFollowUp(debtor: Debtor) = Unit
+        override fun scheduleDailyFollowUp(
+            debtor: Debtor,
+            reminderHour: Int,
+            reminderMinute: Int,
+        ) = Unit
 
         override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
             calls += "advance_${debtor.id}"

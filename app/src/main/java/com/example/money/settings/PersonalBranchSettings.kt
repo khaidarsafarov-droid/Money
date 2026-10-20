@@ -13,6 +13,8 @@ data class PersonalBranchSettings(
     val debtAutoMessageEmail: Boolean = true,
     val debtDirectSmsEnabled: Boolean = false,
     val clientNotificationsEnabled: Boolean = true,
+    val reminderHour: Int = 9,
+    val reminderMinute: Int = 0,
 ) {
     fun notificationsEnabledFor(mode: AppMode): Boolean = when (mode) {
         AppMode.PERSONAL -> debtNotificationsEnabled

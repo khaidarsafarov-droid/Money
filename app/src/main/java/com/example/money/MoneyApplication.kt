@@ -40,6 +40,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MoneyApplication : Application() {
 
@@ -119,8 +120,16 @@ class MoneyApplication : Application() {
                 Log.w(TAG, "Failed to align payoff strategy", exception)
             }
         }
-        rescheduleDebtReminders()
-        syncPersonalDebtMessageSchedule()
+        applicationScope.launch {
+            try {
+                rescheduleDebtReminders()
+                syncPersonalDebtMessageSchedule()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Log.w(TAG, "Failed to reschedule reminders", exception)
+            }
+        }
         startWidgetPipeline()
         syncAutopilotSchedule()
         syncWeeklyCheckInSchedule()
@@ -198,8 +207,8 @@ class MoneyApplication : Application() {
         const val TAG = "MoneyApplication"
     }
 
-    fun rescheduleDebtReminders() {
-        applicationScope.launch {
+    suspend fun rescheduleDebtReminders() {
+        withContext(Dispatchers.IO) {
             val settings = preferencesStore.personalBranchSettings.first()
             database.debtorDao().getAllDebtorsOnce()
                 .map { it.toDomain() }
@@ -208,15 +217,20 @@ class MoneyApplication : Application() {
                     if (!settings.notificationsEnabledFor(debtor.mode)) {
                         debtReminderScheduler.cancel(debtor.id)
                     } else {
-                        debtReminderScheduler.schedule(debtor)
+                        debtReminderScheduler.schedule(
+                            debtor,
+                            reminderHour = settings.reminderHour,
+                            reminderMinute = settings.reminderMinute,
+                            preserveSnooze = true,
+                        )
                         debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
                     }
                 }
         }
     }
 
-    fun syncPersonalDebtMessageSchedule() {
-        applicationScope.launch {
+    suspend fun syncPersonalDebtMessageSchedule() {
+        withContext(Dispatchers.IO) {
             val settings = preferencesStore.personalBranchSettings.first()
             personalDebtMessageScheduler.syncSchedule(settings)
         }

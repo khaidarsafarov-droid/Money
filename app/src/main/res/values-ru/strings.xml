@@ -618,6 +618,9 @@
     <string name="debt_auto_message_telegram">Авто Telegram</string>
     <string name="debt_auto_message_email">Авто Email</string>
     <string name="debt_direct_sms">Прямая отправка SMS</string>
+    <string name="debt_notification_hour">Час</string>
+    <string name="debt_notification_exact">Точные</string>
+    <string name="debt_notification_battery">Батарея</string>
     <string name="notification_debt_advance_3d_title">Долг через 3 дня</string>
     <string name="notification_debt_advance_1d_title">Долг завтра</string>
     <string name="notification_debt_advance_body">%1$s должен вернуть %2$s. Срок: %3$s</string>

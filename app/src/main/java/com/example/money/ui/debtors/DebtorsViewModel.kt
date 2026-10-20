@@ -357,7 +357,12 @@ class DebtorsViewModel(
             debtReminderScheduler.cancel(debtor.id)
             return
         }
-        debtReminderScheduler.schedule(debtor)
+        debtReminderScheduler.schedule(
+            debtor,
+            reminderHour = settings.reminderHour,
+            reminderMinute = settings.reminderMinute,
+            preserveSnooze = false,
+        )
         debtReminderScheduler.scheduleAdvanceReminders(debtor, settings)
     }
 

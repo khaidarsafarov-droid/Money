@@ -379,6 +379,9 @@
     <string name="debt_auto_message_telegram">Auto Telegram</string>
     <string name="debt_auto_message_email">Auto Email</string>
     <string name="debt_direct_sms">Direct SMS send</string>
+    <string name="debt_notification_hour">Hour</string>
+    <string name="debt_notification_exact">Exact</string>
+    <string name="debt_notification_battery">Battery</string>
     <string name="notification_debt_advance_3d_title">Debt due in 3 days</string>
     <string name="notification_debt_advance_1d_title">Debt due tomorrow</string>
     <string name="notification_debt_advance_body">%1$s owes %2$s. Due: %3$s</string>

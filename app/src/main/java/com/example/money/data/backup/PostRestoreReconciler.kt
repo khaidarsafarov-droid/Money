@@ -60,7 +60,12 @@ class DebtReminderRestoreReconciler(
         val settings = loadSettings()
         loadActiveDebtors().forEach { debtor ->
             if (!settings.notificationsEnabledFor(debtor.mode)) return@forEach
-            scheduler.schedule(debtor)
+            scheduler.schedule(
+                debtor,
+                reminderHour = settings.reminderHour,
+                reminderMinute = settings.reminderMinute,
+                preserveSnooze = false,
+            )
             scheduler.scheduleAdvanceReminders(debtor, settings)
         }
     }
