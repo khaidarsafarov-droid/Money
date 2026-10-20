@@ -5,7 +5,7 @@
     <string name="debt_history_balance">Balance</string>
     <string name="debt_history_progress">%1$s of %2$s</string>
     <string name="home_screen_title">Finance</string>
-    <string name="app_name">Financial Control</string>
+    <string name="app_name">Money</string>
 
     <!-- App language -->
     <string name="app_language_menu">Interface language</string>
@@ -114,6 +114,10 @@
     <string name="debt_filter_active">Active</string>
     <string name="debt_filter_overdue">Overdue</string>
     <string name="debt_filter_paid">Paid</string>
+    <string name="debt_chip_today">Today</string>
+    <string name="debt_chip_due">Due</string>
+    <string name="debt_total_label">Total %1$s</string>
+    <string name="debt_filter_overdue_count">Overdue · %1$d</string>
     <string name="debt_add_title_owes_me">New debt: Owed to me</string>
     <string name="debt_add_title_i_owe">New debt: I owe</string>
     <string name="debt_creditor_name_label">Name</string>
@@ -242,7 +246,6 @@
     <string name="welcome_title">Welcome!</string>
 
     <!-- Goals -->
-    <string name="goals_section_title">My goals (%1$d)</string>
     <string name="goal_add_title">New goal</string>
     <string name="goal_kind_label">Goal type</string>
     <string name="goal_kind_money">Financial goal</string>
@@ -509,7 +512,7 @@
     <string name="calendar_use_debts_calendar">Use the Debts calendar</string>
     <string name="calendar_create_debts_calendar">Create the Debts calendar</string>
     <string name="calendar_request_permission">Allow calendar access</string>
-    <string name="calendar_permission_hint">Without calendar access we cannot remind you of due dates. You can turn access on in phone settings.</string>
+    <string name="calendar_permission_hint">No calendar access. Turn it on in settings.</string>
     <string name="calendar_sync_failed">Could not add the event to the calendar. Check settings.</string>
     <string name="calendar_removed">Event removed from the calendar</string>
     <string name="calendar_close_title">Debt closed</string>
@@ -605,7 +608,7 @@
     <string name="backup_message_auto_enabled">Automatic backup enabled.</string>
     <string name="backup_message_auto_disabled">Automatic backup disabled.</string>
     <string name="backup_delete_local_title">Danger zone</string>
-    <string name="backup_delete_local_hint">Deletes all financial data, local settings, the vision image, schedules, and the saved backup password on this device. Google Drive backups remain.</string>
+    <string name="backup_delete_local_hint">Deletes data on this device. Drive backups remain.</string>
     <string name="backup_delete_local_action">Delete all local data</string>
     <string name="backup_delete_local_dialog_title">Delete all local data?</string>
     <string name="backup_delete_local_dialog_message">This cannot be undone. Google Drive backups will not be deleted. Type DELETE to confirm.</string>

@@ -13,13 +13,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Contacts
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -44,8 +50,9 @@ import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.ContactDebtHistoryEngine
 import com.example.money.domain.util.MoneyMath
+import com.example.money.ui.components.AmountKeypad
 import com.example.money.ui.components.DatePickerField
-import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.applyAmountKey
 import com.example.money.ui.theme.MoneyTypeScale
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
@@ -55,6 +62,7 @@ private fun formatAmountForInput(amount: Double): String {
     return if (amount % 1.0 == 0.0) amount.toLong().toString() else amount.toString()
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebtorFormDialog(
     debtType: DebtType,
@@ -63,6 +71,7 @@ fun DebtorFormDialog(
     allDebtors: List<Debtor> = emptyList(),
     onDismiss: () -> Unit,
     onViewContactHistory: ((String, String) -> Unit)? = null,
+    onDebtTypeChange: (DebtType) -> Unit = {},
     onConfirm: (
         name: String,
         amountCents: Long,
@@ -80,8 +89,15 @@ fun DebtorFormDialog(
     ) -> Unit,
 ) {
     val isEdit = existingDebtor != null
-    val resolvedType = existingDebtor?.debtType ?: debtType
+    var selectedType by remember(existingDebtor?.id, debtType) {
+        mutableStateOf(existingDebtor?.debtType ?: debtType)
+    }
+    val resolvedType = selectedType
     var showDetails by remember(existingDebtor?.id) { mutableStateOf(isEdit) }
+    var showDue by remember(existingDebtor?.id) { mutableStateOf(isEdit) }
+    var showNote by remember(existingDebtor?.id) {
+        mutableStateOf(isEdit && !existingDebtor?.note.isNullOrBlank())
+    }
 
     var name by remember(existingDebtor?.id, debtType) {
         mutableStateOf(existingDebtor?.name.orEmpty())
@@ -210,101 +226,148 @@ fun DebtorFormDialog(
         DebtType.CREDITOR -> R.string.debtor_name_label
         DebtType.DEBTOR -> R.string.debt_creditor_name_label
     }
-    val dateGivenLabelRes = when (resolvedType) {
-        DebtType.CREDITOR -> R.string.debtor_date_given_label
-        DebtType.DEBTOR -> R.string.debt_date_received_label
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val editingDebtor = existingDebtor
+    val title = if (editingDebtor != null) {
+        stringResource(R.string.debtor_edit_title, editingDebtor.name)
+    } else {
+        stringResource(titleRes)
     }
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = {
-            val editingDebtor = existingDebtor
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(text = title, style = MaterialTheme.typography.titleLarge)
+            if (!isEdit) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    listOf(DebtType.CREDITOR, DebtType.DEBTOR).forEachIndexed { index, type ->
+                        SegmentedButton(
+                            selected = resolvedType == type,
+                            onClick = {
+                                selectedType = type
+                                onDebtTypeChange(type)
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index, 2),
+                            icon = {},
+                            label = {
+                                Text(
+                                    stringResource(
+                                        if (type == DebtType.CREDITOR) {
+                                            R.string.debt_dashboard_owes_me
+                                        } else {
+                                            R.string.debt_dashboard_i_owe
+                                        },
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        nameError = null
+                    },
+                    label = { Text(stringResource(nameLabelRes)) },
+                    isError = nameError != null,
+                    supportingText = nameError?.let { { Text(it) } },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = { contactPickerLauncher.launch(null) }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Contacts,
+                        contentDescription = stringResource(R.string.contact_pick_action),
+                    )
+                }
+            }
+            pickedContact?.let { contact ->
+                Text(
+                    text = contact.displayName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            if (onViewContactHistory != null && existingContactDebtCount > 0) {
+                val lookupKey = pickedContact?.lookupKey
+                TextButton(
+                    onClick = {
+                        if (lookupKey != null) onViewContactHistory(lookupKey, name.trim())
+                    },
+                ) {
+                    Text(stringResource(R.string.contact_history_short, existingContactDebtCount))
+                }
+            }
             Text(
-                if (editingDebtor != null) {
-                    stringResource(R.string.debtor_edit_title, editingDebtor.name)
+                text = if (amountText.isBlank()) "0" else amountText,
+                style = MoneyTypeScale.amountInput,
+                color = if (amountError != null) {
+                    MaterialTheme.colorScheme.error
                 } else {
-                    stringResource(titleRes)
+                    MaterialTheme.colorScheme.onSurface
                 },
             )
-        },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                MoneyTextField(
-                    value = amountText,
-                    onValueChange = {
-                        amountText = it
-                        amountError = null
-                    },
-                    label = stringResource(R.string.debtor_amount_label),
-                    isError = amountError != null,
-                    supportingText = amountError,
-                    textStyle = MoneyTypeScale.amountInput,
+            amountError?.let { message ->
+                Text(text = message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = false,
+                    onClick = { dateGiven = System.currentTimeMillis() },
+                    label = { Text(stringResource(R.string.debt_chip_today)) },
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = {
-                            name = it
-                            nameError = null
-                        },
-                        label = { Text(stringResource(nameLabelRes)) },
-                        isError = nameError != null,
-                        supportingText = nameError?.let { { Text(it) } },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                    IconButton(onClick = { contactPickerLauncher.launch(null) }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Contacts,
-                            contentDescription = stringResource(R.string.contact_pick_action),
-                        )
-                    }
-                }
-                pickedContact?.let { contact ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.contact_linked_hint, contact.displayName),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (existingContactDebtCount > 0 && onViewContactHistory != null) {
-                            TextButton(
-                                onClick = { onViewContactHistory(contact.lookupKey, contact.displayName) },
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.History,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(end = 4.dp),
-                                )
-                                Text(stringResource(R.string.contact_history_short, existingContactDebtCount))
-                            }
-                        }
-                    }
-                }
-                if (existingContactDebtCount > 0 && pickedContact != null) {
-                    Text(
-                        text = stringResource(R.string.contact_existing_debts_hint, existingContactDebtCount),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                FilterChip(
+                    selected = showDue,
+                    onClick = { showDue = !showDue },
+                    label = { Text(stringResource(R.string.debt_chip_due)) },
+                )
+                FilterChip(
+                    selected = showNote,
+                    onClick = { showNote = !showNote },
+                    label = { Text(stringResource(R.string.debt_note_label)) },
+                )
                 FilterChip(
                     selected = showDetails,
                     onClick = { showDetails = !showDetails },
                     label = { Text(stringResource(R.string.action_more)) },
                 )
-                if (showDetails) {
+            }
+            if (showDue) {
+                DatePickerField(
+                    label = stringResource(R.string.debtor_date_due_label),
+                    selectedDateMillis = dateDue,
+                    onDateSelected = {
+                        dateDue = it
+                        dateError = null
+                    },
+                    isError = dateError != null,
+                    supportingText = dateError,
+                )
+            }
+            if (showNote) {
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text(stringResource(R.string.debt_note_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (showDetails) {
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
@@ -325,38 +388,10 @@ fun DebtorFormDialog(
                             R.string.debtor_edit_paid_hint,
                             formatAmountForInput(MoneyMath.fromCents(existingDebtor.currentAmountCents)),
                         ),
-                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
-                DatePickerField(
-                    label = stringResource(dateGivenLabelRes),
-                    selectedDateMillis = dateGiven,
-                    onDateSelected = {
-                        dateGiven = it
-                        dateError = null
-                    },
-                )
-                DatePickerField(
-                    label = stringResource(R.string.debtor_date_due_label),
-                    selectedDateMillis = dateDue,
-                    onDateSelected = {
-                        dateDue = it
-                        dateError = null
-                    },
-                    isError = dateError != null,
-                    supportingText = dateError,
-                )
-                OutlinedTextField(
-                    value = note,
-                    onValueChange = { note = it },
-                    label = { Text(stringResource(R.string.debt_note_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
                 if (resolvedType == DebtType.DEBTOR) {
-                    Text(
-                        text = stringResource(R.string.loan_category_label),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         LoanCategory.entries.forEach { category ->
                             FilterChip(
@@ -379,11 +414,14 @@ fun DebtorFormDialog(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                }
             }
-        },
-        confirmButton = {
-            TextButton(
+            AmountKeypad(
+                onKey = { key ->
+                    amountText = applyAmountKey(amountText, key)
+                    amountError = null
+                },
+            )
+            Button(
                 enabled = canSubmit,
                 onClick = {
                     nameError = InputValidators.validateName(name)?.let(context::getString)
@@ -396,24 +434,20 @@ fun DebtorFormDialog(
                     }
                     dateError = InputValidators.validateDueDate(dateGiven, dateDue)?.let(context::getString)
                     interestError = InputValidators.validatePercent(interestRateText)?.let(context::getString)
-
                     if (isEdit && amountError == null) {
                         val amount = InputValidators.parseAmount(amountText)
-                        if (amount != null) {
-                            val targetCents = amount
-                            if (targetCents < existingDebtor.currentAmountCents) {
-                                amountError = amountBelowPaidError
-                            }
+                        if (amount != null && amount < existingDebtor.currentAmountCents) {
+                            amountError = amountBelowPaidError
                         }
                     }
-
                     if (nameError != null || amountError != null || dateError != null || interestError != null) {
-                        if (dateError != null || interestError != null) showDetails = true
-                        return@TextButton
+                        if (dateError != null) showDue = true
+                        if (interestError != null) showDetails = true
+                        return@Button
                     }
-
-                    val amount = InputValidators.parseAmount(amountText) ?: return@TextButton
-                    val interestRateBps = InputValidators.parsePercent(interestRateText) ?: return@TextButton
+                    val amount = InputValidators.parseAmount(amountText) ?: return@Button
+                    val interestRateBps = InputValidators.parsePercent(interestRateText) ?: return@Button
+                    onDebtTypeChange(resolvedType)
                     onConfirm(
                         name.trim(),
                         amount,
@@ -430,19 +464,14 @@ fun DebtorFormDialog(
                         email.trim(),
                     )
                 },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp),
             ) {
-                Text(
-                    if (isEdit) stringResource(R.string.action_save)
-                    else stringResource(R.string.debtor_add_confirm),
-                )
+                Text(stringResource(R.string.action_save))
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        },
-    )
+        }
+    }
 }
 
 private fun defaultDueDateMillis(): Long {

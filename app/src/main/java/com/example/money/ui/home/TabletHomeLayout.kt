@@ -75,10 +75,10 @@ import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
+import com.example.money.ui.debtors.DebtFilterAndSearch
+import com.example.money.ui.debtors.DebtSectionTotal
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
-import com.example.money.ui.debtors.DebtSearchField
-import com.example.money.ui.debtors.DebtorFilterRow
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.HapticStrength
@@ -125,6 +125,7 @@ fun TabletHomeLayout(
     onApplyAutopilot: () -> Unit = {},
     showCheckIn: Boolean = false,
     onDismissCheckIn: () -> Unit = {},
+    onOpenCheckIn: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
     onOpenAppLanguage: () -> Unit = {},
     onOpenPrivacySettings: () -> Unit = {},
@@ -418,7 +419,7 @@ fun TabletHomeLayout(
                         val orderedGoals = GoalProgress.orderedForSection(goals)
                         item {
                             Text(
-                                text = stringResource(R.string.goals_section_title, goals.size),
+                                text = stringResource(R.string.section_goals),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(vertical = 8.dp),
@@ -491,14 +492,20 @@ fun TabletHomeLayout(
                             DebtTabRow(
                                 selectedTab = debtTab,
                                 onTabSelected = onDebtTabChange,
+                                onOpenCalendar = { onDebtTabChange(DebtTab.Calendar) },
+                                onOpenCheckIn = onOpenCheckIn,
+                                onApplyAutopilot = if (autopilotSettings.enabled) onApplyAutopilot else null,
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
-                        if (autopilotSettings.enabled) {
+                        if (debtTab != DebtTab.Calendar) {
                             item {
-                                TextButton(onClick = onApplyAutopilot) {
-                                    Text(stringResource(R.string.autopilot_apply_now))
-                                }
+                                DebtSectionTotal(
+                                    debtors = allDebtors,
+                                    tab = debtTab,
+                                    hideAmounts = privacySettings.hideAmounts,
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                )
                             }
                         }
                         if (debtTab == DebtTab.Calendar) {
@@ -528,17 +535,14 @@ fun TabletHomeLayout(
                                 }
                             }
                             item {
-                                DebtorFilterRow(
-                                    selectedFilter = debtorFilter,
-                                    onFilterSelected = onDebtorFilterChange,
+                                DebtFilterAndSearch(
+                                    debtTab = debtTab,
+                                    allDebtors = allDebtors,
+                                    debtorFilter = debtorFilter,
+                                    onDebtorFilterChange = onDebtorFilterChange,
+                                    debtSearchQuery = debtSearchQuery,
+                                    onDebtSearchQueryChange = onDebtSearchQueryChange,
                                     modifier = Modifier.padding(vertical = 8.dp),
-                                )
-                            }
-                            item {
-                                DebtSearchField(
-                                    query = debtSearchQuery,
-                                    onQueryChange = onDebtSearchQueryChange,
-                                    modifier = Modifier.padding(vertical = 4.dp),
                                 )
                             }
                             if (debtors.isEmpty()) {

@@ -35,6 +35,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -78,6 +80,23 @@ fun DebtorListItem(
         isOverdue -> MaterialTheme.colorScheme.error.copy(alpha = 0.06f)
         else -> Color.Transparent
     }
+    val amountLabel = Formatters.currencyFromCents(
+        if (debtor.isPaid) debtor.targetAmountCents else debtor.remainingAmountCents,
+        debtor.currency,
+        hide = hideAmounts,
+    )
+    val dueSpoken = when (dueStatus) {
+        DebtDueStatus.PAID -> stringResource(R.string.debtor_paid)
+        DebtDueStatus.OVERDUE, DebtDueStatus.URGENT, DebtDueStatus.NORMAL ->
+            if (debtor.dateDue > 0L) {
+                stringResource(R.string.debtor_due_date, Formatters.dueDateCompact(debtor.dateDue))
+            } else {
+                ""
+            }
+    }
+    val rowSpoken = listOf(debtor.name, amountLabel, dueSpoken)
+        .filter { it.isNotBlank() }
+        .joinToString(", ")
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -86,7 +105,8 @@ fun DebtorListItem(
                 .background(rowBackground)
                 .clickable(onClick = onOpen)
                 .heightIn(min = MoneySpacing.listRow)
-                .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md),
+                .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md)
+                .semantics(mergeDescendants = true) { contentDescription = rowSpoken },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
@@ -104,12 +124,8 @@ fun DebtorListItem(
             }
 
             Text(
-                text = Formatters.currencyFromCents(
-                    if (debtor.isPaid) debtor.targetAmountCents else debtor.remainingAmountCents,
-                    debtor.currency,
-                    hide = hideAmounts,
-                ),
-                style = MaterialTheme.typography.bodyLarge,
+                text = amountLabel,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,

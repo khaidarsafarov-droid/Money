@@ -44,6 +44,8 @@ import com.example.money.ui.notes.NoteFormDialog
 import com.example.money.ui.notes.NoteViewModel
 import com.example.money.ui.settings.CurrencyPickerDialog
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.util.HapticStrength
+import com.example.money.ui.util.vibrate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -98,6 +100,7 @@ internal fun HomeDialogs(
     onDebtWithDueDateSaved: () -> Unit = {},
 ) {
     var showAddDebtorDialog by showAddDebtorDialogState
+    var chosenDebtType by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<DebtType?>(null) }
     var editDebtor by editDebtorState
     var contactHistoryTarget by contactHistoryTargetState
     var remindDebtor by remindDebtorState
@@ -140,12 +143,14 @@ internal fun HomeDialogs(
     }
 
     if (showAddDebtorDialog) {
+        val typeForNew = chosenDebtType ?: when (debtTab) {
+            DebtTab.OwesMe -> DebtType.CREDITOR
+            DebtTab.IOwe -> DebtType.DEBTOR
+            DebtTab.Calendar -> DebtType.CREDITOR
+        }
         DebtorFormDialog(
-            debtType = when (debtTab) {
-                DebtTab.OwesMe -> DebtType.CREDITOR
-                DebtTab.IOwe -> DebtType.DEBTOR
-                DebtTab.Calendar -> DebtType.CREDITOR
-            },
+            debtType = typeForNew,
+            onDebtTypeChange = { chosenDebtType = it },
             availableBalance = availableBalanceCents,
             allDebtors = allDebtors,
             onViewContactHistory = openContactHistory,
@@ -156,11 +161,7 @@ internal fun HomeDialogs(
                     amountCents = amount,
                     dateGiven = dateGiven,
                     dateDue = dateDue,
-                    debtType = when (debtTab) {
-                        DebtTab.OwesMe -> DebtType.CREDITOR
-                        DebtTab.IOwe -> DebtType.DEBTOR
-                        DebtTab.Calendar -> DebtType.CREDITOR
-                    },
+                    debtType = typeForNew,
                     affectsBalance = affectsBalance,
                     note = note,
                     loanCategory = loanCategory,
@@ -517,6 +518,7 @@ internal fun HomeDialogs(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        vibrate(context, HapticStrength.MEDIUM)
                         debtorsViewModel.markAsPaid(debtor.id)
                         pendingMarkPaid = null
                         scope.launch { showMessage(context.getString(R.string.msg_debtor_paid)) }
