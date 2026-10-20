@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -26,11 +27,15 @@ import androidx.compose.material.icons.rounded.SouthWest
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,8 +62,11 @@ import com.example.money.data.sync.DebtAdvanceIds
 import com.example.money.domain.model.DebtAdvance
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.MoneyMath
+import com.example.money.ui.components.AmountKeypad
 import com.example.money.ui.components.DatePickerField
-import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.applyAmountKey
+import com.example.money.ui.theme.LocalMoneyExtraColors
+import com.example.money.ui.theme.MoneyTypeScale
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 
@@ -85,20 +93,44 @@ fun DebtHistorySheet(
         returned.toFloat() / debtor.targetAmountCents.toFloat()
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(modifier = Modifier.fillMaxHeight(0.96f)) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 28.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = stringResource(R.string.debt_history_title, debtor.name),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = debtor.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    if (debtor.dateDue > 0L) {
+                        Text(
+                            text = Formatters.dueDateCompact(debtor.dateDue),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                if (debtor.phone.isNotBlank()) {
+                    IconButton(onClick = { DebtContactActions.dialPhone(context, debtor.phone) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Call,
+                            contentDescription = stringResource(R.string.debt_action_call),
+                        )
+                    }
+                }
+            }
             Text(
                 text = stringResource(R.string.debt_history_balance),
                 style = MaterialTheme.typography.bodyMedium,
@@ -134,11 +166,25 @@ fun DebtHistorySheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
-                entries.forEach { entry ->
+                var previousMonth = ""
+                entries.sortedByDescending { it.at }.forEach { entry ->
+                    val month = Formatters.monthYear(entry.at)
+                    if (month != previousMonth) {
+                        Text(
+                            text = month,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        previousMonth = month
+                    }
                     HistoryRow(entry = entry, currency = debtor.currency, hideAmounts = hideAmounts)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
             }
+        }
+            Column(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            ) {
             AnimatedContent(
                 targetState = form,
                 transitionSpec = {
@@ -178,6 +224,7 @@ fun DebtHistorySheet(
                     )
                 }
             }
+            }
         }
     }
 }
@@ -190,6 +237,7 @@ private fun HistoryRow(
 ) {
     val took = entry.kind == DebtHistoryKind.Advance
     val scheme = MaterialTheme.colorScheme
+    val extra = LocalMoneyExtraColors.current
     val formatted = Formatters.currencyFromCents(entry.amountCents, currency, hide = hideAmounts)
     val signed = signedHistoryAmount(formatted, took = took, hidden = hideAmounts)
     val title = stringResource(if (took) R.string.debt_history_took else R.string.debt_history_returned)
@@ -197,8 +245,8 @@ private fun HistoryRow(
         if (took) R.string.debt_history_advance else R.string.debt_history_payment,
         signed,
     )
-    val accent = if (took) scheme.error else scheme.primary
-    val container = if (took) scheme.errorContainer else scheme.primaryContainer
+    val accent = if (took) extra.negative else extra.positive
+    val container = if (took) extra.negativeContainer else extra.positiveContainer
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(
             modifier = Modifier
@@ -270,7 +318,7 @@ private fun HistoryActions(
             onClick = onTook,
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = 48.dp),
+                .heightIn(min = 56.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = tookContainer,
                 contentColor = tookContent,
@@ -283,7 +331,7 @@ private fun HistoryActions(
             onClick = onReturned,
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = 48.dp),
+                .heightIn(min = 56.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = scheme.primary,
                 contentColor = scheme.onPrimary,
@@ -307,16 +355,13 @@ private fun AdvanceForm(
     val positiveError = stringResource(R.string.error_amount_positive)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        MoneyTextField(
-            value = amountText,
-            onValueChange = {
-                amountText = it
-                amountError = null
-            },
-            label = stringResource(R.string.debt_advance_amount_label),
-            isError = amountError != null,
-            supportingText = amountError,
+        Text(
+            text = if (amountText.isBlank()) "0" else amountText,
+            style = MoneyTypeScale.amountInput,
+            color = if (amountError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
         )
+        amountError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        AmountKeypad(onKey = { amountText = applyAmountKey(amountText, it); amountError = null })
         DatePickerField(
             label = stringResource(R.string.debt_advance_date_label),
             selectedDateMillis = givenAt,
@@ -362,32 +407,35 @@ private fun PaymentForm(
     val exceedsError = stringResource(R.string.error_payment_exceeds_remaining)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        MoneyTextField(
-            value = amountText,
-            onValueChange = {
-                amountText = it
-                amountError = null
+        Text(
+            text = if (amountText.isBlank()) "0" else amountText,
+            style = MoneyTypeScale.amountInput,
+            color = if (amountError != null) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onSurface
             },
-            label = stringResource(R.string.debt_advance_amount_label),
-            isError = amountError != null,
-            supportingText = amountError,
         )
-        TextButton(
+        amountError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        FilterChip(
+            selected = false,
             onClick = {
                 amountText = formatAmountInput(remainingCents)
                 amountError = null
             },
-            modifier = Modifier.heightIn(min = 48.dp),
-        ) {
-            Text(stringResource(R.string.debt_history_pay_all))
-        }
+            label = { Text(stringResource(R.string.debt_history_pay_all)) },
+        )
+        AmountKeypad(onKey = { key ->
+            amountText = applyAmountKey(amountText, key)
+            amountError = null
+        })
         DatePickerField(
             label = stringResource(R.string.debt_advance_date_label),
             selectedDateMillis = paidAt,
             onDateSelected = { paidAt = it },
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = onCancel, modifier = Modifier.heightIn(min = 48.dp)) {
+            TextButton(onClick = onCancel, modifier = Modifier.heightIn(min = 56.dp)) {
                 Text(stringResource(R.string.action_cancel))
             }
             Button(
@@ -399,7 +447,7 @@ private fun PaymentForm(
                         else -> onSave(cents, paidAt)
                     }
                 },
-                modifier = Modifier.heightIn(min = 48.dp),
+                modifier = Modifier.heightIn(min = 56.dp),
             ) {
                 Text(stringResource(R.string.action_save))
             }

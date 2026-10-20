@@ -26,4 +26,5 @@ enum class HomeTab(val titleRes: Int) {
     Goals(R.string.section_goals),
     Debts(R.string.tab_debts),
     Notes(R.string.tab_notes),
+    More(R.string.nav_more),
 }

@@ -4,7 +4,7 @@
     <string name="debt_history_balance">Остаток</string>
     <string name="debt_history_progress">%1$s из %2$s</string>
     <string name="home_screen_title">Финансы</string>
-    <string name="app_name">Финансовый Контроль</string>
+    <string name="app_name">Долги</string>
 
     <!-- App language -->
     <string name="app_language_menu">Язык интерфейса</string>
@@ -102,6 +102,10 @@
     <string name="debt_filter_active">Активные</string>
     <string name="debt_filter_overdue">Просроченные</string>
     <string name="debt_filter_paid">Погашенные</string>
+    <string name="debt_chip_today">Сегодня</string>
+    <string name="debt_chip_due">Срок</string>
+    <string name="debt_total_label">Всего %1$s</string>
+    <string name="debt_filter_overdue_count">Просрочено · %1$d</string>
     <string name="debt_add_title_owes_me">Новый долг: Мне должны</string>
     <string name="debt_add_title_i_owe">Новый долг: Я должен</string>
     <string name="debt_creditor_name_label">Имя</string>
@@ -240,7 +244,6 @@
     <string name="welcome_title">Добро пожаловать!</string>
 
     <!-- Goals -->
-    <string name="goals_section_title">Мои цели (%1$d)</string>
     <string name="goal_add_title">Новая цель</string>
     <string name="goal_edit_title">Изменить — %1$s</string>
     <string name="goal_name_label">Цель</string>
@@ -374,7 +377,7 @@
     <string name="backup_message_auto_enabled">Автоматическое копирование включено.</string>
     <string name="backup_message_auto_disabled">Автоматическое копирование выключено.</string>
     <string name="backup_delete_local_title">Опасная зона</string>
-    <string name="backup_delete_local_hint">Удаляет все финансовые данные, локальные настройки, фото цели, расписания и сохранённый пароль резервной копии на этом устройстве. Копии на Google Диске останутся.</string>
+    <string name="backup_delete_local_hint">Удаляет данные на этом устройстве. Копии на Диске останутся.</string>
     <string name="backup_delete_local_action">Удалить все локальные данные</string>
     <string name="backup_delete_local_dialog_title">Удалить все локальные данные?</string>
     <string name="backup_delete_local_dialog_message">Это действие нельзя отменить. Резервные копии на Google Диске не будут удалены. Для подтверждения введите DELETE.</string>
@@ -561,7 +564,7 @@
     <string name="calendar_use_debts_calendar">Использовать календарь «Долги»</string>
     <string name="calendar_create_debts_calendar">Создать календарь «Долги»</string>
     <string name="calendar_request_permission">Разрешить доступ к календарю</string>
-    <string name="calendar_permission_hint">Без доступа к календарю мы не сможем напоминать о сроках долгов. Вы можете включить доступ в настройках телефона.</string>
+    <string name="calendar_permission_hint">Нет доступа к календарю. Включите его в настройках.</string>
     <string name="calendar_sync_failed">Не удалось добавить событие в календарь. Проверьте настройки.</string>
     <string name="calendar_removed">Событие удалено из календаря</string>
     <string name="calendar_action_add">Добавить в календарь</string>

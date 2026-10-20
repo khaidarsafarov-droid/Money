@@ -99,7 +99,9 @@ import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.debtors.DebtListViewModel
 import com.example.money.ui.debtors.DebtTab
+import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.DebtorFilter
+import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.goal.GoalViewModel
 import com.example.money.ui.notes.NoteViewModel
@@ -281,6 +283,7 @@ fun HomeScreen(
                 HomeTab.Goals -> HomeSection.Goals
                 HomeTab.Debts -> HomeSection.Debts
                 HomeTab.Notes -> HomeSection.Notes
+                HomeTab.More -> HomeSection.Notes
             },
         )
     }
@@ -342,6 +345,7 @@ fun HomeScreen(
             HomeTab.Goals -> HomeSection.Goals
             HomeTab.Debts -> HomeSection.Debts
             HomeTab.Notes -> HomeSection.Notes
+            HomeTab.More -> HomeSection.Notes
         }
         debtListViewModel.setDebtTab(launchConfig.initialDebtTab)
 
@@ -354,9 +358,16 @@ fun HomeScreen(
         val targetDebtorId = launchConfig.openDebtPaymentForDebtorId
             ?: launchConfig.highlightDebtorId
         if (targetDebtorId != null) {
-            debtListViewModel.setFilter(DebtorFilter.ALL)
             val debtor = debtorsViewModel.getDebtorById(targetDebtorId)
             if (debtor != null) {
+                debtListViewModel.setFilter(
+                    when {
+                        debtor.isPaid -> DebtorFilter.PAID
+                        debtor.dueStatus() == DebtDueStatus.OVERDUE ->
+                            DebtorFilter.OVERDUE
+                        else -> DebtorFilter.ACTIVE
+                    },
+                )
                 debtListViewModel.setDebtTab(DebtTab.forDebtType(debtor.debtType))
                 highlightedDebtorId = targetDebtorId
                 tabletSection = HomeSection.Debts
@@ -482,37 +493,44 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    SingleChoiceSegmentedButtonRow {
-                        AppMode.entries.forEachIndexed { index, mode ->
-                            SegmentedButton(
-                                selected = appMode == mode,
-                                onClick = {
-                                    scope.launch {
-                                        app.preferencesStore.setAppMode(mode)
-                                        app.rescheduleDebtReminders()
-                                    }
-                                },
-                                shape = SegmentedButtonDefaults.itemShape(index, AppMode.entries.size),
-                                colors = SegmentedButtonDefaults.colors(
-                                    activeContainerColor = modeAccent,
-                                    activeContentColor = modeOnAccent,
-                                ),
-                                label = {
-                                    Text(
-                                        stringResource(
-                                            if (mode == AppMode.PROFESSIONAL) {
-                                                R.string.mode_professional_short
-                                            } else {
-                                                R.string.mode_personal_short
-                                            },
-                                        ),
-                                    )
-                                },
-                            )
+                    if (isTablet) {
+                        SingleChoiceSegmentedButtonRow {
+                            AppMode.entries.forEachIndexed { index, mode ->
+                                SegmentedButton(
+                                    selected = appMode == mode,
+                                    onClick = {
+                                        scope.launch {
+                                            app.preferencesStore.setAppMode(mode)
+                                            app.rescheduleDebtReminders()
+                                        }
+                                    },
+                                    shape = SegmentedButtonDefaults.itemShape(index, AppMode.entries.size),
+                                    colors = SegmentedButtonDefaults.colors(
+                                        activeContainerColor = modeAccent,
+                                        activeContentColor = modeOnAccent,
+                                    ),
+                                    label = {
+                                        Text(
+                                            stringResource(
+                                                if (mode == AppMode.PROFESSIONAL) {
+                                                    R.string.mode_professional_short
+                                                } else {
+                                                    R.string.mode_personal_short
+                                                },
+                                            ),
+                                        )
+                                    },
+                                )
+                            }
                         }
-                    }
-                    if (!isTablet) {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                    } else {
+                        IconButton(
+                            onClick = {
+                                val more = HomeTab.More.ordinal
+                                if (selectedTab != more) vibrate(context, HapticStrength.MEDIUM)
+                                selectedTab = more
+                            },
+                        ) {
                             Icon(
                                 Icons.Outlined.Settings,
                                 contentDescription = stringResource(R.string.settings_open),
@@ -638,6 +656,7 @@ fun HomeScreen(
                 autopilotSettings = autopilotSettings,
                 showCheckIn = showCheckIn,
                 onDismissCheckIn = debtorsViewModel::dismissCheckIn,
+                onOpenCheckIn = debtorsViewModel::openCheckIn,
                 onOpenAdvisor = { showAdvisorSheet = true },
                 onApplyAutopilot = {
                     scope.launch {
@@ -813,6 +832,7 @@ fun HomeScreen(
                 onDismissNotificationPrompt = onDismissNotificationPrompt,
                 showCheckIn = showCheckIn,
                 onDismissCheckIn = debtorsViewModel::dismissCheckIn,
+                onOpenCheckIn = debtorsViewModel::openCheckIn,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
                 onOpenAdvisor = { showAdvisorSheet = true },
@@ -837,6 +857,12 @@ fun HomeScreen(
                 scope = scope,
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
                 appMode = appMode,
+                onAppModeChange = { mode ->
+                    scope.launch {
+                        app.preferencesStore.setAppMode(mode)
+                        app.rescheduleDebtReminders()
+                    }
+                },
                 onOpenClients = onOpenClients,
             )
         }

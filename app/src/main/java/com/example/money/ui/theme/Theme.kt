@@ -5,6 +5,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+
 private val MoneyShapes = Shapes(
     extraSmall = RoundedCornerShape(MoneyRadius.xs),
     small = RoundedCornerShape(MoneyRadius.sm),
@@ -18,10 +20,15 @@ fun MoneyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
+    val scheme = if (darkTheme) DarkColorScheme else LightColorScheme
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        colorScheme = scheme,
         typography = Typography,
         shapes = MoneyShapes,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(
+            LocalMoneyExtraColors provides scheme.toMoneyExtraColors(),
+            content = content,
+        )
+    }
 }

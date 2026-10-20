@@ -12,6 +12,7 @@ class PagePlusTest {
         assertEquals(PagePlusAction.AddNote, plusActionFor(HomeTab.Notes))
         assertEquals(PagePlusAction.AddDebt, plusActionFor(HomeTab.Debts))
         assertEquals(PagePlusAction.AddGoal, plusActionFor(HomeTab.Goals))
+        assertEquals(PagePlusAction.AddAnything, plusActionFor(HomeTab.More))
 
         assertEquals(PagePlusAction.AddAnything, plusActionFor(HomeSection.Home))
         assertEquals(PagePlusAction.AddNote, plusActionFor(HomeSection.Notes))

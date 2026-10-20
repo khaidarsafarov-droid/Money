@@ -227,6 +227,8 @@ internal fun PhoneHomeLayout(
     scope: kotlinx.coroutines.CoroutineScope,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     appMode: AppMode = AppMode.PERSONAL,
+    onAppModeChange: (AppMode) -> Unit = {},
+    onOpenCheckIn: () -> Unit = {},
     onOpenClients: () -> Unit = {},
 ) {
     val contactContext = LocalContext.current
@@ -235,157 +237,27 @@ internal fun PhoneHomeLayout(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = false,
         drawerContent = {
             ModalDrawerSheet {
-                LazyColumn(
-                    modifier = Modifier.padding(vertical = MoneySpacing.lg),
-                    contentPadding = PaddingValues(bottom = MoneySpacing.xl),
-                ) {
-                    if (appMode == AppMode.PROFESSIONAL) {
-                        item {
-                            SettingsDrawerItem(
-                                label = stringResource(R.string.clients_title),
-                                icon = Icons.Outlined.Work,
-                                onClick = {
-                                    onOpenClients()
-                                    scope.launch { drawerState.close() }
-                                },
-                            )
-                        }
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.advisor_open),
-                            icon = Icons.Outlined.Psychology,
-                            onClick = {
-                                onOpenAdvisor()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        DrawerGroupLabel(stringResource(R.string.drawer_group_data))
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.section_goals),
-                            icon = Icons.Outlined.Flag,
-                            onClick = {
-                                onTabSelected(HomeTab.Goals.ordinal)
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.backup_settings_title),
-                            icon = Icons.Outlined.CloudUpload,
-                            onClick = {
-                                onOpenBackupSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        DrawerGroupLabel(stringResource(R.string.drawer_group_tools))
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.income_ideas_title),
-                            icon = Icons.Outlined.Lightbulb,
-                            onClick = {
-                                onOpenIncomeIdeas()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.voice_settings_menu),
-                            icon = Icons.Outlined.Mic,
-                            onClick = {
-                                onOpenVoiceSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        DrawerGroupLabel(stringResource(R.string.drawer_group_autopilot))
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.autopilot_settings_title),
-                            icon = Icons.Outlined.AutoMode,
-                            onClick = {
-                                onOpenAutopilotSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        DrawerGroupLabel(stringResource(R.string.drawer_group_settings))
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.currency_settings_title),
-                            icon = Icons.Outlined.Payments,
-                            onClick = {
-                                onOpenCurrency()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.app_language_menu),
-                            icon = Icons.Outlined.Translate,
-                            onClick = {
-                                onOpenAppLanguage()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.sync_settings_title),
-                            icon = Icons.Outlined.Sync,
-                            onClick = {
-                                onOpenSyncSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.privacy_settings_title),
-                            icon = Icons.Outlined.Lock,
-                            onClick = {
-                                onOpenPrivacySettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.debt_notification_settings_title),
-                            icon = Icons.Outlined.Notifications,
-                            onClick = {
-                                onOpenDebtNotificationSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                    item {
-                        SettingsDrawerItem(
-                            label = stringResource(R.string.calendar_settings_title),
-                            icon = Icons.Outlined.CalendarMonth,
-                            onClick = {
-                                onOpenCalendarSettings()
-                                scope.launch { drawerState.close() }
-                            },
-                        )
-                    }
-                }
+                MorePage(
+                    appMode = appMode,
+                    onAppModeChange = onAppModeChange,
+                    onOpenNotes = { onTabSelected(HomeTab.Notes.ordinal) },
+                    onOpenClients = onOpenClients,
+                    onOpenAdvisor = onOpenAdvisor,
+                    onOpenBackupSettings = onOpenBackupSettings,
+                    onOpenIncomeIdeas = onOpenIncomeIdeas,
+                    onOpenVoiceSettings = onOpenVoiceSettings,
+                    onOpenAutopilotSettings = onOpenAutopilotSettings,
+                    onOpenCurrency = onOpenCurrency,
+                    onOpenAppLanguage = onOpenAppLanguage,
+                    onOpenSyncSettings = onOpenSyncSettings,
+                    onOpenPrivacySettings = onOpenPrivacySettings,
+                    onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
+                    onOpenCalendarSettings = onOpenCalendarSettings,
+                    onAfterClick = { scope.launch { drawerState.close() } },
+                )
             }
         },
     ) {
@@ -397,9 +269,9 @@ internal fun PhoneHomeLayout(
             bottomBar = {
                 val dockTab = when (HomeTab.entries[selectedTab]) {
                     HomeTab.Home -> PhoneDockTab.Home
-                    HomeTab.Goals -> PhoneDockTab.Goals
                     HomeTab.Debts -> PhoneDockTab.Debts
-                    HomeTab.Notes -> PhoneDockTab.Notes
+                    HomeTab.Goals -> PhoneDockTab.Goals
+                    HomeTab.Notes, HomeTab.More -> PhoneDockTab.More
                 }
                 PhoneDockBar(
                     selected = dockTab,
@@ -407,9 +279,9 @@ internal fun PhoneHomeLayout(
                         onTabSelected(HomeTab.Home.ordinal)
                         scope.launch { homeListState.animateScrollToItem(0) }
                     },
-                    onGoals = { onTabSelected(HomeTab.Goals.ordinal) },
                     onDebts = { onTabSelected(HomeTab.Debts.ordinal) },
-                    onNotes = { onTabSelected(HomeTab.Notes.ordinal) },
+                    onGoals = { onTabSelected(HomeTab.Goals.ordinal) },
+                    onMore = { onTabSelected(HomeTab.More.ordinal) },
                 )
             },
         ) { innerPadding ->
@@ -445,7 +317,29 @@ internal fun PhoneHomeLayout(
                 label = "phoneHomeTab",
             ) { tabIndex ->
             val page = HomeTab.entries[tabIndex]
-            if (page == HomeTab.Notes) {
+            if (page == HomeTab.More) {
+                MorePage(
+                    appMode = appMode,
+                    onAppModeChange = onAppModeChange,
+                    onOpenNotes = { onTabSelected(HomeTab.Notes.ordinal) },
+                    onOpenClients = onOpenClients,
+                    onOpenAdvisor = onOpenAdvisor,
+                    onOpenBackupSettings = onOpenBackupSettings,
+                    onOpenIncomeIdeas = onOpenIncomeIdeas,
+                    onOpenVoiceSettings = onOpenVoiceSettings,
+                    onOpenAutopilotSettings = onOpenAutopilotSettings,
+                    onOpenCurrency = onOpenCurrency,
+                    onOpenAppLanguage = onOpenAppLanguage,
+                    onOpenSyncSettings = onOpenSyncSettings,
+                    onOpenPrivacySettings = onOpenPrivacySettings,
+                    onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
+                    onOpenCalendarSettings = onOpenCalendarSettings,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .consumeWindowInsets(innerPadding),
+                )
+            } else if (page == HomeTab.Notes) {
                 NotesPage(
                     notes = notes,
                     lines = noteLines,
@@ -475,7 +369,7 @@ internal fun PhoneHomeLayout(
                     HomeTab.Home -> homeListState
                     HomeTab.Goals -> goalsListState
                     HomeTab.Debts -> listState
-                    HomeTab.Notes -> listState
+                    HomeTab.Notes, HomeTab.More -> listState
                 },
                 modifier = Modifier
                     .fillMaxSize()
@@ -541,7 +435,7 @@ internal fun PhoneHomeLayout(
                 if (page == HomeTab.Goals) {
                 item {
                     Text(
-                        text = stringResource(R.string.goals_section_title, goals.size),
+                        text = stringResource(R.string.section_goals),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = MoneySpacing.lg),
@@ -627,6 +521,7 @@ internal fun PhoneHomeLayout(
                         onDebtSearchQueryChange = onDebtSearchQueryChange,
                         showCheckIn = showCheckIn,
                         onDismissCheckIn = onDismissCheckIn,
+                        onOpenCheckIn = onOpenCheckIn,
                         privacySettings = privacySettings,
                         autopilotSettings = autopilotSettings,
                         onApplyAutopilot = onApplyAutopilot,
@@ -686,7 +581,7 @@ internal fun NotificationPermissionBanner(
 }
 
 @Composable
-private fun DrawerGroupLabel(text: String) {
+internal fun DrawerGroupLabel(text: String) {
     Text(
         text = text,
         style = moneySubheadingStyle(),

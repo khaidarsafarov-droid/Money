@@ -26,7 +26,7 @@ class DebtListViewModel(
     private val _debtTab = MutableStateFlow(DebtTab.OwesMe)
     val debtTab: StateFlow<DebtTab> = _debtTab.asStateFlow()
 
-    private val _filter = MutableStateFlow(DebtorFilter.ALL)
+    private val _filter = MutableStateFlow(DebtorFilter.ACTIVE)
     val filter: StateFlow<DebtorFilter> = _filter.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")

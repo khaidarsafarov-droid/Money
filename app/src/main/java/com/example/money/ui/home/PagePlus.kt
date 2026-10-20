@@ -15,6 +15,7 @@ internal fun plusActionFor(tab: HomeTab): PagePlusAction = when (tab) {
     HomeTab.Notes -> PagePlusAction.AddNote
     HomeTab.Debts -> PagePlusAction.AddDebt
     HomeTab.Goals -> PagePlusAction.AddGoal
+    HomeTab.More -> PagePlusAction.AddAnything
 }
 
 internal fun plusActionFor(section: HomeSection): PagePlusAction = when (section) {
