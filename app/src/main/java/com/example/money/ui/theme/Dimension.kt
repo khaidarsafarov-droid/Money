@@ -14,4 +14,13 @@ object MoneySpacing {
     val sectionGap = 24.dp
     val listItemGap = 12.dp
     val minTouchTarget = 48.dp
+    val listRow = 64.dp
+}
+
+object MoneyRadius {
+    val xs = 8.dp
+    val sm = 12.dp
+    val md = 16.dp
+    val lg = 24.dp
+    val xl = 28.dp
 }

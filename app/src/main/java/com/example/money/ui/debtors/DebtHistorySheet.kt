@@ -1,18 +1,34 @@
 package com.example.money.ui.debtors
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.NorthEast
+import androidx.compose.material.icons.rounded.SouthWest
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -24,10 +40,18 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.util.systemMotionEnabled
+import com.example.money.ui.util.vibrateLight
 import com.example.money.R
 import com.example.money.data.sync.DebtAdvanceIds
 import com.example.money.domain.model.DebtAdvance
@@ -52,6 +76,15 @@ fun DebtHistorySheet(
         historyEntries(debtor)
     }
 
+    val context = LocalContext.current
+    val motionEnabled = systemMotionEnabled(context)
+    val returned = (debtor.targetAmountCents - debtor.remainingAmountCents).coerceAtLeast(0L)
+    val progress = if (debtor.targetAmountCents <= 0L) {
+        0f
+    } else {
+        returned.toFloat() / debtor.targetAmountCents.toFloat()
+    }
+
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -67,12 +100,32 @@ fun DebtHistorySheet(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = stringResource(
-                    R.string.debt_history_remaining,
-                    Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency, hide = hideAmounts),
+                text = stringResource(R.string.debt_history_balance),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = Formatters.currencyFromCents(
+                    debtor.remainingAmountCents,
+                    debtor.currency,
+                    hide = hideAmounts,
                 ),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.displaySmall,
+            )
+            LinearProgressIndicator(
+                progress = { progress.coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
+            Text(
+                text = stringResource(
+                    R.string.debt_history_progress,
+                    Formatters.currencyFromCents(returned, debtor.currency, hide = hideAmounts),
+                    Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency, hide = hideAmounts),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (entries.isEmpty()) {
                 Text(
@@ -86,26 +139,44 @@ fun DebtHistorySheet(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
             }
-            when (form) {
-                HistoryForm.Advance -> AdvanceForm(
-                    onCancel = { form = HistoryForm.None },
-                    onSave = { amountCents, givenAt, note ->
-                        onAddAdvance(amountCents, givenAt, note)
-                        form = HistoryForm.None
-                    },
-                )
-                HistoryForm.Payment -> PaymentForm(
-                    remainingCents = debtor.remainingAmountCents,
-                    onCancel = { form = HistoryForm.None },
-                    onSave = { amountCents, paidAt ->
-                        onAddPayment(amountCents, paidAt)
-                        form = HistoryForm.None
-                    },
-                )
-                HistoryForm.None -> HistoryActions(
-                    onTook = { form = HistoryForm.Advance },
-                    onReturned = { form = HistoryForm.Payment },
-                )
+            AnimatedContent(
+                targetState = form,
+                transitionSpec = {
+                    if (!motionEnabled) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        fadeIn(
+                            tween(MoneyMotion.fadeIn, easing = MoneyMotion.emphasizedDecelerate),
+                        ) togetherWith fadeOut(
+                            tween(MoneyMotion.fadeOut, easing = MoneyMotion.emphasizedAccelerate),
+                        )
+                    }
+                },
+                label = "debtHistoryForm",
+            ) { current ->
+                when (current) {
+                    HistoryForm.Advance -> AdvanceForm(
+                        onCancel = { form = HistoryForm.None },
+                        onSave = { amountCents, givenAt, note ->
+                            vibrateLight(context)
+                            onAddAdvance(amountCents, givenAt, note)
+                            form = HistoryForm.None
+                        },
+                    )
+                    HistoryForm.Payment -> PaymentForm(
+                        remainingCents = debtor.remainingAmountCents,
+                        onCancel = { form = HistoryForm.None },
+                        onSave = { amountCents, paidAt ->
+                            vibrateLight(context)
+                            onAddPayment(amountCents, paidAt)
+                            form = HistoryForm.None
+                        },
+                    )
+                    HistoryForm.None -> HistoryActions(
+                        onTook = { form = HistoryForm.Advance },
+                        onReturned = { form = HistoryForm.Payment },
+                    )
+                }
             }
         }
     }
@@ -117,28 +188,67 @@ private fun HistoryRow(
     currency: String,
     hideAmounts: Boolean,
 ) {
-    val amount = Formatters.currencyFromCents(entry.amountCents, currency, hide = hideAmounts)
-    val label = when (entry.kind) {
-        DebtHistoryKind.Advance -> stringResource(R.string.debt_history_advance, amount)
-        DebtHistoryKind.Payment -> stringResource(R.string.debt_history_payment, amount)
-    }
+    val took = entry.kind == DebtHistoryKind.Advance
+    val scheme = MaterialTheme.colorScheme
+    val formatted = Formatters.currencyFromCents(entry.amountCents, currency, hide = hideAmounts)
+    val signed = signedHistoryAmount(formatted, took = took, hidden = hideAmounts)
+    val title = stringResource(if (took) R.string.debt_history_took else R.string.debt_history_returned)
+    val spoken = stringResource(
+        if (took) R.string.debt_history_advance else R.string.debt_history_payment,
+        signed,
+    )
+    val accent = if (took) scheme.error else scheme.primary
+    val container = if (took) scheme.errorContainer else scheme.primaryContainer
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics(mergeDescendants = true) { contentDescription = spoken },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(container),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (took) Icons.Rounded.SouthWest else Icons.Rounded.NorthEast,
+                    contentDescription = null,
+                    tint = accent,
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = Formatters.date(entry.at),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant,
+                )
+            }
             Text(
-                text = Formatters.date(entry.at),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = signed,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = accent,
             )
         }
         if (entry.note.isNotBlank()) {
             Text(
                 text = entry.note,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 52.dp),
             )
         }
     }
+}
+
+internal fun signedHistoryAmount(formatted: String, took: Boolean, hidden: Boolean): String {
+    if (hidden) return formatted
+    return if (took) "+$formatted" else "-$formatted"
 }
 
 private enum class HistoryForm { None, Advance, Payment }
@@ -166,6 +276,7 @@ private fun HistoryActions(
                 contentColor = tookContent,
             ),
         ) {
+            Icon(Icons.Rounded.SouthWest, contentDescription = null)
             Text(stringResource(R.string.debt_history_took))
         }
         Button(
@@ -178,6 +289,7 @@ private fun HistoryActions(
                 contentColor = scheme.onPrimary,
             ),
         ) {
+            Icon(Icons.Rounded.NorthEast, contentDescription = null)
             Text(stringResource(R.string.debt_history_returned))
         }
     }

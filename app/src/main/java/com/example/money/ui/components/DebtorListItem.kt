@@ -7,19 +7,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -38,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,6 +48,7 @@ import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.util.Formatters
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun DebtorListItem(
     debtor: Debtor,
@@ -87,7 +85,8 @@ fun DebtorListItem(
                 .fillMaxWidth()
                 .background(rowBackground)
                 .clickable(onClick = onOpen)
-                .padding(horizontal = MoneySpacing.sm, vertical = 6.dp),
+                .heightIn(min = MoneySpacing.listRow)
+                .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
@@ -130,143 +129,40 @@ fun DebtorListItem(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
                 ) {
-                    if (!debtor.isPaid) {
+                    if (onCall != null) {
                         DropdownMenuItem(
-                            text = {
-                                Text(
-                                    stringResource(
-                                        if (debtor.debtType == DebtType.CREDITOR) {
-                                            R.string.action_add_payment
-                                        } else {
-                                            R.string.action_make_payment
-                                        },
-                                    ),
-                                )
-                            },
+                            text = { Text(stringResource(R.string.debt_action_call)) },
                             onClick = {
                                 showMenu = false
-                                onAddPayment()
+                                onCall()
                             },
                             leadingIcon = {
-                                Icon(Icons.Default.Payments, contentDescription = null)
-                            },
-                        )
-                        if (onCall != null) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.debt_action_call)) },
-                                onClick = {
-                                    showMenu = false
-                                    onCall()
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Outlined.Call, contentDescription = null)
-                                },
-                            )
-                        }
-                        if (onWhatsApp != null) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.debt_action_whatsapp)) },
-                                onClick = {
-                                    showMenu = false
-                                    onWhatsApp()
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.AutoMirrored.Outlined.Chat, contentDescription = null)
-                                },
-                            )
-                        }
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_edit)) },
-                            onClick = {
-                                showMenu = false
-                                onEdit()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Outlined.Edit, contentDescription = null)
-                            },
-                        )
-                        if (showRemind) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.action_remind)) },
-                                onClick = {
-                                    showMenu = false
-                                    onRemind()
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Outlined.Notifications, contentDescription = null)
-                                },
-                            )
-                        }
-                        if (onViewContactHistory != null) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.contact_history_action)) },
-                                onClick = {
-                                    showMenu = false
-                                    onViewContactHistory()
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Outlined.History, contentDescription = null)
-                                },
-                            )
-                        }
-                        if (onCalendar != null) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        stringResource(
-                                            if (calendarSynced) {
-                                                R.string.calendar_action_remove
-                                            } else {
-                                                R.string.calendar_action_add
-                                            },
-                                        ),
-                                    )
-                                },
-                                onClick = {
-                                    showMenu = false
-                                    onCalendar()
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
-                                },
-                            )
-                        }
-                        if (onAccelerate != null) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.debt_accelerate)) },
-                                onClick = {
-                                    showMenu = false
-                                    onAccelerate()
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.AutoMirrored.Outlined.TrendingUp, contentDescription = null)
-                                },
-                            )
-                        }
-                        if (onMarkPaid != null) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.action_mark_paid)) },
-                                onClick = {
-                                    showMenu = false
-                                    onMarkPaid()
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Filled.Payments, contentDescription = null)
-                                },
-                            )
-                        }
-                    } else {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_edit)) },
-                            onClick = {
-                                showMenu = false
-                                onEdit()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Outlined.Edit, contentDescription = null)
+                                Icon(Icons.Outlined.Call, contentDescription = null)
                             },
                         )
                     }
+                    if (showRemind) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_remind)) },
+                            onClick = {
+                                showMenu = false
+                                onRemind()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Notifications, contentDescription = null)
+                            },
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_edit)) },
+                        onClick = {
+                            showMenu = false
+                            onEdit()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.Edit, contentDescription = null)
+                        },
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_delete)) },
                         onClick = {
@@ -281,28 +177,29 @@ fun DebtorListItem(
             }
         }
         HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+            thickness = 1.dp,
         )
     }
 }
 
 @Composable
 private fun DebtorAvatar(name: String, overdue: Boolean) {
-    val avatarColor = avatarColorForName(name)
+    val scheme = MaterialTheme.colorScheme
     Box(contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(40.dp)
                 .clip(CircleShape)
-                .background(avatarColor),
+                .background(scheme.surfaceContainerHigh)
+                .clearAndSetSemantics { },
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = name.initials(),
-                color = Color.White,
+                color = scheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
             )
         }
         if (overdue) {
@@ -311,7 +208,7 @@ private fun DebtorAvatar(name: String, overdue: Boolean) {
                     .align(Alignment.TopEnd)
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.error),
+                    .background(scheme.error),
             )
         }
     }
@@ -360,15 +257,3 @@ private fun DebtDueStatusLabel(status: DebtDueStatus, dateDue: Long) {
     }
 }
 
-private fun avatarColorForName(name: String): Color {
-    val palette = listOf(
-        Color(0xFF8D6E63),
-        Color(0xFF6D8B74),
-        Color(0xFF7B6FA6),
-        Color(0xFF5C7EAE),
-        Color(0xFFB07D62),
-        Color(0xFF9E7C5C),
-    )
-    val index = kotlin.math.abs(name.hashCode()) % palette.size
-    return palette[index]
-}

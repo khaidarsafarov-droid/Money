@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="home_debt_balance">Debt balance</string>
+    <string name="home_upcoming">Upcoming</string>
+    <string name="debt_history_balance">Balance</string>
+    <string name="debt_history_progress">%1$s of %2$s</string>
     <string name="home_screen_title">Finance</string>
     <string name="app_name">Financial Control</string>
 
@@ -42,14 +46,9 @@
     <!-- Widget -->
     <string name="widget_goal_title">My finances</string>
     <string name="widget_goal_description">Debts and goals</string>
-    <string name="widget_score_chip_debts">Debts · %1$d%%</string>
-    <string name="widget_score_chip_goals">Goals · %1$d%%</string>
-    <string name="widget_preview_score">Goals · 33%</string>
-    <string name="widget_preview_overdue">1 overdue</string>
+    <string name="widget_preview_score">62%</string>
     <string name="widget_preview_owes">$22,115.00</string>
     <string name="widget_preview_i_owe">$0.00</string>
-    <string name="widget_preview_saved">$33,000.00</string>
-    <string name="widget_preview_long_amount">$122,115.00</string>
     <string name="operation_pending_suffix"> · Pending</string>
     <string name="calendar_prev_month">Previous month</string>
     <string name="calendar_next_month">Next month</string>
@@ -63,8 +62,6 @@
     <string name="calendar_day_with_debts">Day %1$d, has debts</string>
     <string name="calendar_has_debt_mark">due</string>
     <string name="calendar_day_empty_cd">Day %1$d</string>
-    <string name="widget_pending_badge">%1$d pending</string>
-    <string name="widget_overdue_debts">%1$d overdue</string>
 
     <string name="tab_debts">Debts</string>
     <string name="nav_home">Home</string>
@@ -92,10 +89,6 @@
     <string name="note_edit_line">Edit</string>
     <string name="currency_settings_title">Currency</string>
     <string name="currency_search">Search</string>
-    <string name="widget_goals_debts_title">Goals and debts</string>
-    <string name="home_only_goals_debts">Home shows only goals and debts</string>
-    <string name="home_score_title">Progress</string>
-    <string name="home_score_plan">Goals</string>
 
     <!-- P2P sync -->
     <string name="sync_status_offline">Sync: offline</string>
@@ -128,7 +121,6 @@
     <string name="debt_note_label">Note</string>
     <string name="debt_payment_dialog_title">Add payment</string>
     <string name="debt_history_title">History · %1$s</string>
-    <string name="debt_history_remaining">Remaining %1$s</string>
     <string name="debt_history_advance">Borrowed %1$s</string>
     <string name="debt_history_payment">Returned %1$s</string>
     <string name="debt_history_empty">No operations yet</string>
@@ -218,7 +210,6 @@
     <string name="debt_action_whatsapp">WhatsApp</string>
     <string name="debt_whatsapp_default_body">Hi %1$s, this is a reminder about the debt.</string>
     <string name="global_balance_accumulated_label">Saved</string>
-    <string name="home_preview_accumulated">Saved</string>
     <string name="add_sheet_title">Add</string>
     <string name="add_sheet_expense">Expense</string>
     <string name="add_sheet_deposit">Top up</string>
@@ -506,7 +497,6 @@
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_default_name">Friend</string>
     <string name="onboarding_default_goal">Save for an important goal</string>
-    <string name="home_greeting_simple">Hi, %1$s!</string>
     <string name="goal_hub_greeting">%1$s, you are %2$s</string>
     <string name="goal_hub_luck_title_personal">%1$s\'s luck diary</string>
     <string name="goal_hub_challenges_title_personal">%1$s, your challenges</string>

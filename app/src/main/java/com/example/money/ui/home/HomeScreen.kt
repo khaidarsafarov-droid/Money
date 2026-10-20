@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -737,9 +736,6 @@ fun HomeScreen(
                 onDebtSearchQueryChange = debtListViewModel::setSearchQuery,
                 goalMetrics = goalMetrics,
                 debtMetrics = debtMetrics,
-                greetingName = userProfile.resolvedDisplayName(
-                    stringResource(R.string.onboarding_default_name),
-                ),
                 planProgressPercent = goalProgressPercent,
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },

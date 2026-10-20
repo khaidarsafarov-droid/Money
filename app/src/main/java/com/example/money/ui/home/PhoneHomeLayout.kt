@@ -5,16 +5,14 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -91,7 +89,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntOffset
+import com.example.money.ui.theme.MoneyMotion
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -168,7 +166,6 @@ internal fun PhoneHomeLayout(
     onDebtSearchQueryChange: (String) -> Unit,
     goalMetrics: com.example.money.domain.model.DashboardGoalMetrics,
     debtMetrics: com.example.money.domain.model.DashboardDebtMetrics,
-    greetingName: String,
     planProgressPercent: Int,
     highlightedDebtorId: Long?,
     onAddGoal: () -> Unit,
@@ -417,8 +414,6 @@ internal fun PhoneHomeLayout(
             },
         ) { innerPadding ->
             val motionEnabled = systemMotionEnabled(LocalContext.current)
-            val tabSlide = tween<IntOffset>(durationMillis = 250)
-            val tabFade = tween<Float>(durationMillis = 250)
             val layoutDirection = LocalLayoutDirection.current
             val listPadding = PaddingValues(
                 start = innerPadding.calculateStartPadding(layoutDirection),
@@ -433,11 +428,18 @@ internal fun PhoneHomeLayout(
                     if (!motionEnabled) {
                         EnterTransition.None togetherWith ExitTransition.None
                     } else {
-                        val forward = targetState > initialState
-                        val enterOffset: (Int) -> Int = { width -> if (forward) width / 5 else -width / 5 }
-                        val exitOffset: (Int) -> Int = { width -> if (forward) -width / 5 else width / 5 }
-                        (slideInHorizontally(tabSlide, enterOffset) + fadeIn(tabFade)) togetherWith
-                            (slideOutHorizontally(tabSlide, exitOffset) + fadeOut(tabFade))
+                        (
+                            fadeIn(tween(MoneyMotion.fadeIn, easing = MoneyMotion.emphasizedDecelerate)) +
+                                scaleIn(
+                                    animationSpec = tween(
+                                        MoneyMotion.fadeIn,
+                                        easing = MoneyMotion.emphasizedDecelerate,
+                                    ),
+                                    initialScale = 0.92f,
+                                )
+                            ) togetherWith fadeOut(
+                            tween(MoneyMotion.fadeOut, easing = MoneyMotion.emphasizedAccelerate),
+                        )
                     }
                 },
                 label = "phoneHomeTab",
@@ -481,20 +483,6 @@ internal fun PhoneHomeLayout(
                     .imePadding(),
                 contentPadding = listPadding,
             ) {
-                if (page == HomeTab.Home) {
-                item {
-                    Text(
-                        text = stringResource(R.string.home_greeting_simple, greetingName),
-                        modifier = Modifier.padding(
-                            horizontal = MoneySpacing.lg,
-                            vertical = MoneySpacing.sm,
-                        ),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                }
                 if (!notificationsEnabled) {
                     item {
                         NotificationPermissionBanner(
@@ -586,12 +574,19 @@ internal fun PhoneHomeLayout(
                     }
                 } else {
                     items(orderedGoals, key = { "goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
+                        val motion = systemMotionEnabled(LocalContext.current)
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteGoal(goal) },
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.lg,
-                                vertical = MoneySpacing.sm,
-                            ),
+                            modifier = Modifier
+                                .animateItem(
+                                    fadeInSpec = MoneyMotion.spec(motion),
+                                    placementSpec = MoneyMotion.spec(motion),
+                                    fadeOutSpec = MoneyMotion.spec(motion),
+                                )
+                                .padding(
+                                    horizontal = MoneySpacing.lg,
+                                    vertical = MoneySpacing.sm,
+                                ),
                         ) {
                             GoalListItem(
                                 goal = goal,

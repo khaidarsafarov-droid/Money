@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#FFF5FBF7</color>
-    <color name="widget_preview_hero">#FF0B6B59</color>
-    <color name="widget_preview_on_hero">#FFFFFFFF</color>
-    <color name="widget_preview_alert">#FFFFDAD6</color>
-    <color name="widget_preview_mint">#FFA1F2DB</color>
-    <color name="widget_preview_on_mint">#FF005142</color>
-    <color name="widget_preview_peach">#FFFFDAD6</color>
-    <color name="widget_preview_on_peach">#FF93000A</color>
-    <color name="widget_preview_lilac">#FFC6E7FF</color>
-    <color name="widget_preview_on_lilac">#FF294A5F</color>
-    <color name="widget_preview_sand">#FFCDE9DF</color>
-    <color name="widget_preview_on_sand">#FF334B44</color>
+    <color name="widget_background">#FFF6F7F6</color>
+    <color name="widget_preview_hero">#FFFFFFFF</color>
+    <color name="widget_preview_mint">#FFDDF3EC</color>
+    <color name="widget_preview_on_mint">#FF08382E</color>
+    <color name="widget_preview_peach">#FFFBE7E4</color>
+    <color name="widget_preview_on_peach">#FF5C120E</color>
+    <color name="widget_preview_lilac">#FFE4E9E6</color>
+    <color name="widget_preview_on_lilac">#FF111614</color>
+    <color name="widget_preview_sand">#FF0B6E5B</color>
+    <color name="widget_preview_on_sand">#FFFFFFFF</color>
 </resources>

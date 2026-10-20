@@ -21,6 +21,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,10 +39,13 @@ import com.example.money.R
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
+import androidx.compose.ui.platform.LocalContext
+import com.example.money.ui.theme.MoneyMotion
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.theme.moneyDisplayStyle
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.util.systemMotionEnabled
 
 @Composable
 fun GoalListItem(
@@ -59,6 +63,12 @@ fun GoalListItem(
     val transferAction = if (isMoney) onTransfer else null
     val expenseAction = if (isMoney) onExpense else null
     val barFraction = if (isMoney) goal.progressFraction else goal.actionProgressFraction
+    val motionEnabled = systemMotionEnabled(LocalContext.current)
+    val animatedFraction by animateFloatAsState(
+        targetValue = barFraction.coerceIn(0f, 1f),
+        animationSpec = MoneyMotion.spec(motionEnabled, MoneyMotion.long),
+        label = "goalProgress",
+    )
     val barPercent = if (isMoney) goal.progressPercent else goal.actionProgressPercent
     val isDeadlinePassed = goal.deadlineMillis != null &&
         GoalProgress.isDeadlinePassed(goal.deadlineMillis) &&
@@ -259,7 +269,7 @@ fun GoalListItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 LinearProgressIndicator(
-                    progress = { barFraction.coerceIn(0f, 1f) },
+                    progress = { animatedFraction },
                     modifier = Modifier.weight(1f),
                     color = progressColor,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,

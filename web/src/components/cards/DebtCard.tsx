@@ -159,7 +159,7 @@ function DebtHistory({
     })),
     ...payments.map((payment) => ({
       id: payment.id,
-      label: "Вернул",
+      label: "Отдал",
       amount: payment.amount,
       at: payment.paidAt,
       note: "",
