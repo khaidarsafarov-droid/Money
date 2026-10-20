@@ -156,6 +156,8 @@ object MoneyPreferenceKeys {
     val PERSONAL_DEBT_AUTO_TELEGRAM = booleanPreferencesKey("personal_debt_auto_telegram")
     val PERSONAL_DEBT_AUTO_EMAIL = booleanPreferencesKey("personal_debt_auto_email")
     val PERSONAL_DEBT_DIRECT_SMS = booleanPreferencesKey("personal_debt_direct_sms")
+    val PERSONAL_DEBT_REMINDER_HOUR = intPreferencesKey("personal_debt_reminder_hour")
+    val PERSONAL_DEBT_REMINDER_MINUTE = intPreferencesKey("personal_debt_reminder_minute")
     val PERSONAL_DEBT_AUTO_MSG_DEDUP_JSON = stringPreferencesKey("personal_debt_auto_msg_dedup_json")
 }
 
@@ -330,6 +332,8 @@ class MoneyPreferencesStore(
                 debtAutoMessageTelegram = personalDebt.debtAutoMessageTelegram,
                 debtAutoMessageEmail = personalDebt.debtAutoMessageEmail,
                 debtDirectSmsEnabled = personalDebt.debtDirectSmsEnabled,
+                reminderHour = personalDebt.reminderHour,
+                reminderMinute = personalDebt.reminderMinute,
             ),
         )
     }
@@ -436,6 +440,8 @@ class MoneyPreferencesStore(
                     debtAutoMessageTelegram = preferences.personalDebt.debtAutoMessageTelegram,
                     debtAutoMessageEmail = preferences.personalDebt.debtAutoMessageEmail,
                     debtDirectSmsEnabled = preferences.personalDebt.debtDirectSmsEnabled,
+                    reminderHour = preferences.personalDebt.reminderHour,
+                    reminderMinute = preferences.personalDebt.reminderMinute,
                 ),
             )
         }
@@ -879,6 +885,8 @@ private fun Preferences.toPersonalBranchSettings(): PersonalBranchSettings =
         debtAutoMessageTelegram = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_TELEGRAM] ?: false,
         debtAutoMessageEmail = this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_EMAIL] ?: true,
         debtDirectSmsEnabled = this[MoneyPreferenceKeys.PERSONAL_DEBT_DIRECT_SMS] ?: false,
+        reminderHour = (this[MoneyPreferenceKeys.PERSONAL_DEBT_REMINDER_HOUR] ?: 9).coerceIn(0, 23),
+        reminderMinute = (this[MoneyPreferenceKeys.PERSONAL_DEBT_REMINDER_MINUTE] ?: 0).coerceIn(0, 59),
     )
 
 private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBranchSettings) {
@@ -892,6 +900,8 @@ private fun MutablePreferences.writePersonalBranchSettings(settings: PersonalBra
     this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_TELEGRAM] = settings.debtAutoMessageTelegram
     this[MoneyPreferenceKeys.PERSONAL_DEBT_AUTO_EMAIL] = settings.debtAutoMessageEmail
     this[MoneyPreferenceKeys.PERSONAL_DEBT_DIRECT_SMS] = settings.debtDirectSmsEnabled
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_REMINDER_HOUR] = settings.reminderHour.coerceIn(0, 23)
+    this[MoneyPreferenceKeys.PERSONAL_DEBT_REMINDER_MINUTE] = settings.reminderMinute.coerceIn(0, 59)
 }
 
 private fun Preferences.toPersonalDebtAutoMessageDedupMap(): Map<String, Long> = runCatching {

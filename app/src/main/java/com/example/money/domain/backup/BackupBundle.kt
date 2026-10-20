@@ -214,6 +214,8 @@ data class BackupPersonalDebtPreferences(
     val debtAutoMessageEmail: Boolean,
     val debtDirectSmsEnabled: Boolean,
     val clientNotificationsEnabled: Boolean = true,
+    val reminderHour: Int = 9,
+    val reminderMinute: Int = 0,
 )
 
 /**

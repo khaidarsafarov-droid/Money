@@ -78,6 +78,29 @@ class DebtReminderCoordinatorTest {
         assertEquals(listOf(3L), scheduler.cancelledIds)
     }
 
+    @Test
+    fun sync_reminderHourChangeReschedules() {
+        val scheduler = RecordingScheduler()
+        val settings = PersonalBranchSettings(debtNotificationsEnabled = true, reminderHour = 9)
+        val debtor = sampleDebtor(id = 4L)
+        val previous = DebtReminderCoordinator.syncAdvanceReminders(
+            scheduler = scheduler,
+            settings = settings,
+            previous = emptyMap(),
+            debtors = listOf(debtor),
+        )
+
+        DebtReminderCoordinator.syncAdvanceReminders(
+            scheduler = scheduler,
+            settings = settings.copy(reminderHour = 18),
+            previous = previous,
+            debtors = listOf(debtor),
+        )
+
+        assertEquals(2, scheduler.dueScheduleCount)
+        assertEquals(2, scheduler.scheduleCount)
+    }
+
     private fun sampleDebtor(id: Long): Debtor = Debtor(
         id = id,
         name = "Test",
@@ -93,19 +116,33 @@ class DebtReminderCoordinatorTest {
         var dueScheduleCount = 0
         val cancelledIds = mutableListOf<Long>()
 
-        override fun schedule(debtor: Debtor) {
+        override fun schedule(
+            debtor: Debtor,
+            reminderHour: Int,
+            reminderMinute: Int,
+            preserveSnooze: Boolean,
+        ) {
             dueScheduleCount += 1
         }
 
         override fun showNow(debtor: Debtor) = false
-        override fun snooze(debtor: Debtor, delayMillis: Long) = Unit
+        override fun snooze(
+            debtor: Debtor,
+            delayMillis: Long,
+            reminderHour: Int,
+            reminderMinute: Int,
+        ) = Unit
         override fun cancel(debtorId: Long) {
             cancelledIds += debtorId
         }
 
         override suspend fun cancelAll() = Unit
 
-        override fun scheduleDailyFollowUp(debtor: Debtor) = Unit
+        override fun scheduleDailyFollowUp(
+            debtor: Debtor,
+            reminderHour: Int,
+            reminderMinute: Int,
+        ) = Unit
         override fun scheduleAdvanceReminders(debtor: Debtor, settings: PersonalBranchSettings) {
             scheduleCount += 1
         }

@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -43,6 +44,7 @@ object DebtNotificationHelper {
         val localized = localizedContext(context)
         if (!com.example.money.ui.util.NotificationPermissions.areEnabled(localized)) return false
 
+        cancelLegacy(context, debtor.id)
         val body = decorate(
             localized,
             debtor,
@@ -96,7 +98,7 @@ object DebtNotificationHelper {
             )
         }
 
-        return notify(context, debtor.id.toInt(), builder.build())
+        return notify(context, DebtNotificationIds.TAG_DUE, debtor.id, builder.build())
     }
 
     fun showAdvanceReminder(
@@ -110,6 +112,7 @@ object DebtNotificationHelper {
         val localized = localizedContext(context)
         if (!com.example.money.ui.util.NotificationPermissions.areEnabled(localized)) return false
 
+        cancelLegacy(context, debtor.id)
         val amount = money(localized, debtor.remainingAmountCents, currencyRegion)
         val dueDate = Formatters.shortDate(debtor.dateDue)
         val title = when (daysBefore) {
@@ -145,7 +148,7 @@ object DebtNotificationHelper {
             )
             .build()
 
-        return notify(context, (debtor.id * 10 + daysBefore).toInt(), notification)
+        return notify(context, DebtNotificationIds.TAG_ADVANCE, debtor.id, notification)
     }
 
     fun showMessagingAction(
@@ -157,6 +160,7 @@ object DebtNotificationHelper {
         val localized = localizedContext(context)
         if (!com.example.money.ui.util.NotificationPermissions.areEnabled(localized)) return false
 
+        cancelLegacy(context, debtor.id)
         val channelLabel = when (channel) {
             MessagingChannel.WHATSAPP -> localized.getString(R.string.messaging_channel_whatsapp)
             MessagingChannel.TELEGRAM -> localized.getString(R.string.messaging_channel_telegram)
@@ -178,19 +182,17 @@ object DebtNotificationHelper {
             )
             .build()
 
-        val notificationId = (debtor.id * 100 + channel.ordinal).toInt()
-        return notify(context, notificationId, notification)
+        return notify(context, DebtNotificationIds.TAG_MESSAGE, debtor.id, notification)
     }
 
     fun cancel(context: Context, debtorId: Long) {
         val manager = NotificationManagerCompat.from(context)
-        cancel(manager, debtorId.toInt())
-        cancel(manager, (debtorId + CONFIRM_ID_OFFSET).toInt())
-        MessagingChannel.entries.forEach { channel ->
-            cancel(manager, (debtorId * 100 + channel.ordinal).toInt())
-        }
-        listOf(1, 3).forEach { days ->
-            cancel(manager, (debtorId * 10 + days).toInt())
+        val id = DebtNotificationIds.idFor(debtorId)
+        DebtNotificationIds.TAGS.forEach { tag -> manager.cancel(tag, id) }
+        manager.cancel(id)
+        DebtNotificationIds.legacyIds(debtorId, MessagingChannel.entries.size).forEach { legacyId ->
+            manager.cancel(DebtNotificationIds.LEGACY_TAG, legacyId)
+            manager.cancel(legacyId)
         }
     }
 
@@ -199,7 +201,7 @@ object DebtNotificationHelper {
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.activeNotifications
                 .filter { notification ->
-                    notification.tag == NOTIFICATION_TAG ||
+                    notification.tag in DebtNotificationIds.TAGS ||
                         (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                             notification.notification.channelId in NotificationChannels.debtChannelIds)
                 }
@@ -276,31 +278,29 @@ object DebtNotificationHelper {
         )
 
     private fun createMarkPaidIntent(context: Context, debtorId: Long): android.app.PendingIntent {
-        val intent = Intent(context, DebtNotificationActionReceiver::class.java).apply {
-            action = DebtNotificationActionReceiver.ACTION_MARK_PAID
+        val intent = actionIntent(
+            context,
+            DebtNotificationActionReceiver.ACTION_MARK_PAID,
+            debtorId,
+            "mark_paid",
+        ).apply {
             putExtra(DebtNotificationActionReceiver.EXTRA_DEBTOR_ID, debtorId)
         }
-        return android.app.PendingIntent.getBroadcast(
-            context,
-            notificationRequestCode(debtorId, REQUEST_CODE_MARK_PAID),
-            intent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
-        )
+        return broadcast(context, debtorId, REQUEST_CODE_MARK_PAID, intent)
     }
 
     private fun createSnoozeIntent(context: Context, debtor: Debtor): android.app.PendingIntent {
-        val intent = Intent(context, DebtNotificationActionReceiver::class.java).apply {
-            action = DebtNotificationActionReceiver.ACTION_SNOOZE
+        val intent = actionIntent(
+            context,
+            DebtNotificationActionReceiver.ACTION_SNOOZE,
+            debtor.id,
+            "snooze",
+        ).apply {
             putExtra(DebtNotificationActionReceiver.EXTRA_DEBTOR_ID, debtor.id)
             putExtra(DebtNotificationActionReceiver.EXTRA_DEBTOR_NAME, debtor.name)
             putExtra(DebtNotificationActionReceiver.EXTRA_DEBTOR_AMOUNT, debtor.amount)
         }
-        return android.app.PendingIntent.getBroadcast(
-            context,
-            notificationRequestCode(debtor.id, REQUEST_CODE_SNOOZE),
-            intent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
-        )
+        return broadcast(context, debtor.id, REQUEST_CODE_SNOOZE, intent)
     }
 
     private fun createMessagingIntent(
@@ -308,28 +308,28 @@ object DebtNotificationHelper {
         debtorId: Long,
         channel: MessagingChannel,
     ): android.app.PendingIntent {
-        val intent = Intent(context, DebtNotificationActionReceiver::class.java).apply {
-            action = DebtNotificationActionReceiver.ACTION_SEND_MESSAGE
-            putExtra(DebtNotificationActionReceiver.EXTRA_DEBTOR_ID, debtorId)
-            putExtra(DebtNotificationActionReceiver.EXTRA_MESSAGING_CHANNEL, channel.name)
-        }
         val requestCode = when (channel) {
             MessagingChannel.WHATSAPP -> REQUEST_CODE_WHATSAPP
             MessagingChannel.SMS -> REQUEST_CODE_SMS
             MessagingChannel.EMAIL -> REQUEST_CODE_EMAIL
             MessagingChannel.TELEGRAM -> REQUEST_CODE_TELEGRAM
         }
-        return android.app.PendingIntent.getBroadcast(
+        val intent = actionIntent(
             context,
-            notificationRequestCode(debtorId, requestCode),
-            intent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
-        )
+            DebtNotificationActionReceiver.ACTION_SEND_MESSAGE,
+            debtorId,
+            channel.name,
+        ).apply {
+            putExtra(DebtNotificationActionReceiver.EXTRA_DEBTOR_ID, debtorId)
+            putExtra(DebtNotificationActionReceiver.EXTRA_MESSAGING_CHANNEL, channel.name)
+        }
+        return broadcast(context, debtorId, requestCode, intent)
     }
 
     fun showPaidConfirmation(context: Context, debtor: Debtor): Boolean {
         val localized = localizedContext(context)
         if (!com.example.money.ui.util.NotificationPermissions.areEnabled(localized)) return false
+        cancelLegacy(context, debtor.id)
         val confirm = NotificationCompat.Action.Builder(
             R.drawable.ic_check,
             localized.getString(R.string.notification_action_confirm_paid),
@@ -342,7 +342,7 @@ object DebtNotificationHelper {
             .setAutoCancel(true)
             .addAction(confirm)
             .build()
-        return notify(localized, (debtor.id + CONFIRM_ID_OFFSET).toInt(), notification)
+        return notify(localized, DebtNotificationIds.TAG_CONFIRM, debtor.id, notification)
     }
 
     internal fun localizedContext(context: Context): Context {
@@ -386,34 +386,62 @@ object DebtNotificationHelper {
     }
 
     private fun createConfirmPaidIntent(context: Context, debtorId: Long): android.app.PendingIntent {
-        val intent = Intent(context, DebtNotificationActionReceiver::class.java).apply {
-            action = DebtNotificationActionReceiver.ACTION_CONFIRM_MARK_PAID
+        val intent = actionIntent(
+            context,
+            DebtNotificationActionReceiver.ACTION_CONFIRM_MARK_PAID,
+            debtorId,
+            "confirm_paid",
+        ).apply {
             putExtra(DebtNotificationActionReceiver.EXTRA_DEBTOR_ID, debtorId)
         }
-        return android.app.PendingIntent.getBroadcast(
-            context,
-            notificationRequestCode(debtorId, REQUEST_CODE_CONFIRM_PAID),
-            intent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
-        )
+        return broadcast(context, debtorId, REQUEST_CODE_CONFIRM_PAID, intent)
     }
 
-    private fun notify(context: Context, id: Int, notification: android.app.Notification): Boolean =
-        try {
-            NotificationManagerCompat.from(context).notify(NOTIFICATION_TAG, id, notification)
-            true
-        } catch (_: SecurityException) {
-            false
-        }
+    private fun actionIntent(
+        context: Context,
+        action: String,
+        debtorId: Long,
+        discriminator: String,
+    ): Intent = Intent(context, DebtNotificationActionReceiver::class.java).apply {
+        this.action = action
+        data = Uri.parse("money://debt-action/$debtorId/$discriminator")
+    }
 
-    private fun cancel(manager: NotificationManagerCompat, id: Int) {
-        manager.cancel(NOTIFICATION_TAG, id)
+    private fun broadcast(
+        context: Context,
+        debtorId: Long,
+        actionCode: Int,
+        intent: Intent,
+    ): android.app.PendingIntent = android.app.PendingIntent.getBroadcast(
+        context,
+        notificationRequestCode(debtorId, actionCode),
+        intent,
+        android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+    )
+
+    private fun cancelLegacy(context: Context, debtorId: Long) {
+        val manager = NotificationManagerCompat.from(context)
+        val id = DebtNotificationIds.idFor(debtorId)
+        manager.cancel(DebtNotificationIds.LEGACY_TAG, id)
         manager.cancel(id)
+        DebtNotificationIds.legacyIds(debtorId, MessagingChannel.entries.size).forEach { legacyId ->
+            manager.cancel(DebtNotificationIds.LEGACY_TAG, legacyId)
+            manager.cancel(legacyId)
+        }
+    }
+
+    private fun notify(
+        context: Context,
+        tag: String,
+        debtorId: Long,
+        notification: android.app.Notification,
+    ): Boolean = try {
+        NotificationManagerCompat.from(context).notify(tag, DebtNotificationIds.idFor(debtorId), notification)
+        true
+    } catch (_: SecurityException) {
+        false
     }
 
     private fun notificationRequestCode(debtorId: Long, actionCode: Int): Int =
         (debtorId * 10 + actionCode).toInt()
-
-    private const val NOTIFICATION_TAG = "debt_reminder"
-    private const val CONFIRM_ID_OFFSET = 50_000L
 }
