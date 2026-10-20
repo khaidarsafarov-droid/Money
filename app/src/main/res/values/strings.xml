@@ -1,4 +1,9 @@
 <resources>
+    <string name="widget_plus" translatable="false">+</string>
+    <string name="home_debt_balance">Баланс долгов</string>
+    <string name="home_upcoming">Ближайшие</string>
+    <string name="debt_history_balance">Остаток</string>
+    <string name="debt_history_progress">%1$s из %2$s</string>
     <string name="home_screen_title">Финансы</string>
     <string name="app_name">Финансовый Контроль</string>
 
@@ -41,14 +46,9 @@
     <!-- Widget -->
     <string name="widget_goal_title">Мои финансы</string>
     <string name="widget_goal_description">Долги и цели</string>
-    <string name="widget_score_chip_debts">Долги · %1$d%%</string>
-    <string name="widget_score_chip_goals">Цели · %1$d%%</string>
-    <string name="widget_preview_score">Цели · 33%</string>
-    <string name="widget_preview_overdue">1 просроч. долг.</string>
+    <string name="widget_preview_score">62%</string>
     <string name="widget_preview_owes">22 115,00 $</string>
     <string name="widget_preview_i_owe">0,00 $</string>
-    <string name="widget_preview_saved">33 000,00 $</string>
-    <string name="widget_preview_long_amount">122 115,00 $</string>
     <string name="operation_pending_suffix"> · Ожидает</string>
     <string name="calendar_prev_month">Предыдущий месяц</string>
     <string name="calendar_next_month">Следующий месяц</string>
@@ -62,8 +62,6 @@
     <string name="calendar_day_with_debts">День %1$d, есть долги</string>
     <string name="calendar_has_debt_mark">долг</string>
     <string name="calendar_day_empty_cd">День %1$d</string>
-    <string name="widget_pending_badge">%1$d ждут</string>
-    <string name="widget_overdue_debts">%1$d просроч. долг.</string>
     <string name="tab_debts">Долги</string>
     <string name="nav_home">Главная</string>
     <string name="nav_more">Ещё</string>
@@ -90,10 +88,6 @@
     <string name="note_edit_line">Исправить</string>
     <string name="currency_settings_title">Валюта</string>
     <string name="currency_search">Поиск</string>
-    <string name="widget_goals_debts_title">Цели и долги</string>
-    <string name="home_only_goals_debts">На главной только цели и долги</string>
-    <string name="home_score_title">Прогресс</string>
-    <string name="home_score_plan">Цели</string>
 
     <!-- P2P sync -->
     <string name="sync_status_offline">Синхронизация: нет сети</string>
@@ -130,9 +124,8 @@
     <string name="debt_note_label">Примечание</string>
     <string name="debt_payment_dialog_title">Добавить оплату</string>
     <string name="debt_history_title">История · %1$s</string>
-    <string name="debt_history_remaining">Остаток %1$s</string>
     <string name="debt_history_advance">Взял %1$s</string>
-    <string name="debt_history_payment">Вернул %1$s</string>
+    <string name="debt_history_payment">Отдал %1$s</string>
     <string name="debt_history_empty">Пока нет операций</string>
     <string name="debt_history_took">Взял</string>
     <string name="debt_history_returned">Отдал</string>
@@ -226,7 +219,6 @@
     <string name="empty_goals_action">Создать цель</string>
     <string name="empty_debtors_action">Добавить долг</string>
     <string name="global_balance_accumulated_label">В целях</string>
-    <string name="home_preview_accumulated">Накоплено</string>
     <string name="add_sheet_title">Добавить</string>
     <string name="add_sheet_expense">Расход</string>
     <string name="add_sheet_deposit">Пополнение</string>
@@ -485,7 +477,6 @@
     <string name="onboarding_skip">Пропустить</string>
     <string name="onboarding_default_name">Друг</string>
     <string name="onboarding_default_goal">Накопить на важную цель</string>
-    <string name="home_greeting_simple">Привет, %1$s!</string>
     <string name="goal_hub_greeting">%1$s, вы — %2$s</string>
     <string name="goal_hub_luck_title_personal">Дневник удач %1$s</string>
     <string name="goal_hub_challenges_title_personal">%1$s, ваши челленджи</string>

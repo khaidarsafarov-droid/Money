@@ -3,6 +3,7 @@ package com.example.money.ui.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.money.ui.util.vibrateLight
 
@@ -24,6 +26,7 @@ fun MoneyTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     focusRequester: FocusRequester? = null,
+    textStyle: TextStyle? = null,
 ) {
     val fieldModifier = if (focusRequester == null) {
         modifier.fillMaxWidth()
@@ -45,6 +48,7 @@ fun MoneyTextField(
         supportingText = supportingText?.let { { Text(it) } },
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        textStyle = textStyle ?: MaterialTheme.typography.bodyLarge,
         singleLine = true,
         modifier = fieldModifier,
     )

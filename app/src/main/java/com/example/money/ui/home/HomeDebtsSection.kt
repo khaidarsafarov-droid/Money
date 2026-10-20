@@ -1,17 +1,29 @@
 package com.example.money.ui.home
 
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
-import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.DebtFreedomEngine
 import com.example.money.settings.AutopilotSettings
@@ -22,14 +34,16 @@ import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
 import com.example.money.ui.debtors.DebtContactActions
-import com.example.money.ui.debtors.DebtOverviewCard
 import com.example.money.ui.debtors.DebtSearchField
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorFilterRow
+import com.example.money.ui.theme.MoneyMotion
 import com.example.money.ui.theme.MoneySpacing
+import com.example.money.ui.util.systemMotionEnabled
 
+@Suppress("UNUSED_PARAMETER")
 fun LazyListScope.homeDebtsSection(
     debtTab: DebtTab,
     onDebtTabChange: (DebtTab) -> Unit,
@@ -68,31 +82,7 @@ fun LazyListScope.homeDebtsSection(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
     }
-    if (autopilotSettings.enabled) {
-        item {
-            TextButton(
-                onClick = onApplyAutopilot,
-                modifier = Modifier.padding(horizontal = 8.dp),
-            ) {
-                Text(stringResource(R.string.autopilot_apply_now))
-            }
-        }
-    }
     if (debtTab != DebtTab.Calendar) {
-        if (debtTab == DebtTab.OwesMe || debtTab == DebtTab.IOwe) {
-            item {
-                DebtOverviewCard(
-                    debtors = allDebtors,
-                    debtType = when (debtTab) {
-                        DebtTab.OwesMe -> DebtType.CREDITOR
-                        DebtTab.IOwe -> DebtType.DEBTOR
-                        else -> DebtType.DEBTOR
-                    },
-                    hideAmounts = privacySettings.hideAmounts,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                )
-            }
-        }
         if (showCheckIn) {
             item {
                 DebtCheckInSheet(
@@ -124,17 +114,12 @@ fun LazyListScope.homeDebtsSection(
         }
     } else {
         item {
-            DebtorFilterRow(
-                selectedFilter = debtorFilter,
-                onFilterSelected = onDebtorFilterChange,
+            DebtFilterAndSearch(
+                debtorFilter = debtorFilter,
+                onDebtorFilterChange = onDebtorFilterChange,
+                debtSearchQuery = debtSearchQuery,
+                onDebtSearchQueryChange = onDebtSearchQueryChange,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-        }
-        item {
-            DebtSearchField(
-                query = debtSearchQuery,
-                onQueryChange = onDebtSearchQueryChange,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
             )
         }
         if (debtors.isEmpty()) {
@@ -160,9 +145,16 @@ fun LazyListScope.homeDebtsSection(
                     targetCents = debtor.targetAmountCents,
                     currentCents = debtor.currentAmountCents,
                 )
+                val motion = systemMotionEnabled(LocalContext.current)
                 DebtorListItem(
                     debtor = debtor,
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    modifier = Modifier
+                        .animateItem(
+                            fadeInSpec = MoneyMotion.spec(motion),
+                            placementSpec = MoneyMotion.spec(motion),
+                            fadeOutSpec = MoneyMotion.spec(motion),
+                        )
+                        .padding(horizontal = 8.dp),
                     highlighted = isHighlighted,
                     onRemind = { onRemindDebtor(debtor) },
                     onAddPayment = { onAddDebtPayment(debtor) },
@@ -197,6 +189,51 @@ fun LazyListScope.homeDebtsSection(
                     },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun DebtFilterAndSearch(
+    debtorFilter: DebtorFilter,
+    onDebtorFilterChange: (DebtorFilter) -> Unit,
+    debtSearchQuery: String,
+    onDebtSearchQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var searchOpen by remember { mutableStateOf(debtSearchQuery.isNotBlank()) }
+    val showSearch = searchOpen || debtSearchQuery.isNotBlank()
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            DebtorFilterRow(
+                selectedFilter = debtorFilter,
+                onFilterSelected = onDebtorFilterChange,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = {
+                    if (showSearch) {
+                        searchOpen = false
+                        if (debtSearchQuery.isNotBlank()) onDebtSearchQueryChange("")
+                    } else {
+                        searchOpen = true
+                    }
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = stringResource(R.string.debt_search_hint),
+                )
+            }
+        }
+        if (showSearch) {
+            DebtSearchField(
+                query = debtSearchQuery,
+                onQueryChange = onDebtSearchQueryChange,
+            )
         }
     }
 }

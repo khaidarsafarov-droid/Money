@@ -46,6 +46,7 @@ import com.example.money.domain.util.ContactDebtHistoryEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.theme.MoneyTypeScale
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 
@@ -80,6 +81,7 @@ fun DebtorFormDialog(
 ) {
     val isEdit = existingDebtor != null
     val resolvedType = existingDebtor?.debtType ?: debtType
+    var showDetails by remember(existingDebtor?.id) { mutableStateOf(isEdit) }
 
     var name by remember(existingDebtor?.id, debtType) {
         mutableStateOf(existingDebtor?.name.orEmpty())
@@ -229,6 +231,17 @@ fun DebtorFormDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                MoneyTextField(
+                    value = amountText,
+                    onValueChange = {
+                        amountText = it
+                        amountError = null
+                    },
+                    label = stringResource(R.string.debtor_amount_label),
+                    isError = amountError != null,
+                    supportingText = amountError,
+                    textStyle = MoneyTypeScale.amountInput,
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -286,6 +299,12 @@ fun DebtorFormDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                FilterChip(
+                    selected = showDetails,
+                    onClick = { showDetails = !showDetails },
+                    label = { Text(stringResource(R.string.action_more)) },
+                )
+                if (showDetails) {
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
@@ -299,16 +318,6 @@ fun DebtorFormDialog(
                     label = { Text(stringResource(R.string.debtor_email_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                )
-                MoneyTextField(
-                    value = amountText,
-                    onValueChange = {
-                        amountText = it
-                        amountError = null
-                    },
-                    label = stringResource(R.string.debtor_amount_label),
-                    isError = amountError != null,
-                    supportingText = amountError,
                 )
                 if (isEdit && existingDebtor.currentAmountCents > 0L) {
                     Text(
@@ -370,6 +379,7 @@ fun DebtorFormDialog(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                }
             }
         },
         confirmButton = {
@@ -398,6 +408,7 @@ fun DebtorFormDialog(
                     }
 
                     if (nameError != null || amountError != null || dateError != null || interestError != null) {
+                        if (dateError != null || interestError != null) showDetails = true
                         return@TextButton
                     }
 

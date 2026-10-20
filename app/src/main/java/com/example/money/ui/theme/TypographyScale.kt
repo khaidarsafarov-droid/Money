@@ -7,45 +7,58 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Canonical type scale: 32 / 24 / 18 / 16 / 12.
+ * Canonical type scale: 36 / 22 / 20 / 16 / 14 / 13 / 12.
  * Digits use tabular figures so amounts stay aligned.
  */
 object MoneyTypeScale {
     private const val tabular = "tnum"
 
     val display = TextStyle(
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
+        fontFamily = OnestFamily,
+        fontSize = 36.sp,
+        lineHeight = 44.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = 0.sp,
+        letterSpacing = (-0.8).sp,
         fontFeatureSettings = tabular,
     )
     val heading = TextStyle(
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
+        fontFamily = OnestFamily,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.sp,
         fontFeatureSettings = tabular,
     )
     val subheading = TextStyle(
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        fontFamily = OnestFamily,
+        fontSize = 20.sp,
+        lineHeight = 26.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.sp,
         fontFeatureSettings = tabular,
     )
     val body = TextStyle(
+        fontFamily = OnestFamily,
         fontSize = 16.sp,
         lineHeight = 24.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = 0.sp,
         fontFeatureSettings = tabular,
     )
     val caption = TextStyle(
+        fontFamily = OnestFamily,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         letterSpacing = 0.sp,
+        fontFeatureSettings = tabular,
+    )
+    val amountInput = TextStyle(
+        fontFamily = OnestFamily,
+        fontSize = 48.sp,
+        lineHeight = 56.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = (-0.8).sp,
         fontFeatureSettings = tabular,
     )
 }
