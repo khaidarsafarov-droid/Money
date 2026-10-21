@@ -14,16 +14,19 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.NorthEast
 import androidx.compose.material.icons.rounded.PhotoCamera
-import androidx.compose.material.icons.rounded.SouthWest
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +38,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,6 +49,7 @@ import com.example.money.R
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.DebtDueDateUtils
+import com.example.money.domain.util.HomeDebtStatusEngine
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.debtors.DebtorSort
@@ -53,6 +60,8 @@ import com.example.money.ui.motion.moneySharedBounds
 import com.example.money.ui.motion.pressScale
 import com.example.money.ui.motion.rememberDrawFraction
 import com.example.money.ui.theme.LocalMoneyExtraColors
+import com.example.money.ui.theme.MoneyRadius
+import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.finoraAvatarColor
 import com.example.money.ui.theme.finoraBalanceBrush
 import com.example.money.ui.theme.finoraGoalBrush
@@ -65,65 +74,52 @@ fun LazyListScope.homeFinora(
     debtors: List<Debtor>,
     owedToMeCents: Long,
     iOweCents: Long,
+    owedToMeCount: Int,
+    iOweCount: Int,
     hideAmounts: Boolean,
     onOwesMe: () -> Unit,
     onIOwe: () -> Unit,
     onOpenGoals: () -> Unit,
     onOpenGoal: (SavingsGoal) -> Unit,
     onOpenDebts: () -> Unit,
+    onOpenOverdue: () -> Unit,
+    onOpenDueSoon: () -> Unit,
     onOpenDebtor: (Debtor) -> Unit,
-    onTook: () -> Unit,
     onReturned: () -> Unit,
     onAddDebt: () -> Unit,
     onPhotoCamera: (() -> Unit)?,
     onPhotoGallery: (() -> Unit)?,
+    showNotificationPrompt: Boolean = false,
+    onEnableNotifications: () -> Unit = {},
+    onDismissNotificationPrompt: () -> Unit = {},
 ) {
+    val status = HomeDebtStatusEngine.summarize(debtors)
+    val returnedCents = HomeDebtStatusEngine.returnedThisMonthCents(debtors)
     item {
         FinoraBalanceCard(
             owedToMeCents = owedToMeCents,
             iOweCents = iOweCents,
+            owedToMeCount = owedToMeCount,
+            iOweCount = iOweCount,
+            returnedThisMonthCents = returnedCents,
             hideAmounts = hideAmounts,
             onOwesMe = onOwesMe,
             onIOwe = onIOwe,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.xs),
         )
     }
-    item {
-        FinoraQuickActions(
-            onTook = onTook,
-            onReturned = onReturned,
-            onAddDebt = onAddDebt,
-            onPhotoCamera = onPhotoCamera,
-            onPhotoGallery = onPhotoGallery,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-        )
-    }
-    val previewGoals = goals.filter { !it.isCompleted }.take(2)
-    item {
-        FinoraSectionTitle(
-            title = stringResource(R.string.section_goals),
-            action = stringResource(R.string.action_see_all),
-            onAction = onOpenGoals,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
-    }
-    if (previewGoals.isNotEmpty()) {
+    if (status.overdueCount > 0 || status.weekCount > 0) {
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                previewGoals.forEach { goal ->
-                    FinoraGoalPreview(
-                        goal = goal,
-                        hideAmounts = hideAmounts,
-                        onClick = { onOpenGoal(goal) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
+            HomeStatusStrip(
+                overdueCount = status.overdueCount,
+                overdueCents = status.overdueCents,
+                todayCount = status.todayCount,
+                weekCount = status.weekCount,
+                hideAmounts = hideAmounts,
+                onOverdue = onOpenOverdue,
+                onDueSoon = onOpenDueSoon,
+                modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm),
+            )
         }
     }
     val nearest = DebtorSort.sort(debtors.filter { !it.isPaid }).take(3)
@@ -132,7 +128,7 @@ fun LazyListScope.homeFinora(
             title = stringResource(R.string.home_upcoming),
             action = stringResource(R.string.action_see_all),
             onAction = onOpenDebts,
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = MoneySpacing.lg),
         )
     }
     if (nearest.isEmpty()) {
@@ -140,17 +136,17 @@ fun LazyListScope.homeFinora(
             EmptyStateMessage(
                 title = stringResource(R.string.empty_debtors_active),
                 illustration = EmptyIllustration.Debts,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = MoneySpacing.lg),
             )
         }
     } else {
         item {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(20.dp))
+                    .padding(horizontal = MoneySpacing.lg)
+                    .clip(RoundedCornerShape(MoneyRadius.lg))
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 14.dp),
+                    .padding(horizontal = MoneySpacing.md),
             ) {
                 nearest.forEachIndexed { index, debtor ->
                     FinoraDebtRow(
@@ -170,7 +166,46 @@ fun LazyListScope.homeFinora(
             }
         }
     }
-    item { Box(modifier = Modifier.height(12.dp)) }
+    if (showNotificationPrompt) {
+        item {
+            NotificationPromptLine(
+                onEnable = onEnableNotifications,
+                onDismiss = onDismissNotificationPrompt,
+                modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm),
+            )
+        }
+    }
+    item {
+        FinoraQuickActions(
+            onReturned = onReturned,
+            onAddDebt = onAddDebt,
+            onPhotoCamera = onPhotoCamera,
+            onPhotoGallery = onPhotoGallery,
+            modifier = Modifier.padding(horizontal = MoneySpacing.sm, vertical = MoneySpacing.sm),
+        )
+    }
+    val closest = HomeDebtStatusEngine.closestGoal(goals)
+    if (closest != null) {
+        item {
+            FinoraSectionTitle(
+                title = stringResource(R.string.section_goals),
+                action = stringResource(R.string.action_see_all),
+                onAction = onOpenGoals,
+                modifier = Modifier.padding(horizontal = MoneySpacing.lg),
+            )
+        }
+        item {
+            FinoraGoalPreview(
+                goal = closest,
+                hideAmounts = hideAmounts,
+                onClick = { onOpenGoal(closest) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MoneySpacing.lg),
+            )
+        }
+    }
+    item { Box(modifier = Modifier.height(MoneySpacing.md)) }
 }
 
 @Composable
@@ -182,6 +217,9 @@ fun FinoraBalanceCard(
     onIOwe: () -> Unit,
     modifier: Modifier = Modifier,
     label: String = stringResource(R.string.home_balance_label),
+    owedToMeCount: Int = 0,
+    iOweCount: Int = 0,
+    returnedThisMonthCents: Long = 0L,
 ) {
     val net = owedToMeCents - iOweCents
     val netText = if (hideAmounts) {
@@ -194,32 +232,142 @@ fun FinoraBalanceCard(
         modifier = modifier
             .pressScale()
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(MoneyRadius.lg))
             .background(finoraBalanceBrush())
             .padding(18.dp),
     ) {
-        Text(text = label, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+        Text(text = label, color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
         AnimatedAmount(
             text = netText,
             color = Color.White,
             style = MaterialTheme.typography.headlineLarge.copy(fontSize = 30.sp, fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(top = 2.dp),
         )
+        if (returnedThisMonthCents > 0L && !hideAmounts) {
+            Text(
+                text = stringResource(
+                    R.string.home_returned_month,
+                    Formatters.currencyFromCents(returnedThisMonthCents, hide = false),
+                ),
+                color = Color.White.copy(alpha = 0.9f),
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
         Row(
             modifier = Modifier.padding(top = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
             BalancePill(
-                label = stringResource(R.string.debt_dashboard_owes_me),
+                label = stringResource(R.string.debt_dashboard_owes_me) + " · $owedToMeCount",
                 value = Formatters.currencyFromCents(owedToMeCents, hide = hideAmounts),
                 onClick = onOwesMe,
                 modifier = Modifier.weight(1f),
             )
             BalancePill(
-                label = stringResource(R.string.debt_dashboard_i_owe),
+                label = stringResource(R.string.debt_dashboard_i_owe) + " · $iOweCount",
                 value = Formatters.currencyFromCents(iOweCents, hide = hideAmounts),
                 onClick = onIOwe,
                 modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeStatusStrip(
+    overdueCount: Int,
+    overdueCents: Long,
+    todayCount: Int,
+    weekCount: Int,
+    hideAmounts: Boolean,
+    onOverdue: () -> Unit,
+    onDueSoon: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+    ) {
+        if (overdueCount > 0) {
+            StatusChip(
+                text = stringResource(
+                    R.string.home_status_overdue,
+                    overdueCount,
+                    Formatters.currencyFromCents(overdueCents, hide = hideAmounts),
+                ),
+                container = MaterialTheme.colorScheme.errorContainer,
+                content = MaterialTheme.colorScheme.error,
+                onClick = onOverdue,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        if (weekCount > 0) {
+            val soonText = if (todayCount > 0) {
+                stringResource(R.string.home_status_today, todayCount)
+            } else {
+                stringResource(R.string.home_status_week, weekCount)
+            }
+            StatusChip(
+                text = soonText,
+                container = MaterialTheme.colorScheme.surface,
+                content = MaterialTheme.colorScheme.onSurface,
+                onClick = onDueSoon,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatusChip(
+    text: String,
+    container: Color,
+    content: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        color = content,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+            .clip(RoundedCornerShape(MoneyRadius.sm))
+            .background(container)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = MoneySpacing.md, vertical = MoneySpacing.md),
+    )
+}
+
+@Composable
+private fun NotificationPromptLine(
+    onEnable: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(MoneyRadius.sm))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(start = MoneySpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Notifications,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        TextButton(onClick = onEnable, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.notification_enable_short), maxLines = 1)
+        }
+        IconButton(onClick = onDismiss) {
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = stringResource(R.string.action_cancel),
             )
         }
     }
@@ -240,14 +388,13 @@ private fun BalancePill(
             .clickable(onClick = onClick)
             .padding(horizontal = 11.dp, vertical = 9.dp),
     ) {
-        Text(text = label, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp, maxLines = 1)
+        Text(text = label, color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(text = value, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
 @Composable
 private fun FinoraQuickActions(
-    onTook: () -> Unit,
     onReturned: () -> Unit,
     onAddDebt: () -> Unit,
     onPhotoCamera: (() -> Unit)?,
@@ -257,12 +404,26 @@ private fun FinoraQuickActions(
     val extra = LocalMoneyExtraColors.current
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
     ) {
-        QuickAction(stringResource(R.string.debt_history_took), Icons.Rounded.SouthWest, extra.negativeContainer, extra.negative, onTook, MotionGlyph.Took)
-        QuickAction(stringResource(R.string.debt_history_returned), Icons.Rounded.NorthEast, extra.positiveContainer, extra.positive, onReturned, MotionGlyph.Returned)
-        PhotoAction(onPhotoCamera, onPhotoGallery)
-        QuickAction(stringResource(R.string.qa_debt), Icons.Rounded.Add, extra.positiveContainer, extra.positive, onAddDebt)
+        QuickAction(
+            stringResource(R.string.qa_add_debt),
+            Icons.Rounded.Add,
+            extra.positiveContainer,
+            extra.positive,
+            onAddDebt,
+            modifier = Modifier.weight(1f),
+        )
+        QuickAction(
+            stringResource(R.string.qa_returned),
+            Icons.Rounded.NorthEast,
+            extra.positiveContainer,
+            extra.positive,
+            onReturned,
+            MotionGlyph.Returned,
+            modifier = Modifier.weight(1f),
+        )
+        PhotoAction(onPhotoCamera, onPhotoGallery, modifier = Modifier.weight(1f))
     }
 }
 
@@ -270,10 +431,11 @@ private fun FinoraQuickActions(
 private fun PhotoAction(
     onCamera: (() -> Unit)?,
     onGallery: (() -> Unit)?,
+    modifier: Modifier = Modifier,
 ) {
     var open by remember { mutableStateOf(false) }
     val extra = LocalMoneyExtraColors.current
-    Box {
+    Box(modifier) {
         QuickAction(
             label = stringResource(R.string.qa_photo),
             icon = Icons.Rounded.PhotoCamera,
@@ -318,12 +480,14 @@ private fun QuickAction(
     tint: Color,
     onClick: () -> Unit,
     glyph: MotionGlyph? = null,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
+        modifier = modifier
             .pressScale()
+            .semantics { role = Role.Button }
             .clickable(onClick = onClick),
     ) {
         Box(
@@ -336,15 +500,15 @@ private fun QuickAction(
             if (glyph != null) {
                 MotionGlyphIcon(glyph = glyph, tint = tint, play = false, modifier = Modifier.size(22.dp))
             } else {
-                Icon(imageVector = icon, contentDescription = label, tint = tint)
+                Icon(imageVector = icon, contentDescription = null, tint = tint)
             }
         }
         Text(
             text = label,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
-            overflow = TextOverflow.Clip,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -363,14 +527,15 @@ private fun FinoraSectionTitle(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-        Text(
-            text = action,
-            color = MaterialTheme.colorScheme.primary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.clickable(onClick = onAction),
-        )
+        Text(text = title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        TextButton(onClick = onAction) {
+            Text(
+                text = action,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+            )
+        }
     }
 }
 
@@ -427,6 +592,7 @@ fun FinoraDebtRow(
     hideAmounts: Boolean,
     onClick: () -> Unit,
     subtitle: String? = null,
+    modifier: Modifier = Modifier,
 ) {
     val owedToMe = debtor.debtType == com.example.money.domain.model.DebtType.CREDITOR
     val amountColor = if (owedToMe) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
@@ -440,7 +606,7 @@ fun FinoraDebtRow(
         else -> Formatters.dueDateCompact(debtor.dateDue)
     }
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .pressScale()
             .clickable(onClick = onClick)

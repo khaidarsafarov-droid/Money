@@ -51,7 +51,12 @@ import com.example.money.ui.util.Formatters
 
 private val directionTabs = listOf(DebtTab.OwesMe, DebtTab.IOwe)
 
-private val listFilters = listOf(DebtorFilter.ACTIVE, DebtorFilter.OVERDUE, DebtorFilter.PAID)
+private val listFilters = listOf(
+    DebtorFilter.ACTIVE,
+    DebtorFilter.DUE_SOON,
+    DebtorFilter.OVERDUE,
+    DebtorFilter.PAID,
+)
 
 @Composable
 fun DebtTabRow(
@@ -274,10 +279,18 @@ internal fun DebtFilterAndSearch(
     onDebtSearchQueryChange: (String) -> Unit,
     showClients: Boolean = false,
     onToggleClients: (() -> Unit)? = null,
+    openSearch: Boolean = false,
+    onSearchOpened: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var searchOpen by remember { mutableStateOf(debtSearchQuery.isNotBlank()) }
     val showSearch = searchOpen || debtSearchQuery.isNotBlank()
+    androidx.compose.runtime.LaunchedEffect(openSearch) {
+        if (openSearch) {
+            searchOpen = true
+            onSearchOpened()
+        }
+    }
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(MoneySpacing.xs),
@@ -318,6 +331,7 @@ internal fun DebtFilterAndSearch(
             DebtSearchField(
                 query = debtSearchQuery,
                 onQueryChange = onDebtSearchQueryChange,
+                requestFocus = openSearch,
             )
         }
     }

@@ -106,6 +106,7 @@
     <string name="debt_filter_all">Все</string>
     <string name="debt_filter_active">Активные</string>
     <string name="debt_filter_overdue">Просроченные</string>
+    <string name="debt_filter_soon">7 дней</string>
     <string name="debt_filter_paid">Погашенные</string>
     <string name="debt_chip_today">Сегодня</string>
     <string name="debt_chip_due">Срок</string>

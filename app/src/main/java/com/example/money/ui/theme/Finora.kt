@@ -52,12 +52,20 @@ fun finoraGoalBrush(seed: Int): Brush {
     return Brush.linearGradient(colors)
 }
 
+val FinoraBalanceLightStops = listOf(
+    Color(0xFF0B6E5B),
+    Color(0xFF0F6A58),
+    Color(0xFF14786E),
+)
+
+val FinoraBalanceDarkStops = listOf(
+    Color(0xFF0A4F42),
+    Color(0xFF0D6553),
+    Color(0xFF0F6A58),
+)
+
 @Composable
 fun finoraBalanceBrush(): Brush {
-    val colors = if (isSystemInDarkTheme()) {
-        listOf(Color(0xFF0A4F42), Color(0xFF0D6553), Color(0xFF178A6F))
-    } else {
-        listOf(Color(0xFF0B6E5B), Color(0xFF13896F), Color(0xFF2FA884))
-    }
+    val colors = if (isSystemInDarkTheme()) FinoraBalanceDarkStops else FinoraBalanceLightStops
     return Brush.linearGradient(colors)
 }

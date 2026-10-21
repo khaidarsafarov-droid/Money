@@ -58,7 +58,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -81,7 +80,6 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -288,7 +286,7 @@ fun HomeScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    var openDebtSearch by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var showWorkClients by rememberSaveable { mutableStateOf(false) }
     var photoLines by remember { mutableStateOf<List<ParsedDebtLine>?>(null) }
@@ -688,6 +686,7 @@ fun HomeScreen(
                     } else {
                         IconButton(onClick = {
                             if (selectedTab != HomeTab.Debts.ordinal) vibrate(context, HapticStrength.MEDIUM)
+                            openDebtSearch = true
                             selectedTab = HomeTab.Debts.ordinal
                         }) {
                             Icon(Icons.Outlined.Search, contentDescription = stringResource(R.string.debt_search_hint))
@@ -900,7 +899,6 @@ fun HomeScreen(
             }
         } else {
             PhoneHomeLayout(
-                drawerState = drawerState,
                 snackbarHostState = snackbarHostState,
                 topBar = topBar,
                 floatingActionButton = fab,
@@ -1036,6 +1034,8 @@ fun HomeScreen(
                 onToggleClients = { showWorkClients = !showWorkClients },
                 onImportCamera = if (importFromPhoto) startDebtCamera else null,
                 onImportGallery = if (importFromPhoto) startDebtGallery else null,
+                openDebtSearch = openDebtSearch,
+                onDebtSearchOpened = { openDebtSearch = false },
             )
         }
         HomeMotionOverlay(

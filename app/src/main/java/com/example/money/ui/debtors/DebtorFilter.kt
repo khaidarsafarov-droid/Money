@@ -21,5 +21,6 @@ enum class DebtorFilter(val labelRes: Int) {
     ALL(R.string.debt_filter_all),
     ACTIVE(R.string.debt_filter_active),
     OVERDUE(R.string.debt_filter_overdue),
+    DUE_SOON(R.string.debt_filter_soon),
     PAID(R.string.debt_filter_paid),
 }

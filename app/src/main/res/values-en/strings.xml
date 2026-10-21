@@ -118,6 +118,7 @@
     <string name="debt_filter_all">All</string>
     <string name="debt_filter_active">Active</string>
     <string name="debt_filter_overdue">Overdue</string>
+    <string name="debt_filter_soon">7 days</string>
     <string name="debt_filter_paid">Paid</string>
     <string name="debt_chip_today">Today</string>
     <string name="debt_chip_due">Due</string>
@@ -698,6 +699,13 @@
     <string name="debt_import_date">Date</string>
     <string name="home_brand">Money</string>
     <string name="home_balance_label">Balance</string>
+    <string name="home_returned_month">+%1$s this month</string>
+    <string name="home_status_overdue">Overdue · %1$d · %2$s</string>
+    <string name="home_status_today">Today · %1$d</string>
+    <string name="home_status_week">7 days · %1$d</string>
+    <string name="qa_returned">Returned</string>
+    <string name="qa_add_debt">+ Debt</string>
+    <string name="notification_enable_short">Enable</string>
     <string name="action_see_all">All</string>
     <string name="qa_photo">Photo</string>
     <string name="qa_debt">Debt</string>
