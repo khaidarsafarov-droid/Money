@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -52,9 +53,12 @@ fun DebtTabRow(
     onOpenCalendar: () -> Unit,
     onOpenCheckIn: () -> Unit,
     onApplyAutopilot: (() -> Unit)? = null,
+    onImportCamera: (() -> Unit)? = null,
+    onImportGallery: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
+    var photoMenu by remember { mutableStateOf(false) }
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -73,6 +77,36 @@ fun DebtTabRow(
                         )
                     },
                 )
+            }
+        }
+        if (onImportCamera != null || onImportGallery != null) {
+            Box {
+                IconButton(onClick = { photoMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Outlined.PhotoCamera,
+                        contentDescription = stringResource(R.string.debt_import_action),
+                    )
+                }
+                DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
+                    if (onImportCamera != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.debt_import_camera)) },
+                            onClick = {
+                                photoMenu = false
+                                onImportCamera()
+                            },
+                        )
+                    }
+                    if (onImportGallery != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.debt_import_gallery)) },
+                            onClick = {
+                                photoMenu = false
+                                onImportGallery()
+                            },
+                        )
+                    }
+                }
             }
         }
         Box {
@@ -198,6 +232,8 @@ internal fun DebtFilterAndSearch(
     onDebtorFilterChange: (DebtorFilter) -> Unit,
     debtSearchQuery: String,
     onDebtSearchQueryChange: (String) -> Unit,
+    showClients: Boolean = false,
+    onToggleClients: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var searchOpen by remember { mutableStateOf(debtSearchQuery.isNotBlank()) }
@@ -207,12 +243,21 @@ internal fun DebtFilterAndSearch(
         verticalArrangement = Arrangement.spacedBy(MoneySpacing.xs),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onToggleClients != null) {
+                FilterChip(
+                    selected = showClients,
+                    onClick = onToggleClients,
+                    label = { Text(stringResource(R.string.clients_title)) },
+                )
+            }
+            if (!showClients) {
             DebtorFilterRow(
                 selectedFilter = debtorFilter,
                 onFilterSelected = onDebtorFilterChange,
                 overdueCount = overdueCount(allDebtors, debtTab),
                 modifier = Modifier.weight(1f),
             )
+            }
             IconButton(
                 onClick = {
                     if (showSearch) {

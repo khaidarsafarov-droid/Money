@@ -38,4 +38,7 @@ object DebtDueDateUtils {
 
     fun isOverdue(dateDue: Long, now: Long = System.currentTimeMillis()): Boolean =
         now > endOfDayMillis(dateDue)
+
+    fun isDueToday(dateDue: Long, now: Long = System.currentTimeMillis()): Boolean =
+        dateDue > 0L && startOfDayMillis(dateDue) == startOfDayMillis(now)
 }

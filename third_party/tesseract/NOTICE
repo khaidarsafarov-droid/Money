@@ -1,0 +1,9 @@
+Offline OCR for debt photos.
+
+ML Kit Text Recognition v2 recognizes Latin, Chinese, Devanagari, Japanese, and Korean.
+It does not recognize Cyrillic, so Russian shop lists use Tesseract on device.
+
+- Library: Tesseract4Android 4.9.0 (Apache-2.0), https://github.com/adaptech-cz/Tesseract4Android
+- Models: tessdata_fast `rus.traineddata` and `eng.traineddata` (Apache-2.0),
+  https://github.com/tesseract-ocr/tessdata_fast
+- Photos stay in the app cache and are deleted after recognition. Nothing is uploaded.

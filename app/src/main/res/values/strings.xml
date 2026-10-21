@@ -707,4 +707,14 @@
         <item quantity="many">%d долгов</item>
         <item quantity="other">%d долга</item>
     </plurals>
+    <string name="debt_import_action">С фото</string>
+    <string name="debt_import_camera">Камера</string>
+    <string name="debt_import_gallery">Галерея</string>
+    <string name="debt_import_review">Проверка</string>
+    <string name="debt_import_empty">Ничего не найдено</string>
+    <string name="debt_import_saved">Сохранено</string>
+    <string name="clients_empty">Нет клиентов</string>
+    <string name="debt_import_name">Имя</string>
+    <string name="debt_import_amount">Сумма</string>
+    <string name="debt_import_date">Дата</string>
 </resources>

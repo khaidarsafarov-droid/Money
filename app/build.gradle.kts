@@ -110,6 +110,7 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.zxing.core)
     implementation(libs.sqlcipher)
+    implementation(libs.tesseract)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)

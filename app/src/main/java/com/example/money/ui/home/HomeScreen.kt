@@ -1,6 +1,18 @@
 package com.example.money.ui.home
 
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.core.content.FileProvider
+import com.example.money.domain.model.DebtType
+import com.example.money.domain.util.ParsedDebtLine
+import com.example.money.ocr.DebtPhotoFiles
+import com.example.money.ocr.DebtPhotoOcr
+import com.example.money.ui.debtors.DebtPhotoReviewSheet
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -276,6 +288,52 @@ fun HomeScreen(
     val listState = rememberLazyListState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    var showWorkClients by rememberSaveable { mutableStateOf(false) }
+    var photoLines by remember { mutableStateOf<List<ParsedDebtLine>?>(null) }
+    var photoBusy by remember { mutableStateOf(false) }
+    val cameraFile = remember { mutableStateOf<java.io.File?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        val file = cameraFile.value
+        cameraFile.value = null
+        if (!saved || file == null) {
+            file?.delete()
+            return@rememberLauncherForActivityResult
+        }
+        scope.launch {
+            photoBusy = true
+            try {
+                photoLines = DebtPhotoOcr.recognize(context, listOf(file))
+            } finally {
+                file.delete()
+                photoBusy = false
+            }
+        }
+    }
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(8),
+    ) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        scope.launch {
+            photoBusy = true
+            val files = uris.mapNotNull { DebtPhotoFiles.copyUri(context, it) }
+            try {
+                photoLines = DebtPhotoOcr.recognize(context, files)
+            } finally {
+                files.forEach { it.delete() }
+                photoBusy = false
+            }
+        }
+    }
+    val startDebtCamera: () -> Unit = {
+        val file = DebtPhotoFiles.newCapture(context)
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        cameraFile.value = file
+        cameraLauncher.launch(uri)
+    }
+    val startDebtGallery: () -> Unit = {
+        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+    val importFromPhoto = appMode == AppMode.PROFESSIONAL
     var tabletSection by remember {
         mutableStateOf(
             when (launchConfig.initialTab) {
@@ -420,6 +478,13 @@ fun HomeScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+    LaunchedEffect(appMode) {
+        if (launchConfig.highlightDebtorId == null && launchConfig.openDebtPaymentForDebtorId == null) {
+            debtListViewModel.setFilter(
+                if (appMode == AppMode.PROFESSIONAL) DebtorFilter.ALL else DebtorFilter.ACTIVE,
+            )
+        }
+    }
     LaunchedEffect(hasCalendarPermissions, calendarSettings.autoSyncEnabled) {
         if (hasCalendarPermissions && calendarSettings.autoSyncEnabled) {
             debtorsViewModel.retryCalendarSyncIfNeeded()
@@ -477,6 +542,36 @@ fun HomeScreen(
             requestNotificationPermissionIfNeeded(NotificationPermissionReason.FIRST_DUE_DEBT)
         },
     )
+
+    photoLines?.let { lines ->
+        val savedMessage = stringResource(R.string.debt_import_saved)
+        DebtPhotoReviewSheet(
+            lines = lines,
+            onDismiss = { photoLines = null },
+            onSave = { imported ->
+                scope.launch {
+                    val type = if (debtTab == com.example.money.ui.debtors.DebtTab.IOwe) {
+                        DebtType.DEBTOR
+                    } else {
+                        DebtType.CREDITOR
+                    }
+                    val count = debtorsViewModel.importDebts(
+                        imported,
+                        currencyRegion.currencyCode,
+                        type,
+                    )
+                    photoLines = null
+                    if (count > 0) {
+                        vibrate(context, HapticStrength.MEDIUM)
+                        showMessage(savedMessage)
+                        if (imported.any { it.dateDue > 0L }) {
+                            requestNotificationPermissionIfNeeded(NotificationPermissionReason.FIRST_DUE_DEBT)
+                        }
+                    }
+                }
+            },
+        )
+    }
 
     BoxWithConstraints(modifier = modifier) {
         val isTablet = isTabletWidth(maxWidth)
@@ -729,6 +824,10 @@ fun HomeScreen(
                 emptyDebtorsTitle = { filter -> emptyDebtorsTitle(filter) },
                 appMode = appMode,
                 onOpenClients = onOpenClients,
+                showClients = showWorkClients,
+                onToggleClients = { showWorkClients = !showWorkClients },
+                onImportCamera = if (importFromPhoto) startDebtCamera else null,
+                onImportGallery = if (importFromPhoto) startDebtGallery else null,
             )
         } else {
             PhoneHomeLayout(
@@ -864,7 +963,19 @@ fun HomeScreen(
                     }
                 },
                 onOpenClients = onOpenClients,
+                showClients = showWorkClients,
+                onToggleClients = { showWorkClients = !showWorkClients },
+                onImportCamera = if (importFromPhoto) startDebtCamera else null,
+                onImportGallery = if (importFromPhoto) startDebtGallery else null,
             )
+        }
+        if (photoBusy) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
         }
     }
 

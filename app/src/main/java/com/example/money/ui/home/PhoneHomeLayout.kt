@@ -230,6 +230,10 @@ internal fun PhoneHomeLayout(
     onAppModeChange: (AppMode) -> Unit = {},
     onOpenCheckIn: () -> Unit = {},
     onOpenClients: () -> Unit = {},
+    showClients: Boolean = false,
+    onToggleClients: () -> Unit = {},
+    onImportCamera: (() -> Unit)? = null,
+    onImportGallery: (() -> Unit)? = null,
 ) {
     val contactContext = LocalContext.current
     val homeListState = rememberLazyListState()
@@ -541,6 +545,11 @@ internal fun PhoneHomeLayout(
                         onSyncCalendar = onSyncCalendar,
                         onRemoveCalendar = onRemoveCalendar,
                         emptyDebtorsTitle = emptyDebtorsTitle,
+                        appMode = appMode,
+                        showClients = showClients,
+                        onToggleClients = onToggleClients,
+                        onImportCamera = onImportCamera,
+                        onImportGallery = onImportGallery,
                     )
                 }
             }

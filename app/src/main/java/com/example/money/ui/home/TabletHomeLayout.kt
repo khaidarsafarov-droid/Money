@@ -164,6 +164,10 @@ fun TabletHomeLayout(
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
     appMode: AppMode = AppMode.PERSONAL,
     onOpenClients: () -> Unit = {},
+    showClients: Boolean = false,
+    onToggleClients: () -> Unit = {},
+    onImportCamera: (() -> Unit)? = null,
+    onImportGallery: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -495,6 +499,8 @@ fun TabletHomeLayout(
                                 onOpenCalendar = { onDebtTabChange(DebtTab.Calendar) },
                                 onOpenCheckIn = onOpenCheckIn,
                                 onApplyAutopilot = if (autopilotSettings.enabled) onApplyAutopilot else null,
+                                onImportCamera = onImportCamera,
+                                onImportGallery = onImportGallery,
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
@@ -542,10 +548,46 @@ fun TabletHomeLayout(
                                     onDebtorFilterChange = onDebtorFilterChange,
                                     debtSearchQuery = debtSearchQuery,
                                     onDebtSearchQueryChange = onDebtSearchQueryChange,
+                                    showClients = showClients && appMode == AppMode.PROFESSIONAL,
+                                    onToggleClients = if (appMode == AppMode.PROFESSIONAL) onToggleClients else null,
                                     modifier = Modifier.padding(vertical = 8.dp),
                                 )
                             }
-                            if (debtors.isEmpty()) {
+                            val clientGroups = if (showClients && appMode == AppMode.PROFESSIONAL) {
+                                val type = if (debtTab == DebtTab.OwesMe) com.example.money.domain.model.DebtType.CREDITOR else com.example.money.domain.model.DebtType.DEBTOR
+                                val groups = com.example.money.domain.util.ClientIdentity.groups(allDebtors, type, debtSearchQuery)
+                                val order = com.example.money.ui.debtors.DebtorSort.sort(groups.map { it.display }).map { it.id }
+                                groups.sortedBy { order.indexOf(it.display.id) }
+                            } else {
+                                emptyList()
+                            }
+                            if (showClients && appMode == AppMode.PROFESSIONAL) {
+                                if (clientGroups.isEmpty()) {
+                                    item {
+                                        EmptyStateMessage(
+                                            title = stringResource(R.string.clients_empty),
+                                            illustration = EmptyIllustration.Debts,
+                                        )
+                                    }
+                                } else {
+                                    items(clientGroups, key = { "tablet-client-${it.open.id}" }) { group ->
+                                        HomeListCompactRow(
+                                            title = group.display.name,
+                                            subtitle = Formatters.currencyFromCents(
+                                                group.display.remainingAmountCents,
+                                                hide = privacySettings.hideAmounts,
+                                            ),
+                                            selected = selection is HomeListSelection.DebtorItem &&
+                                                selection.debtor.id == group.open.id,
+                                            onClick = {
+                                                onSelectionChange(HomeListSelection.DebtorItem(group.open))
+                                                onOpenDebtor(group.open)
+                                            },
+                                            modifier = Modifier.padding(vertical = 4.dp),
+                                        )
+                                    }
+                                }
+                            } else if (debtors.isEmpty()) {
                                 item {
                                     EmptyStateMessage(
                                         title = emptyDebtorsTitle(debtorFilter),

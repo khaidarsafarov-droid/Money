@@ -12,8 +12,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
+import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.util.ClientIdentity
 import com.example.money.domain.util.DebtFreedomEngine
+import com.example.money.settings.AppMode
 import com.example.money.settings.AutopilotSettings
 import com.example.money.settings.PrivacySettings
 import com.example.money.ui.components.DebtorListItem
@@ -28,6 +31,7 @@ import com.example.money.ui.debtors.DebtSectionTotal
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtTabRow
 import com.example.money.ui.debtors.DebtorFilter
+import com.example.money.ui.debtors.DebtorSort
 import com.example.money.ui.theme.MoneyMotion
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.systemMotionEnabled
@@ -64,6 +68,11 @@ fun LazyListScope.homeDebtsSection(
     onSyncCalendar: (Debtor) -> Unit,
     onRemoveCalendar: (Debtor) -> Unit,
     emptyDebtorsTitle: @Composable (DebtorFilter) -> String,
+    appMode: AppMode = AppMode.PERSONAL,
+    showClients: Boolean = false,
+    onToggleClients: () -> Unit = {},
+    onImportCamera: (() -> Unit)? = null,
+    onImportGallery: (() -> Unit)? = null,
 ) {
     item {
         DebtTabRow(
@@ -72,6 +81,8 @@ fun LazyListScope.homeDebtsSection(
             onOpenCalendar = { onDebtTabChange(DebtTab.Calendar) },
             onOpenCheckIn = onOpenCheckIn,
             onApplyAutopilot = if (autopilotSettings.enabled) onApplyAutopilot else null,
+            onImportCamera = onImportCamera,
+            onImportGallery = onImportGallery,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
     }
@@ -124,10 +135,50 @@ fun LazyListScope.homeDebtsSection(
                 onDebtorFilterChange = onDebtorFilterChange,
                 debtSearchQuery = debtSearchQuery,
                 onDebtSearchQueryChange = onDebtSearchQueryChange,
+                showClients = showClients && appMode == AppMode.PROFESSIONAL,
+                onToggleClients = if (appMode == AppMode.PROFESSIONAL) onToggleClients else null,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }
-        if (debtors.isEmpty()) {
+        val clientGroups = if (showClients && appMode == AppMode.PROFESSIONAL) {
+            val type = if (debtTab == DebtTab.OwesMe) DebtType.CREDITOR else DebtType.DEBTOR
+            val groups = ClientIdentity.groups(allDebtors, type, debtSearchQuery)
+            val order = DebtorSort.sort(groups.map { it.display }).map { it.id }
+            groups.sortedBy { order.indexOf(it.display.id) }
+        } else {
+            emptyList()
+        }
+        if (showClients && appMode == AppMode.PROFESSIONAL) {
+            if (clientGroups.isEmpty()) {
+                item {
+                    EmptyStateMessage(
+                        title = stringResource(R.string.clients_empty),
+                        illustration = EmptyIllustration.Debts,
+                        modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm),
+                    )
+                }
+            } else {
+                items(clientGroups, key = { "client-${it.open.id}" }) { group ->
+                    val motion = systemMotionEnabled(LocalContext.current)
+                    DebtorListItem(
+                        debtor = group.display,
+                        modifier = Modifier
+                            .animateItem(
+                                fadeInSpec = MoneyMotion.spec(motion),
+                                placementSpec = MoneyMotion.spec(motion),
+                                fadeOutSpec = MoneyMotion.spec(motion),
+                            )
+                            .padding(horizontal = 8.dp),
+                        onRemind = { onRemindDebtor(group.open) },
+                        onAddPayment = { onAddDebtPayment(group.open) },
+                        onOpen = { onOpenDebtor(group.open) },
+                        onEdit = { onEditDebtor(group.open) },
+                        onDelete = { onDeleteDebtor(group.open) },
+                        hideAmounts = privacySettings.hideAmounts,
+                    )
+                }
+            }
+        } else if (debtors.isEmpty()) {
             item {
                 EmptyStateMessage(
                     title = emptyDebtorsTitle(debtorFilter),
