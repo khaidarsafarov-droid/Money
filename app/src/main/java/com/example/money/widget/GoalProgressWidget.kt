@@ -64,6 +64,7 @@ class GoalProgressWidget : GlanceAppWidget() {
 class GoalProgressWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = GoalProgressWidget()
 
+    @Suppress("MissingSuperCall") // Refresh the snapshot first, then update each widget once.
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,

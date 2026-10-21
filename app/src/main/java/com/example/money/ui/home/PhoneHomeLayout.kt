@@ -54,8 +54,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -72,7 +70,6 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -109,8 +106,6 @@ import com.example.money.ui.budget.AddExpenseDialog
 import com.example.money.ui.budget.AddTransferDialog
 import com.example.money.ui.budget.BudgetActionResult
 import com.example.money.ui.budget.BudgetViewModel
-import com.example.money.ui.components.MoneyButton
-import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
@@ -242,7 +237,7 @@ internal fun PhoneHomeLayout(
     var returnedPicker by remember { mutableStateOf(false) }
     val activeDebts = DebtorSort.sort(allDebtors.filter { !it.isPaid })
 
-        Scaffold(
+    Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
@@ -539,37 +534,6 @@ internal fun PhoneHomeLayout(
                 )
             }
             Spacer(Modifier.height(MoneySpacing.xl))
-        }
-    }
-}
-
-@Composable
-internal fun NotificationPermissionBanner(
-    onRequestPermission: () -> Unit,
-    onDismiss: () -> Unit = {},
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Column(
-            modifier = Modifier.padding(MoneySpacing.cardPadding),
-            verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
-        ) {
-            Text(
-                text = stringResource(R.string.notification_permission_needed),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            MoneyButton(
-                text = stringResource(R.string.notification_permission_action),
-                onClick = onRequestPermission,
-                priority = MoneyButtonPriority.Secondary,
-            )
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.notification_permission_later))
-            }
         }
     }
 }

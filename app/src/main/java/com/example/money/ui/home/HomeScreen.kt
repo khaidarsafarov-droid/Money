@@ -165,6 +165,10 @@ fun HomeScreen(
     val syncUrlCopiedMessage = stringResource(R.string.sync_web_url_copied)
     val autopilotAppliedTemplate = stringResource(R.string.autopilot_applied)
     val autopilotFailedMessage = stringResource(R.string.autopilot_apply_failed)
+    val debtAdvanceSavedMessage = stringResource(R.string.msg_debt_advance_saved)
+    val debtAdvanceFailedMessage = stringResource(R.string.error_debt_advance_failed)
+    val paymentNeutralMessage = stringResource(R.string.msg_payment_neutral)
+    val paymentFailedMessage = stringResource(R.string.error_payment_failed)
     val app = context.applicationContext as MoneyApplication
 
     val goalViewModel: GoalViewModel = viewModel(
@@ -1057,21 +1061,13 @@ fun HomeScreen(
             onAddAdvance = { debtor, amountCents, givenAt, note ->
                 scope.launch {
                     val ok = debtorsViewModel.addDebtAdvanceSync(debtor.id, amountCents, givenAt, note)
-                    showMessage(
-                        context.getString(
-                            if (ok) R.string.msg_debt_advance_saved else R.string.error_debt_advance_failed,
-                        ),
-                    )
+                    showMessage(if (ok) debtAdvanceSavedMessage else debtAdvanceFailedMessage)
                 }
             },
             onAddPayment = { debtor, amountCents, paidAt ->
                 scope.launch {
                     val ok = debtorsViewModel.processPaymentSync(debtor.id, amountCents, false, paidAt)
-                    showMessage(
-                        context.getString(
-                            if (ok) R.string.msg_payment_neutral else R.string.error_payment_failed,
-                        ),
-                    )
+                    showMessage(if (ok) paymentNeutralMessage else paymentFailedMessage)
                 }
             },
             stepsGoalId = stepsGoalId,
