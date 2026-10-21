@@ -108,6 +108,7 @@ class MoneyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        if (System.getProperty("money.robolectric") == "true") return
         SqlCipherLibrary.load()
         AppLanguageManager.applyStored(this)
         NotificationChannels.create(this)

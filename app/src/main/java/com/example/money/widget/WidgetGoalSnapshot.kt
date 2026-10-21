@@ -25,7 +25,15 @@ data class WidgetGoalSnapshot(
     val lastWinMessage: String? = null,
     /** True when [progressPercent] is the home debt score, otherwise the goal score. */
     val scoreUsesDebts: Boolean = false,
+    /** Nearest active goal. Empty when there is nothing to show. */
+    val featuredGoalName: String = "",
+    val featuredGoalSavedCents: Long = 0L,
+    val featuredGoalTargetCents: Long = 0L,
+    val featuredGoalPercent: Int = 0,
+    val featuredGoalIsAction: Boolean = false,
 ) {
+    val hasFeaturedGoal: Boolean
+        get() = featuredGoalName.isNotBlank() || featuredGoalTargetCents > 0L
     companion object {
         val Empty = WidgetGoalSnapshot(
             currentAmount = 0.0,

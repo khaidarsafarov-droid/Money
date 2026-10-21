@@ -396,6 +396,7 @@ fun HomeScreen(
     LaunchedEffect(
         launchConfig.openExpenseDialog,
         launchConfig.openQuickAddDialog,
+        launchConfig.openAddDebtDialog,
         launchConfig.initialTab,
         launchConfig.initialDebtTab,
         launchConfig.highlightDebtorId,
@@ -411,6 +412,10 @@ fun HomeScreen(
             HomeTab.More -> HomeSection.Notes
         }
         debtListViewModel.setDebtTab(launchConfig.initialDebtTab)
+
+        if (launchConfig.openAddDebtDialog) {
+            showAddDebtorDialog = true
+        }
 
         if (launchConfig.openExpenseDialog || launchConfig.openQuickAddDialog) {
             addHighlight = plusHighlight(PagePlusAction.AddAnything)

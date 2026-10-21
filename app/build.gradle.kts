@@ -69,6 +69,12 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            it.systemProperty("money.robolectric", "true")
+        }
+    }
     packaging {
         jniLibs {
             useLegacyPackaging = true

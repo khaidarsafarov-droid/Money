@@ -9,8 +9,10 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = android.app.Application::class)
 class AppIntentsTest {
 
     @Test
@@ -60,6 +62,17 @@ class AppIntentsTest {
 
         assertEquals(true, config.openQuickAddDialog)
         assertEquals(false, config.openExpenseDialog)
+    }
+
+    @Test
+    fun parseLaunchConfig_addDebtOpensTheDebtDialog() {
+        val config = AppIntents.parseLaunchConfig(
+            Intent().putExtra(AppIntents.EXTRA_ACTION, AppIntents.ACTION_ADD_DEBT),
+        )
+
+        assertEquals(true, config.openAddDebtDialog)
+        assertEquals(false, config.openQuickAddDialog)
+        assertEquals(false, config.withoutOneShotActions().openAddDebtDialog)
     }
 
     @Test

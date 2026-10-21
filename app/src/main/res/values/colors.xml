@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#FFF6F7F6</color>
+    <color name="widget_background">#FFFFFFFF</color>
     <color name="widget_preview_hero">#FFFFFFFF</color>
+    <color name="widget_preview_primary">#FF0B6E5B</color>
+    <color name="widget_preview_on_primary">#FFFFFFFF</color>
+    <color name="widget_preview_negative">#FFB3261E</color>
+    <color name="widget_preview_muted">#FF6B7772</color>
+    <color name="widget_preview_on_card">#FF16201D</color>
+    <color name="widget_preview_track">#FFE3F1EC</color>
     <color name="widget_preview_mint">#FFDDF3EC</color>
     <color name="widget_preview_on_mint">#FF08382E</color>
     <color name="widget_preview_peach">#FFFBE7E4</color>

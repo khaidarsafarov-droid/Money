@@ -14,6 +14,7 @@ object AppIntents {
 
     const val ACTION_ADD_EXPENSE = "add_expense"
     const val ACTION_QUICK_ADD = "quick_add"
+    const val ACTION_ADD_DEBT = "add_debt"
     const val ACTION_OPEN_DEBTOR = "open_debtor"
     const val ACTION_DEBT_PAYMENT = "debt_payment"
     const val ACTION_WEEKLY_CHECKIN = "weekly_checkin"
@@ -39,6 +40,7 @@ object AppIntents {
         return when (intent.getStringExtra(EXTRA_ACTION)) {
             ACTION_ADD_EXPENSE -> HomeLaunchConfig(openQuickAddDialog = true)
             ACTION_QUICK_ADD -> HomeLaunchConfig(openQuickAddDialog = true)
+            ACTION_ADD_DEBT -> HomeLaunchConfig(openAddDebtDialog = true)
             ACTION_OPEN_DEBTOR -> {
                 val debtorId = intent.getLongExtra(EXTRA_DEBTOR_ID, -1L)
                 HomeLaunchConfig(
@@ -86,6 +88,12 @@ object AppIntents {
         Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_ACTION, ACTION_QUICK_ADD)
+        }
+
+    fun addDebtIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_ACTION, ACTION_ADD_DEBT)
         }
 
     fun openDebtorIntent(context: Context, debtorId: Long): Intent =

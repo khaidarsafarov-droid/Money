@@ -5,5 +5,5 @@
     <dimen name="widget_min_height">110dp</dimen>
     <dimen name="widget_min_resize_width">110dp</dimen>
     <dimen name="widget_min_resize_height">110dp</dimen>
-    <dimen name="widget_max_resize_height">180dp</dimen>
+    <dimen name="widget_max_resize_height">280dp</dimen>
 </resources>

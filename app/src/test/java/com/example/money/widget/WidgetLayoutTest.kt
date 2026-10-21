@@ -19,4 +19,15 @@ class WidgetLayoutTest {
         assertEquals(16.sp, widgetAmountFontSize(200.dp, "0,00 $".length))
         assertEquals(18.sp, widgetAmountFontSize(320.dp, "0,00 $".length))
     }
+
+    @Test
+    fun wideLayoutStartsAtTwoColumns() {
+        assertEquals(false, widgetUsesWideLayout(200.dp))
+        assertEquals(true, widgetUsesWideLayout(280.dp))
+        assertEquals(100.dp, widgetGoalTrackWidth(124.dp, 12.dp, wide = false))
+        assertEquals(82.dp, widgetGoalTrackWidth(200.dp, 12.dp, wide = true))
+        assertEquals(33.dp, widgetProgressFillWidth(100.dp, 33))
+        assertEquals(0.dp, widgetProgressFillWidth(100.dp, 0))
+        assertEquals("33%", featuredGoalPercentLabel(33))
+    }
 }
