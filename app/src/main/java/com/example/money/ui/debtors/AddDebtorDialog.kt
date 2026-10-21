@@ -94,7 +94,7 @@ fun DebtorFormDialog(
     }
     val resolvedType = selectedType
     var showDetails by remember(existingDebtor?.id) { mutableStateOf(isEdit) }
-    var showDue by remember(existingDebtor?.id) { mutableStateOf(isEdit) }
+    var showDue by remember(existingDebtor?.id) { mutableStateOf(true) }
     var showNote by remember(existingDebtor?.id) {
         mutableStateOf(isEdit && !existingDebtor?.note.isNullOrBlank())
     }
@@ -272,6 +272,19 @@ fun DebtorFormDialog(
                     }
                 }
             }
+            Text(
+                text = if (amountText.isBlank()) "0" else amountText,
+                style = MoneyTypeScale.amountInput,
+                color = if (amountError != null) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            amountError?.let { message ->
+                Text(text = message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -312,18 +325,6 @@ fun DebtorFormDialog(
                 ) {
                     Text(stringResource(R.string.contact_history_short, existingContactDebtCount))
                 }
-            }
-            Text(
-                text = if (amountText.isBlank()) "0" else amountText,
-                style = MoneyTypeScale.amountInput,
-                color = if (amountError != null) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-            )
-            amountError?.let { message ->
-                Text(text = message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(

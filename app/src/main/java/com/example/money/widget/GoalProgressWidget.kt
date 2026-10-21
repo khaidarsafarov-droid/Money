@@ -89,51 +89,70 @@ private fun GoalWidgetContent(
     val goals = actionStartActivity(AppIntents.openGoalsIntent(context))
     val add = actionStartActivity(AppIntents.quickAddIntent(context))
     val outer = widgetOuterRadius(context)
-    val inner = (outer - 8.dp).coerceAtLeast(8.dp)
 
+    val owesText = maskFromCents(snapshot.owedToMeCents, region, hide)
+    val oweText = maskFromCents(snapshot.iOweCents, region, hide)
+    val owesSize = widgetAmountFontSize(LocalSize.current.width, owesText.length)
+    val oweSize = widgetAmountFontSize(LocalSize.current.width, oweText.length)
     Column(
         modifier = GlanceModifier
             .fillMaxWidth()
             .wrapContentHeight()
             .cornerRadius(outer)
             .background(Card)
-            .padding(12.dp),
+            .padding(14.dp),
+        verticalAlignment = Alignment.Vertical.Top,
     ) {
-        Row(modifier = GlanceModifier.fillMaxWidth().wrapContentHeight()) {
-            WidgetTile(
-                label = context.getString(R.string.debt_dashboard_owes_me),
-                value = maskFromCents(snapshot.owedToMeCents, region, hide),
-                container = Mint,
-                content = OnMint,
-                radius = inner,
-                onClick = owesMe,
+        Row(
+            modifier = GlanceModifier.fillMaxWidth().wrapContentHeight(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = context.getString(R.string.home_brand),
+                style = TextStyle(color = Plus, fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                maxLines = 1,
+                modifier = GlanceModifier.defaultWeight(),
             )
-            Spacer(modifier = GlanceModifier.width(8.dp))
-            WidgetTile(
-                label = context.getString(R.string.debt_dashboard_i_owe),
-                value = maskFromCents(snapshot.iOweCents, region, hide),
-                container = Peach,
-                content = OnPeach,
-                radius = inner,
-                onClick = iOwe,
+            Text(
+                text = "+",
+                style = TextStyle(color = Plus, fontSize = 18.sp, fontWeight = FontWeight.Bold),
+                maxLines = 1,
+                modifier = GlanceModifier.clickable(add),
             )
         }
         Spacer(modifier = GlanceModifier.height(8.dp))
-        Row(modifier = GlanceModifier.fillMaxWidth().wrapContentHeight()) {
-            WidgetTile(
-                label = context.getString(R.string.section_goals),
-                value = "${snapshot.progressPercent}%",
-                container = GoalTile,
-                content = OnGoal,
-                radius = inner,
-                onClick = goals,
-            )
-            Spacer(modifier = GlanceModifier.width(8.dp))
-            PlusTile(
-                radius = inner,
-                onClick = add,
-            )
-        }
+        Text(
+            text = context.getString(R.string.debt_dashboard_owes_me),
+            style = TextStyle(color = OnMint, fontSize = 11.sp),
+            maxLines = 1,
+            modifier = GlanceModifier.clickable(owesMe),
+        )
+        Text(
+            text = owesText,
+            style = TextStyle(color = Plus, fontWeight = FontWeight.Bold, fontSize = owesSize),
+            maxLines = 1,
+            modifier = GlanceModifier.clickable(owesMe),
+        )
+        Spacer(modifier = GlanceModifier.height(6.dp))
+        Text(
+            text = context.getString(R.string.debt_dashboard_i_owe),
+            style = TextStyle(color = OnPeach, fontSize = 11.sp),
+            maxLines = 1,
+            modifier = GlanceModifier.clickable(iOwe),
+        )
+        Text(
+            text = oweText,
+            style = TextStyle(color = dayNight(androidx.compose.ui.graphics.Color(0xFFB3261E), DarkColorScheme.error), fontWeight = FontWeight.Bold, fontSize = oweSize),
+            maxLines = 1,
+            modifier = GlanceModifier.clickable(iOwe),
+        )
+        Spacer(modifier = GlanceModifier.height(4.dp))
+        Text(
+            text = "${snapshot.progressPercent}%",
+            style = TextStyle(color = OnGoal, fontSize = 11.sp),
+            maxLines = 1,
+            modifier = GlanceModifier.clickable(goals),
+        )
     }
 }
 

@@ -19,7 +19,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import com.example.money.ui.theme.finoraBalanceBrush
+import com.example.money.ui.theme.finoraInitials
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.NorthEast
@@ -106,22 +109,13 @@ fun DebtHistorySheet(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = debtor.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    if (debtor.dateDue > 0L) {
-                        Text(
-                            text = Formatters.dueDateCompact(debtor.dateDue),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                Text(
+                    text = debtor.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
                 if (debtor.phone.isNotBlank()) {
                     IconButton(onClick = { DebtContactActions.dialPhone(context, debtor.phone) }) {
                         Icon(
@@ -131,34 +125,43 @@ fun DebtHistorySheet(
                     }
                 }
             }
-            Text(
-                text = stringResource(R.string.debt_history_balance),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = Formatters.currencyFromCents(
-                    debtor.remainingAmountCents,
-                    debtor.currency,
-                    hide = hideAmounts,
-                ),
-                style = MaterialTheme.typography.displaySmall,
-            )
-            LinearProgressIndicator(
-                progress = { progress.coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
-            Text(
-                text = stringResource(
-                    R.string.debt_history_progress,
-                    Formatters.currencyFromCents(returned, debtor.currency, hide = hideAmounts),
-                    Formatters.currencyFromCents(debtor.targetAmountCents, debtor.currency, hide = hideAmounts),
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(finoraBalanceBrush())
+                    .padding(18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color.White.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = finoraInitials(debtor.name), color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                }
+                Text(
+                    text = stringResource(if (debtor.debtType == com.example.money.domain.model.DebtType.CREDITOR) R.string.debt_dashboard_owes_me else R.string.debt_dashboard_i_owe),
+                    color = Color.White.copy(alpha = 0.8f),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Text(
+                    text = Formatters.currencyFromCents(debtor.remainingAmountCents, debtor.currency, hide = hideAmounts),
+                    color = Color.White,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                if (debtor.dateDue > 0L) {
+                    Text(
+                        text = stringResource(R.string.debt_until, Formatters.dueDateCompact(debtor.dateDue)),
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
             if (entries.isEmpty()) {
                 Text(
                     text = stringResource(R.string.debt_history_empty),
@@ -166,19 +169,35 @@ fun DebtHistorySheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
+                val ordered = entries.sortedByDescending { it.at }
                 var previousMonth = ""
-                entries.sortedByDescending { it.at }.forEach { entry ->
+                var previousDay = ""
+                ordered.forEachIndexed { index, entry ->
                     val month = Formatters.monthYear(entry.at)
+                    val day = Formatters.dueDateCompact(entry.at)
                     if (month != previousMonth) {
                         Text(
                             text = month,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
                         )
                         previousMonth = month
+                        previousDay = ""
+                    }
+                    if (day != previousDay) {
+                        Text(
+                            text = day,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        previousDay = day
                     }
                     HistoryRow(entry = entry, currency = debtor.currency, hideAmounts = hideAmounts)
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    val nextDay = ordered.getOrNull(index + 1)?.let { Formatters.dueDateCompact(it.at) }
+                    if (nextDay == day) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
                 }
             }
         }
@@ -258,14 +277,14 @@ private fun HistoryRow(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
-                    .background(container),
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(if (took) Color(0xFFE2725B) else Color(0xFF2FA884)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = if (took) Icons.Rounded.SouthWest else Icons.Rounded.NorthEast,
                     contentDescription = null,
-                    tint = accent,
+                    tint = Color.White,
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
@@ -296,7 +315,7 @@ private fun HistoryRow(
 
 internal fun signedHistoryAmount(formatted: String, took: Boolean, hidden: Boolean): String {
     if (hidden) return formatted
-    return if (took) "+$formatted" else "-$formatted"
+    return if (took) "− $formatted" else "+ $formatted"
 }
 
 private enum class HistoryForm { None, Advance, Payment }

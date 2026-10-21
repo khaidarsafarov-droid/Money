@@ -8,8 +8,8 @@ class HistoryAmountTest {
 
     @Test
     fun historyAmountsKeepDirection() {
-        assertEquals("+12 000 ₽", signedHistoryAmount("12 000 ₽", took = true, hidden = false))
-        assertEquals("-8 000 ₽", signedHistoryAmount("8 000 ₽", took = false, hidden = false))
+        assertEquals("− 12 000 ₽", signedHistoryAmount("12 000 ₽", took = true, hidden = false))
+        assertEquals("+ 8 000 ₽", signedHistoryAmount("8 000 ₽", took = false, hidden = false))
         assertEquals("••••", signedHistoryAmount("••••", took = true, hidden = true))
     }
 
