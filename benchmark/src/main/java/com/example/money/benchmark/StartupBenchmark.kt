@@ -13,6 +13,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * Device-only startup and scroll frame timing. CI has no emulator, so the
+ * benchmark module is only assembled there. Measure a release build: debug
+ * Compose is much slower and is not the smoothness the phone should have.
+ */
 @RunWith(AndroidJUnit4::class)
 class StartupBenchmark {
     @get:Rule

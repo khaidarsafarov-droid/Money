@@ -54,7 +54,7 @@ fun CurrencyPickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
-                    items(visible, key = { it.currencyCode }) { region ->
+                    items(visible, key = { it.currencyCode }, contentType = { "currency" }) { region ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()

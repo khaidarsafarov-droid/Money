@@ -133,7 +133,7 @@ fun DebtPhotoReviewSheet(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
             ) {
-                items(rows, key = { it.id }) { row ->
+                items(rows, key = { it.id }, contentType = { "photo-row" }) { row ->
                     DraftEditor(
                         row = row,
                         onChange = { updated ->

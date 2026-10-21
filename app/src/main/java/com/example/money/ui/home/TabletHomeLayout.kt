@@ -451,7 +451,11 @@ fun TabletHomeLayout(
                                 )
                             }
                         } else {
-                            items(orderedGoals, key = { "tablet-goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
+                            items(
+                                orderedGoals,
+                                key = { "tablet-goal-${it.syncId.ifBlank { "id-${it.id}" }}" },
+                                contentType = { "goal" },
+                            ) { goal ->
                                 val pace = goal.dailyGoalCents
                                 val daysLeft = goal.deadlineMillis?.let { GoalProgress.daysUntilDeadline(it) }
                                 val baseSubtitle = if (goal.kind == GoalKind.ACTION) {
@@ -570,7 +574,11 @@ fun TabletHomeLayout(
                                         )
                                     }
                                 } else {
-                                    items(clientGroups, key = { "tablet-client-${it.open.id}" }) { group ->
+                                    items(
+                                        clientGroups,
+                                        key = { "tablet-client-${it.open.id}" },
+                                        contentType = { "client" },
+                                    ) { group ->
                                         HomeListCompactRow(
                                             title = group.display.name,
                                             subtitle = Formatters.currencyFromCents(
@@ -599,7 +607,11 @@ fun TabletHomeLayout(
                                     )
                                 }
                             } else {
-                                items(debtors, key = { "tablet-debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
+                                items(
+                                    debtors,
+                                    key = { "tablet-debtor-${it.syncId.ifBlank { "id-${it.id}" }}" },
+                                    contentType = { "debtor" },
+                                ) { debtor ->
                                     HomeListCompactRow(
                                         title = debtor.name,
                                         subtitle = stringResource(

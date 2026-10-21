@@ -60,7 +60,7 @@ fun LazyListScope.homeGoalAndDebtPreview(
                 .clickable(onClick = onOpenDebts),
         )
     }
-    items(homeDebts, key = { "home-debt-${it.id}" }) { debtor ->
+    items(homeDebts, key = { "home-debt-${it.id}" }, contentType = { "debt" }) { debtor ->
         val motion = systemMotionEnabled(LocalContext.current)
         HomeListCompactRow(
             title = debtor.name,

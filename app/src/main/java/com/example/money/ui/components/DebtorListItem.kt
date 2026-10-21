@@ -53,7 +53,6 @@ import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.initials
 import com.example.money.ui.motion.PaidCheck
-import com.example.money.ui.motion.moneySharedBounds
 import com.example.money.ui.motion.pressScale
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
@@ -228,7 +227,6 @@ private fun DebtorAvatar(name: String, overdue: Boolean, sharedKey: Any, paid: B
     Box(contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
-                .moneySharedBounds(sharedKey)
                 .size(40.dp)
                 .clip(RoundedCornerShape(13.dp))
                 .background(finoraAvatarColor(name))

@@ -1,6 +1,5 @@
 package com.example.money.ui.home
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,9 +51,8 @@ import com.example.money.ui.motion.MotionGlyph
 import com.example.money.ui.motion.MotionGlyphIcon
 import com.example.money.ui.motion.moneySharedBounds
 import com.example.money.ui.motion.pressScale
+import com.example.money.ui.motion.rememberDrawFraction
 import com.example.money.ui.theme.LocalMoneyExtraColors
-import com.example.money.ui.theme.MoneyMotion
-import com.example.money.ui.util.systemMotionEnabled
 import com.example.money.ui.theme.finoraAvatarColor
 import com.example.money.ui.theme.finoraBalanceBrush
 import com.example.money.ui.theme.finoraGoalBrush
@@ -195,7 +192,6 @@ fun FinoraBalanceCard(
     }
     Column(
         modifier = modifier
-            .moneySharedBounds("money-balance")
             .pressScale()
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
@@ -338,7 +334,7 @@ private fun QuickAction(
             contentAlignment = Alignment.Center,
         ) {
             if (glyph != null) {
-                MotionGlyphIcon(glyph = glyph, tint = tint, modifier = Modifier.size(22.dp))
+                MotionGlyphIcon(glyph = glyph, tint = tint, play = false, modifier = Modifier.size(22.dp))
             } else {
                 Icon(imageVector = icon, contentDescription = label, tint = tint)
             }
@@ -385,15 +381,10 @@ private fun FinoraGoalPreview(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val motion = systemMotionEnabled(LocalContext.current)
-    val progress by animateFloatAsState(
-        targetValue = goal.progressFraction.coerceIn(0f, 1f),
-        animationSpec = MoneyMotion.springSpec(motion),
-        label = "goalPreview",
-    )
+    val drawFraction = rememberDrawFraction(goal.progressFraction)
     Column(
         modifier = modifier
-            .moneySharedBounds("goal-${goal.id}")
+            .moneySharedBounds("goal-detail-${goal.id}")
             .pressScale()
             .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.surface)
@@ -417,7 +408,7 @@ private fun FinoraGoalPreview(
                 overflow = TextOverflow.Ellipsis,
             )
             LinearProgressIndicator(
-                progress = { progress },
+                progress = drawFraction,
                 modifier = Modifier
                     .padding(top = 8.dp)
                     .fillMaxWidth()
@@ -457,7 +448,7 @@ fun FinoraDebtRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        FinoraAvatar(debtor.name, sharedKey = "debtor-${debtor.id}")
+        FinoraAvatar(debtor.name)
         Column(modifier = Modifier.weight(1f)) {
             Text(text = debtor.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (due.isNotBlank()) {

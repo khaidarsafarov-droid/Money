@@ -80,6 +80,13 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+if (providers.gradleProperty("money.composeReports").orNull == "true") {
+    composeCompiler {
+        reportsDestination.set(layout.buildDirectory.dir("compose-reports"))
+        metricsDestination.set(layout.buildDirectory.dir("compose-reports"))
+    }
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

@@ -15,19 +15,16 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import com.example.money.ui.motion.MoneyInWindowSheet
 import com.example.money.ui.motion.moneySharedBounds
-import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.motion.rememberDrawFraction
 import com.example.money.ui.theme.finoraGoalBrush
-import com.example.money.ui.util.systemMotionEnabled
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -130,17 +127,8 @@ fun GoalActionsPanel(
     val done = actions.count { it.completed }
     val total = actions.size
     val fraction = if (total <= 0) 0f else done.toFloat() / total.toFloat()
-    val motion = systemMotionEnabled(LocalContext.current)
-    val moneyProgress by animateFloatAsState(
-        targetValue = goal.progressFraction.coerceIn(0f, 1f),
-        animationSpec = MoneyMotion.springSpec(motion),
-        label = "goalDetailMoney",
-    )
-    val actionProgress by animateFloatAsState(
-        targetValue = fraction,
-        animationSpec = MoneyMotion.springSpec(motion),
-        label = "goalDetailActions",
-    )
+    val moneyProgress = rememberDrawFraction(goal.progressFraction)
+    val actionProgress = rememberDrawFraction(fraction)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -156,7 +144,7 @@ fun GoalActionsPanel(
                 style = MaterialTheme.typography.bodyMedium,
             )
             LinearProgressIndicator(
-                progress = { moneyProgress },
+                progress = moneyProgress,
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -181,7 +169,7 @@ fun GoalActionsPanel(
                 fontWeight = FontWeight.Medium,
             )
             LinearProgressIndicator(
-                progress = { actionProgress },
+                progress = actionProgress,
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,

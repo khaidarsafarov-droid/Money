@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import com.example.money.ui.motion.AnimatedAmount
-import com.example.money.ui.motion.moneySharedBounds
 import com.example.money.ui.motion.pressScale
 import com.example.money.ui.theme.finoraBalanceBrush
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -177,7 +176,6 @@ fun DebtSectionTotal(
     }
     Column(
         modifier = modifier
-            .moneySharedBounds("money-balance")
             .pressScale()
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
@@ -228,7 +226,7 @@ fun DebtorFilterRow(
         horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         contentPadding = PaddingValues(horizontal = 0.dp),
     ) {
-        items(listFilters) { option ->
+        items(listFilters, key = { it.name }, contentType = { "filter" }) { option ->
             val selected = selectedFilter == option
             val label = if (option == DebtorFilter.OVERDUE) {
                 stringResource(R.string.debt_filter_overdue_count, overdueCount)

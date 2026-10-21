@@ -23,7 +23,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,16 +40,13 @@ import com.example.money.R
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
-import androidx.compose.ui.platform.LocalContext
-import com.example.money.ui.motion.moneySharedBounds
 import com.example.money.ui.motion.pressScale
-import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.motion.rememberDrawFraction
 import com.example.money.ui.theme.finoraGoalBrush
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.theme.moneyDisplayStyle
 import com.example.money.ui.util.Formatters
-import com.example.money.ui.util.systemMotionEnabled
 
 @Composable
 fun GoalListItem(
@@ -68,12 +64,7 @@ fun GoalListItem(
     val transferAction = if (isMoney) onTransfer else null
     val expenseAction = if (isMoney) onExpense else null
     val barFraction = if (isMoney) goal.progressFraction else goal.actionProgressFraction
-    val motionEnabled = systemMotionEnabled(LocalContext.current)
-    val animatedFraction by animateFloatAsState(
-        targetValue = barFraction.coerceIn(0f, 1f),
-        animationSpec = MoneyMotion.springSpec(motionEnabled),
-        label = "goalProgress",
-    )
+    val drawFraction = rememberDrawFraction(barFraction)
     val barPercent = if (isMoney) goal.progressPercent else goal.actionProgressPercent
     val isDeadlinePassed = goal.deadlineMillis != null &&
         GoalProgress.isDeadlinePassed(goal.deadlineMillis) &&
@@ -89,7 +80,6 @@ fun GoalListItem(
     Card(
         onClick = onOpen,
         modifier = modifier
-            .moneySharedBounds("goal-${goal.id}")
             .pressScale()
             .fillMaxWidth()
             .then(
@@ -102,13 +92,16 @@ fun GoalListItem(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (!goal.isCompleted) 2.dp else 1.dp,
+            defaultElevation = if (!goal.isCompleted) 1.dp else 0.dp,
+            pressedElevation = if (!goal.isCompleted) 1.dp else 0.dp,
+            focusedElevation = if (!goal.isCompleted) 1.dp else 0.dp,
+            hoveredElevation = if (!goal.isCompleted) 1.dp else 0.dp,
+            draggedElevation = if (!goal.isCompleted) 1.dp else 0.dp,
         ),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
-                    .moneySharedBounds("goal-detail-${goal.id}")
                     .fillMaxWidth()
                     .height(84.dp)
                     .background(finoraGoalBrush(goal.name.hashCode())),
@@ -284,7 +277,7 @@ fun GoalListItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 LinearProgressIndicator(
-                    progress = { animatedFraction },
+                    progress = drawFraction,
                     modifier = Modifier.weight(1f),
                     color = progressColor,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
