@@ -22,6 +22,16 @@ interface GoalRepository {
 
     suspend fun deleteGoal(goal: SavingsGoal)
 
+    fun stageDelete(goal: SavingsGoal)
+
+    fun unstageDelete(id: Long)
+
+    fun hasStagedDeletes(): Boolean
+
+    fun stagedGoals(): List<SavingsGoal>
+
+    suspend fun commitStagedDeletes()
+
     suspend fun addAction(goalId: Long, title: String, completed: Boolean = false): Long
 
     suspend fun setActionCompleted(actionId: Long, completed: Boolean)

@@ -32,7 +32,7 @@ import com.example.money.settings.PrivacySettings
 import com.example.money.ui.components.DebtorListItem
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
-import com.example.money.ui.components.SwipeToDeleteContainer
+import com.example.money.ui.components.SwipeToPaidContainer
 import com.example.money.ui.debtors.DebtCalendarTab
 import com.example.money.ui.debtors.DebtCheckInSheet
 import com.example.money.ui.debtors.DebtContactActions
@@ -195,8 +195,9 @@ fun LazyListScope.homeDebtsSection(
             } else {
                 items(clientGroups, key = { "client-${it.open.id}" }, contentType = { "client" }) { group ->
                     val motion = systemMotionEnabled(LocalContext.current)
-                    DebtorListItem(
-                        debtor = group.display,
+                    SwipeToPaidContainer(
+                        enabled = !group.open.isPaid,
+                        onMarkPaid = { onMarkDebtPaid(group.open) },
                         modifier = Modifier
                             .animateItem(
                                 fadeInSpec = MoneyMotion.spec(motion),
@@ -204,13 +205,18 @@ fun LazyListScope.homeDebtsSection(
                                 fadeOutSpec = MoneyMotion.spec(motion),
                             )
                             .padding(horizontal = 8.dp),
-                        onRemind = { onRemindDebtor(group.open) },
-                        onAddPayment = { onAddDebtPayment(group.open) },
-                        onOpen = { onOpenDebtor(group.open) },
-                        onEdit = { onEditDebtor(group.open) },
-                        onDelete = { onDeleteDebtor(group.open) },
-                        hideAmounts = privacySettings.hideAmounts,
-                    )
+                    ) {
+                        DebtorListItem(
+                            debtor = group.display,
+                            onRemind = { onRemindDebtor(group.open) },
+                            onAddPayment = { onAddDebtPayment(group.open) },
+                            onOpen = { onOpenDebtor(group.open) },
+                            onMarkPaid = { onMarkDebtPaid(group.open) },
+                            onEdit = { onEditDebtor(group.open) },
+                            onDelete = { onDeleteDebtor(group.open) },
+                            hideAmounts = privacySettings.hideAmounts,
+                        )
+                    }
                 }
             }
         } else if (debtors.isEmpty()) {
@@ -247,8 +253,9 @@ fun LazyListScope.homeDebtsSection(
                     )
                 }
                 val motion = systemMotionEnabled(LocalContext.current)
-                SwipeToDeleteContainer(
-                    onDelete = { onDeleteDebtor(debtor) },
+                SwipeToPaidContainer(
+                    enabled = !debtor.isPaid,
+                    onMarkPaid = { onMarkDebtPaid(debtor) },
                     modifier = Modifier
                         .animateItem(
                             fadeInSpec = MoneyMotion.spec(motion),

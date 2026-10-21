@@ -111,7 +111,6 @@ import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.SyncStatusIndicator
-import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalPsychologyEngines
 import com.example.money.ui.debtors.DebtListViewModel
@@ -134,8 +133,10 @@ import com.example.money.ui.util.vibrate
 import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.navigation.NotificationPermissionReason
 import com.example.money.ui.theme.moneySubheadingStyle
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -275,10 +276,6 @@ fun HomeScreen(
     var showAdvisorSheet by showAdvisorSheetState
     val showIncomeIdeasState = remember { mutableStateOf(false) }
     var showIncomeIdeas by showIncomeIdeasState
-    val pendingDeleteState = remember { mutableStateOf<PendingDelete?>(null) }
-    var pendingDelete by pendingDeleteState
-    val pendingMarkPaidState = remember { mutableStateOf<Debtor?>(null) }
-    var pendingMarkPaid by pendingMarkPaidState
     val remindDebtorState = remember { mutableStateOf<Debtor?>(null) }
     var remindDebtor by remindDebtorState
 
@@ -364,24 +361,66 @@ fun HomeScreen(
     }
 
     val noteDeletedMessage = stringResource(R.string.note_deleted)
+    val debtorDeletedMessage = stringResource(R.string.msg_debtor_deleted)
+    val goalDeletedMessage = stringResource(R.string.msg_goal_deleted)
+    val debtorPaidMessage = stringResource(R.string.msg_debtor_paid)
     val undoDeleteLabel = stringResource(R.string.action_undo)
-    fun offerUndo(start: () -> Unit, undo: () -> Unit) {
+    val undoJob = remember { mutableStateOf<Job?>(null) }
+    fun offerUndo(
+        message: String = noteDeletedMessage,
+        start: () -> Unit = {},
+        commit: () -> Unit = {},
+        undo: () -> Unit,
+    ) {
         start()
-        scope.launch {
-            val waiting = launch {
-                val result = snackbarHostState.showSnackbar(
-                    message = noteDeletedMessage,
-                    actionLabel = undoDeleteLabel,
-                    duration = SnackbarDuration.Indefinite,
-                )
-                if (result == SnackbarResult.ActionPerformed) {
-                    vibrate(context, HapticStrength.MEDIUM)
-                    undo()
+        val previous = undoJob.value
+        val session = UndoSession(commit = commit, undo = undo)
+        val job = scope.launch {
+            previous?.join()
+            var undone = false
+            try {
+                val result = withTimeoutOrNull(5_000) {
+                    snackbarHostState.showSnackbar(
+                        message = message,
+                        actionLabel = undoDeleteLabel,
+                        duration = SnackbarDuration.Indefinite,
+                    )
                 }
+                undone = result == SnackbarResult.ActionPerformed
+                if (undone) vibrate(context, HapticStrength.MEDIUM)
+            } finally {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                session.finish(undone && isActive)
             }
-            delay(5_000)
-            snackbarHostState.currentSnackbarData?.dismiss()
-            waiting.join()
+        }
+        previous?.cancel()
+        undoJob.value = job
+    }
+    fun deleteDebtorWithUndo(debtor: Debtor) {
+        offerUndo(
+            message = debtorDeletedMessage,
+            start = { debtorsViewModel.stageDelete(debtor) },
+            commit = { debtorsViewModel.commitDelete(debtor) },
+            undo = { debtorsViewModel.unstageDelete(debtor.id) },
+        )
+    }
+    fun deleteGoalWithUndo(goal: SavingsGoal) {
+        offerUndo(
+            message = goalDeletedMessage,
+            start = { goalViewModel.stageDelete(goal) },
+            commit = { goalViewModel.commitDelete(goal) },
+            undo = { goalViewModel.unstageDelete(goal.id) },
+        )
+    }
+    fun markDebtPaidWithUndo(debtor: Debtor) {
+        scope.launch {
+            val paymentId = debtorsViewModel.markAsPaidReturningId(debtor.id) ?: return@launch
+            offerUndo(
+                message = debtorPaidMessage,
+                undo = {
+                    scope.launch { debtorsViewModel.undoPaymentSync(debtor.id, paymentId) }
+                },
+            )
         }
     }
 
@@ -488,6 +527,19 @@ fun HomeScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP &&
+                (debtorsViewModel.hasStagedDeletes() || goalViewModel.hasStagedDeletes())
+            ) {
+                undoJob.value?.cancel()
+                debtorsViewModel.commitStagedDeletes()
+                goalViewModel.commitStagedDeletes()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     LaunchedEffect(appMode) {
         if (launchConfig.highlightDebtorId == null && launchConfig.openDebtPaymentForDebtorId == null) {
             debtListViewModel.setFilter(
@@ -543,8 +595,6 @@ fun HomeScreen(
         openNoteIdState = openNoteIdState,
         showCurrencyPickerState = showCurrencyPickerState,
         showAddSheetState = showAddSheetState,
-        pendingDeleteState = pendingDeleteState,
-        pendingMarkPaidState = pendingMarkPaidState,
         showAdvisorSheetState = showAdvisorSheetState,
         onDebtWithDueDateSaved = {
             requestNotificationPermissionIfNeeded(NotificationPermissionReason.FIRST_DUE_DEBT)
@@ -749,7 +799,7 @@ fun HomeScreen(
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },
-                onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
+                onDeleteGoal = ::deleteGoalWithUndo,
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onLogGoal = { progressLogGoal = it },
                 onExpense = { goalExpenseTarget = it },
@@ -763,7 +813,7 @@ fun HomeScreen(
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
-                onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
+                onMarkDebtPaid = ::markDebtPaidWithUndo,
                 privacySettings = privacySettings,
                 autopilotSettings = autopilotSettings,
                 showCheckIn = showCheckIn,
@@ -829,7 +879,7 @@ fun HomeScreen(
                 onFlushNoteDraft = noteViewModel::flushDraft,
                 noteDraftBlocksRemote = noteViewModel::hasUnsavedDraft,
                 onEditDebtor = { editDebtor = it },
-                onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
+                onDeleteDebtor = ::deleteDebtorWithUndo,
                 onViewContactHistory = { debtor ->
                     debtor.contactLookupKey?.let { key ->
                         openContactHistory(key, debtor.name)
@@ -878,7 +928,7 @@ fun HomeScreen(
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
                 onOpenGoal = { stepsGoalId = it.id },
-                onDeleteGoal = { pendingDelete = PendingDelete.GoalItem(it) },
+                onDeleteGoal = ::deleteGoalWithUndo,
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onLogGoal = { progressLogGoal = it },
                 onExpense = { goalExpenseTarget = it },
@@ -892,9 +942,9 @@ fun HomeScreen(
                     debtPaymentPrefillCents = prefillCents
                     showDebtPaymentDialog = debtor
                 },
-                onMarkDebtPaid = { debtor -> pendingMarkPaid = debtor },
+                onMarkDebtPaid = ::markDebtPaidWithUndo,
                 onEditDebtor = { editDebtor = it },
-                onDeleteDebtor = { pendingDelete = PendingDelete.DebtorItem(it) },
+                onDeleteDebtor = ::deleteDebtorWithUndo,
                 onViewContactHistory = { debtor ->
                     debtor.contactLookupKey?.let { key ->
                         openContactHistory(key, debtor.name)

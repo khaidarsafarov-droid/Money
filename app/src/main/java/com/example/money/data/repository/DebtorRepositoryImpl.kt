@@ -26,6 +26,7 @@ import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.domain.util.DebtOperationLabels
 import com.example.money.domain.util.MoneyMath
+import com.example.money.domain.util.StagedDeletes
 import com.example.money.ui.debtors.DebtTab
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.settings.AppMode
@@ -46,16 +47,22 @@ class DebtorRepositoryImpl(
     private val appMode: Flow<AppMode>,
 ) : DebtorRepository {
 
+    private val stagedDeletes = StagedDeletes<com.example.money.domain.model.Debtor>()
+
     private fun <T> scoped(query: (String) -> Flow<T>): Flow<T> =
         appMode.map { it.name }.distinctUntilChanged().flatMapLatest(query)
 
     override fun getAllDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
-        scoped { mode -> debtorDao.getAllDebtorsWithPayments(mode) }
-            .map { rows -> DebtorSort.sort(rows.map { it.toDomain() }) }
+        stagedDeletes.excluding(
+            scoped { mode -> debtorDao.getAllDebtorsWithPayments(mode) }
+                .map { rows -> DebtorSort.sort(rows.map { it.toDomain() }) },
+        ) { it.id }
 
     override fun getActiveDebtors(): Flow<List<com.example.money.domain.model.Debtor>> =
-        scoped { mode -> debtorDao.getActiveDebtorsWithPayments(mode) }
-            .map { rows -> DebtorSort.sort(rows.map { it.toDomain() }) }
+        stagedDeletes.excluding(
+            scoped { mode -> debtorDao.getActiveDebtorsWithPayments(mode) }
+                .map { rows -> DebtorSort.sort(rows.map { it.toDomain() }) },
+        ) { it.id }
 
     override fun observeFilteredDebtors(
         tab: DebtTab,
@@ -84,6 +91,25 @@ class DebtorRepositoryImpl(
         )
         }.map { rows ->
             DebtorSort.sort(rows.map { it.toDomain() }, now)
+        }.let { flow -> stagedDeletes.excluding(flow) { it.id } }
+    }
+
+    override fun stageDelete(debtor: com.example.money.domain.model.Debtor) {
+        stagedDeletes.stage(debtor.id, debtor)
+    }
+
+    override fun unstageDelete(id: Long) {
+        stagedDeletes.unstage(id)
+    }
+
+    override fun hasStagedDeletes(): Boolean = !stagedDeletes.isEmpty()
+
+    override fun stagedDebtors(): List<com.example.money.domain.model.Debtor> = stagedDeletes.snapshot()
+
+    override suspend fun commitStagedDeletes() {
+        stagedDeletes.snapshot().forEach { debtor ->
+            deleteDebtor(debtor)
+            stagedDeletes.unstage(debtor.id)
         }
     }
 

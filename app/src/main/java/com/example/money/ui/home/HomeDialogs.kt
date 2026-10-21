@@ -43,9 +43,6 @@ import com.example.money.ui.goal.GoalViewModel
 import com.example.money.ui.notes.NoteFormDialog
 import com.example.money.ui.notes.NoteViewModel
 import com.example.money.ui.settings.CurrencyPickerDialog
-import com.example.money.ui.util.Formatters
-import com.example.money.ui.util.HapticStrength
-import com.example.money.ui.util.vibrate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -92,8 +89,6 @@ internal fun HomeDialogs(
     openNoteIdState: MutableState<Long?>,
     showCurrencyPickerState: MutableState<Boolean>,
     showAddSheetState: MutableState<Boolean>,
-    pendingDeleteState: MutableState<PendingDelete?>,
-    pendingMarkPaidState: MutableState<Debtor?>,
     showAdvisorSheetState: MutableState<Boolean>,
     onDebtWithDueDateSaved: () -> Unit = {},
 ) {
@@ -116,8 +111,6 @@ internal fun HomeDialogs(
     var openNoteId by openNoteIdState
     var showCurrencyPicker by showCurrencyPickerState
     var showAddSheet by showAddSheetState
-    var pendingDelete by pendingDeleteState
-    var pendingMarkPaid by pendingMarkPaidState
     var showAdvisorSheet by showAdvisorSheetState
 
     if (pendingCalendarClose != null) {
@@ -432,58 +425,6 @@ internal fun HomeDialogs(
                 }
             },
             onNewGoal = { showAddGoalDialog = true },
-        )
-    }
-
-    pendingDelete?.let { delete ->
-        PendingDeleteDialog(
-            pending = delete,
-            onDismiss = { pendingDelete = null },
-            onDeleteDebtor = { debtor ->
-                debtorsViewModel.deleteDebtor(debtor)
-                scope.launch { showMessage(context.getString(R.string.msg_debtor_deleted)) }
-            },
-            onDeleteGoal = { goal ->
-                goalViewModel.deleteGoal(goal)
-                scope.launch { showMessage(context.getString(R.string.msg_goal_deleted)) }
-            },
-        )
-    }
-
-    pendingMarkPaid?.let { debtor ->
-        AlertDialog(
-            onDismissRequest = { pendingMarkPaid = null },
-            title = { Text(stringResource(R.string.mark_debt_paid_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.mark_debt_paid_message,
-                        debtor.name,
-                        Formatters.currencyFromCents(
-                            debtor.remainingAmountCents,
-                            debtor.currency,
-                            hide = privacySettings.hideAmounts,
-                        ),
-                    ),
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        vibrate(context, HapticStrength.MEDIUM)
-                        debtorsViewModel.markAsPaid(debtor.id)
-                        pendingMarkPaid = null
-                        scope.launch { showMessage(context.getString(R.string.msg_debtor_paid)) }
-                    },
-                ) {
-                    Text(stringResource(R.string.action_mark_paid))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingMarkPaid = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
         )
     }
 

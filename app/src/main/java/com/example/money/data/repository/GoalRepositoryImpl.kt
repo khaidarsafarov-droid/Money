@@ -16,6 +16,7 @@ import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.domain.util.GlobalFinanceEngine
+import com.example.money.domain.util.StagedDeletes
 import com.example.money.settings.AppMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -34,7 +35,12 @@ class GoalRepositoryImpl(
     private val appMode: Flow<AppMode>,
 ) : GoalRepository {
 
+    private val stagedDeletes = StagedDeletes<SavingsGoal>()
+
     override fun observeAllGoals(): Flow<List<SavingsGoal>> =
+        stagedDeletes.excluding(observeStoredGoals()) { it.id }
+
+    private fun observeStoredGoals(): Flow<List<SavingsGoal>> =
         appMode.map { it.name }.distinctUntilChanged().flatMapLatest { mode ->
         combine(
             savingsGoalDao.observeAllGoals(mode),
@@ -101,6 +107,25 @@ class GoalRepositoryImpl(
             )
             savingsGoalDao.update(entity)
             syncQueueRecorder.recordGoal(entity)
+        }
+    }
+
+    override fun stageDelete(goal: SavingsGoal) {
+        stagedDeletes.stage(goal.id, goal)
+    }
+
+    override fun unstageDelete(id: Long) {
+        stagedDeletes.unstage(id)
+    }
+
+    override fun hasStagedDeletes(): Boolean = !stagedDeletes.isEmpty()
+
+    override fun stagedGoals(): List<SavingsGoal> = stagedDeletes.snapshot()
+
+    override suspend fun commitStagedDeletes() {
+        stagedDeletes.snapshot().forEach { goal ->
+            deleteGoal(goal)
+            stagedDeletes.unstage(goal.id)
         }
     }
 

@@ -28,6 +28,9 @@ import com.example.money.settings.PersonalBranchSettings
 import com.example.money.settings.PrivacySettings
 import com.example.money.settings.UserProfile
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -505,6 +508,9 @@ class DebtorsViewModel(
 
     suspend fun undoPaymentSync(debtorId: Long, paymentId: Long) {
         debtorRepository.undoDebtPayment(debtorId, paymentId)
+        if (_pendingCalendarClose.value?.id == debtorId) {
+            _pendingCalendarClose.value = null
+        }
         val debtor = debtorRepository.getDebtorById(debtorId) ?: return
         if (debtor.isPaid) {
             debtReminderScheduler.cancel(debtorId)
@@ -514,6 +520,46 @@ class DebtorsViewModel(
                 _celebrationDebtor.value = null
             }
         }
+    }
+
+    suspend fun markAsPaidReturningId(id: Long): Long? {
+        val debtor = debtorRepository.getDebtorById(id) ?: return null
+        if (debtor.isPaid) return null
+        val remaining = debtor.remainingAmountCents
+        val affectsBalance = debtor.debtType == DebtType.CREDITOR
+        if (remaining <= 0L) {
+            debtorRepository.markAsPaid(id, affectsBalance)
+            return null
+        }
+        return recordPaymentSync(id, remaining, affectsBalance)
+    }
+
+    fun stageDelete(debtor: Debtor) {
+        debtorRepository.stageDelete(debtor)
+    }
+
+    fun unstageDelete(id: Long) {
+        debtorRepository.unstageDelete(id)
+    }
+
+    fun hasStagedDeletes(): Boolean = debtorRepository.hasStagedDeletes()
+
+    fun commitDelete(debtor: Debtor) {
+        deleteDebtor(debtor)
+    }
+
+    fun commitStagedDeletes() {
+        debtorRepository.stagedDebtors().forEach(::deleteDebtor)
+    }
+
+    override fun onCleared() {
+        val pending = debtorRepository.stagedDebtors()
+        if (pending.isNotEmpty()) {
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                pending.forEach { purgeDebtor(it) }
+            }
+        }
+        super.onCleared()
     }
 
     suspend fun applyMicroPaymentSync(): DebtAutopilotEngine.MicroPaymentPlan? {
@@ -546,10 +592,15 @@ class DebtorsViewModel(
 
     fun deleteDebtor(debtor: Debtor) {
         viewModelScope.launch {
-            debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId, debtor.id)
-            debtorRepository.deleteDebtor(debtor)
-            debtReminderScheduler.cancel(debtor.id)
+            purgeDebtor(debtor)
         }
+    }
+
+    private suspend fun purgeDebtor(debtor: Debtor) {
+        debtCalendarSyncService.deleteDebtEvent(debtor.calendarEventId, debtor.id)
+        debtorRepository.deleteDebtor(debtor)
+        debtorRepository.unstageDelete(debtor.id)
+        debtReminderScheduler.cancel(debtor.id)
     }
 
     fun syncDebtToCalendarManually(debtor: Debtor) {

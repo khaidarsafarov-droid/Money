@@ -7,6 +7,9 @@ import com.example.money.domain.model.GoalAction
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.GoalRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -98,6 +101,40 @@ class GoalViewModel(
         viewModelScope.launch {
             goalRepository.deleteGoal(goal)
         }
+    }
+
+    fun stageDelete(goal: SavingsGoal) {
+        goalRepository.stageDelete(goal)
+    }
+
+    fun unstageDelete(id: Long) {
+        goalRepository.unstageDelete(id)
+    }
+
+    fun hasStagedDeletes(): Boolean = goalRepository.hasStagedDeletes()
+
+    fun commitDelete(goal: SavingsGoal) {
+        viewModelScope.launch {
+            goalRepository.deleteGoal(goal)
+            goalRepository.unstageDelete(goal.id)
+        }
+    }
+
+    fun commitStagedDeletes() {
+        goalRepository.stagedGoals().forEach { commitDelete(it) }
+    }
+
+    override fun onCleared() {
+        val pending = goalRepository.stagedGoals()
+        if (pending.isNotEmpty()) {
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                pending.forEach { goal ->
+                    goalRepository.deleteGoal(goal)
+                    goalRepository.unstageDelete(goal.id)
+                }
+            }
+        }
+        super.onCleared()
     }
 
     class Factory(

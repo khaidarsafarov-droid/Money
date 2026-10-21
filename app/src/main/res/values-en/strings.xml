@@ -19,6 +19,8 @@
     <string name="action_edit">Edit</string>
     <string name="action_delete">Delete</string>
     <string name="action_mark_paid">Paid</string>
+    <string name="a11y_mark_paid">Paid</string>
+    <string name="a11y_open">Open</string>
     <string name="mark_debt_paid_title">Mark debt as paid?</string>
     <string name="mark_debt_paid_message">"%1$s" will be marked paid. Remaining %2$s.</string>
     <string name="action_add_payment">Add payment</string>

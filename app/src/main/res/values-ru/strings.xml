@@ -18,6 +18,8 @@
     <string name="action_edit">Изменить</string>
     <string name="action_delete">Удалить</string>
     <string name="action_mark_paid">Погашено</string>
+    <string name="a11y_mark_paid">Оплачен</string>
+    <string name="a11y_open">Открыть</string>
     <string name="mark_debt_paid_title">Отметить долг погашенным?</string>
     <string name="mark_debt_paid_message">«%1$s» будет погашен. Остаток %2$s.</string>
     <string name="action_add_payment">Добавить оплату</string>

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.money.ui.theme.finoraAvatarColor
@@ -17,6 +18,7 @@ import com.example.money.ui.theme.finoraInitials
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Call
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Notifications
@@ -38,8 +40,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -109,6 +114,8 @@ fun DebtorListItem(
     val rowSpoken = listOf(debtor.name, amountLabel, dueSpoken)
         .filter { it.isNotBlank() }
         .joinToString(", ")
+    val openLabel = stringResource(R.string.a11y_open)
+    val paidActionLabel = stringResource(R.string.a11y_mark_paid)
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -116,10 +123,20 @@ fun DebtorListItem(
                 .fillMaxWidth()
                 .background(rowBackground)
                 .pressScale()
-                .clickable(onClick = onOpen)
+                .clickable(onClickLabel = openLabel, role = Role.Button, onClick = onOpen)
                 .heightIn(min = MoneySpacing.listRow)
                 .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md)
-                .semantics(mergeDescendants = true) { contentDescription = rowSpoken },
+                .semantics(mergeDescendants = true) {
+                    contentDescription = rowSpoken
+                    if (!debtor.isPaid && onMarkPaid != null) {
+                        customActions = listOf(
+                            CustomAccessibilityAction(paidActionLabel) {
+                                onMarkPaid()
+                                true
+                            },
+                        )
+                    }
+                },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
@@ -138,10 +155,12 @@ fun DebtorListItem(
 
             Text(
                 text = amountLabel,
+                modifier = Modifier.widthIn(max = 140.dp),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
 
             Box {
@@ -179,6 +198,18 @@ fun DebtorListItem(
                             },
                             leadingIcon = {
                                 Icon(Icons.Outlined.Notifications, contentDescription = null)
+                            },
+                        )
+                    }
+                    if (!debtor.isPaid && onMarkPaid != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_mark_paid)) },
+                            onClick = {
+                                showMenu = false
+                                onMarkPaid()
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Check, contentDescription = null)
                             },
                         )
                     }
