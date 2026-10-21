@@ -38,9 +38,6 @@
     <string name="notification_debt_overdue_i_owe">Вы просрочили возврат %1$s %2$s на %3$d дн.</string>
     <string name="notification_action_mark_paid">Погашено</string>
     <string name="notification_action_snooze">Напомнить позже</string>
-    <string name="notification_permission_needed">Разрешите уведомления</string>
-    <string name="notification_permission_action">Разрешить уведомления</string>
-    <string name="notification_permission_later">Не сейчас</string>
     <string name="calendar_permission_granted">Доступ к календарю разрешён</string>
     <string name="calendar_permission_denied">Нет доступа к календарю</string>
 
@@ -691,4 +688,35 @@
         <item quantity="many">%d долгов</item>
         <item quantity="other">%d долга</item>
     </plurals>
+    <string name="widget_plus" translatable="false">+</string>
+    <string name="debt_until">до %1$s</string>
+    <string name="goal_meta_due">до %1$s</string>
+    <string name="goal_meta_pace">%1$s/день</string>
+    <string name="debt_add_manual">Вручную</string>
+    <string name="debt_import_action">С фото</string>
+    <string name="debt_import_camera">Камера</string>
+    <string name="debt_import_gallery">Галерея</string>
+    <string name="debt_import_review">Проверка</string>
+    <string name="debt_import_empty">Ничего не найдено</string>
+    <string name="debt_import_saved">Сохранено</string>
+    <string name="clients_empty">Нет клиентов</string>
+    <string name="debt_import_name">Имя</string>
+    <string name="debt_import_amount">Сумма</string>
+    <string name="debt_import_date">Дата</string>
+    <string name="home_brand">Money</string>
+    <string name="home_balance_label">Баланс</string>
+    <string name="home_returned_month">+%1$s за месяц</string>
+    <string name="home_status_overdue">Просрочено · %1$d · %2$s</string>
+    <string name="home_status_today">Сегодня · %1$d</string>
+    <string name="home_status_week">7 дней · %1$d</string>
+    <string name="qa_returned">Вернули</string>
+    <string name="qa_add_debt">+ Долг</string>
+    <string name="notification_enable_short">Включить</string>
+    <string name="action_see_all">Все</string>
+    <string name="qa_photo">Фото</string>
+    <string name="qa_debt">Долг</string>
+    <string name="debt_total_short">Всего</string>
+    <string name="clients_owed_total">Должны всего</string>
+    <string name="photo_import_lines">%1$d строк</string>
+    <string name="photo_import_selected">%1$d выбрано · %2$s</string>
 </resources>

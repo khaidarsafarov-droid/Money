@@ -282,7 +282,6 @@ private fun HistoryRow(
         signed,
     )
     val accent = if (took) extra.negative else extra.positive
-    val container = if (took) extra.negativeContainer else extra.positiveContainer
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(
             modifier = Modifier

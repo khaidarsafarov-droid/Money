@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package com.example.money.data.repository
 
 import com.example.money.data.local.dao.FinanceNoteDao
