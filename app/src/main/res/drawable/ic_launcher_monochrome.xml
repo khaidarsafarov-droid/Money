@@ -4,33 +4,18 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M36,46 A20,20 0 0 1 72,46"
-        android:strokeWidth="6"
-        android:strokeColor="#FF000000"
-        android:strokeLineCap="round" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M65,41 L72,48 L79,41"
-        android:strokeWidth="6"
-        android:strokeColor="#FF000000"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M72,62 A20,20 0 0 1 36,62"
-        android:strokeWidth="6"
-        android:strokeColor="#FF000000"
-        android:strokeLineCap="round" />
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M29,67 L36,60 L43,67"
-        android:strokeWidth="6"
-        android:strokeColor="#FF000000"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M54,49 a5,5 0 1 1 0,10 a5,5 0 1 1 0,-10" />
+    <group
+        android:scaleX="0.106"
+        android:scaleY="0.106"
+        android:translateX="-0.295"
+        android:translateY="3.169">
+        <group
+            android:translateX="-512.000"
+            android:translateY="-479.333">
+        <path
+            android:fillColor="#FF000000"
+            android:fillType="evenOdd"
+            android:pathData="M332,330 H692 A70,70 0 0 1 762,400 V640 A70,70 0 0 1 692,710 H332 A70,70 0 0 1 262,640 V400 A70,70 0 0 1 332,330 Z M300,330 L620,250 Q660,242 668,282 L678,330 Z M630,460 H722 A40,40 0 0 1 762,500 V540 A40,40 0 0 1 722,580 H630 A40,40 0 0 1 590,540 V500 A40,40 0 0 1 630,460 Z M620,520 A20,20 0 1 1 660,520 A20,20 0 1 1 620,520 Z M320.2,539.8 L390.2,609.8 L396.16,614.34 L403.11,617.14 L410.56,617.99 L417.97,616.84 L424.8,613.77 L430.57,608.99 L550.57,478.99 L554.79,473.02 L557.31,466.16 L557.98,458.88 L556.73,451.68 L553.67,445.04 L548.99,439.43 L543.02,435.21 L536.16,432.69 L528.88,432.02 L521.68,433.27 L515.04,436.33 L509.43,441.01 L389.43,571.01 L395.2,566.23 L402.03,563.16 L409.44,562.01 L416.89,562.86 L423.84,565.66 L429.8,570.2 L359.8,500.2 L354,495.75 L347.25,492.95 L340,492 L332.75,492.95 L326,495.75 L320.2,500.2 L315.75,506 L312.95,512.75 L312,520 L312.95,527.25 L315.75,534 L320.2,539.8 Z" />
+        </group>
+    </group>
 </vector>
