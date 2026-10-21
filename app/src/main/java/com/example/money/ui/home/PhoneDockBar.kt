@@ -1,5 +1,7 @@
 package com.example.money.ui.home
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,15 +28,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
+import com.example.money.ui.motion.pressScale
+import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.util.systemMotionEnabled
 
 internal enum class PhoneDockTab {
     Home,
@@ -83,9 +91,16 @@ private fun RowScope.DockItem(
 ) {
     val on = selected == tab
     val scheme = MaterialTheme.colorScheme
+    val motion = systemMotionEnabled(LocalContext.current)
+    val iconScale by animateFloatAsState(
+        targetValue = if (on) 1f else 0.92f,
+        animationSpec = MoneyMotion.pressSpec(motion),
+        label = "dockIcon",
+    )
     Column(
         modifier = Modifier
             .weight(1f)
+            .pressScale()
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -96,12 +111,23 @@ private fun RowScope.DockItem(
                 .background(if (on) scheme.primaryContainer else scheme.surface),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = if (on) selectedIcon else icon,
-                contentDescription = label,
-                tint = if (on) scheme.primary else scheme.onSurfaceVariant,
-                modifier = Modifier.size(22.dp),
-            )
+            Crossfade(
+                targetState = on,
+                animationSpec = MoneyMotion.spec(motion, MoneyMotion.short),
+                label = "dockGlyph",
+            ) { selectedNow ->
+                Icon(
+                    imageVector = if (selectedNow) selectedIcon else icon,
+                    contentDescription = label,
+                    tint = if (on) scheme.primary else scheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .graphicsLayer {
+                            scaleX = iconScale
+                            scaleY = iconScale
+                        },
+                )
+            }
         }
         Text(
             text = label,

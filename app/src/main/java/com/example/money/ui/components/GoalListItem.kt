@@ -42,6 +42,8 @@ import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
 import androidx.compose.ui.platform.LocalContext
+import com.example.money.ui.motion.moneySharedBounds
+import com.example.money.ui.motion.pressScale
 import com.example.money.ui.theme.MoneyMotion
 import com.example.money.ui.theme.finoraGoalBrush
 import com.example.money.ui.theme.MoneySpacing
@@ -69,7 +71,7 @@ fun GoalListItem(
     val motionEnabled = systemMotionEnabled(LocalContext.current)
     val animatedFraction by animateFloatAsState(
         targetValue = barFraction.coerceIn(0f, 1f),
-        animationSpec = MoneyMotion.spec(motionEnabled, MoneyMotion.long),
+        animationSpec = MoneyMotion.springSpec(motionEnabled),
         label = "goalProgress",
     )
     val barPercent = if (isMoney) goal.progressPercent else goal.actionProgressPercent
@@ -87,6 +89,8 @@ fun GoalListItem(
     Card(
         onClick = onOpen,
         modifier = modifier
+            .moneySharedBounds("goal-${goal.id}")
+            .pressScale()
             .fillMaxWidth()
             .then(
                 if (goal.isOverAchieved) {
@@ -104,6 +108,7 @@ fun GoalListItem(
         Column(modifier = Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
+                    .moneySharedBounds("goal-detail-${goal.id}")
                     .fillMaxWidth()
                     .height(84.dp)
                     .background(finoraGoalBrush(goal.name.hashCode())),

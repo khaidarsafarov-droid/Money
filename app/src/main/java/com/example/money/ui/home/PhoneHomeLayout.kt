@@ -11,7 +11,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -77,6 +76,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -305,22 +305,20 @@ internal fun PhoneHomeLayout(
                     if (!motionEnabled) {
                         EnterTransition.None togetherWith ExitTransition.None
                     } else {
-                        (
-                            fadeIn(tween(MoneyMotion.fadeIn, easing = MoneyMotion.emphasizedDecelerate)) +
-                                scaleIn(
-                                    animationSpec = tween(
-                                        MoneyMotion.fadeIn,
-                                        easing = MoneyMotion.emphasizedDecelerate,
-                                    ),
-                                    initialScale = 0.92f,
-                                )
-                            ) togetherWith fadeOut(
+                        fadeIn(
+                            tween(
+                                MoneyMotion.fadeIn,
+                                delayMillis = MoneyMotion.fadeOut,
+                                easing = MoneyMotion.emphasizedDecelerate,
+                            ),
+                        ) togetherWith fadeOut(
                             tween(MoneyMotion.fadeOut, easing = MoneyMotion.emphasizedAccelerate),
                         )
                     }
                 },
                 label = "phoneHomeTab",
             ) { tabIndex ->
+            CompositionLocalProvider(com.example.money.ui.motion.LocalMoneyVisibility provides this) {
             val page = HomeTab.entries[tabIndex]
             if (page == HomeTab.More) {
                 MorePage(
@@ -468,14 +466,18 @@ internal fun PhoneHomeLayout(
                         )
                     }
                 } else {
-                    items(orderedGoals, key = { "goal-${it.syncId.ifBlank { "id-${it.id}" }}" }) { goal ->
+                    items(
+                        orderedGoals,
+                        key = { "goal-${it.syncId.ifBlank { "id-${it.id}" }}" },
+                        contentType = { "goal" },
+                    ) { goal ->
                         val motion = systemMotionEnabled(LocalContext.current)
                         SwipeToDeleteContainer(
                             onDelete = { onDeleteGoal(goal) },
                             modifier = Modifier
                                 .animateItem(
                                     fadeInSpec = MoneyMotion.spec(motion),
-                                    placementSpec = MoneyMotion.spec(motion),
+                                    placementSpec = MoneyMotion.springSpec(motion),
                                     fadeOutSpec = MoneyMotion.spec(motion),
                                 )
                                 .padding(
@@ -549,6 +551,7 @@ internal fun PhoneHomeLayout(
                         onImportGallery = onImportGallery,
                     )
                 }
+            }
             }
             }
         }

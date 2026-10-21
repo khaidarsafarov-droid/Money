@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +52,9 @@ import com.example.money.settings.AppMode
 import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.initials
+import com.example.money.ui.motion.PaidCheck
+import com.example.money.ui.motion.moneySharedBounds
+import com.example.money.ui.motion.pressScale
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.util.Formatters
@@ -112,6 +116,7 @@ fun DebtorListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(rowBackground)
+                .pressScale()
                 .clickable(onClick = onOpen)
                 .heightIn(min = MoneySpacing.listRow)
                 .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.md)
@@ -119,7 +124,7 @@ fun DebtorListItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
-            DebtorAvatar(name = debtor.name, overdue = isOverdue)
+            DebtorAvatar(name = debtor.name, overdue = isOverdue, sharedKey = "debtor-${debtor.id}", paid = debtor.isPaid)
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -209,11 +214,21 @@ fun DebtorListItem(
 }
 
 @Composable
-private fun DebtorAvatar(name: String, overdue: Boolean) {
+private fun DebtorAvatar(name: String, overdue: Boolean, sharedKey: Any, paid: Boolean) {
     val scheme = MaterialTheme.colorScheme
+    var playCheck by remember(sharedKey) { mutableStateOf(false) }
+    var ready by remember(sharedKey) { mutableStateOf(false) }
+    LaunchedEffect(paid) {
+        if (!ready) {
+            ready = true
+            return@LaunchedEffect
+        }
+        if (paid) playCheck = true
+    }
     Box(contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
+                .moneySharedBounds(sharedKey)
                 .size(40.dp)
                 .clip(RoundedCornerShape(13.dp))
                 .background(finoraAvatarColor(name))
@@ -226,6 +241,13 @@ private fun DebtorAvatar(name: String, overdue: Boolean) {
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.labelMedium,
             )
+            if (paid) {
+                PaidCheck(
+                    play = playCheck,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
         if (overdue) {
             Box(

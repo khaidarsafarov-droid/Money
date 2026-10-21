@@ -14,6 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import com.example.money.ui.motion.MotionGlyph
+import com.example.money.ui.motion.MotionGlyphIcon
+import com.example.money.ui.motion.moneySheetMotion
+import com.example.money.ui.util.MoneyHaptic
+import com.example.money.ui.util.moneyHaptic
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -85,6 +90,7 @@ fun DebtPhotoReviewSheet(
         Column(
             modifier = Modifier
                 .fillMaxHeight(0.96f)
+                .moneySheetMotion(onDismiss)
                 .padding(horizontal = 20.dp),
         ) {
             val selectedRows = rows.filter { it.selected }
@@ -137,6 +143,8 @@ fun DebtPhotoReviewSheet(
                     )
                 }
             }
+            val saveView = androidx.compose.ui.platform.LocalView.current
+            var saved by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
             Button(
                 onClick = {
                     val imported = mutableListOf<ImportedDebt>()
@@ -157,15 +165,25 @@ fun DebtPhotoReviewSheet(
                             )
                         }
                     }
-                    if (!invalid && imported.isNotEmpty()) onSave(imported)
+                    if (invalid || imported.isEmpty()) {
+                        saveView.moneyHaptic(MoneyHaptic.Reject)
+                    } else {
+                        saved = true
+                        saveView.moneyHaptic(MoneyHaptic.Confirm)
+                        onSave(imported)
+                    }
                 },
-                enabled = rows.any { it.selected },
+                enabled = rows.any { it.selected } && !saved,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp)
                     .heightIn(min = 56.dp),
             ) {
-                Text(stringResource(R.string.action_save))
+                if (saved) {
+                    MotionGlyphIcon(MotionGlyph.Check, tint = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text(stringResource(R.string.action_save))
+                }
             }
         }
     }

@@ -16,7 +16,11 @@ import com.example.money.ui.debtors.DebtPhotoReviewSheet
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.expandVertically
+import androidx.compose.runtime.CompositionLocalProvider
+import com.example.money.ui.motion.LocalMoneySharedTransition
+import com.example.money.ui.motion.pressScale
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -521,7 +525,6 @@ fun HomeScreen(
         contactHistoryTargetState = contactHistoryTargetState,
         remindDebtorState = remindDebtorState,
         showDebtPaymentDialogState = showDebtPaymentDialogState,
-        historyDebtorState = historyDebtorState,
         debtPaymentPrefillCentsState = debtPaymentPrefillCentsState,
         showIncomeIdeasState = showIncomeIdeasState,
         showTransferDialogState = showTransferDialogState,
@@ -529,7 +532,6 @@ fun HomeScreen(
         showExpenseDialogState = showExpenseDialogState,
         goalExpenseTargetState = goalExpenseTargetState,
         showAddGoalDialogState = showAddGoalDialogState,
-        stepsGoalIdState = stepsGoalIdState,
         progressLogGoalState = progressLogGoalState,
         editGoalState = editGoalState,
         showNoteFormState = showNoteFormState,
@@ -685,6 +687,7 @@ fun HomeScreen(
             }
             val showFab = isTablet || HomeTab.entries.getOrElse(selectedTab) { HomeTab.Home } != HomeTab.Home
             if (showFab) FloatingActionButton(
+                modifier = Modifier.pressScale(),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                 onClick = {
                     when (pagePlus) {
@@ -708,7 +711,11 @@ fun HomeScreen(
             }
         }
 
+        SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
+        CompositionLocalProvider(LocalMoneySharedTransition provides this) {
         if (isTablet) {
+            androidx.compose.animation.AnimatedVisibility(visible = true) {
+            CompositionLocalProvider(com.example.money.ui.motion.LocalMoneyVisibility provides this) {
             TabletHomeLayout(
                 section = tabletSection,
                 onSectionChange = { section ->
@@ -834,6 +841,8 @@ fun HomeScreen(
                 onImportCamera = if (importFromPhoto) startDebtCamera else null,
                 onImportGallery = if (importFromPhoto) startDebtGallery else null,
             )
+            }
+            }
         } else {
             PhoneHomeLayout(
                 drawerState = drawerState,
@@ -974,6 +983,40 @@ fun HomeScreen(
                 onImportGallery = if (importFromPhoto) startDebtGallery else null,
             )
         }
+        HomeMotionOverlay(
+            historyDebtorState = historyDebtorState,
+            allDebtors = allDebtors,
+            hideAmounts = privacySettings.hideAmounts,
+            onAddAdvance = { debtor, amountCents, givenAt, note ->
+                scope.launch {
+                    val ok = debtorsViewModel.addDebtAdvanceSync(debtor.id, amountCents, givenAt, note)
+                    showMessage(
+                        context.getString(
+                            if (ok) R.string.msg_debt_advance_saved else R.string.error_debt_advance_failed,
+                        ),
+                    )
+                }
+            },
+            onAddPayment = { debtor, amountCents, paidAt ->
+                scope.launch {
+                    val ok = debtorsViewModel.processPaymentSync(debtor.id, amountCents, false, paidAt)
+                    showMessage(
+                        context.getString(
+                            if (ok) R.string.msg_payment_neutral else R.string.error_payment_failed,
+                        ),
+                    )
+                }
+            },
+            stepsGoalId = stepsGoalId,
+            onDismissGoal = { stepsGoalId = null },
+            goals = goals,
+            goalActions = goalActions,
+            onAddAction = { goalId, title -> goalViewModel.addAction(goalId, title) },
+            onToggleAction = { action, completed ->
+                goalViewModel.setActionCompleted(action.id, completed)
+            },
+            onDeleteAction = { action -> goalViewModel.deleteAction(action.id) },
+        )
         if (photoBusy) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -981,6 +1024,8 @@ fun HomeScreen(
             ) {
                 CircularProgressIndicator()
             }
+        }
+        }
         }
     }
 

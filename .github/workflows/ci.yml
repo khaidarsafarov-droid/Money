@@ -29,7 +29,7 @@ jobs:
       - name: Install Android 36 platform
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Run JVM tests and assemble debug APK
-        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug
+        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :benchmark:assemble
 
   node:
     name: Shared and web tests and build

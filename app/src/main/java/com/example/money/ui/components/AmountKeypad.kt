@@ -15,9 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.money.ui.motion.pressScale
+import com.example.money.ui.util.MoneyHaptic
+import com.example.money.ui.util.moneyHaptic
 
 private val keypadRows = listOf(
     listOf("1", "2", "3"),
@@ -31,6 +35,7 @@ fun AmountKeypad(
     onKey: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val view = LocalView.current
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -45,9 +50,13 @@ fun AmountKeypad(
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = 58.dp)
+                            .pressScale()
                             .clip(RoundedCornerShape(18.dp))
                             .background(MaterialTheme.colorScheme.surface)
-                            .clickable { onKey(key) },
+                            .clickable {
+                                view.moneyHaptic(MoneyHaptic.ClockTick)
+                                onKey(key)
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(text = key, fontSize = 24.sp, fontWeight = FontWeight.Medium)

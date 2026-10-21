@@ -1,5 +1,6 @@
 package com.example.money.ui.home
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,7 +48,14 @@ import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.debtors.DebtorSort
+import com.example.money.ui.motion.AnimatedAmount
+import com.example.money.ui.motion.MotionGlyph
+import com.example.money.ui.motion.MotionGlyphIcon
+import com.example.money.ui.motion.moneySharedBounds
+import com.example.money.ui.motion.pressScale
 import com.example.money.ui.theme.LocalMoneyExtraColors
+import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.util.systemMotionEnabled
 import com.example.money.ui.theme.finoraAvatarColor
 import com.example.money.ui.theme.finoraBalanceBrush
 import com.example.money.ui.theme.finoraGoalBrush
@@ -186,17 +195,18 @@ fun FinoraBalanceCard(
     }
     Column(
         modifier = modifier
+            .moneySharedBounds("money-balance")
+            .pressScale()
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(finoraBalanceBrush())
             .padding(18.dp),
     ) {
         Text(text = label, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
-        Text(
+        AnimatedAmount(
             text = netText,
             color = Color.White,
-            fontSize = 30.sp,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 30.sp, fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(top = 2.dp),
         )
         Row(
@@ -228,6 +238,7 @@ private fun BalancePill(
 ) {
     Column(
         modifier = modifier
+            .pressScale()
             .clip(RoundedCornerShape(14.dp))
             .background(Color.White.copy(alpha = 0.14f))
             .clickable(onClick = onClick)
@@ -252,8 +263,8 @@ private fun FinoraQuickActions(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        QuickAction(stringResource(R.string.debt_history_took), Icons.Rounded.SouthWest, extra.negativeContainer, extra.negative, onTook)
-        QuickAction(stringResource(R.string.debt_history_returned), Icons.Rounded.NorthEast, extra.positiveContainer, extra.positive, onReturned)
+        QuickAction(stringResource(R.string.debt_history_took), Icons.Rounded.SouthWest, extra.negativeContainer, extra.negative, onTook, MotionGlyph.Took)
+        QuickAction(stringResource(R.string.debt_history_returned), Icons.Rounded.NorthEast, extra.positiveContainer, extra.positive, onReturned, MotionGlyph.Returned)
         PhotoAction(onPhotoCamera, onPhotoGallery)
         QuickAction(stringResource(R.string.qa_debt), Icons.Rounded.Add, extra.positiveContainer, extra.positive, onAddDebt)
     }
@@ -310,11 +321,14 @@ private fun QuickAction(
     container: Color,
     tint: Color,
     onClick: () -> Unit,
+    glyph: MotionGlyph? = null,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = Modifier
+            .pressScale()
+            .clickable(onClick = onClick),
     ) {
         Box(
             modifier = Modifier
@@ -323,7 +337,11 @@ private fun QuickAction(
                 .background(container),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(imageVector = icon, contentDescription = label, tint = tint)
+            if (glyph != null) {
+                MotionGlyphIcon(glyph = glyph, tint = tint, modifier = Modifier.size(22.dp))
+            } else {
+                Icon(imageVector = icon, contentDescription = label, tint = tint)
+            }
         }
         Text(
             text = label,
@@ -367,8 +385,16 @@ private fun FinoraGoalPreview(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val motion = systemMotionEnabled(LocalContext.current)
+    val progress by animateFloatAsState(
+        targetValue = goal.progressFraction.coerceIn(0f, 1f),
+        animationSpec = MoneyMotion.springSpec(motion),
+        label = "goalPreview",
+    )
     Column(
         modifier = modifier
+            .moneySharedBounds("goal-${goal.id}")
+            .pressScale()
             .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick),
@@ -391,7 +417,7 @@ private fun FinoraGoalPreview(
                 overflow = TextOverflow.Ellipsis,
             )
             LinearProgressIndicator(
-                progress = { goal.progressFraction.coerceIn(0f, 1f) },
+                progress = { progress },
                 modifier = Modifier
                     .padding(top = 8.dp)
                     .fillMaxWidth()
@@ -425,12 +451,13 @@ fun FinoraDebtRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .pressScale()
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        FinoraAvatar(debtor.name)
+        FinoraAvatar(debtor.name, sharedKey = "debtor-${debtor.id}")
         Column(modifier = Modifier.weight(1f)) {
             Text(text = debtor.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (due.isNotBlank()) {
@@ -442,9 +469,10 @@ fun FinoraDebtRow(
 }
 
 @Composable
-fun FinoraAvatar(name: String) {
+fun FinoraAvatar(name: String, sharedKey: Any? = null) {
     Box(
         modifier = Modifier
+            .then(if (sharedKey != null) Modifier.moneySharedBounds(sharedKey) else Modifier)
             .size(40.dp)
             .clip(RoundedCornerShape(13.dp))
             .background(finoraAvatarColor(name)),

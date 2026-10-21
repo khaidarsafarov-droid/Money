@@ -1,0 +1,9 @@
+HSPLcom/example/money/MainActivity;-><init>()V
+HSPLcom/example/money/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HSPLcom/example/money/MainActivity;->onResume()V
+HSPLcom/example/money/MoneyApplication;-><init>()V
+HSPLcom/example/money/MoneyApplication;->onCreate()V
+Landroidx/compose/ui/platform/AndroidComposeView;
+Landroidx/compose/foundation/lazy/LazyListState;
+Landroidx/compose/foundation/lazy/LazyListKt;
+Landroidx/compose/foundation/gestures/ScrollableKt;

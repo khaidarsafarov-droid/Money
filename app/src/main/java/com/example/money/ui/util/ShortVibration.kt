@@ -6,6 +6,8 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
+import android.view.View
 
 enum class HapticStrength {
     LIGHT,
@@ -74,6 +76,27 @@ internal fun systemMotionEnabled(context: Context): Boolean = try {
     animator > 0f && transition > 0f
 } catch (_: RuntimeException) {
     true
+}
+
+internal enum class MoneyHaptic {
+    Confirm,
+    Reject,
+    ClockTick,
+    LongPress,
+}
+
+internal fun hapticConstant(kind: MoneyHaptic, sdk: Int): Int = when (kind) {
+    MoneyHaptic.Confirm ->
+        if (sdk >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
+    MoneyHaptic.Reject ->
+        if (sdk >= Build.VERSION_CODES.R) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
+    MoneyHaptic.ClockTick -> HapticFeedbackConstants.CLOCK_TICK
+    MoneyHaptic.LongPress -> HapticFeedbackConstants.LONG_PRESS
+}
+
+internal fun View.moneyHaptic(kind: MoneyHaptic) {
+    if (!systemHapticsEnabled(context)) return
+    performHapticFeedback(hapticConstant(kind, Build.VERSION.SDK_INT))
 }
 
 private fun systemVibrator(context: Context): Vibrator? {

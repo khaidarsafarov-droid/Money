@@ -79,7 +79,6 @@ internal fun HomeDialogs(
     contactHistoryTargetState: MutableState<Pair<String, String>?>,
     remindDebtorState: MutableState<Debtor?>,
     showDebtPaymentDialogState: MutableState<Debtor?>,
-    historyDebtorState: MutableState<Debtor?>,
     debtPaymentPrefillCentsState: MutableLongState,
     showIncomeIdeasState: MutableState<Boolean>,
     showTransferDialogState: MutableState<Boolean>,
@@ -87,7 +86,6 @@ internal fun HomeDialogs(
     showExpenseDialogState: MutableState<Boolean>,
     goalExpenseTargetState: MutableState<SavingsGoal?>,
     showAddGoalDialogState: MutableState<Boolean>,
-    stepsGoalIdState: MutableState<Long?>,
     progressLogGoalState: MutableState<SavingsGoal?>,
     editGoalState: MutableState<SavingsGoal?>,
     showNoteFormState: MutableState<Boolean>,
@@ -105,7 +103,6 @@ internal fun HomeDialogs(
     var contactHistoryTarget by contactHistoryTargetState
     var remindDebtor by remindDebtorState
     var showDebtPaymentDialog by showDebtPaymentDialogState
-    var historyDebtor by historyDebtorState
     var debtPaymentPrefillCents by debtPaymentPrefillCentsState
     var showIncomeIdeas by showIncomeIdeasState
     var showTransferDialog by showTransferDialogState
@@ -113,7 +110,6 @@ internal fun HomeDialogs(
     var showExpenseDialog by showExpenseDialogState
     var goalExpenseTarget by goalExpenseTargetState
     var showAddGoalDialog by showAddGoalDialogState
-    var stepsGoalId by stepsGoalIdState
     var progressLogGoal by progressLogGoalState
     var editGoal by editGoalState
     var showNoteForm by showNoteFormState
@@ -227,34 +223,6 @@ internal fun HomeDialogs(
             debtor = debtor,
             settings = personalBranchSettings,
             onDismiss = { remindDebtor = null },
-        )
-    }
-    historyDebtor?.let { selected ->
-        val debtor = allDebtors.find { it.id == selected.id } ?: selected
-        DebtHistorySheet(
-            debtor = debtor,
-            hideAmounts = privacySettings.hideAmounts,
-            onDismiss = { historyDebtor = null },
-            onAddAdvance = { amountCents, givenAt, note ->
-                scope.launch {
-                    val ok = debtorsViewModel.addDebtAdvanceSync(debtor.id, amountCents, givenAt, note)
-                    showMessage(
-                        context.getString(
-                            if (ok) R.string.msg_debt_advance_saved else R.string.error_debt_advance_failed,
-                        ),
-                    )
-                }
-            },
-            onAddPayment = { amountCents, paidAt ->
-                scope.launch {
-                    val ok = debtorsViewModel.processPaymentSync(debtor.id, amountCents, false, paidAt)
-                    showMessage(
-                        context.getString(
-                            if (ok) R.string.msg_payment_neutral else R.string.error_payment_failed,
-                        ),
-                    )
-                }
-            },
         )
     }
     showDebtPaymentDialog?.let { debtor ->
@@ -377,22 +345,6 @@ internal fun HomeDialogs(
                 scope.launch { showMessage(context.getString(R.string.msg_goal_added)) }
             },
         )
-    }
-    stepsGoalId?.let { goalId ->
-        val goal = goals.find { it.id == goalId }
-        if (goal != null) {
-            GoalActionsDialog(
-                goal = goal,
-                actions = goalActions.filter { it.goalId == goal.id },
-                hideAmounts = privacySettings.hideAmounts,
-                onDismiss = { stepsGoalId = null },
-                onAddAction = { title -> goalViewModel.addAction(goal.id, title) },
-                onToggleAction = { action, completed ->
-                    goalViewModel.setActionCompleted(action.id, completed)
-                },
-                onDeleteAction = { action -> goalViewModel.deleteAction(action.id) },
-            )
-        }
     }
     progressLogGoal?.let { goal ->
         GoalProgressLogDialog(

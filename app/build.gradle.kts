@@ -111,6 +111,7 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.sqlcipher)
     implementation(libs.tesseract)
+    implementation(libs.androidx.profileinstaller)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)

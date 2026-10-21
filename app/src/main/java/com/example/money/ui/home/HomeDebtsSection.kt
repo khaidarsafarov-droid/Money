@@ -192,14 +192,14 @@ fun LazyListScope.homeDebtsSection(
                     )
                 }
             } else {
-                items(clientGroups, key = { "client-${it.open.id}" }) { group ->
+                items(clientGroups, key = { "client-${it.open.id}" }, contentType = { "client" }) { group ->
                     val motion = systemMotionEnabled(LocalContext.current)
                     DebtorListItem(
                         debtor = group.display,
                         modifier = Modifier
                             .animateItem(
                                 fadeInSpec = MoneyMotion.spec(motion),
-                                placementSpec = MoneyMotion.spec(motion),
+                                placementSpec = MoneyMotion.springSpec(motion),
                                 fadeOutSpec = MoneyMotion.spec(motion),
                             )
                             .padding(horizontal = 8.dp),
@@ -228,7 +228,11 @@ fun LazyListScope.homeDebtsSection(
                 )
             }
         } else {
-            items(debtors, key = { "debtor-${it.syncId.ifBlank { "id-${it.id}" }}" }) { debtor ->
+            items(
+                debtors,
+                key = { "debtor-${it.syncId.ifBlank { "id-${it.id}" }}" },
+                contentType = { "debtor" },
+            ) { debtor ->
                 val isHighlighted = debtor.id == highlightedDebtorId
                 val accelerateCents = DebtFreedomEngine.suggestAcceleratePaymentCents(
                     remainingCents = debtor.remainingAmountCents,
@@ -241,7 +245,7 @@ fun LazyListScope.homeDebtsSection(
                     modifier = Modifier
                         .animateItem(
                             fadeInSpec = MoneyMotion.spec(motion),
-                            placementSpec = MoneyMotion.spec(motion),
+                            placementSpec = MoneyMotion.springSpec(motion),
                             fadeOutSpec = MoneyMotion.spec(motion),
                         )
                         .padding(horizontal = 8.dp),

@@ -57,7 +57,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.money.ui.motion.MoneyInWindowSheet
+import com.example.money.ui.motion.MotionGlyph
+import com.example.money.ui.motion.MotionGlyphIcon
+import com.example.money.ui.motion.moneySharedBounds
+import com.example.money.ui.motion.moneySheetMotion
 import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.util.MoneyHaptic
+import com.example.money.ui.util.moneyHaptic
 import com.example.money.ui.util.systemMotionEnabled
 import com.example.money.ui.util.vibrateLight
 import com.example.money.R
@@ -81,6 +88,7 @@ fun DebtHistorySheet(
     onDismiss: () -> Unit,
     onAddAdvance: (amountCents: Long, givenAt: Long, note: String) -> Unit,
     onAddPayment: (amountCents: Long, paidAt: Long) -> Unit,
+    inWindow: Boolean = false,
 ) {
     var form by remember(debtor.id) { mutableStateOf(HistoryForm.None) }
     val entries = remember(debtor.id, debtor.advances, debtor.paymentHistory, debtor.targetAmountCents, debtor.dateGiven) {
@@ -88,6 +96,7 @@ fun DebtHistorySheet(
     }
 
     val context = LocalContext.current
+    val view = androidx.compose.ui.platform.LocalView.current
     val motionEnabled = systemMotionEnabled(context)
     val returned = (debtor.targetAmountCents - debtor.remainingAmountCents).coerceAtLeast(0L)
     val progress = if (debtor.targetAmountCents <= 0L) {
@@ -97,8 +106,12 @@ fun DebtHistorySheet(
     }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(modifier = Modifier.fillMaxHeight(0.96f)) {
+    val body: @Composable () -> Unit = {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight(if (inWindow) 1f else 0.96f)
+                .then(if (inWindow) Modifier else Modifier.moneySheetMotion(onDismiss)),
+        ) {
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -135,6 +148,7 @@ fun DebtHistorySheet(
             ) {
                 Box(
                     modifier = Modifier
+                        .moneySharedBounds("debtor-${debtor.id}")
                         .size(52.dp)
                         .clip(RoundedCornerShape(18.dp))
                         .background(Color.White.copy(alpha = 0.2f)),
@@ -223,7 +237,7 @@ fun DebtHistorySheet(
                     HistoryForm.Advance -> AdvanceForm(
                         onCancel = { form = HistoryForm.None },
                         onSave = { amountCents, givenAt, note ->
-                            vibrateLight(context)
+                            view.moneyHaptic(MoneyHaptic.Confirm)
                             onAddAdvance(amountCents, givenAt, note)
                             form = HistoryForm.None
                         },
@@ -232,7 +246,7 @@ fun DebtHistorySheet(
                         remainingCents = debtor.remainingAmountCents,
                         onCancel = { form = HistoryForm.None },
                         onSave = { amountCents, paidAt ->
-                            vibrateLight(context)
+                            view.moneyHaptic(MoneyHaptic.Confirm)
                             onAddPayment(amountCents, paidAt)
                             form = HistoryForm.None
                         },
@@ -245,6 +259,11 @@ fun DebtHistorySheet(
             }
             }
         }
+    }
+    if (inWindow) {
+        MoneyInWindowSheet(onDismiss = onDismiss) { body() }
+    } else {
+        ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) { body() }
     }
 }
 
@@ -343,7 +362,7 @@ private fun HistoryActions(
                 contentColor = tookContent,
             ),
         ) {
-            Icon(Icons.Rounded.SouthWest, contentDescription = null)
+            MotionGlyphIcon(MotionGlyph.Took, tint = tookContent)
             Text(stringResource(R.string.debt_history_took))
         }
         Button(
@@ -356,7 +375,7 @@ private fun HistoryActions(
                 contentColor = scheme.onPrimary,
             ),
         ) {
-            Icon(Icons.Rounded.NorthEast, contentDescription = null)
+            MotionGlyphIcon(MotionGlyph.Returned, tint = scheme.onPrimary)
             Text(stringResource(R.string.debt_history_returned))
         }
     }
@@ -397,17 +416,23 @@ private fun AdvanceForm(
             TextButton(onClick = onCancel) {
                 Text(stringResource(R.string.action_cancel))
             }
+            var saved by remember { mutableStateOf(false) }
             Button(
                 onClick = {
                     val cents = InputValidators.parseAmount(amountText)
                     if (cents == null || cents <= 0L) {
                         amountError = positiveError
                     } else {
+                        saved = true
                         onSave(cents, givenAt, note.trim())
                     }
                 },
             ) {
-                Text(stringResource(R.string.action_save))
+                if (saved) {
+                    MotionGlyphIcon(MotionGlyph.Check, tint = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text(stringResource(R.string.action_save))
+                }
             }
         }
     }
@@ -457,18 +482,26 @@ private fun PaymentForm(
             TextButton(onClick = onCancel, modifier = Modifier.heightIn(min = 56.dp)) {
                 Text(stringResource(R.string.action_cancel))
             }
+            var saved by remember { mutableStateOf(false) }
             Button(
                 onClick = {
                     val cents = InputValidators.parseAmount(amountText)
                     when {
                         cents == null || cents <= 0L -> amountError = positiveError
                         cents > remainingCents -> amountError = exceedsError
-                        else -> onSave(cents, paidAt)
+                        else -> {
+                            saved = true
+                            onSave(cents, paidAt)
+                        }
                     }
                 },
                 modifier = Modifier.heightIn(min = 56.dp),
             ) {
-                Text(stringResource(R.string.action_save))
+                if (saved) {
+                    MotionGlyphIcon(MotionGlyph.Check, tint = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text(stringResource(R.string.action_save))
+                }
             }
         }
     }
