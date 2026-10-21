@@ -109,14 +109,12 @@ import com.example.money.ui.budget.BudgetActionResult
 import com.example.money.ui.budget.BudgetViewModel
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
-import com.example.money.ui.components.ConfirmDeleteDialog
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.GoalListItem
 import com.example.money.ui.components.HomePreviewCards
 import com.example.money.ui.components.GoalsSectionSummary
 import com.example.money.ui.components.SyncStatusIndicator
-import com.example.money.ui.components.SwipeToDeleteContainer
 import com.example.money.domain.util.GlobalFinanceEngine
 import com.example.money.domain.util.GoalProgress
 import com.example.money.domain.util.GoalPsychologyEngines
@@ -472,8 +470,8 @@ internal fun PhoneHomeLayout(
                         contentType = { "goal" },
                     ) { goal ->
                         val motion = systemMotionEnabled(LocalContext.current)
-                        SwipeToDeleteContainer(
-                            onDelete = { onDeleteGoal(goal) },
+                        GoalListItem(
+                            goal = goal,
                             modifier = Modifier
                                 .animateItem(
                                     fadeInSpec = MoneyMotion.spec(motion),
@@ -484,22 +482,18 @@ internal fun PhoneHomeLayout(
                                     horizontal = MoneySpacing.lg,
                                     vertical = MoneySpacing.sm,
                                 ),
-                        ) {
-                            GoalListItem(
-                                goal = goal,
-                                onEdit = { onEditGoal(goal) },
-                                onOpen = { onOpenGoal(goal) },
-                                onDelete = { onDeleteGoal(goal) },
-                                onTransfer = if (!goal.isCompleted && goal.kind == GoalKind.MONEY) {
-                                    { onGoalTransfer(goal) }
-                                } else {
-                                    null
-                                },
-                                onExpense = { onExpense(goal) },
-                                onLog = { onLogGoal(goal) },
-                                hideAmounts = privacySettings.hideAmounts,
-                            )
-                        }
+                            onEdit = { onEditGoal(goal) },
+                            onOpen = { onOpenGoal(goal) },
+                            onDelete = { onDeleteGoal(goal) },
+                            onTransfer = if (!goal.isCompleted && goal.kind == GoalKind.MONEY) {
+                                { onGoalTransfer(goal) }
+                            } else {
+                                null
+                            },
+                            onExpense = { onExpense(goal) },
+                            onLog = { onLogGoal(goal) },
+                            hideAmounts = privacySettings.hideAmounts,
+                        )
                     }
                 }
                 item {

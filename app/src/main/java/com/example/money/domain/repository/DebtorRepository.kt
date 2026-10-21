@@ -52,6 +52,17 @@ interface DebtorRepository {
 
     suspend fun deleteDebtor(debtor: Debtor)
 
+    /** Hide [debtor] from lists until [unstageDelete] or [commitStagedDeletes]. */
+    fun stageDelete(debtor: Debtor)
+
+    fun unstageDelete(id: Long)
+
+    fun hasStagedDeletes(): Boolean
+
+    fun stagedDebtors(): List<Debtor>
+
+    suspend fun commitStagedDeletes()
+
     suspend fun handleTransferDeleted(transfer: Transfer)
 
     suspend fun handleExpenseDeleted(expense: Expense)
