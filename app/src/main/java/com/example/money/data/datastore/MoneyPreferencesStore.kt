@@ -82,6 +82,11 @@ object MoneyPreferenceKeys {
     val WIDGET_STREAK_COUNT = intPreferencesKey("widget_streak_count")
     val WIDGET_LAST_WIN = stringPreferencesKey("widget_last_win")
     val WIDGET_SCORE_USES_DEBTS = booleanPreferencesKey("widget_score_uses_debts")
+    val WIDGET_GOAL_NAME = stringPreferencesKey("widget_featured_goal_name")
+    val WIDGET_GOAL_SAVED_CENTS = longPreferencesKey("widget_featured_goal_saved_cents")
+    val WIDGET_GOAL_TARGET_CENTS = longPreferencesKey("widget_featured_goal_target_cents")
+    val WIDGET_GOAL_PERCENT = intPreferencesKey("widget_featured_goal_percent")
+    val WIDGET_GOAL_IS_ACTION = booleanPreferencesKey("widget_featured_goal_is_action")
 
     val VOICE_REPORTS_ENABLED = booleanPreferencesKey("voice_reports_enabled")
     val VOICE_REPORT_HOUR = intPreferencesKey("voice_report_hour")
@@ -195,6 +200,11 @@ class MoneyPreferencesStore(
                 streakCount = prefs[MoneyPreferenceKeys.WIDGET_STREAK_COUNT] ?: 0,
                 lastWinMessage = prefs[MoneyPreferenceKeys.WIDGET_LAST_WIN],
                 scoreUsesDebts = prefs[MoneyPreferenceKeys.WIDGET_SCORE_USES_DEBTS] ?: false,
+                featuredGoalName = prefs[MoneyPreferenceKeys.WIDGET_GOAL_NAME].orEmpty(),
+                featuredGoalSavedCents = prefs[MoneyPreferenceKeys.WIDGET_GOAL_SAVED_CENTS] ?: 0L,
+                featuredGoalTargetCents = prefs[MoneyPreferenceKeys.WIDGET_GOAL_TARGET_CENTS] ?: 0L,
+                featuredGoalPercent = prefs[MoneyPreferenceKeys.WIDGET_GOAL_PERCENT] ?: 0,
+                featuredGoalIsAction = prefs[MoneyPreferenceKeys.WIDGET_GOAL_IS_ACTION] ?: false,
             )
         }
 
@@ -232,6 +242,19 @@ class MoneyPreferencesStore(
             prefs[MoneyPreferenceKeys.WIDGET_HIDE_AMOUNTS] = snapshot.hideAmounts
             prefs[MoneyPreferenceKeys.WIDGET_SCORE_USES_DEBTS] = snapshot.scoreUsesDebts
             prefs[MoneyPreferenceKeys.WIDGET_STREAK_COUNT] = snapshot.streakCount
+            if (snapshot.hasFeaturedGoal) {
+                prefs[MoneyPreferenceKeys.WIDGET_GOAL_NAME] = snapshot.featuredGoalName
+                prefs[MoneyPreferenceKeys.WIDGET_GOAL_SAVED_CENTS] = snapshot.featuredGoalSavedCents
+                prefs[MoneyPreferenceKeys.WIDGET_GOAL_TARGET_CENTS] = snapshot.featuredGoalTargetCents
+                prefs[MoneyPreferenceKeys.WIDGET_GOAL_PERCENT] = snapshot.featuredGoalPercent
+                prefs[MoneyPreferenceKeys.WIDGET_GOAL_IS_ACTION] = snapshot.featuredGoalIsAction
+            } else {
+                prefs.remove(MoneyPreferenceKeys.WIDGET_GOAL_NAME)
+                prefs.remove(MoneyPreferenceKeys.WIDGET_GOAL_SAVED_CENTS)
+                prefs.remove(MoneyPreferenceKeys.WIDGET_GOAL_TARGET_CENTS)
+                prefs.remove(MoneyPreferenceKeys.WIDGET_GOAL_PERCENT)
+                prefs.remove(MoneyPreferenceKeys.WIDGET_GOAL_IS_ACTION)
+            }
             snapshot.lastWinMessage?.let {
                 prefs[MoneyPreferenceKeys.WIDGET_LAST_WIN] = it
             } ?: prefs.remove(MoneyPreferenceKeys.WIDGET_LAST_WIN)

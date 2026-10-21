@@ -7,6 +7,7 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.settings.CurrencyRegion
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WidgetSnapshotBuilderTest {
@@ -36,6 +37,9 @@ class WidgetSnapshotBuilderTest {
         assertEquals(60.0, snapshot.totalRemainingToGoal, 0.001)
         assertFalse(snapshot.scoreUsesDebts)
         assertEquals(40, snapshot.progressPercent)
+        assertEquals("Money 1", snapshot.featuredGoalName)
+        assertEquals(4_000L, snapshot.featuredGoalSavedCents)
+        assertFalse(snapshot.featuredGoalIsAction)
     }
 
     @Test
@@ -53,6 +57,90 @@ class WidgetSnapshotBuilderTest {
         assertEquals(8_000L, snapshot.owedToMeCents)
         assertEquals(11_000L, snapshot.iOweCents)
         assertEquals(1, snapshot.overdueDebtCount)
+        assertFalse(snapshot.hasFeaturedGoal)
+        assertEquals("", snapshot.featuredGoalName)
+    }
+
+    @Test
+    fun nearestActiveGoalIsLabeledSeparatelyFromTheAggregate() {
+        val day = 86_400_000L
+        val sooner = moneyGoal(id = 2, target = 30_000, current = 9_900).copy(
+            name = "Отпуск",
+            deadlineMillis = now + day,
+        )
+        val later = moneyGoal(id = 1, target = 10_000, current = 1_000).copy(
+            name = "Later",
+            deadlineMillis = now + day * 10,
+        )
+        val done = moneyGoal(id = 3, target = 5_000, current = 5_000).copy(
+            name = "Done",
+            deadlineMillis = now + day,
+        )
+
+        val snapshot = build(goals = listOf(later, done, sooner), debts = emptyList())
+
+        assertEquals("Отпуск", snapshot.featuredGoalName)
+        assertEquals(9_900L, snapshot.featuredGoalSavedCents)
+        assertEquals(30_000L, snapshot.featuredGoalTargetCents)
+        assertEquals(33, snapshot.featuredGoalPercent)
+        assertTrue(snapshot.hasFeaturedGoal)
+        assertEquals("33%", featuredGoalPercentLabel(snapshot.featuredGoalPercent))
+    }
+
+    @Test
+    fun overdueGoalBeatsALaterDeadline() {
+        val day = 86_400_000L
+        val snapshot = build(
+            goals = listOf(
+                moneyGoal(id = 2, target = 10_000, current = 1_000).copy(
+                    name = "Soon",
+                    deadlineMillis = now + day,
+                ),
+                moneyGoal(id = 1, target = 10_000, current = 1_000).copy(
+                    name = "Late",
+                    deadlineMillis = now - day * 3,
+                ),
+            ),
+            debts = emptyList(),
+        )
+
+        assertEquals("Late", snapshot.featuredGoalName)
+    }
+
+    @Test
+    fun actionGoalUsesStepCounts() {
+        val snapshot = build(
+            goals = listOf(
+                SavingsGoal(
+                    id = 4,
+                    name = "Steps",
+                    targetAmountCents = 0,
+                    currentAmountCents = 0,
+                    updatedAt = now,
+                    kind = GoalKind.ACTION,
+                    actionDone = 1,
+                    actionTotal = 3,
+                    deadlineMillis = now + 86_400_000L,
+                ),
+            ),
+            debts = emptyList(),
+        )
+
+        assertTrue(snapshot.featuredGoalIsAction)
+        assertEquals(1L, snapshot.featuredGoalSavedCents)
+        assertEquals(3L, snapshot.featuredGoalTargetCents)
+        assertEquals(33, snapshot.featuredGoalPercent)
+        assertEquals("1/3", featuredGoalRatio(snapshot))
+    }
+
+    @Test
+    fun completedGoalsDoNotFillTheGoalBlock() {
+        val snapshot = build(
+            goals = listOf(moneyGoal(id = 1, target = 5_000, current = 5_000)),
+            debts = emptyList(),
+        )
+
+        assertFalse(snapshot.hasFeaturedGoal)
     }
 
     @Test

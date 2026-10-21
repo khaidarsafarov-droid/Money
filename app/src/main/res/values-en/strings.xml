@@ -45,10 +45,13 @@
 
     <!-- Widget -->
     <string name="widget_goal_title">My finances</string>
-    <string name="widget_goal_description">Debts and goals</string>
-    <string name="widget_preview_score">62%</string>
-    <string name="widget_preview_owes">$22,115.00</string>
+    <string name="widget_goal_description">Debts and the nearest goal</string>
+    <string name="widget_add_debt">Add debt</string>
+    <string name="widget_preview_owes">$33,751.00</string>
     <string name="widget_preview_i_owe">$0.00</string>
+    <string name="widget_preview_goal_name">Vacation</string>
+    <string name="widget_preview_goal_ratio">$9,900 / $30,000</string>
+    <string name="widget_preview_goal_percent">33%</string>
     <string name="operation_pending_suffix"> · Pending</string>
     <string name="calendar_prev_month">Previous month</string>
     <string name="calendar_next_month">Next month</string>

@@ -6,6 +6,7 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.domain.util.DebtMetricsEngine
 import com.example.money.domain.util.GlobalFinanceEngine
+import com.example.money.domain.util.GoalProgress
 import com.example.money.domain.util.MoneyMath
 import com.example.money.settings.CurrencyRegion
 
@@ -40,6 +41,7 @@ internal fun buildWidgetGoalSnapshot(
     val overdueDebtCount = debts.count {
         !it.isPaid && it.dateDue > 0L && DebtDueDateUtils.isOverdue(it.dateDue, now)
     }
+    val featured = featuredWidgetGoal(goals, now)
 
     return WidgetGoalSnapshot(
         currentAmount = MoneyMath.fromCents(totalCurrentCents),
@@ -64,5 +66,14 @@ internal fun buildWidgetGoalSnapshot(
         streakCount = streakCount,
         lastWinMessage = lastWinMessage,
         scoreUsesDebts = scoreUsesDebts,
+        featuredGoalName = featured?.name.orEmpty(),
+        featuredGoalSavedCents = featured?.let { if (it.kind == GoalKind.ACTION) it.actionDone.toLong() else it.currentAmountCents } ?: 0L,
+        featuredGoalTargetCents = featured?.let { if (it.kind == GoalKind.ACTION) it.actionTotal.toLong() else it.targetAmountCents } ?: 0L,
+        featuredGoalPercent = featured?.let { if (it.kind == GoalKind.ACTION) it.actionProgressPercent else it.progressPercent } ?: 0,
+        featuredGoalIsAction = featured?.kind == GoalKind.ACTION,
     )
 }
+
+/** Overdue first, then the soonest deadline, then goals without a date. */
+internal fun featuredWidgetGoal(goals: List<SavingsGoal>, now: Long): SavingsGoal? =
+    GoalProgress.orderedForSection(goals, now).firstOrNull { !it.isCompleted }
