@@ -1,13 +1,14 @@
 package com.example.money.ui.motion
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -25,27 +26,37 @@ fun AnimatedAmount(
     maxLines: Int = 1,
 ) {
     if (!systemMotionEnabled(LocalContext.current)) {
-        Text(text = text, color = color, style = style, modifier = modifier, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = text,
+            color = color,
+            style = style,
+            modifier = modifier,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+        )
         return
     }
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        text.forEachIndexed { index, character ->
-            AnimatedContent(
-                targetState = character,
-                transitionSpec = {
-                    slideInVertically(MoneyMotion.springSpec(true)) { it } togetherWith
-                        slideOutVertically(MoneyMotion.springSpec(true)) { -it }
-                },
-                label = "amount-$index",
-            ) { glyph ->
-                Text(
-                    text = glyph.toString(),
-                    color = color,
-                    style = style,
-                    maxLines = 1,
-                    softWrap = false,
+    AnimatedContent(
+        targetState = text,
+        modifier = modifier,
+        transitionSpec = {
+            (
+                fadeIn(tween(MoneyMotion.short, easing = MoneyMotion.emphasizedDecelerate)) +
+                    slideInVertically(tween(MoneyMotion.short, easing = MoneyMotion.emphasizedDecelerate)) { it / 5 }
+                ) togetherWith (
+                fadeOut(tween(MoneyMotion.fadeOut, easing = MoneyMotion.emphasizedAccelerate)) +
+                    slideOutVertically(tween(MoneyMotion.fadeOut, easing = MoneyMotion.emphasizedAccelerate)) { -it / 5 }
                 )
-            }
-        }
+        },
+        label = "amount",
+    ) { value ->
+        Text(
+            text = value,
+            color = color,
+            style = style,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false,
+        )
     }
 }

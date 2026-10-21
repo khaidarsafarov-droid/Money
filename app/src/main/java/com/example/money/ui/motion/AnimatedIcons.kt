@@ -31,23 +31,30 @@ fun MotionGlyphIcon(
     glyph: MotionGlyph,
     tint: Color,
     modifier: Modifier = Modifier,
-    play: Boolean = true,
+    play: Boolean = false,
 ) {
     val motion = systemMotionEnabled(LocalContext.current)
     val progress = remember(glyph, play) { Animatable(if (motion && play) 0f else 1f) }
+    val path = remember { Path() }
+    val measure = remember { PathMeasure() }
+    val drawn = remember { Path() }
     LaunchedEffect(glyph, play, motion) {
         if (motion && play) {
             progress.snapTo(0f)
-            progress.animateTo(1f, tween(MoneyMotion.medium, easing = MoneyMotion.emphasizedDecelerate))
+            progress.animateTo(1f, tween(MoneyMotion.short, easing = MoneyMotion.emphasizedDecelerate))
         } else {
             progress.snapTo(1f)
         }
     }
     Canvas(modifier.size(22.dp)) {
-        val path = glyphPath(glyph, size.width, size.height)
-        val measure = PathMeasure().apply { setPath(path, false) }
-        val drawn = Path()
-        measure.getSegment(0f, measure.length * progress.value, drawn, true)
+        path.rewind()
+        traceGlyph(path, glyph, size.width, size.height)
+        measure.setPath(path, false)
+        drawn.rewind()
+        val length = measure.length
+        if (length > 0f) {
+            measure.getSegment(0f, length * progress.value, drawn, true)
+        }
         drawPath(
             path = drawn,
             color = tint,
@@ -60,26 +67,26 @@ fun MotionGlyphIcon(
     }
 }
 
-private fun glyphPath(glyph: MotionGlyph, width: Float, height: Float): Path = Path().apply {
+private fun traceGlyph(path: Path, glyph: MotionGlyph, width: Float, height: Float) {
     when (glyph) {
         MotionGlyph.Check -> {
-            moveTo(width * 0.18f, height * 0.52f)
-            lineTo(width * 0.40f, height * 0.74f)
-            lineTo(width * 0.82f, height * 0.28f)
+            path.moveTo(width * 0.18f, height * 0.52f)
+            path.lineTo(width * 0.40f, height * 0.74f)
+            path.lineTo(width * 0.82f, height * 0.28f)
         }
         MotionGlyph.Took -> {
-            moveTo(width * 0.72f, height * 0.28f)
-            lineTo(width * 0.28f, height * 0.72f)
-            lineTo(width * 0.28f, height * 0.42f)
-            lineTo(width * 0.28f, height * 0.72f)
-            lineTo(width * 0.58f, height * 0.72f)
+            path.moveTo(width * 0.72f, height * 0.28f)
+            path.lineTo(width * 0.28f, height * 0.72f)
+            path.lineTo(width * 0.28f, height * 0.42f)
+            path.lineTo(width * 0.28f, height * 0.72f)
+            path.lineTo(width * 0.58f, height * 0.72f)
         }
         MotionGlyph.Returned -> {
-            moveTo(width * 0.28f, height * 0.72f)
-            lineTo(width * 0.72f, height * 0.28f)
-            lineTo(width * 0.42f, height * 0.28f)
-            lineTo(width * 0.72f, height * 0.28f)
-            lineTo(width * 0.72f, height * 0.58f)
+            path.moveTo(width * 0.28f, height * 0.72f)
+            path.lineTo(width * 0.72f, height * 0.28f)
+            path.lineTo(width * 0.42f, height * 0.28f)
+            path.lineTo(width * 0.72f, height * 0.28f)
+            path.lineTo(width * 0.72f, height * 0.58f)
         }
     }
 }

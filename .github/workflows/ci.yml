@@ -30,6 +30,12 @@ jobs:
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Run JVM tests and assemble debug APK
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :benchmark:assemble
+      - name: Release build keeps R8 and the baseline profile
+        run: |
+          ./gradlew :app:assembleRelease
+          test -s app/build/outputs/mapping/release/mapping.txt
+          apk=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          unzip -l "$apk" | grep -q 'assets/dexopt/baseline.prof'
 
   node:
     name: Shared and web tests and build

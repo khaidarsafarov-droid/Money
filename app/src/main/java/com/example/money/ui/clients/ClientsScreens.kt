@@ -150,7 +150,7 @@ fun ClientListScreen(
                 color = MaterialTheme.colorScheme.tertiary,
             )
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(clients, key = { it.id }) { client ->
+                items(clients, key = { it.id }, contentType = { "client" }) { client ->
                     ClientRow(
                         client = client,
                         onClick = { onOpenClient(client.id) },

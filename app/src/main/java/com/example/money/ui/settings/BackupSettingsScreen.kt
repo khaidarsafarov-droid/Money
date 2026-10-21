@@ -324,7 +324,7 @@ fun BackupSettingsScreen(
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
-                items(state.remoteFiles, key = BackupRemoteFile::id) { file ->
+                items(state.remoteFiles, key = BackupRemoteFile::id, contentType = { "backup" }) { file ->
                     RemoteBackupCard(
                         file = file,
                         enabled = !state.isBusy,

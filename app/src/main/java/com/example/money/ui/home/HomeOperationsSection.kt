@@ -141,7 +141,7 @@ fun LazyListScope.homeOperationsSection(
             )
         }
     } else {
-        items(operations, key = { it.key }) { event ->
+        items(operations, key = { it.key }, contentType = { "operation" }) { event ->
             HistoryRow(event = event, goals = goals)
         }
     }

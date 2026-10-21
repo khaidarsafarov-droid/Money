@@ -1,6 +1,5 @@
 package com.example.money.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,13 +15,11 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -32,11 +29,10 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DashboardGoalMetrics
-import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.motion.rememberDrawFraction
 import com.example.money.ui.theme.MoneyRadius
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
-import com.example.money.ui.util.systemMotionEnabled
 import kotlin.math.abs
 
 @Composable
@@ -110,12 +106,7 @@ private fun DebtBalanceCard(
         hidden = hideAmounts,
     )
     val percent = (progressPercent ?: 0).coerceIn(0, 100)
-    val motionEnabled = systemMotionEnabled(LocalContext.current)
-    val animated by animateFloatAsState(
-        targetValue = percent / 100f,
-        animationSpec = MoneyMotion.spec(motionEnabled, MoneyMotion.long),
-        label = "homeGoalProgress",
-    )
+    val drawFraction = rememberDrawFraction(percent / 100f)
     val accumulated = Formatters.currencyFromCents(goalMetrics.totalAccumulatedCents, hide = hideAmounts)
     val target = Formatters.currencyFromCents(
         goalMetrics.totalAccumulatedCents + goalMetrics.totalRemainingToGoalCents,
@@ -181,7 +172,7 @@ private fun DebtBalanceCard(
                 )
             }
             LinearProgressIndicator(
-                progress = { animated },
+                progress = drawFraction,
                 modifier = Modifier.fillMaxWidth(),
                 color = scheme.primary,
                 trackColor = scheme.surfaceVariant,

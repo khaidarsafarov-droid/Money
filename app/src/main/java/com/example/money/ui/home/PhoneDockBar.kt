@@ -1,7 +1,7 @@
 package com.example.money.ui.home
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,7 +28,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -92,11 +93,15 @@ private fun RowScope.DockItem(
     val on = selected == tab
     val scheme = MaterialTheme.colorScheme
     val motion = systemMotionEnabled(LocalContext.current)
-    val iconScale by animateFloatAsState(
-        targetValue = if (on) 1f else 0.92f,
-        animationSpec = MoneyMotion.pressSpec(motion),
-        label = "dockIcon",
-    )
+    val iconScale = remember { Animatable(if (on) 1f else 0.92f) }
+    LaunchedEffect(on, motion) {
+        val target = if (on) 1f else 0.92f
+        if (motion) {
+            iconScale.animateTo(target, MoneyMotion.pressSpec(true))
+        } else {
+            iconScale.snapTo(target)
+        }
+    }
     Column(
         modifier = Modifier
             .weight(1f)
@@ -119,12 +124,13 @@ private fun RowScope.DockItem(
                 Icon(
                     imageVector = if (selectedNow) selectedIcon else icon,
                     contentDescription = label,
-                    tint = if (on) scheme.primary else scheme.onSurfaceVariant,
+                    tint = if (selectedNow) scheme.primary else scheme.onSurfaceVariant,
                     modifier = Modifier
                         .size(22.dp)
                         .graphicsLayer {
-                            scaleX = iconScale
-                            scaleY = iconScale
+                            val shown = iconScale.value
+                            scaleX = shown
+                            scaleY = shown
                         },
                 )
             }

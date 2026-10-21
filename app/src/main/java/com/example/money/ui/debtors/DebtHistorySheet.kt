@@ -60,7 +60,6 @@ import androidx.compose.ui.unit.dp
 import com.example.money.ui.motion.MoneyInWindowSheet
 import com.example.money.ui.motion.MotionGlyph
 import com.example.money.ui.motion.MotionGlyphIcon
-import com.example.money.ui.motion.moneySharedBounds
 import com.example.money.ui.motion.moneySheetMotion
 import com.example.money.ui.theme.MoneyMotion
 import com.example.money.ui.util.MoneyHaptic
@@ -148,7 +147,6 @@ fun DebtHistorySheet(
             ) {
                 Box(
                     modifier = Modifier
-                        .moneySharedBounds("debtor-${debtor.id}")
                         .size(52.dp)
                         .clip(RoundedCornerShape(18.dp))
                         .background(Color.White.copy(alpha = 0.2f)),
