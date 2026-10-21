@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.util.DebtDueDateUtils
+import com.example.money.settings.AppMode
 import com.example.money.ui.debtors.DebtDueStatus
 import com.example.money.ui.debtors.dueStatus
 import com.example.money.ui.debtors.initials
@@ -75,8 +77,12 @@ fun DebtorListItem(
     val showRemind = debtor.debtType == DebtType.CREDITOR && !debtor.isPaid
     var showMenu by remember { mutableStateOf(false) }
 
+    val dueToday = debtor.mode == AppMode.PROFESSIONAL &&
+        !debtor.isPaid &&
+        DebtDueDateUtils.isDueToday(debtor.dateDue)
     val rowBackground = when {
         highlighted -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        dueToday -> MaterialTheme.colorScheme.primaryContainer
         isOverdue -> MaterialTheme.colorScheme.error.copy(alpha = 0.06f)
         else -> Color.Transparent
     }

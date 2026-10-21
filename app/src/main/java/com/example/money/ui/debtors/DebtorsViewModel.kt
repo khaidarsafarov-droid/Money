@@ -8,6 +8,9 @@ import com.example.money.data.datastore.MoneyPreferencesStore
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.LoanCategory
 import com.example.money.domain.model.Debtor
+import com.example.money.domain.util.ClientIdentity
+import com.example.money.domain.util.ImportedDebt
+import com.example.money.settings.AppMode
 import com.example.money.domain.model.DashboardDebtMetrics
 import com.example.money.domain.model.DebtStatus
 import com.example.money.domain.repository.DebtorRepository
@@ -268,41 +271,132 @@ class DebtorsViewModel(
         email: String = "",
     ) {
         viewModelScope.launch {
-            try {
-                val targetCents = amountCents
-                if (targetCents <= 0L) {
-                    Log.w(TAG, "Skipped debtor insert: target amount must be > 0 cents")
-                    return@launch
-                }
+            saveDebt(
+                name = name,
+                amountCents = amountCents,
+                dateGiven = dateGiven,
+                dateDue = dateDue,
+                debtType = debtType,
+                affectsBalance = affectsBalance,
+                note = note,
+                currency = currency,
+                loanCategory = loanCategory,
+                interestRateBps = interestRateBps,
+                contactLookupKey = contactLookupKey,
+                contactUri = contactUri,
+                contactPhotoUri = contactPhotoUri,
+                phone = phone,
+                email = email,
+            )
+        }
+    }
 
-                val id = debtorRepository.addDebtor(
-                    Debtor(
-                        name = name,
-                        targetAmountCents = targetCents,
-                        currency = currency,
-                        debtType = debtType,
-                        affectsBalance = affectsBalance,
-                        note = note,
-                        dateGiven = dateGiven,
-                        dateDue = dateDue,
-                        loanCategory = loanCategory,
-                        interestRateBps = interestRateBps,
-                        contactLookupKey = contactLookupKey,
-                        contactUri = contactUri,
-                        contactPhotoUri = contactPhotoUri,
-                        phone = phone.trim(),
-                        email = email.trim(),
-                    ),
-                )
-                val created = debtorRepository.getDebtorById(id)
-                if (created != null && !created.isPaid) {
-                    scheduleDebtReminders(created)
-                    syncDebtToCalendar(created)
-                }
-            } catch (exception: Exception) {
-                Log.e(TAG, "Failed to add debtor", exception)
+    /** Work mode only. Matching names or phones become a history entry on the existing debtor. */
+    suspend fun importDebts(rows: List<ImportedDebt>, currency: String, debtType: DebtType): Int {
+        if (preferencesStore.appMode.first() != AppMode.PROFESSIONAL) return 0
+        val givenAt = System.currentTimeMillis()
+        var saved = 0
+        for (row in rows) {
+            val ok = saveDebt(
+                name = row.name,
+                amountCents = row.amountCents,
+                dateGiven = givenAt,
+                dateDue = row.dateDue,
+                debtType = debtType,
+                affectsBalance = false,
+                currency = currency,
+                phone = row.phone,
+            )
+            if (ok) saved += 1
+        }
+        return saved
+    }
+
+    private suspend fun saveDebt(
+        name: String,
+        amountCents: Long,
+        dateGiven: Long,
+        dateDue: Long,
+        debtType: DebtType,
+        affectsBalance: Boolean,
+        note: String = "",
+        currency: String = "USD",
+        loanCategory: LoanCategory = LoanCategory.OTHER,
+        interestRateBps: Int = 0,
+        contactLookupKey: String? = null,
+        contactUri: String? = null,
+        contactPhotoUri: String? = null,
+        phone: String = "",
+        email: String = "",
+    ): Boolean {
+        if (amountCents <= 0L || name.isBlank()) return false
+        if (preferencesStore.appMode.first() == AppMode.PROFESSIONAL) {
+            val match = ClientIdentity.findMatch(
+                debtorRepository.getAllDebtors().first(),
+                name,
+                phone,
+                debtType,
+            )
+            if (match != null) {
+                return mergeDebt(match, amountCents, dateGiven, dateDue, note, phone)
             }
         }
+        return try {
+            val id = debtorRepository.addDebtor(
+                Debtor(
+                    name = name.trim(),
+                    targetAmountCents = amountCents,
+                    currency = currency,
+                    debtType = debtType,
+                    affectsBalance = affectsBalance,
+                    note = note,
+                    dateGiven = dateGiven,
+                    dateDue = dateDue,
+                    loanCategory = loanCategory,
+                    interestRateBps = interestRateBps,
+                    contactLookupKey = contactLookupKey,
+                    contactUri = contactUri,
+                    contactPhotoUri = contactPhotoUri,
+                    phone = phone.trim(),
+                    email = email.trim(),
+                ),
+            )
+            val created = debtorRepository.getDebtorById(id)
+            if (created != null && !created.isPaid) {
+                scheduleDebtReminders(created)
+                syncDebtToCalendar(created)
+            }
+            created != null
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed to add debtor", exception)
+            false
+        }
+    }
+
+    private suspend fun mergeDebt(
+        match: Debtor,
+        amountCents: Long,
+        givenAt: Long,
+        dateDue: Long,
+        note: String,
+        phone: String,
+    ): Boolean {
+        val advanced = addDebtAdvanceSync(match.id, amountCents, givenAt, note)
+        val fresh = debtorRepository.getDebtorById(match.id) ?: return advanced
+        val due = if (dateDue > 0L && (fresh.dateDue <= 0L || dateDue < fresh.dateDue)) dateDue else fresh.dateDue
+        val nextPhone = if (fresh.phone.isBlank() && phone.isNotBlank()) phone.trim() else fresh.phone
+        if (due != fresh.dateDue || nextPhone != fresh.phone) {
+            debtorRepository.updateDebtor(
+                fresh.copy(dateDue = due, phone = nextPhone),
+                fresh.affectsBalance,
+            )
+            val updated = debtorRepository.getDebtorById(match.id) ?: fresh
+            if (!updated.isPaid) {
+                scheduleDebtReminders(updated)
+                syncDebtToCalendar(updated, force = true)
+            }
+        }
+        return advanced
     }
 
     fun updateDebtor(

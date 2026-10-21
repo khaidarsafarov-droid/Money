@@ -680,4 +680,14 @@
         <item quantity="one">%d debt</item>
         <item quantity="other">%d debts</item>
     </plurals>
+    <string name="debt_import_action">From photo</string>
+    <string name="debt_import_camera">Camera</string>
+    <string name="debt_import_gallery">Gallery</string>
+    <string name="debt_import_review">Review</string>
+    <string name="debt_import_empty">Nothing found</string>
+    <string name="debt_import_saved">Saved</string>
+    <string name="clients_empty">No clients</string>
+    <string name="debt_import_name">Name</string>
+    <string name="debt_import_amount">Amount</string>
+    <string name="debt_import_date">Date</string>
 </resources>
