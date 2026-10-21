@@ -43,6 +43,7 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.filled.Add
@@ -578,11 +579,20 @@ fun HomeScreen(
         val syncState by app.syncService.connectionState.collectAsStateWithLifecycle()
 
         val topBar: @Composable () -> Unit = {
+            val page = HomeTab.entries.getOrElse(selectedTab) { HomeTab.Home }
+            val title = when {
+                page == HomeTab.Debts && showWorkClients -> stringResource(R.string.clients_title)
+                page == HomeTab.Debts -> stringResource(R.string.tab_debts)
+                page == HomeTab.Goals -> stringResource(R.string.section_goals)
+                page == HomeTab.More -> stringResource(R.string.nav_more)
+                else -> stringResource(R.string.home_brand)
+            }
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.home_screen_title),
-                        fontWeight = FontWeight.SemiBold,
+                        text = title,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -619,22 +629,15 @@ fun HomeScreen(
                             }
                         }
                     } else {
-                        IconButton(
-                            onClick = {
-                                val more = HomeTab.More.ordinal
-                                if (selectedTab != more) vibrate(context, HapticStrength.MEDIUM)
-                                selectedTab = more
-                            },
-                        ) {
-                            Icon(
-                                Icons.Outlined.Settings,
-                                contentDescription = stringResource(R.string.settings_open),
-                            )
+                        IconButton(onClick = {
+                            if (selectedTab != HomeTab.Debts.ordinal) vibrate(context, HapticStrength.MEDIUM)
+                            selectedTab = HomeTab.Debts.ordinal
+                        }) {
+                            Icon(Icons.Outlined.Search, contentDescription = stringResource(R.string.debt_search_hint))
                         }
-                        SyncStatusIndicator(
-                            state = syncState,
-                            modifier = Modifier.padding(end = 4.dp),
-                        )
+                        IconButton(onClick = onOpenDebtNotificationSettings) {
+                            Icon(Icons.Outlined.Notifications, contentDescription = stringResource(R.string.settings_open))
+                        }
                     }
                     syncState.webSocketUrl?.let { webSocketUrl ->
                     IconButton(onClick = { showTopMenu = true }) {
@@ -680,7 +683,9 @@ fun HomeScreen(
             } else {
                 plusActionFor(HomeTab.entries[selectedTab])
             }
-            FloatingActionButton(
+            val showFab = isTablet || HomeTab.entries.getOrElse(selectedTab) { HomeTab.Home } != HomeTab.Home
+            if (showFab) FloatingActionButton(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                 onClick = {
                     when (pagePlus) {
                         PagePlusAction.AddDebt -> showAddDebtorDialog = true

@@ -128,6 +128,7 @@ import com.example.money.ui.debtors.DebtListViewModel
 import com.example.money.ui.debtors.DebtMessageChannelSheet
 import com.example.money.ui.debtors.DebtPaymentDialog
 import com.example.money.ui.debtors.DebtTab
+import com.example.money.ui.debtors.DebtorSort
 import com.example.money.ui.debtors.DebtorFilter
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.debtors.IncomeIdeasDialog
@@ -379,7 +380,12 @@ internal fun PhoneHomeLayout(
                     .fillMaxSize()
                     .consumeWindowInsets(innerPadding)
                     .imePadding(),
-                contentPadding = listPadding,
+                contentPadding = PaddingValues(
+                    start = listPadding.calculateStartPadding(layoutDirection),
+                    top = listPadding.calculateTopPadding(),
+                    end = listPadding.calculateEndPadding(layoutDirection),
+                    bottom = listPadding.calculateBottomPadding() + 72.dp,
+                ),
             ) {
                 if (!notificationsEnabled) {
                     item {
@@ -394,44 +400,35 @@ internal fun PhoneHomeLayout(
                     }
                 }
                 if (page == HomeTab.Home) {
-                    item {
-                        HomePreviewCards(
-                            goalMetrics = goalMetrics,
-                            debtMetrics = debtMetrics,
-                            hideAmounts = privacySettings.hideAmounts,
-                            progressPercent = planProgressPercent,
-                            onOwesMeClick = {
-                                onDebtTabChange(DebtTab.OwesMe)
-                                onTabSelected(HomeTab.Debts.ordinal)
-                            },
-                            onIOweClick = {
-                                onDebtTabChange(DebtTab.IOwe)
-                                onTabSelected(HomeTab.Debts.ordinal)
-                            },
-                            onAccumulatedClick = { onTabSelected(HomeTab.Goals.ordinal) },
-                            onRemainingClick = { onTabSelected(HomeTab.Goals.ordinal) },
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.lg,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                    homeGoalAndDebtPreview(
+                    val nearestUnpaid = DebtorSort.sort(allDebtors.filter { !it.isPaid }).firstOrNull()
+                    homeFinora(
                         goals = goals,
                         debtors = allDebtors,
+                        owedToMeCents = debtMetrics.owedToMeCents,
+                        iOweCents = debtMetrics.iOweCents,
                         hideAmounts = privacySettings.hideAmounts,
-                        horizontalPadding = PaddingValues(horizontal = MoneySpacing.lg),
+                        onOwesMe = {
+                            onDebtTabChange(DebtTab.OwesMe)
+                            onTabSelected(HomeTab.Debts.ordinal)
+                        },
+                        onIOwe = {
+                            onDebtTabChange(DebtTab.IOwe)
+                            onTabSelected(HomeTab.Debts.ordinal)
+                        },
                         onOpenGoals = { onTabSelected(HomeTab.Goals.ordinal) },
                         onOpenGoal = { goal ->
                             onTabSelected(HomeTab.Goals.ordinal)
                             onOpenGoal(goal)
                         },
-                        onEditGoal = onEditGoal,
-                        onDeleteGoal = onDeleteGoal,
-                        onGoalTransfer = onGoalTransfer,
-                        onExpense = onExpense,
-                        onLogGoal = onLogGoal,
                         onOpenDebts = { onTabSelected(HomeTab.Debts.ordinal) },
+                        onOpenDebtor = onOpenDebtor,
+                        onTook = onAddDebt,
+                        onReturned = {
+                            if (nearestUnpaid != null) onAddDebtPayment(nearestUnpaid) else onAddDebt()
+                        },
+                        onAddDebt = onAddDebt,
+                        onPhotoCamera = onImportCamera,
+                        onPhotoGallery = onImportGallery,
                     )
                 }
 

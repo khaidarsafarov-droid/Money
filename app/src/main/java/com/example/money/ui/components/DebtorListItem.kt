@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.example.money.ui.theme.finoraAvatarColor
+import com.example.money.ui.theme.finoraInitials
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Call
@@ -212,14 +215,14 @@ private fun DebtorAvatar(name: String, overdue: Boolean) {
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .clip(CircleShape)
-                .background(scheme.surfaceContainerHigh)
+                .clip(RoundedCornerShape(13.dp))
+                .background(finoraAvatarColor(name))
                 .clearAndSetSemantics { },
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = name.initials(),
-                color = scheme.onSurface,
+                text = finoraInitials(name),
+                color = Color.White,
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.labelMedium,
             )

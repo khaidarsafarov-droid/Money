@@ -4,11 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import com.example.money.ui.theme.finoraBalanceBrush
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -153,18 +158,37 @@ fun DebtSectionTotal(
     modifier: Modifier = Modifier,
 ) {
     if (tab == DebtTab.Calendar) return
-    val type = if (tab == DebtTab.OwesMe) DebtType.CREDITOR else DebtType.DEBTOR
-    val total = debtors
-        .filter { it.debtType == type && !it.isPaid }
-        .sumOf { it.remainingAmountCents }
-    Text(
-        text = stringResource(
-            R.string.debt_total_label,
-            Formatters.currencyFromCents(total, hide = hideAmounts),
-        ),
-        style = MaterialTheme.typography.titleMedium,
-        modifier = modifier,
-    )
+    val owes = debtors.filter { it.debtType == DebtType.CREDITOR && !it.isPaid }.sumOf { it.remainingAmountCents }
+    val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }.sumOf { it.remainingAmountCents }
+    val net = owes - iOwe
+    val netText = if (hideAmounts) {
+        Formatters.currencyFromCents(net, hide = true)
+    } else {
+        val sign = if (net > 0L) "+ " else if (net < 0L) "− " else ""
+        sign + Formatters.currencyFromCents(kotlin.math.abs(net), hide = false)
+    }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(finoraBalanceBrush())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+    ) {
+        Text(text = stringResource(R.string.debt_total_short), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium)
+        Text(text = netText, color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Row(horizontalArrangement = Arrangement.spacedBy(18.dp), modifier = Modifier.padding(top = 8.dp)) {
+            Text(
+                text = "↓ " + Formatters.currencyFromCents(owes, hide = hideAmounts),
+                color = Color.White,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = "↑ " + Formatters.currencyFromCents(iOwe, hide = hideAmounts),
+                color = Color.White.copy(alpha = 0.85f),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
 }
 
 internal fun overdueCount(debtors: List<Debtor>, tab: DebtTab, now: Long = System.currentTimeMillis()): Int {
@@ -207,15 +231,19 @@ fun DebtorFilterRow(
                     )
                 },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.primary,
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.surface,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    labelColor = if (option == DebtorFilter.OVERDUE) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = selected,
-                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    borderColor = MaterialTheme.colorScheme.surface,
                     selectedBorderColor = MaterialTheme.colorScheme.primary,
                 ),
                 shape = RoundedCornerShape(MoneyRadius.lg),

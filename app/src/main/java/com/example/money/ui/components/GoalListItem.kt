@@ -1,8 +1,10 @@
 package com.example.money.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,6 +43,7 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
 import androidx.compose.ui.platform.LocalContext
 import com.example.money.ui.theme.MoneyMotion
+import com.example.money.ui.theme.finoraGoalBrush
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
 import com.example.money.ui.theme.moneyDisplayStyle
@@ -98,6 +101,13 @@ fun GoalListItem(
             defaultElevation = if (!goal.isCompleted) 2.dp else 1.dp,
         ),
     ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(84.dp)
+                    .background(finoraGoalBrush(goal.name.hashCode())),
+            )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -291,6 +301,7 @@ fun GoalListItem(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
+        }
         }
     }
 }

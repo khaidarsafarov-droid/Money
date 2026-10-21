@@ -1,13 +1,22 @@
 package com.example.money.ui.home
 
 import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import com.example.money.ui.util.Formatters
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -149,6 +158,31 @@ fun LazyListScope.homeDebtsSection(
             emptyList()
         }
         if (showClients && appMode == AppMode.PROFESSIONAL) {
+            item {
+                val owed = clientGroups.sumOf { it.display.remainingAmountCents }
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface, androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column {
+                        Text(stringResource(R.string.clients_owed_total), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            Formatters.currencyFromCents(owed, hide = privacySettings.hideAmounts),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(stringResource(R.string.clients_title), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${clientGroups.size}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
             if (clientGroups.isEmpty()) {
                 item {
                     EmptyStateMessage(

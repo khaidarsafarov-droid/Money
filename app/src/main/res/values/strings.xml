@@ -185,6 +185,7 @@
     <string name="debtor_edit_paid_hint">Уже внесено: %1$s — сумма долга не может быть меньше</string>
     <string name="debtor_paid">Погашен</string>
     <string name="debtor_due_date">Срок: %1$s</string>
+    <string name="debt_until">до %1$s</string>
     <string name="debtor_due_short">Срок: %1$s</string>
     <string name="debtor_remaining">Осталось: %1$s</string>
     <string name="action_remind">Напомнить</string>
@@ -717,4 +718,13 @@
     <string name="debt_import_name">Имя</string>
     <string name="debt_import_amount">Сумма</string>
     <string name="debt_import_date">Дата</string>
+    <string name="home_brand">Money</string>
+    <string name="home_balance_label">Баланс</string>
+    <string name="action_see_all">Все</string>
+    <string name="qa_photo">Фото</string>
+    <string name="qa_debt">Долг</string>
+    <string name="debt_total_short">Всего</string>
+    <string name="clients_owed_total">Должны всего</string>
+    <string name="photo_import_lines">%1$d строк</string>
+    <string name="photo_import_selected">%1$d выбрано · %2$s</string>
 </resources>

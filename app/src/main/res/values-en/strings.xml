@@ -172,6 +172,7 @@
     <string name="debtor_edit_paid_hint">Already paid: %1$s — debt amount cannot be lower</string>
     <string name="debtor_paid">Paid</string>
     <string name="debtor_due_date">Due: %1$s</string>
+    <string name="debt_until">until %1$s</string>
     <string name="debtor_due_short">Due: %1$s</string>
     <string name="debtor_remaining">Remaining: %1$s</string>
     <string name="debt_remind_subject">Debt reminder — %1$s</string>
@@ -690,4 +691,13 @@
     <string name="debt_import_name">Name</string>
     <string name="debt_import_amount">Amount</string>
     <string name="debt_import_date">Date</string>
+    <string name="home_brand">Money</string>
+    <string name="home_balance_label">Balance</string>
+    <string name="action_see_all">All</string>
+    <string name="qa_photo">Photo</string>
+    <string name="qa_debt">Debt</string>
+    <string name="debt_total_short">Total</string>
+    <string name="clients_owed_total">Owed in total</string>
+    <string name="photo_import_lines">%1$d lines</string>
+    <string name="photo_import_selected">%1$d selected · %2$s</string>
 </resources>
