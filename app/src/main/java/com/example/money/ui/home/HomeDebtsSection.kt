@@ -83,6 +83,8 @@ fun LazyListScope.homeDebtsSection(
     onToggleClients: () -> Unit = {},
     onImportCamera: (() -> Unit)? = null,
     onImportGallery: (() -> Unit)? = null,
+    openSearch: Boolean = false,
+    onSearchOpened: () -> Unit = {},
 ) {
     item {
         DebtTabRow(
@@ -147,6 +149,8 @@ fun LazyListScope.homeDebtsSection(
                 onDebtSearchQueryChange = onDebtSearchQueryChange,
                 showClients = showClients && appMode == AppMode.PROFESSIONAL,
                 onToggleClients = if (appMode == AppMode.PROFESSIONAL) onToggleClients else null,
+                openSearch = openSearch,
+                onSearchOpened = onSearchOpened,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }

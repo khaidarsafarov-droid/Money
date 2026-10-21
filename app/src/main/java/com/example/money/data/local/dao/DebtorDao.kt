@@ -47,6 +47,7 @@ interface DebtorDao {
             OR (:filter = 'ACTIVE' AND status != 'COMPLETED')
             OR (:filter = 'PAID' AND status = 'COMPLETED')
             OR (:filter = 'OVERDUE' AND status != 'COMPLETED' AND date_due > 0 AND date_due < :overdueBefore)
+            OR (:filter = 'DUE_SOON' AND status != 'COMPLETED' AND date_due >= :overdueBefore AND date_due < :soonBefore)
         )
         AND (
             :searchPattern = '%'
@@ -64,6 +65,7 @@ interface DebtorDao {
         filter: String,
         searchPattern: String,
         overdueBefore: Long,
+        soonBefore: Long,
     ): Flow<List<DebtorWithPayments>>
 
     @Insert

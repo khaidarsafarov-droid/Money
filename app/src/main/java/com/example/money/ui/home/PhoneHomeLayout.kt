@@ -56,13 +56,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -74,7 +72,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -146,7 +143,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PhoneHomeLayout(
-    drawerState: androidx.compose.material3.DrawerState,
     snackbarHostState: SnackbarHostState,
     topBar: @Composable () -> Unit,
     floatingActionButton: @Composable () -> Unit,
@@ -233,37 +229,15 @@ internal fun PhoneHomeLayout(
     onToggleClients: () -> Unit = {},
     onImportCamera: (() -> Unit)? = null,
     onImportGallery: (() -> Unit)? = null,
+    openDebtSearch: Boolean = false,
+    onDebtSearchOpened: () -> Unit = {},
 ) {
     val contactContext = LocalContext.current
     val homeListState = rememberLazyListState()
     val goalsListState = rememberLazyListState()
+    var returnedPicker by remember { mutableStateOf(false) }
+    val activeDebts = DebtorSort.sort(allDebtors.filter { !it.isPaid })
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = false,
-        drawerContent = {
-            ModalDrawerSheet {
-                MorePage(
-                    appMode = appMode,
-                    onAppModeChange = onAppModeChange,
-                    onOpenNotes = { onTabSelected(HomeTab.Notes.ordinal) },
-                    onOpenClients = onOpenClients,
-                    onOpenAdvisor = onOpenAdvisor,
-                    onOpenBackupSettings = onOpenBackupSettings,
-                    onOpenIncomeIdeas = onOpenIncomeIdeas,
-                    onOpenVoiceSettings = onOpenVoiceSettings,
-                    onOpenAutopilotSettings = onOpenAutopilotSettings,
-                    onOpenCurrency = onOpenCurrency,
-                    onOpenAppLanguage = onOpenAppLanguage,
-                    onOpenSyncSettings = onOpenSyncSettings,
-                    onOpenPrivacySettings = onOpenPrivacySettings,
-                    onOpenDebtNotificationSettings = onOpenDebtNotificationSettings,
-                    onOpenCalendarSettings = onOpenCalendarSettings,
-                    onAfterClick = { scope.launch { drawerState.close() } },
-                )
-            }
-        },
-    ) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -374,8 +348,7 @@ internal fun PhoneHomeLayout(
                 },
                 modifier = Modifier
                     .fillMaxSize()
-                    .consumeWindowInsets(innerPadding)
-                    .imePadding(),
+                    .consumeWindowInsets(innerPadding),
                 contentPadding = PaddingValues(
                     start = listPadding.calculateStartPadding(layoutDirection),
                     top = listPadding.calculateTopPadding(),
@@ -383,32 +356,23 @@ internal fun PhoneHomeLayout(
                     bottom = listPadding.calculateBottomPadding() + 72.dp,
                 ),
             ) {
-                if (!notificationsEnabled) {
-                    item {
-                        NotificationPermissionBanner(
-                            onRequestPermission = onRequestNotificationPermission,
-                            onDismiss = onDismissNotificationPrompt,
-                            modifier = Modifier.padding(
-                                horizontal = MoneySpacing.lg,
-                                vertical = MoneySpacing.sm,
-                            ),
-                        )
-                    }
-                }
                 if (page == HomeTab.Home) {
-                    val nearestUnpaid = DebtorSort.sort(allDebtors.filter { !it.isPaid }).firstOrNull()
                     homeFinora(
                         goals = goals,
                         debtors = allDebtors,
                         owedToMeCents = debtMetrics.owedToMeCents,
                         iOweCents = debtMetrics.iOweCents,
+                        owedToMeCount = debtMetrics.owedToMeActiveCount,
+                        iOweCount = debtMetrics.iOweActiveCount,
                         hideAmounts = privacySettings.hideAmounts,
                         onOwesMe = {
                             onDebtTabChange(DebtTab.OwesMe)
+                            onDebtorFilterChange(DebtorFilter.ACTIVE)
                             onTabSelected(HomeTab.Debts.ordinal)
                         },
                         onIOwe = {
                             onDebtTabChange(DebtTab.IOwe)
+                            onDebtorFilterChange(DebtorFilter.ACTIVE)
                             onTabSelected(HomeTab.Debts.ordinal)
                         },
                         onOpenGoals = { onTabSelected(HomeTab.Goals.ordinal) },
@@ -417,14 +381,33 @@ internal fun PhoneHomeLayout(
                             onOpenGoal(goal)
                         },
                         onOpenDebts = { onTabSelected(HomeTab.Debts.ordinal) },
+                        onOpenOverdue = {
+                            val overdueCreditors = allDebtors.any {
+                                it.debtType == DebtType.CREDITOR && !it.isPaid && it.dateDue > 0L &&
+                                    com.example.money.domain.util.DebtDueDateUtils.isOverdue(it.dateDue)
+                            }
+                            onDebtTabChange(if (overdueCreditors) DebtTab.OwesMe else DebtTab.IOwe)
+                            onDebtorFilterChange(DebtorFilter.OVERDUE)
+                            onTabSelected(HomeTab.Debts.ordinal)
+                        },
+                        onOpenDueSoon = {
+                            onDebtorFilterChange(DebtorFilter.DUE_SOON)
+                            onTabSelected(HomeTab.Debts.ordinal)
+                        },
                         onOpenDebtor = onOpenDebtor,
-                        onTook = onAddDebt,
                         onReturned = {
-                            if (nearestUnpaid != null) onAddDebtPayment(nearestUnpaid) else onAddDebt()
+                            when (activeDebts.size) {
+                                0 -> onAddDebt()
+                                1 -> onAddDebtPayment(activeDebts.first())
+                                else -> returnedPicker = true
+                            }
                         },
                         onAddDebt = onAddDebt,
                         onPhotoCamera = onImportCamera,
                         onPhotoGallery = onImportGallery,
+                        showNotificationPrompt = !notificationsEnabled,
+                        onEnableNotifications = onRequestNotificationPermission,
+                        onDismissNotificationPrompt = onDismissNotificationPrompt,
                     )
                 }
 
@@ -543,11 +526,34 @@ internal fun PhoneHomeLayout(
                         onToggleClients = onToggleClients,
                         onImportCamera = onImportCamera,
                         onImportGallery = onImportGallery,
+                        openSearch = openDebtSearch,
+                        onSearchOpened = onDebtSearchOpened,
                     )
                 }
             }
             }
             }
+        }
+    if (returnedPicker) {
+        ModalBottomSheet(onDismissRequest = { returnedPicker = false }) {
+            Text(
+                text = stringResource(R.string.qa_returned),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm),
+            )
+            activeDebts.forEach { debtor ->
+                FinoraDebtRow(
+                    debtor = debtor,
+                    hideAmounts = privacySettings.hideAmounts,
+                    onClick = {
+                        returnedPicker = false
+                        onAddDebtPayment(debtor)
+                    },
+                    modifier = Modifier.padding(horizontal = MoneySpacing.lg),
+                )
+            }
+            Spacer(Modifier.height(MoneySpacing.xl))
         }
     }
 }
@@ -622,5 +628,6 @@ internal fun emptyDebtorsTitle(filter: DebtorFilter): String = when (filter) {
     DebtorFilter.ALL -> stringResource(R.string.empty_debtors_all)
     DebtorFilter.ACTIVE -> stringResource(R.string.empty_debtors_active)
     DebtorFilter.OVERDUE -> stringResource(R.string.empty_debtors_overdue)
+    DebtorFilter.DUE_SOON -> stringResource(R.string.empty_debtors_active)
     DebtorFilter.PAID -> stringResource(R.string.empty_debtors_paid)
 }

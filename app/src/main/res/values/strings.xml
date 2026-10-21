@@ -121,6 +121,7 @@
     <string name="debt_filter_all">Все</string>
     <string name="debt_filter_active">Активные</string>
     <string name="debt_filter_overdue">Просроченные</string>
+    <string name="debt_filter_soon">7 дней</string>
     <string name="debt_filter_paid">Погашенные</string>
     <string name="debt_chip_today">Сегодня</string>
     <string name="debt_chip_due">Срок</string>
@@ -725,6 +726,13 @@
     <string name="debt_import_date">Дата</string>
     <string name="home_brand">Money</string>
     <string name="home_balance_label">Баланс</string>
+    <string name="home_returned_month">+%1$s за месяц</string>
+    <string name="home_status_overdue">Просрочено · %1$d · %2$s</string>
+    <string name="home_status_today">Сегодня · %1$d</string>
+    <string name="home_status_week">7 дней · %1$d</string>
+    <string name="qa_returned">Вернули</string>
+    <string name="qa_add_debt">+ Долг</string>
+    <string name="notification_enable_short">Включить</string>
     <string name="action_see_all">Все</string>
     <string name="qa_photo">Фото</string>
     <string name="qa_debt">Долг</string>

@@ -25,6 +25,7 @@ import com.example.money.domain.model.Transfer
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.util.DebtDueDateUtils
 import com.example.money.domain.util.DebtOperationLabels
+import com.example.money.domain.util.HomeDebtStatusEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.domain.util.StagedDeletes
 import com.example.money.ui.debtors.DebtTab
@@ -88,6 +89,7 @@ class DebtorRepositoryImpl(
             filter = filter.name,
             searchPattern = searchPattern,
             overdueBefore = DebtDueDateUtils.overdueBeforeMillis(now),
+            soonBefore = DebtDueDateUtils.startPlusDays(now, HomeDebtStatusEngine.WEEK_DAYS),
         )
         }.map { rows ->
             DebtorSort.sort(rows.map { it.toDomain() }, now)

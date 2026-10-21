@@ -41,4 +41,17 @@ object DebtDueDateUtils {
 
     fun isDueToday(dateDue: Long, now: Long = System.currentTimeMillis()): Boolean =
         dateDue > 0L && startOfDayMillis(dateDue) == startOfDayMillis(now)
+
+    fun startPlusDays(now: Long, days: Int): Long {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = startOfDayMillis(now)
+            add(Calendar.DAY_OF_YEAR, days)
+        }
+        return calendar.timeInMillis
+    }
+
+    fun isDueWithinDays(dateDue: Long, days: Int, now: Long = System.currentTimeMillis()): Boolean {
+        if (dateDue <= 0L || isOverdue(dateDue, now)) return false
+        return dateDue < startPlusDays(now, days)
+    }
 }

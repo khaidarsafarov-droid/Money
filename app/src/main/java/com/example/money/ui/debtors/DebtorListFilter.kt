@@ -3,6 +3,7 @@ package com.example.money.ui.debtors
 import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.DebtDueDateUtils
+import com.example.money.domain.util.HomeDebtStatusEngine
 
 /** Pure filter/sort pipeline — easy to unit-test and reuse outside ViewModel. */
 object DebtorListFilter {
@@ -29,6 +30,9 @@ object DebtorListFilter {
             DebtorFilter.ACTIVE -> byType.filter { !it.isPaid }
             DebtorFilter.OVERDUE -> byType.filter {
                 !it.isPaid && it.dateDue > 0L && DebtDueDateUtils.isOverdue(it.dateDue, now)
+            }
+            DebtorFilter.DUE_SOON -> byType.filter {
+                DebtDueDateUtils.isDueWithinDays(it.dateDue, HomeDebtStatusEngine.WEEK_DAYS, now)
             }
             DebtorFilter.PAID -> byType.filter { it.isPaid }
         }

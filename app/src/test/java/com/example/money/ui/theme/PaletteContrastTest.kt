@@ -7,6 +7,15 @@ import kotlin.math.pow
 class PaletteContrastTest {
 
     @Test
+    fun balanceGradientEndsKeepWhiteReadable() {
+        val stops = listOf(0xFF0B6E5B.toInt(), 0xFF14786E.toInt(), 0xFF0A4F42.toInt(), 0xFF0F6A58.toInt())
+        stops.forEach { stop ->
+            val blended = composite(0xFFFFFFFF.toInt(), stop, 0.9)
+            assertTrue("stop=${stop.toUInt().toString(16)}", contrast(blended, stop) >= 4.5)
+        }
+    }
+
+    @Test
     fun avatarInitialsMeetTextContrast() {
         assertTrue(contrast(0xFF111614.toInt(), 0xFFE4E9E6.toInt()) >= 4.5)
         assertTrue(contrast(0xFFE8EEEB.toInt(), 0xFF262D2A.toInt()) >= 4.5)
@@ -16,6 +25,14 @@ class PaletteContrastTest {
         val lighter = maxOf(luminance(foreground), luminance(background))
         val darker = minOf(luminance(foreground), luminance(background))
         return (lighter + 0.05) / (darker + 0.05)
+    }
+
+    private fun composite(foreground: Int, background: Int, alpha: Double): Int {
+        fun channel(fg: Int, bg: Int): Int = (fg * alpha + bg * (1.0 - alpha)).toInt()
+        val r = channel((foreground shr 16) and 0xFF, (background shr 16) and 0xFF)
+        val g = channel((foreground shr 8) and 0xFF, (background shr 8) and 0xFF)
+        val b = channel(foreground and 0xFF, background and 0xFF)
+        return (r shl 16) or (g shl 8) or b
     }
 
     private fun luminance(color: Int): Double {
