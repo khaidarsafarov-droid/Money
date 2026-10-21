@@ -37,7 +37,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -166,8 +165,6 @@ fun TabletHomeLayout(
     onOpenClients: () -> Unit = {},
     showClients: Boolean = false,
     onToggleClients: () -> Unit = {},
-    onImportCamera: (() -> Unit)? = null,
-    onImportGallery: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -422,16 +419,11 @@ fun TabletHomeLayout(
                     HomeSection.Goals -> {
                         val orderedGoals = GoalProgress.orderedForSection(goals)
                         item {
-                            Text(
-                                text = stringResource(R.string.section_goals),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                            )
-                        }
-                        item {
-                            TextButton(onClick = onOpenGoalHub) {
-                                Text(stringResource(R.string.goal_hub_open))
+                            IconButton(onClick = onOpenGoalHub) {
+                                Icon(
+                                    Icons.Outlined.Flag,
+                                    contentDescription = stringResource(R.string.goal_hub_open),
+                                )
                             }
                         }
                         if (orderedGoals.isNotEmpty()) {
@@ -503,8 +495,6 @@ fun TabletHomeLayout(
                                 onOpenCalendar = { onDebtTabChange(DebtTab.Calendar) },
                                 onOpenCheckIn = onOpenCheckIn,
                                 onApplyAutopilot = if (autopilotSettings.enabled) onApplyAutopilot else null,
-                                onImportCamera = onImportCamera,
-                                onImportGallery = onImportGallery,
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
@@ -535,13 +525,9 @@ fun TabletHomeLayout(
                                     DebtCheckInSheet(
                                         debtors = allDebtors,
                                         hideAmounts = privacySettings.hideAmounts,
+                                        onDismiss = onDismissCheckIn,
                                         modifier = Modifier.padding(vertical = 4.dp),
                                     )
-                                }
-                                item {
-                                    TextButton(onClick = onDismissCheckIn) {
-                                        Text(stringResource(R.string.action_close))
-                                    }
                                 }
                             }
                             item {

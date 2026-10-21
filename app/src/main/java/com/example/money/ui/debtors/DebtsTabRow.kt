@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.DebtType
@@ -65,12 +65,9 @@ fun DebtTabRow(
     onOpenCalendar: () -> Unit,
     onOpenCheckIn: () -> Unit,
     onApplyAutopilot: (() -> Unit)? = null,
-    onImportCamera: (() -> Unit)? = null,
-    onImportGallery: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    var photoMenu by remember { mutableStateOf(false) }
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -86,39 +83,12 @@ fun DebtTabRow(
                         Text(
                             text = stringResource(tab.titleRes),
                             fontWeight = if (selectedTab == tab) FontWeight.SemiBold else FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            softWrap = false,
                         )
                     },
                 )
-            }
-        }
-        if (onImportCamera != null || onImportGallery != null) {
-            Box {
-                IconButton(onClick = { photoMenu = true }) {
-                    Icon(
-                        imageVector = Icons.Outlined.PhotoCamera,
-                        contentDescription = stringResource(R.string.debt_import_action),
-                    )
-                }
-                DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
-                    if (onImportCamera != null) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.debt_import_camera)) },
-                            onClick = {
-                                photoMenu = false
-                                onImportCamera()
-                            },
-                        )
-                    }
-                    if (onImportGallery != null) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.debt_import_gallery)) },
-                            onClick = {
-                                photoMenu = false
-                                onImportGallery()
-                            },
-                        )
-                    }
-                }
             }
         }
         Box {
@@ -165,44 +135,42 @@ fun DebtSectionTotal(
     modifier: Modifier = Modifier,
 ) {
     if (tab == DebtTab.Calendar) return
-    val totals = androidx.compose.runtime.remember(debtors, tab) {
-        val owes = debtors.filter { it.debtType == DebtType.CREDITOR && !it.isPaid }.sumOf { it.remainingAmountCents }
-        val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }.sumOf { it.remainingAmountCents }
-        owes to iOwe
+    val type = if (tab == DebtTab.OwesMe) DebtType.CREDITOR else DebtType.DEBTOR
+    val amount = androidx.compose.runtime.remember(debtors, tab) {
+        debtors.filter { it.debtType == type && !it.isPaid }.sumOf { it.remainingAmountCents }
     }
-    val owes = totals.first
-    val iOwe = totals.second
-    val net = owes - iOwe
-    val netText = if (hideAmounts) {
-        Formatters.currencyFromCents(net, hide = true)
-    } else {
-        val sign = if (net > 0L) "+ " else if (net < 0L) "− " else ""
-        sign + Formatters.currencyFromCents(kotlin.math.abs(net), hide = false)
-    }
-    Column(
+    val late = overdueCount(debtors, tab)
+    Row(
         modifier = modifier
             .pressScale()
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(MoneyRadius.lg))
             .background(finoraBalanceBrush())
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+            .padding(horizontal = MoneySpacing.lg, vertical = MoneySpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.md),
     ) {
-        Text(text = stringResource(R.string.debt_total_short), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium)
-        AnimatedAmount(
-            text = netText,
-            color = Color.White,
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(18.dp), modifier = Modifier.padding(top = 8.dp)) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "↓ " + Formatters.currencyFromCents(owes, hide = hideAmounts),
-                color = Color.White,
-                style = MaterialTheme.typography.bodySmall,
+                text = stringResource(tab.titleRes),
+                color = Color.White.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
+            AnimatedAmount(
+                text = Formatters.currencyFromCents(amount, hide = hideAmounts),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            )
+        }
+        if (late > 0) {
             Text(
-                text = "↑ " + Formatters.currencyFromCents(iOwe, hide = hideAmounts),
-                color = Color.White.copy(alpha = 0.85f),
-                style = MaterialTheme.typography.bodySmall,
+                text = stringResource(R.string.debt_filter_overdue_count, late),
+                color = Color.White.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -225,12 +193,18 @@ fun DebtorFilterRow(
     onFilterSelected: (DebtorFilter) -> Unit,
     overdueCount: Int,
     modifier: Modifier = Modifier,
+    hideFilters: Boolean = false,
+    leading: (@Composable () -> Unit)? = null,
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         contentPadding = PaddingValues(horizontal = 0.dp),
     ) {
+        if (leading != null) {
+            item(key = "leading", contentType = "filter") { leading() }
+        }
+        if (hideFilters) return@LazyRow
         items(listFilters, key = { it.name }, contentType = { "filter" }) { option ->
             val selected = selectedFilter == option
             val label = if (option == DebtorFilter.OVERDUE) {
@@ -260,7 +234,7 @@ fun DebtorFilterRow(
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = selected,
-                    borderColor = MaterialTheme.colorScheme.surface,
+                    borderColor = MaterialTheme.colorScheme.outlineVariant,
                     selectedBorderColor = MaterialTheme.colorScheme.primary,
                 ),
                 shape = RoundedCornerShape(MoneyRadius.lg),
@@ -295,22 +269,33 @@ internal fun DebtFilterAndSearch(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(MoneySpacing.xs),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (onToggleClients != null) {
-                FilterChip(
-                    selected = showClients,
-                    onClick = onToggleClients,
-                    label = { Text(stringResource(R.string.clients_title)) },
-                )
-            }
-            if (!showClients) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        ) {
             DebtorFilterRow(
                 selectedFilter = debtorFilter,
                 onFilterSelected = onDebtorFilterChange,
                 overdueCount = overdueCount(allDebtors, debtTab),
+                hideFilters = showClients,
+                leading = onToggleClients?.let { toggle ->
+                    {
+                        FilterChip(
+                            selected = showClients,
+                            onClick = toggle,
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.clients_title),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                        )
+                    }
+                },
                 modifier = Modifier.weight(1f),
             )
-            }
             IconButton(
                 onClick = {
                     if (showSearch) {

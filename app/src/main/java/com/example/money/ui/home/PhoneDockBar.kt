@@ -3,14 +3,14 @@ package com.example.money.ui.home
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,7 +37,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.money.R
@@ -69,7 +71,7 @@ internal fun PhoneDockBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .height(64.dp),
+                    .heightIn(min = 64.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 DockItem(PhoneDockTab.Home, selected, stringResource(R.string.nav_home), Icons.Outlined.Home, Icons.Filled.Home, onHome)
@@ -105,8 +107,9 @@ private fun RowScope.DockItem(
     Column(
         modifier = Modifier
             .weight(1f)
+            .heightIn(min = 48.dp)
             .pressScale()
-            .clickable(onClick = onClick),
+            .selectable(selected = on, onClick = onClick, role = Role.Tab),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
@@ -123,7 +126,7 @@ private fun RowScope.DockItem(
             ) { selectedNow ->
                 Icon(
                     imageVector = if (selectedNow) selectedIcon else icon,
-                    contentDescription = label,
+                    contentDescription = null,
                     tint = if (selectedNow) scheme.primary else scheme.onSurfaceVariant,
                     modifier = Modifier
                         .size(22.dp)
@@ -141,6 +144,7 @@ private fun RowScope.DockItem(
             fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal,
             color = if (on) scheme.primary else scheme.onSurfaceVariant,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

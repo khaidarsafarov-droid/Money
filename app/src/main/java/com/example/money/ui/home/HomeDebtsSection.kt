@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -81,8 +80,6 @@ fun LazyListScope.homeDebtsSection(
     appMode: AppMode = AppMode.PERSONAL,
     showClients: Boolean = false,
     onToggleClients: () -> Unit = {},
-    onImportCamera: (() -> Unit)? = null,
-    onImportGallery: (() -> Unit)? = null,
     openSearch: Boolean = false,
     onSearchOpened: () -> Unit = {},
 ) {
@@ -93,8 +90,6 @@ fun LazyListScope.homeDebtsSection(
             onOpenCalendar = { onDebtTabChange(DebtTab.Calendar) },
             onOpenCheckIn = onOpenCheckIn,
             onApplyAutopilot = if (autopilotSettings.enabled) onApplyAutopilot else null,
-            onImportCamera = onImportCamera,
-            onImportGallery = onImportGallery,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
     }
@@ -114,16 +109,9 @@ fun LazyListScope.homeDebtsSection(
                 DebtCheckInSheet(
                     debtors = allDebtors,
                     hideAmounts = privacySettings.hideAmounts,
+                    onDismiss = onDismissCheckIn,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 )
-            }
-            item {
-                TextButton(
-                    onClick = onDismissCheckIn,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                ) {
-                    Text(stringResource(R.string.action_close))
-                }
             }
         }
     }
