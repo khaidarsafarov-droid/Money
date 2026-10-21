@@ -15,6 +15,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
+import com.example.money.ui.motion.MotionGlyph
+import com.example.money.ui.motion.MotionGlyphIcon
+import com.example.money.ui.motion.moneySheetMotion
+import com.example.money.ui.util.MoneyHaptic
+import com.example.money.ui.util.moneyHaptic
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -240,6 +245,7 @@ fun DebtorFormDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .moneySheetMotion(onDismiss)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp),
@@ -422,8 +428,10 @@ fun DebtorFormDialog(
                     amountError = null
                 },
             )
+            val saveView = androidx.compose.ui.platform.LocalView.current
+            var saved by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
             Button(
-                enabled = canSubmit,
+                enabled = canSubmit && !saved,
                 onClick = {
                     nameError = InputValidators.validateName(name)?.let(context::getString)
                     amountError = InputValidators.validateAmount(amountText)?.let(context::getString)
@@ -444,11 +452,14 @@ fun DebtorFormDialog(
                     if (nameError != null || amountError != null || dateError != null || interestError != null) {
                         if (dateError != null) showDue = true
                         if (interestError != null) showDetails = true
+                        saveView.moneyHaptic(MoneyHaptic.Reject)
                         return@Button
                     }
                     val amount = InputValidators.parseAmount(amountText) ?: return@Button
                     val interestRateBps = InputValidators.parsePercent(interestRateText) ?: return@Button
                     onDebtTypeChange(resolvedType)
+                    saved = true
+                    saveView.moneyHaptic(MoneyHaptic.Confirm)
                     onConfirm(
                         name.trim(),
                         amount,
@@ -469,7 +480,11 @@ fun DebtorFormDialog(
                     .fillMaxWidth()
                     .heightIn(min = 56.dp),
             ) {
-                Text(stringResource(R.string.action_save))
+                if (saved) {
+                    MotionGlyphIcon(MotionGlyph.Check, tint = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text(stringResource(R.string.action_save))
+                }
             }
         }
     }

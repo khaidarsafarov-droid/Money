@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.example.money.ui.motion.pressScale
 import com.example.money.ui.theme.MoneySpacing
 
 enum class MoneyButtonPriority {
@@ -33,7 +34,7 @@ fun MoneyButton(
     enabled: Boolean = true,
     icon: ImageVector? = null,
 ) {
-    val minSizeModifier = modifier.defaultMinSize(
+    val minSizeModifier = modifier.pressScale().defaultMinSize(
         minWidth = MoneySpacing.minTouchTarget,
         minHeight = MoneySpacing.minTouchTarget,
     )

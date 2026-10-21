@@ -24,6 +24,9 @@ zxing = "3.5.3"
 sqlcipher = "4.9.0"
 desugar = "2.1.5"
 tesseract = "4.9.0"
+profileinstaller = "1.4.1"
+benchmark = "1.5.0"
+uiautomator = "2.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,9 +70,13 @@ zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" 
 sqlcipher = { group = "net.zetetic", name = "sqlcipher-android", version.ref = "sqlcipher" }
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
 tesseract = { group = "cz.adaptech.tesseract4android", name = "tesseract4android", version.ref = "tesseract" }
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
+androidx-benchmark-macro = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+baselineprofile = { id = "androidx.baselineprofile", version.ref = "benchmark" }
 

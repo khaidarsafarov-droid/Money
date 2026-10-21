@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.example.money.ui.motion.AnimatedAmount
+import com.example.money.ui.motion.moneySharedBounds
+import com.example.money.ui.motion.pressScale
 import com.example.money.ui.theme.finoraBalanceBrush
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -158,8 +161,13 @@ fun DebtSectionTotal(
     modifier: Modifier = Modifier,
 ) {
     if (tab == DebtTab.Calendar) return
-    val owes = debtors.filter { it.debtType == DebtType.CREDITOR && !it.isPaid }.sumOf { it.remainingAmountCents }
-    val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }.sumOf { it.remainingAmountCents }
+    val totals = androidx.compose.runtime.remember(debtors, tab) {
+        val owes = debtors.filter { it.debtType == DebtType.CREDITOR && !it.isPaid }.sumOf { it.remainingAmountCents }
+        val iOwe = debtors.filter { it.debtType == DebtType.DEBTOR && !it.isPaid }.sumOf { it.remainingAmountCents }
+        owes to iOwe
+    }
+    val owes = totals.first
+    val iOwe = totals.second
     val net = owes - iOwe
     val netText = if (hideAmounts) {
         Formatters.currencyFromCents(net, hide = true)
@@ -169,13 +177,19 @@ fun DebtSectionTotal(
     }
     Column(
         modifier = modifier
+            .moneySharedBounds("money-balance")
+            .pressScale()
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(finoraBalanceBrush())
             .padding(horizontal = 18.dp, vertical = 16.dp),
     ) {
         Text(text = stringResource(R.string.debt_total_short), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium)
-        Text(text = netText, color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        AnimatedAmount(
+            text = netText,
+            color = Color.White,
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(18.dp), modifier = Modifier.padding(top = 8.dp)) {
             Text(
                 text = "↓ " + Formatters.currencyFromCents(owes, hide = hideAmounts),

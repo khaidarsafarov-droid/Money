@@ -4,6 +4,13 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +32,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.money.MoneyApplication
 import com.example.money.settings.CurrencyRegion
 import com.example.money.settings.UserProfile
+import com.example.money.ui.theme.MoneyMotion
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.util.systemMotionEnabled
 import com.example.money.ui.clients.ClientDetailScreen
 import com.example.money.ui.clients.ClientEditorScreen
 import com.example.money.ui.clients.ClientListScreen
@@ -122,10 +131,39 @@ fun MoneyNavHost(
         return
     }
 
+    val motionEnabled = systemMotionEnabled(context)
+    val nestedEnter: EnterTransition = if (motionEnabled) {
+        slideInHorizontally(tween(MoneyMotion.medium, easing = MoneyMotion.emphasizedDecelerate)) { it } +
+            fadeIn(tween(MoneyMotion.fadeIn, easing = MoneyMotion.emphasizedDecelerate))
+    } else {
+        EnterTransition.None
+    }
+    val nestedExit: ExitTransition = if (motionEnabled) {
+        slideOutHorizontally(tween(MoneyMotion.medium, easing = MoneyMotion.emphasizedAccelerate)) { -it / 5 } +
+            fadeOut(tween(MoneyMotion.fadeOut, easing = MoneyMotion.emphasizedAccelerate))
+    } else {
+        ExitTransition.None
+    }
+    val nestedPopEnter: EnterTransition = if (motionEnabled) {
+        slideInHorizontally(tween(MoneyMotion.medium, easing = MoneyMotion.emphasizedDecelerate)) { -it / 5 } +
+            fadeIn(tween(MoneyMotion.fadeIn, easing = MoneyMotion.emphasizedDecelerate))
+    } else {
+        EnterTransition.None
+    }
+    val nestedPopExit: ExitTransition = if (motionEnabled) {
+        slideOutHorizontally(tween(MoneyMotion.medium, easing = MoneyMotion.emphasizedAccelerate)) { it } +
+            fadeOut(tween(MoneyMotion.fadeOut, easing = MoneyMotion.emphasizedAccelerate))
+    } else {
+        ExitTransition.None
+    }
     NavHost(
         navController = navController,
         startDestination = AppRoutes.HOME,
         modifier = modifier,
+        enterTransition = { nestedEnter },
+        exitTransition = { nestedExit },
+        popEnterTransition = { nestedPopEnter },
+        popExitTransition = { nestedPopExit },
     ) {
         composable(AppRoutes.HOME) {
             HomeScreen(
