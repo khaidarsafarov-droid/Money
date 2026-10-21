@@ -256,6 +256,7 @@ fun HomeScreen(
     var stepsGoalId by stepsGoalIdState
     val showAddSheetState = remember { mutableStateOf(false) }
     var showAddSheet by showAddSheetState
+    var showDebtAddMenu by remember { mutableStateOf(false) }
     val showNoteFormState = remember { mutableStateOf(false) }
     var showNoteForm by showNoteFormState
     val openNoteIdState = rememberSaveable(
@@ -684,6 +685,14 @@ fun HomeScreen(
                             }
                         }
                     } else {
+                        if (page == HomeTab.Goals) {
+                            IconButton(onClick = onOpenGoalHub) {
+                                Icon(
+                                    Icons.Outlined.Flag,
+                                    contentDescription = stringResource(R.string.goal_hub_open),
+                                )
+                            }
+                        }
                         IconButton(onClick = {
                             if (selectedTab != HomeTab.Debts.ordinal) vibrate(context, HapticStrength.MEDIUM)
                             openDebtSearch = true
@@ -739,13 +748,19 @@ fun HomeScreen(
             } else {
                 plusActionFor(HomeTab.entries[selectedTab])
             }
-            val showFab = isTablet || HomeTab.entries.getOrElse(selectedTab) { HomeTab.Home } != HomeTab.Home
+            val showFab = if (isTablet) {
+                true
+            } else {
+                showsPageFab(HomeTab.entries.getOrElse(selectedTab) { HomeTab.Home }, tablet = false)
+            }
             if (showFab) FloatingActionButton(
                 modifier = Modifier.pressScale(),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                 onClick = {
                     when (pagePlus) {
-                        PagePlusAction.AddDebt -> showAddDebtorDialog = true
+                        PagePlusAction.AddDebt -> {
+                            if (importFromPhoto) showDebtAddMenu = true else showAddDebtorDialog = true
+                        }
                         PagePlusAction.AddGoal -> showAddGoalDialog = true
                         PagePlusAction.AddNote -> showNoteForm = true
                         PagePlusAction.AddAnything -> {
@@ -892,8 +907,6 @@ fun HomeScreen(
                 onOpenClients = onOpenClients,
                 showClients = showWorkClients,
                 onToggleClients = { showWorkClients = !showWorkClients },
-                onImportCamera = if (importFromPhoto) startDebtCamera else null,
-                onImportGallery = if (importFromPhoto) startDebtGallery else null,
             )
             }
             }
@@ -989,7 +1002,6 @@ fun HomeScreen(
                 noteDraftBlocksRemote = noteViewModel::hasUnsavedDraft,
                 calendarPermissionGranted = hasCalendarPermissions,
                 onRequestCalendarPermission = onRequestCalendarPermission,
-                onOpenGoalHub = onOpenGoalHub,
                 onAddDebt = { showAddDebtorDialog = true },
                 notificationsEnabled = notificationsEnabled || notificationPromptDismissed,
                 onRequestNotificationPermission = {
@@ -1072,6 +1084,14 @@ fun HomeScreen(
             },
             onDeleteAction = { action -> goalViewModel.deleteAction(action.id) },
         )
+        if (showDebtAddMenu) {
+            DebtAddMenuSheet(
+                onDismiss = { showDebtAddMenu = false },
+                onManual = { showAddDebtorDialog = true },
+                onCamera = startDebtCamera,
+                onGallery = startDebtGallery,
+            )
+        }
         if (photoBusy) {
             Box(
                 modifier = Modifier.fillMaxSize(),

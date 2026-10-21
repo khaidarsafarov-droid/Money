@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.AlertDialog
@@ -19,6 +20,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -48,6 +52,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -196,8 +201,11 @@ fun GoalScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { showPsychotypeTest = true }) {
-                        Text(stringResource(R.string.psychotype_retake))
+                    IconButton(onClick = { showPsychotypeTest = true }) {
+                        Icon(
+                            Icons.Outlined.Psychology,
+                            contentDescription = stringResource(R.string.psychotype_retake),
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
@@ -248,29 +256,24 @@ fun GoalScreen(
             )
 
             HubCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(stringResource(R.string.goal_hub_fears_title), fontWeight = FontWeight.SemiBold)
-                    TextButton(onClick = { showFears = !showFears }) {
-                        Text(if (showFears) stringResource(R.string.action_close) else stringResource(R.string.action_edit))
-                    }
-                }
+                HubHeader(
+                    title = stringResource(R.string.goal_hub_fears_title),
+                    expanded = showFears,
+                    onToggle = { showFears = !showFears },
+                )
                 if (showFears) {
                     FearSelector(
                         selected = profile.selectedFearIds,
                         onChange = viewModel::updateFears,
                     )
-                }
-                profile.selectedFearIds.forEach { fearId ->
-                    Text(
-                        text = "• ${GoalPsychologyEngines.affirmationForFear(fearId, 0, displayName, goalText)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
+                    profile.selectedFearIds.forEach { fearId ->
+                        Text(
+                            text = "• ${GoalPsychologyEngines.affirmationForFear(fearId, 0, displayName, goalText)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
                 }
             }
 
@@ -280,12 +283,17 @@ fun GoalScreen(
             )
 
             HubCard {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(stringResource(R.string.goal_hub_luck_title_personal, displayName), fontWeight = FontWeight.SemiBold)
-                    TextButton(onClick = { showLuckForm = true }) {
-                        Text(stringResource(R.string.goal_hub_luck_add))
-                    }
-                }
+                var showLuckList by remember { mutableStateOf(false) }
+                HubHeader(
+                    title = stringResource(R.string.goal_hub_luck_title_personal, displayName),
+                    expanded = showLuckList,
+                    onToggle = { showLuckList = !showLuckList },
+                    trailing = {
+                        TextButton(onClick = { showLuckForm = true }) {
+                            Text(stringResource(R.string.goal_hub_luck_add))
+                        }
+                    },
+                )
                 Text(
                     stringResource(
                         R.string.goal_hub_luck_monthly,
@@ -294,13 +302,15 @@ fun GoalScreen(
                     ),
                     style = MaterialTheme.typography.bodySmall,
                 )
-                luckEntries.take(5).forEach { entry ->
-                    LuckEntryRow(
-                        entry = entry,
-                        hideAmounts = hideAmounts,
-                        onEdit = { editingLuck = entry },
-                        onDelete = { viewModel.deleteLuckEntry(entry) },
-                    )
+                if (showLuckList) {
+                    luckEntries.take(5).forEach { entry ->
+                        LuckEntryRow(
+                            entry = entry,
+                            hideAmounts = hideAmounts,
+                            onEdit = { editingLuck = entry },
+                            onDelete = { viewModel.deleteLuckEntry(entry) },
+                        )
+                    }
                 }
             }
 
@@ -315,8 +325,14 @@ fun GoalScreen(
             WeeklyChecklistCard(viewModel = viewModel, profile = profile)
 
             HubCard {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(stringResource(R.string.goal_hub_word_power), fontWeight = FontWeight.SemiBold)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.goal_hub_word_power),
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                     Switch(
                         checked = profile.wordPowerEnabled,
                         onCheckedChange = withLightHaptic(context, onCheckedChange = viewModel::setWordPowerEnabled),
@@ -324,6 +340,35 @@ fun GoalScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HubHeader(
+    title: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    trailing: @Composable (() -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        trailing?.invoke()
+        Icon(
+            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+            contentDescription = null,
+        )
     }
 }
 
@@ -345,8 +390,14 @@ private fun PayoffPlanCard(
     onStrategyChange: (AutopilotStrategy) -> Unit,
     hideAmounts: Boolean = false,
 ) {
+    var expanded by remember { mutableStateOf(false) }
     HubCard {
-        Text(stringResource(R.string.goal_hub_plan_title), fontWeight = FontWeight.SemiBold)
+        HubHeader(
+            title = stringResource(R.string.goal_hub_plan_title),
+            expanded = expanded,
+            onToggle = { expanded = !expanded },
+        )
+        if (!expanded) return@HubCard
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = strategy == AutopilotStrategy.AVALANCHE,
@@ -419,8 +470,14 @@ private fun FearSelector(selected: Set<String>, onChange: (Set<String>) -> Unit)
 @Composable
 private fun MotivationCard(motivation: String, onMotivationChange: (String) -> Unit) {
     var text by remember(motivation) { mutableStateOf(motivation) }
+    var expanded by remember { mutableStateOf(false) }
     HubCard {
-        Text(stringResource(R.string.goal_hub_motivation_title), fontWeight = FontWeight.SemiBold)
+        HubHeader(
+            title = stringResource(R.string.goal_hub_motivation_title),
+            expanded = expanded,
+            onToggle = { expanded = !expanded },
+        )
+        if (!expanded) return@HubCard
         OutlinedTextField(
             value = text,
             onValueChange = {
@@ -439,8 +496,14 @@ private fun WeeklyChecklistCard(viewModel: GoalHubViewModel, profile: com.exampl
         GoalHubViewModel.decodeChecklistForUi(profile.weeklyChecklistJson)
     }
 
+    var expanded by remember { mutableStateOf(false) }
     HubCard {
-        Text(stringResource(R.string.goal_hub_checklist_title), fontWeight = FontWeight.SemiBold)
+        HubHeader(
+            title = stringResource(R.string.goal_hub_checklist_title),
+            expanded = expanded,
+            onToggle = { expanded = !expanded },
+        )
+        if (!expanded) return@HubCard
         ChecklistRow(R.string.checklist_checked_debts, checklist.checkedDebts) {
             viewModel.updateChecklist { s -> s.copy(checkedDebts = it) }
         }
@@ -515,7 +578,7 @@ private fun VisionBoardCard(
             bitmap?.let {
                 Image(
                     bitmap = it,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.goal_hub_vision_title),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp),
@@ -547,14 +610,19 @@ private fun ChallengesCard(
     onIncrement: (String) -> Unit,
     onRemove: (String) -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
     HubCard {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(stringResource(R.string.goal_hub_challenges_title_personal, displayName), fontWeight = FontWeight.SemiBold)
-            TextButton(onClick = onAdd) {
-                Text(stringResource(R.string.goal_hub_challenges_add))
-            }
-        }
-        if (challenges.isNotEmpty()) {
+        HubHeader(
+            title = stringResource(R.string.goal_hub_challenges_title_personal, displayName),
+            expanded = expanded,
+            onToggle = { expanded = !expanded },
+            trailing = {
+                TextButton(onClick = onAdd) {
+                    Text(stringResource(R.string.goal_hub_challenges_add))
+                }
+            },
+        )
+        if (expanded && challenges.isNotEmpty()) {
             challenges.forEach { challenge ->
                 val template = GoalChallengeEngines.templateFor(challenge.templateId)
                 Column(Modifier.padding(vertical = 6.dp)) {

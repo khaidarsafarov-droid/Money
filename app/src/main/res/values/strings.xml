@@ -288,6 +288,8 @@
     <string name="goal_deadline_label">Дата окончания</string>
     <string name="goal_deadline_date">Срок: %1$s</string>
     <string name="goal_pace_line">Ежедневно: %1$s · осталось %2$d дн.</string>
+    <string name="goal_meta_due">до %1$s</string>
+    <string name="goal_meta_pace">%1$s/день</string>
     <string name="goals_summary_saved">Накоплено %1$s из %2$s</string>
     <string name="goals_summary_daily">В день до сроков: %1$s</string>
     <string name="goals_summary_overdue">Просрочено: %1$d</string>
@@ -714,6 +716,7 @@
         <item quantity="many">%d долгов</item>
         <item quantity="other">%d долга</item>
     </plurals>
+    <string name="debt_add_manual">Вручную</string>
     <string name="debt_import_action">С фото</string>
     <string name="debt_import_camera">Камера</string>
     <string name="debt_import_gallery">Галерея</string>

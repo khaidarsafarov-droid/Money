@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AutoMode
@@ -59,9 +61,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -83,6 +86,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -208,7 +213,6 @@ internal fun PhoneHomeLayout(
     noteDraftBlocksRemote: (Long) -> Boolean = { false },
     calendarPermissionGranted: Boolean,
     onRequestCalendarPermission: () -> Unit = {},
-    onOpenGoalHub: () -> Unit,
     onAddDebt: () -> Unit,
     notificationsEnabled: Boolean,
     onRequestNotificationPermission: () -> Unit,
@@ -413,15 +417,6 @@ internal fun PhoneHomeLayout(
 
                 val orderedGoals = GoalProgress.orderedForSection(goals)
                 if (page == HomeTab.Goals) {
-                item {
-                    Text(
-                        text = stringResource(R.string.section_goals),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = MoneySpacing.lg),
-                    )
-                }
-
                 if (orderedGoals.isNotEmpty()) {
                     item {
                         GoalsSectionSummary(
@@ -479,14 +474,6 @@ internal fun PhoneHomeLayout(
                         )
                     }
                 }
-                item {
-                    TextButton(
-                        onClick = onOpenGoalHub,
-                        modifier = Modifier.padding(horizontal = MoneySpacing.sm),
-                    ) {
-                        Text(stringResource(R.string.goal_hub_open))
-                    }
-                }
                 }
 
                 if (page == HomeTab.Debts) {
@@ -524,8 +511,6 @@ internal fun PhoneHomeLayout(
                         appMode = appMode,
                         showClients = showClients,
                         onToggleClients = onToggleClients,
-                        onImportCamera = onImportCamera,
-                        onImportGallery = onImportGallery,
                         openSearch = openDebtSearch,
                         onSearchOpened = onDebtSearchOpened,
                     )
@@ -609,17 +594,28 @@ internal fun SettingsDrawerItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
 ) {
-    NavigationDrawerItem(
-        label = { Text(label) },
-        selected = false,
-        onClick = onClick,
-        icon = {
+    ListItem(
+        headlineContent = {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        leadingContent = {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
             )
         },
-        modifier = Modifier.padding(horizontal = MoneySpacing.md),
+        trailingContent = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+            )
+        },
+        modifier = Modifier.clickable(onClick = onClick),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     )
 }
 

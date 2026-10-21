@@ -3,24 +3,39 @@ package com.example.money.ui.clients
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -32,15 +47,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,15 +71,19 @@ import com.example.money.domain.model.Client
 import com.example.money.messaging.ContactInfoResolver
 import com.example.money.messaging.SmsPermissions
 import com.example.money.settings.CurrencyRegion
+import com.example.money.ui.components.EmptyIllustration
+import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyTextField
 import com.example.money.ui.components.QuickPaymentSheet
+import com.example.money.ui.home.FinoraAvatar
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.util.HapticStrength
 import com.example.money.ui.util.vibrate
 import com.example.money.ui.util.vibrateShort
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
@@ -100,6 +124,11 @@ fun ClientListScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onCreateClient) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.clients_add))
+            }
+        },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.clients_title)) },
@@ -115,7 +144,7 @@ fun ClientListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             OutlinedTextField(
@@ -125,20 +154,22 @@ fun ClientListScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ClientSort.entries.forEach { option ->
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(ClientSort.entries, key = { it.name }) { option ->
                     FilterChip(
                         selected = sort == option,
                         onClick = { viewModel.setSort(option) },
                         label = {
                             Text(
-                                stringResource(
+                                text = stringResource(
                                     when (option) {
                                         ClientSort.NAME -> R.string.clients_sort_name
                                         ClientSort.DEBT -> R.string.clients_sort_debt
                                         ClientSort.LAST_MEETING -> R.string.clients_sort_meeting
                                     },
                                 ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         },
                     )
@@ -149,20 +180,34 @@ fun ClientListScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.tertiary,
             )
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(clients, key = { it.id }, contentType = { "client" }) { client ->
-                    ClientRow(
-                        client = client,
-                        onClick = { onOpenClient(client.id) },
-                        onQuickPayment = if (client.debtCents > 0L) {
-                            { quickClientId = client.id }
-                        } else {
-                            null
-                        },
-                    )
+            if (clients.isEmpty()) {
+                EmptyStateMessage(
+                    title = stringResource(R.string.clients_empty),
+                    illustration = EmptyIllustration.Debts,
+                    actionLabel = stringResource(R.string.clients_add),
+                    onAction = onCreateClient,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(bottom = 88.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(clients, key = { it.id }, contentType = { "client" }) { client ->
+                        ClientRow(
+                            client = client,
+                            currency = currencyRegion,
+                            onClick = { onOpenClient(client.id) },
+                            onQuickPayment = if (client.debtCents > 0L) {
+                                { quickClientId = client.id }
+                            } else {
+                                null
+                            },
+                        )
+                    }
                 }
             }
-            MoneyButton(text = stringResource(R.string.clients_add), onClick = onCreateClient)
         }
     }
     val paymentSavedMessage = stringResource(R.string.msg_payment_saved)
@@ -195,27 +240,51 @@ fun ClientListScreen(
 }
 
 @Composable
-private fun ClientRow(
+internal fun ClientRow(
     client: Client,
+    currency: CurrencyRegion,
     onClick: () -> Unit,
     onQuickPayment: (() -> Unit)?,
+    modifier: Modifier = Modifier,
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(client.name, style = MaterialTheme.typography.titleMedium)
-                if (client.company.isNotBlank()) {
-                    Text(client.company, style = MaterialTheme.typography.bodyMedium)
-                }
-                Text(Formatters.currencyFromCents(client.debtCents))
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clickable(onClick = onClick, role = Role.Button),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        FinoraAvatar(client.name)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = client.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (client.company.isNotBlank()) {
+                Text(
+                    text = client.company,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
+        Text(
+            text = Formatters.currencyFromCents(client.debtCents, currency),
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+        )
         if (onQuickPayment != null) {
-            TextButton(
-                onClick = onQuickPayment,
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) {
-                Text(stringResource(R.string.quick_payment_add))
+            IconButton(onClick = onQuickPayment, modifier = Modifier.size(48.dp)) {
+                Icon(
+                    Icons.Outlined.Payments,
+                    contentDescription = stringResource(R.string.quick_payment_add),
+                )
             }
         }
     }
@@ -260,6 +329,25 @@ fun ClientEditorScreen(
         if (granted) contactPicker.launch(null)
     }
 
+    val saveClient = {
+        if (name.isBlank()) {
+            nameError = true
+        } else {
+            viewModel.save(
+                Client(
+                    id = existing?.id ?: 0L,
+                    syncId = existing?.syncId.orEmpty(),
+                    name = name,
+                    phone = phone,
+                    company = company,
+                    email = email.ifBlank { null },
+                    lastMeetingAt = existing?.lastMeetingAt,
+                    note = note,
+                    createdAt = existing?.createdAt ?: 0L,
+                ),
+            ) { onBack() }
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -277,11 +365,24 @@ fun ClientEditorScreen(
                 },
             )
         },
+        bottomBar = {
+            MoneyButton(
+                text = stringResource(R.string.action_save),
+                onClick = saveClient,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(16.dp),
+            )
+        },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -346,30 +447,9 @@ fun ClientEditorScreen(
                 },
             ) {
                 Icon(Icons.Outlined.Contacts, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.clients_pick_contact))
             }
-            MoneyButton(
-                text = stringResource(R.string.action_save),
-                onClick = {
-                    if (name.isBlank()) {
-                        nameError = true
-                    } else {
-                    viewModel.save(
-                        Client(
-                            id = existing?.id ?: 0L,
-                            syncId = existing?.syncId.orEmpty(),
-                            name = name,
-                            phone = phone,
-                            company = company,
-                            email = email.ifBlank { null },
-                            lastMeetingAt = existing?.lastMeetingAt,
-                            note = note,
-                            createdAt = existing?.createdAt ?: 0L,
-                        ),
-                    ) { onBack() }
-                    }
-                },
-            )
         }
     }
 }
@@ -390,10 +470,16 @@ fun ClientDetailScreen(
     val viewModel: ClientsViewModel = viewModel(
         factory = ClientsViewModel.factory(app.clientRepository, app.debtorRepository),
     )
-    val client by viewModel.observeClient(clientId).collectAsStateWithLifecycle(initialValue = null)
+    val clientFlow = remember(clientId) { viewModel.observeClient(clientId) }
+    val client by clientFlow.collectAsStateWithLifecycle(initialValue = null)
+    val ready by produceState(initialValue = false, clientId) {
+        clientFlow.first()
+        value = true
+    }
     val debts by viewModel.observeDebts(clientId).collectAsStateWithLifecycle(initialValue = emptyList())
     var amountText by remember { mutableStateOf("") }
     var amountError by remember { mutableStateOf<String?>(null) }
+    var showAddDebt by remember { mutableStateOf(false) }
     val invalidAmount = stringResource(R.string.clients_debt_amount_invalid)
 
     Scaffold(
@@ -414,68 +500,121 @@ fun ClientDetailScreen(
         },
     ) { padding ->
         val current = client
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (current == null) {
-                Text(stringResource(R.string.clients_missing))
-                return@Column
+        when {
+            !ready -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-            if (current.company.isNotBlank()) {
-                Text(current.company, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.tertiary)
-            }
-            Text(
-                text = stringResource(
-                    R.string.clients_debt_total,
-                    Formatters.currencyFromCents(current.debtCents, currency),
-                ),
-            )
-            Text(
-                pluralStringResource(R.plurals.client_debts_count, debts.size, debts.size),
-            )
-            MoneyButton(
-                text = stringResource(R.string.clients_mark_meeting),
-                onClick = { viewModel.markMeeting(current.id) },
-            )
-            if (current.lastMeetingAt != null) {
+            current == null -> {
                 Text(
-                    stringResource(
-                        R.string.clients_last_meeting,
-                        Formatters.date(current.lastMeetingAt),
-                    ),
+                    text = stringResource(R.string.clients_missing),
+                    modifier = Modifier.padding(padding).padding(16.dp),
                 )
             }
-            debts.forEach { debt ->
-                Text("${debt.name} · ${Formatters.currencyFromCents(debt.remainingAmountCents, currency)}")
-            }
-            MoneyTextField(
-                value = amountText,
-                onValueChange = {
-                    amountText = it
-                    amountError = null
-                },
-                label = stringResource(R.string.clients_new_debt_amount),
-                isError = amountError != null,
-                supportingText = amountError,
-            )
-            MoneyButton(
-                text = stringResource(R.string.clients_add_debt),
-                onClick = {
-                    val cents = InputValidators.parseAmount(amountText)
-                    if (cents == null || cents <= 0L) {
-                        amountError = invalidAmount
-                    } else {
-                        viewModel.addDebt(current, cents, currency.currencyCode) {
-                            amountText = ""
-                            onDebtWithDueDateSaved()
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .imePadding(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (current.company.isNotBlank()) {
+                                Text(
+                                    current.company,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                )
+                            }
+                            Text(
+                                text = stringResource(
+                                    R.string.clients_debt_total,
+                                    Formatters.currencyFromCents(current.debtCents, currency),
+                                ),
+                            )
+                            Text(pluralStringResource(R.plurals.client_debts_count, debts.size, debts.size))
                         }
                     }
-                },
-            )
+                    item {
+                        MoneyButton(
+                            text = stringResource(R.string.clients_mark_meeting),
+                            onClick = { viewModel.markMeeting(current.id) },
+                        )
+                    }
+                    if (current.lastMeetingAt != null) {
+                        item {
+                            Text(
+                                stringResource(
+                                    R.string.clients_last_meeting,
+                                    Formatters.date(current.lastMeetingAt),
+                                ),
+                            )
+                        }
+                    }
+                    items(debts, key = { it.id }) { debt ->
+                        Text(
+                            "${debt.name} · ${Formatters.currencyFromCents(debt.remainingAmountCents, currency)}",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    item {
+                        MoneyButton(
+                            text = stringResource(R.string.clients_add_debt),
+                            onClick = { showAddDebt = true },
+                        )
+                    }
+                }
+            }
+        }
+    }
+    val currentForDebt = client
+    if (showAddDebt && currentForDebt != null) {
+        ModalBottomSheet(onDismissRequest = { showAddDebt = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                MoneyTextField(
+                    value = amountText,
+                    onValueChange = {
+                        amountText = it
+                        amountError = null
+                    },
+                    label = stringResource(R.string.clients_new_debt_amount),
+                    isError = amountError != null,
+                    supportingText = amountError,
+                )
+                MoneyButton(
+                    text = stringResource(R.string.clients_add_debt),
+                    onClick = {
+                        val cents = InputValidators.parseAmount(amountText)
+                        if (cents == null || cents <= 0L) {
+                            amountError = invalidAmount
+                        } else {
+                            viewModel.addDebt(currentForDebt, cents, currency.currencyCode) {
+                                amountText = ""
+                                showAddDebt = false
+                                onDebtWithDueDateSaved()
+                            }
+                        }
+                    },
+                )
+            }
         }
     }
 }

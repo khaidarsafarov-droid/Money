@@ -12,8 +12,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -88,6 +91,60 @@ fun AddActionSheet(
                     },
                 )
             }
+        }
+    }
+}
+
+/** Debts plus menu: type a debt, or import one from a photo. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DebtAddMenuSheet(
+    onDismiss: () -> Unit,
+    onManual: () -> Unit,
+    onCamera: () -> Unit,
+    onGallery: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = MoneySpacing.lg)
+                .padding(bottom = MoneySpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+        ) {
+            Text(
+                text = stringResource(R.string.add_sheet_debt),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(bottom = MoneySpacing.sm),
+            )
+            AddActionRow(
+                label = stringResource(R.string.debt_add_manual),
+                icon = Icons.Outlined.Edit,
+                highlighted = true,
+                onClick = {
+                    onDismiss()
+                    onManual()
+                },
+            )
+            AddActionRow(
+                label = stringResource(R.string.debt_import_camera),
+                icon = Icons.Outlined.PhotoCamera,
+                highlighted = false,
+                onClick = {
+                    onDismiss()
+                    onCamera()
+                },
+            )
+            AddActionRow(
+                label = stringResource(R.string.debt_import_gallery),
+                icon = Icons.Outlined.Image,
+                highlighted = false,
+                onClick = {
+                    onDismiss()
+                    onGallery()
+                },
+            )
         }
     }
 }

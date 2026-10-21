@@ -18,6 +18,10 @@ internal fun plusActionFor(tab: HomeTab): PagePlusAction = when (tab) {
     HomeTab.More -> PagePlusAction.AddAnything
 }
 
+/** The plus button stays off Home and More so it does not cover the last rows. */
+internal fun showsPageFab(tab: HomeTab, tablet: Boolean): Boolean =
+    tablet || tab == HomeTab.Debts || tab == HomeTab.Goals || tab == HomeTab.Notes
+
 internal fun plusActionFor(section: HomeSection): PagePlusAction = when (section) {
     HomeSection.Home -> PagePlusAction.AddAnything
     HomeSection.Notes -> PagePlusAction.AddNote

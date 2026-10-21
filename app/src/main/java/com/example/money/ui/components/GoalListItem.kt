@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.domain.model.GoalKind
@@ -45,7 +46,6 @@ import com.example.money.ui.motion.rememberDrawFraction
 import com.example.money.ui.theme.finoraGoalBrush
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.theme.moneyCaptionStyle
-import com.example.money.ui.theme.moneyDisplayStyle
 import com.example.money.ui.util.Formatters
 
 @Composable
@@ -103,110 +103,42 @@ fun GoalListItem(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(84.dp)
+                    .height(8.dp)
                     .background(finoraGoalBrush(goal.name.hashCode())),
             )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(MoneySpacing.cardPadding),
-            verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
+            verticalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = goal.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        GoalStatusBadge(
-                            label = when {
-                                goal.isCompleted -> stringResource(R.string.goal_status_completed)
-                                isDeadlinePassed -> stringResource(R.string.goal_deadline_passed_short)
-                                else -> stringResource(R.string.goal_status_active)
-                            },
-                            isCompleted = goal.isCompleted,
-                            isOverdue = isDeadlinePassed,
-                        )
-                    }
-
-                    if (isMoney) {
-                        Text(
-                            text = Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
-                            style = moneyDisplayStyle(),
-                        )
-                        Text(
-                            text = if (goal.isOverAchieved) {
-                                stringResource(
-                                    R.string.goal_over_achieved,
-                                    Formatters.currencyFromCents(goal.surplusAmountCents, hide = hideAmounts),
-                                )
-                            } else {
-                                stringResource(
-                                    R.string.goal_remaining,
-                                    Formatters.currencyFromCents(goal.remainingAmountCents, hide = hideAmounts),
-                                    Formatters.currencyFromCents(goal.targetAmountCents, hide = hideAmounts),
-                                )
-                            },
-                            style = moneyCaptionStyle(),
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.goal_kind_action),
-                            style = moneyCaptionStyle(),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            text = stringResource(
-                                R.string.goal_log_collected,
-                                Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts),
-                            ),
-                            style = moneyDisplayStyle(),
-                        )
-                    }
-                    if (goal.actionTotal > 0) {
-                        Text(
-                            text = stringResource(
-                                R.string.goal_action_progress,
-                                goal.actionDone,
-                                goal.actionTotal,
-                            ),
-                            style = moneyCaptionStyle(),
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-
-                    goal.deadlineMillis?.let { deadline ->
-                        Text(
-                            text = stringResource(
-                                R.string.goal_deadline_date,
-                                Formatters.shortDate(deadline),
-                            ),
-                            style = moneyCaptionStyle(),
-                        )
-                    }
-                    val dailyCents = goal.dailyGoalCents
-                    val daysLeft = goal.deadlineMillis?.let { GoalProgress.daysUntilDeadline(it) }
-                    if (isMoney && !goal.isCompleted && dailyCents != null && daysLeft != null) {
-                        Text(
-                            text = stringResource(
-                                R.string.goal_pace_line,
-                                Formatters.currencyFromCents(dailyCents, hide = hideAmounts),
-                                daysLeft,
-                            ),
-                            style = moneyCaptionStyle(),
-                            color = progressColor,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(MoneySpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = goal.name,
+                        modifier = Modifier.weight(1f, fill = false),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    GoalStatusBadge(
+                        label = when {
+                            goal.isCompleted -> stringResource(R.string.goal_status_completed)
+                            isDeadlinePassed -> stringResource(R.string.goal_deadline_passed_short)
+                            else -> stringResource(R.string.goal_status_active)
+                        },
+                        isCompleted = goal.isCompleted,
+                        isOverdue = isDeadlinePassed,
+                    )
                 }
 
                 Box {
@@ -269,6 +201,43 @@ fun GoalListItem(
                         )
                     }
                 }
+            }
+
+            Text(
+                text = if (isMoney) {
+                    Formatters.currencyFromCents(goal.currentAmountCents, hide = hideAmounts) +
+                        " / " +
+                        Formatters.currencyFromCents(goal.targetAmountCents, hide = hideAmounts)
+                } else if (goal.actionTotal > 0) {
+                    stringResource(R.string.goal_action_progress, goal.actionDone, goal.actionTotal)
+                } else {
+                    stringResource(R.string.goal_kind_action)
+                },
+                style = moneyCaptionStyle(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val dailyCents = goal.dailyGoalCents
+            val dueLabel = goal.deadlineMillis?.let { deadline ->
+                stringResource(R.string.goal_meta_due, Formatters.shortDate(deadline))
+            }
+            val paceLabel = if (isMoney && !goal.isCompleted && dailyCents != null) {
+                stringResource(
+                    R.string.goal_meta_pace,
+                    Formatters.currencyFromCents(dailyCents, hide = hideAmounts),
+                )
+            } else {
+                null
+            }
+            val meta = listOfNotNull(dueLabel, paceLabel).joinToString(" · ")
+            if (meta.isNotBlank()) {
+                Text(
+                    text = meta,
+                    style = moneyCaptionStyle(),
+                    color = progressColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
 
             Row(

@@ -1,7 +1,9 @@
 package com.example.money.ui.home
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PagePlusTest {
@@ -29,5 +31,15 @@ class PagePlusTest {
             listOf(AddAction.NewGoal, AddAction.Debt),
             plusSheetActions(PagePlusAction.AddAnything),
         )
+    }
+
+    @Test
+    fun plusStaysOffHomeAndMore() {
+        assertFalse(showsPageFab(HomeTab.Home, tablet = false))
+        assertFalse(showsPageFab(HomeTab.More, tablet = false))
+        assertTrue(showsPageFab(HomeTab.Debts, tablet = false))
+        assertTrue(showsPageFab(HomeTab.Goals, tablet = false))
+        assertTrue(showsPageFab(HomeTab.Notes, tablet = false))
+        assertTrue(showsPageFab(HomeTab.More, tablet = true))
     }
 }
