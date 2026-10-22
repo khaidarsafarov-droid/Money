@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import com.example.money.ui.motion.MotionGlyph
 import com.example.money.ui.motion.MotionGlyphIcon
@@ -31,6 +33,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.money.ui.components.DialogImeEffect
+import com.example.money.ui.components.bringIntoViewOnFocus
 import com.example.money.ui.util.Formatters
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -86,9 +90,16 @@ fun DebtPhotoReviewSheet(
         }
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        contentWindowInsets = { BottomSheetDefaults.windowInsets },
+    ) {
+        DialogImeEffect()
         Column(
             modifier = Modifier
+                .fillMaxWidth()
+                .imePadding()
                 .fillMaxHeight(0.96f)
                 .moneySheetMotion(onDismiss)
                 .padding(horizontal = 20.dp),
@@ -237,7 +248,9 @@ private fun DraftEditor(
                 placeholder = { Text(stringResource(R.string.debt_import_name)) },
                 isError = row.nameUnsure,
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             OutlinedTextField(
                 value = row.amountText,
@@ -245,7 +258,9 @@ private fun DraftEditor(
                 placeholder = { Text(stringResource(R.string.debt_import_amount)) },
                 isError = row.amountUnsure,
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             OutlinedTextField(
                 value = row.dateText,
@@ -253,7 +268,9 @@ private fun DraftEditor(
                 placeholder = { Text(stringResource(R.string.debt_import_date)) },
                 isError = row.dateUnsure,
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
         }
     }

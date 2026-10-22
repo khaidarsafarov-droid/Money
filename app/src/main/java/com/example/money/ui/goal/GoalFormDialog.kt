@@ -27,6 +27,7 @@ import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.DatePickerField
+import com.example.money.ui.components.bringIntoViewOnFocus
 import com.example.money.ui.util.withLightHaptic
 import com.example.money.ui.components.MoneyDialog
 import com.example.money.ui.components.MoneyTextField
@@ -155,7 +156,9 @@ fun GoalFormDialog(
                 isError = nameError != null,
                 supportingText = nameError?.let { { Text(it) } },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             if (kind == GoalKind.MONEY) {
                 MoneyTextField(

@@ -98,6 +98,7 @@ fun MoneyInWindowSheet(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .imePadding()
                 .fillMaxHeight(0.96f)
                 .graphicsLayer {
                     val shown = enter.value.coerceIn(0f, 1f)
@@ -108,8 +109,7 @@ fun MoneyInWindowSheet(
                     interactionSource = sheetInteraction,
                     indication = null,
                     onClick = {},
-                )
-                .imePadding(),
+                ),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             color = MaterialTheme.colorScheme.surface,
         ) {

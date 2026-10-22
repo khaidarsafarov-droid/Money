@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -40,6 +41,7 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
+import com.example.money.ui.components.bringIntoViewOnFocus
 import com.example.money.ui.components.MoneyDialog
 import com.example.money.ui.util.Formatters
 
@@ -56,6 +58,7 @@ fun GoalDetailOverlay(
     MoneyInWindowSheet(onDismiss = onDismiss) {
         Column(
             modifier = Modifier
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 24.dp),
         ) {
@@ -202,7 +205,9 @@ fun GoalActionsPanel(
             onValueChange = { draft = it },
             label = { Text(stringResource(R.string.goal_action_hint)) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewOnFocus(),
         )
         MoneyButton(
             text = stringResource(R.string.goal_action_add),

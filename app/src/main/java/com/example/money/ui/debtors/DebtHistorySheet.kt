@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -27,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.NorthEast
 import androidx.compose.material.icons.rounded.SouthWest
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -77,6 +79,10 @@ import com.example.money.ui.components.applyAmountKey
 import com.example.money.ui.theme.LocalMoneyExtraColors
 import com.example.money.ui.theme.MoneyTypeScale
 import com.example.money.ui.util.Formatters
+import com.example.money.ui.components.DialogImeEffect
+import com.example.money.ui.components.hideAmountKeypad
+import com.example.money.ui.components.imeTextField
+import com.example.money.ui.components.rememberTextFocus
 import com.example.money.ui.util.InputValidators
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,14 +112,18 @@ fun DebtHistorySheet(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val body: @Composable () -> Unit = {
+        if (!inWindow) DialogImeEffect()
         Column(
             modifier = Modifier
+                .fillMaxWidth()
+                .imePadding()
                 .fillMaxHeight(if (inWindow) 1f else 0.96f)
                 .then(if (inWindow) Modifier else Modifier.moneySheetMotion(onDismiss)),
         ) {
         Column(
             modifier = Modifier
                 .weight(1f)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -261,7 +271,11 @@ fun DebtHistorySheet(
     if (inWindow) {
         MoneyInWindowSheet(onDismiss = onDismiss) { body() }
     } else {
-        ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) { body() }
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            contentWindowInsets = { BottomSheetDefaults.windowInsets },
+        ) { body() }
     }
 }
 
@@ -387,7 +401,9 @@ private fun AdvanceForm(
     var note by remember { mutableStateOf("") }
     var givenAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var amountError by remember { mutableStateOf<String?>(null) }
+    val noteFocus = rememberTextFocus()
     val positiveError = stringResource(R.string.error_amount_positive)
+    val keypadHidden = hideAmountKeypad(noteFocus.focused)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -396,7 +412,9 @@ private fun AdvanceForm(
             color = if (amountError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
         )
         amountError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        AmountKeypad(onKey = { amountText = applyAmountKey(amountText, it); amountError = null })
+        if (!keypadHidden) {
+            AmountKeypad(onKey = { amountText = applyAmountKey(amountText, it); amountError = null })
+        }
         DatePickerField(
             label = stringResource(R.string.debt_advance_date_label),
             selectedDateMillis = givenAt,
@@ -406,7 +424,9 @@ private fun AdvanceForm(
             value = note,
             onValueChange = { note = it },
             label = { Text(stringResource(R.string.debt_advance_note_label)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .imeTextField(noteFocus),
             singleLine = true,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

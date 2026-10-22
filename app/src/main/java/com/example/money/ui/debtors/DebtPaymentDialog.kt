@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,7 +23,9 @@ import com.example.money.domain.model.DebtType
 import com.example.money.domain.model.Debtor
 import com.example.money.domain.util.DebtExtraPaymentEngine
 import com.example.money.domain.util.MoneyMath
+import com.example.money.ui.components.DialogImeEffect
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 
@@ -63,7 +66,11 @@ fun DebtPaymentDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.debt_payment_dialog_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 Text(
                     text = stringResource(
                         R.string.debt_payment_remaining,

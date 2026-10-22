@@ -32,7 +32,7 @@ fun MoneyTextField(
         modifier.fillMaxWidth()
     } else {
         modifier.fillMaxWidth().focusRequester(focusRequester)
-    }
+    }.bringIntoViewOnFocus()
     val context = LocalContext.current
     val numericKeyboard = keyboardOptions.keyboardType == KeyboardType.Decimal ||
         keyboardOptions.keyboardType == KeyboardType.Number ||

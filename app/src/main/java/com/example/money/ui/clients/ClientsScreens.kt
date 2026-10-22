@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -74,7 +75,10 @@ import com.example.money.settings.CurrencyRegion
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.MoneyButton
+import com.example.money.ui.components.DialogImeEffect
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.bringIntoViewOnFocus
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.ui.components.QuickPaymentSheet
 import com.example.money.ui.home.FinoraAvatar
 import com.example.money.ui.debtors.DebtorsViewModel
@@ -144,6 +148,7 @@ fun ClientListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -152,7 +157,9 @@ fun ClientListScreen(
                 onValueChange = viewModel::setSearch,
                 label = { Text(stringResource(R.string.clients_search)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(ClientSort.entries, key = { it.name }) { option ->
@@ -381,8 +388,7 @@ fun ClientEditorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .imePadding()
-                .verticalScroll(rememberScrollState())
+                .scrollAboveIme(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -400,7 +406,9 @@ fun ClientEditorScreen(
                     null
                 },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             OutlinedTextField(
                 value = phone,
@@ -411,7 +419,9 @@ fun ClientEditorScreen(
                     imeAction = ImeAction.Next,
                 ),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             OutlinedTextField(
                 value = email,
@@ -422,20 +432,26 @@ fun ClientEditorScreen(
                     imeAction = ImeAction.Next,
                 ),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             OutlinedTextField(
                 value = company,
                 onValueChange = { company = it },
                 label = { Text(stringResource(R.string.clients_company)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             OutlinedTextField(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text(stringResource(R.string.clients_note)) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             TextButton(
                 onClick = {
@@ -580,12 +596,16 @@ fun ClientDetailScreen(
     }
     val currentForDebt = client
     if (showAddDebt && currentForDebt != null) {
-        ModalBottomSheet(onDismissRequest = { showAddDebt = false }) {
+        ModalBottomSheet(
+            onDismissRequest = { showAddDebt = false },
+            contentWindowInsets = { BottomSheetDefaults.windowInsets },
+        ) {
+            DialogImeEffect()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .imePadding()
+                    .scrollAboveIme(rememberScrollState())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

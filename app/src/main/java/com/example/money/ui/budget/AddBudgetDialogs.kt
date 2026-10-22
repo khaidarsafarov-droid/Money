@@ -2,11 +2,14 @@ package com.example.money.ui.budget
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -17,7 +20,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.money.R
 import com.example.money.ui.components.DatePickerField
+import com.example.money.ui.components.DialogImeEffect
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.bringIntoViewOnFocus
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.ui.util.InputValidators
 
 @Composable
@@ -70,7 +76,11 @@ fun AddTransferDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.budget_new_transfer_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 MoneyTextField(
                     value = amountText,
                     onValueChange = {
@@ -129,7 +139,11 @@ fun AddExpenseDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(titleRes)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 MoneyTextField(
                     value = amountText,
                     onValueChange = {
@@ -150,12 +164,18 @@ fun AddExpenseDialog(
                     isError = categoryError != null,
                     supportingText = categoryError?.let { { Text(it) } },
                     singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
                     label = { Text(stringResource(R.string.field_note_optional)) },
                     singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
                 DatePickerField(
                     label = stringResource(R.string.field_date),

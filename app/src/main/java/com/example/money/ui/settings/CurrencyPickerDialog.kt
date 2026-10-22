@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -25,6 +26,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.money.R
+import com.example.money.ui.components.DialogImeEffect
+import com.example.money.ui.components.bringIntoViewOnFocus
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.settings.CurrencyRegion
 
 @Composable
@@ -45,13 +49,19 @@ fun CurrencyPickerDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.currency_settings_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
                     label = { Text(stringResource(R.string.currency_search)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
                 LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
                     items(visible, key = { it.currencyCode }, contentType = { "currency" }) { region ->
