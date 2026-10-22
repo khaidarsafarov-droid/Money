@@ -1,11 +1,16 @@
 package com.example.money.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
@@ -39,63 +44,78 @@ fun MoneyDialog(
             dismissOnBackPress = true,
             dismissOnClickOutside = false,
             usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
         ),
     ) {
-        Surface(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = MoneySpacing.lg),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerLowest,
-            tonalElevation = 6.dp,
-            shadowElevation = 8.dp,
+        DialogImeEffect()
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize().imePadding(),
+            contentAlignment = Alignment.Center,
         ) {
-            Column(
-                modifier = Modifier.padding(MoneySpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
+            Surface(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MoneySpacing.lg)
+                    .heightIn(max = maxHeight),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                tonalElevation = 6.dp,
+                shadowElevation = 8.dp,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier.padding(MoneySpacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
                 ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.defaultMinSize(
-                            minWidth = MoneySpacing.minTouchTarget,
-                            minHeight = MoneySpacing.minTouchTarget,
-                        ),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.action_close),
-                        )
-                    }
-                }
-
-                content()
-
-                if (confirmLabel != null && onConfirm != null) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        MoneyButton(
-                            text = dismissLabel,
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        IconButton(
                             onClick = onDismiss,
-                            priority = MoneyButtonPriority.Tertiary,
-                        )
-                        MoneyButton(
-                            text = confirmLabel,
-                            onClick = onConfirm,
-                            priority = MoneyButtonPriority.Primary,
-                            modifier = Modifier.padding(start = MoneySpacing.sm),
-                        )
+                            modifier = Modifier.defaultMinSize(
+                                minWidth = MoneySpacing.minTouchTarget,
+                                minHeight = MoneySpacing.minTouchTarget,
+                            ),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.action_close),
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .scrollAboveIme(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(MoneySpacing.md),
+                    ) {
+                        content()
+                    }
+
+                    if (confirmLabel != null && onConfirm != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            MoneyButton(
+                                text = dismissLabel,
+                                onClick = onDismiss,
+                                priority = MoneyButtonPriority.Tertiary,
+                            )
+                            MoneyButton(
+                                text = confirmLabel,
+                                onClick = onConfirm,
+                                priority = MoneyButtonPriority.Primary,
+                                modifier = Modifier.padding(start = MoneySpacing.sm),
+                            )
+                        }
                     }
                 }
             }

@@ -49,6 +49,8 @@ import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyDialog
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.bringIntoViewOnFocus
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
@@ -84,7 +86,9 @@ fun NoteFormDialog(
                 isError = titleError != null,
                 supportingText = titleError?.let { { Text(it) } },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewOnFocus(),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
@@ -271,7 +275,7 @@ private fun NoteEditor(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .scrollAboveIme(rememberScrollState())
             .padding(MoneySpacing.lg),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -296,7 +300,9 @@ private fun NoteEditor(
             },
             label = { Text(stringResource(R.string.note_title_label)) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewOnFocus(),
         )
         when (note.kind) {
             NoteKind.TEXT -> {
@@ -307,7 +313,9 @@ private fun NoteEditor(
                         onNoteBodyChange(it)
                     },
                     label = { Text(stringResource(R.string.note_body_label)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                     minLines = 6,
                 )
             }
@@ -446,7 +454,9 @@ private fun FinancialNoteBody(
         onValueChange = { label = it },
         label = { Text(stringResource(R.string.note_line_label)) },
         singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .bringIntoViewOnFocus(),
     )
     MoneyTextField(
         value = amountText,
@@ -484,7 +494,9 @@ private fun LineEditor(
             onValueChange = { label = it },
             label = { Text(stringResource(R.string.note_line_label)) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewOnFocus(),
         )
         MoneyTextField(
             value = amountText,

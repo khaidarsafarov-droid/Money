@@ -3,6 +3,7 @@ package com.example.money.ui.onboarding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
+import com.example.money.ui.components.bringIntoViewOnFocus
 import com.example.money.ui.home.OnboardingPreferences
 import com.example.money.ui.home.WelcomePreferences
 
@@ -58,6 +60,7 @@ fun OnboardingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -80,14 +83,18 @@ fun OnboardingScreen(
                         value = draft.firstName,
                         onValueChange = viewModel::updateFirstName,
                         label = { Text(stringResource(R.string.onboarding_first_name_label)) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bringIntoViewOnFocus(),
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = draft.lastName,
                         onValueChange = viewModel::updateLastName,
                         label = { Text(stringResource(R.string.onboarding_last_name_label)) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bringIntoViewOnFocus(),
                         singleLine = true,
                     )
                     Button(

@@ -2,11 +2,14 @@ package com.example.money.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,6 +18,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.money.R
+import com.example.money.ui.components.DialogImeEffect
+import com.example.money.ui.components.bringIntoViewOnFocus
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.domain.backup.BackupRemoteFile
 
 @Composable
@@ -31,7 +37,11 @@ internal fun BackupPasswordDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 Text(stringResource(R.string.backup_password_hint))
                 OutlinedTextField(
                     value = password,
@@ -39,6 +49,9 @@ internal fun BackupPasswordDialog(
                     label = { Text(stringResource(R.string.backup_password)) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
                 if (requireConfirmation) {
                     OutlinedTextField(
@@ -53,6 +66,9 @@ internal fun BackupPasswordDialog(
                         isError = confirmation.isNotEmpty() && password != confirmation,
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bringIntoViewOnFocus(),
                     )
                 }
             }
@@ -179,7 +195,11 @@ internal fun DeleteAllLocalDataDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.backup_delete_local_dialog_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 Text(stringResource(R.string.backup_delete_local_dialog_message))
                 OutlinedTextField(
                     value = confirmation,
@@ -189,6 +209,9 @@ internal fun DeleteAllLocalDataDialog(
                         Text(stringResource(R.string.backup_delete_local_confirmation_help))
                     },
                     singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
             }
         },

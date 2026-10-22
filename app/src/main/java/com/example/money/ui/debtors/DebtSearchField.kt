@@ -8,13 +8,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import com.example.money.ui.components.bringIntoViewOnFocus
 import androidx.compose.ui.res.stringResource
 import com.example.money.R
 
@@ -34,7 +34,7 @@ fun DebtSearchField(
         onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .imePadding()
+            .bringIntoViewOnFocus()
             .focusRequester(focusRequester),
         singleLine = true,
         label = { Text(stringResource(R.string.debt_search_hint)) },

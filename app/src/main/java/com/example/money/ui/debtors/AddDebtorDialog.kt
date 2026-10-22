@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import com.example.money.ui.motion.MotionGlyph
 import com.example.money.ui.motion.MotionGlyphIcon
@@ -57,7 +58,11 @@ import com.example.money.domain.util.ContactDebtHistoryEngine
 import com.example.money.domain.util.MoneyMath
 import com.example.money.ui.components.AmountKeypad
 import com.example.money.ui.components.DatePickerField
+import com.example.money.ui.components.DialogImeEffect
 import com.example.money.ui.components.applyAmountKey
+import com.example.money.ui.components.hideAmountKeypad
+import com.example.money.ui.components.imeTextField
+import com.example.money.ui.components.rememberTextFocus
 import com.example.money.ui.theme.MoneyTypeScale
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
@@ -232,6 +237,8 @@ fun DebtorFormDialog(
         DebtType.DEBTOR -> R.string.debt_creditor_name_label
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val textFocus = rememberTextFocus()
+    val keypadHidden = hideAmountKeypad(textFocus.focused)
     val editingDebtor = existingDebtor
     val title = if (editingDebtor != null) {
         stringResource(R.string.debtor_edit_title, editingDebtor.name)
@@ -241,7 +248,9 @@ fun DebtorFormDialog(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        contentWindowInsets = { BottomSheetDefaults.windowInsets },
     ) {
+        DialogImeEffect()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -306,7 +315,9 @@ fun DebtorFormDialog(
                     isError = nameError != null,
                     supportingText = nameError?.let { { Text(it) } },
                     singleLine = true,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .imeTextField(textFocus),
                 )
                 IconButton(onClick = { contactPickerLauncher.launch(null) }) {
                     Icon(
@@ -371,7 +382,9 @@ fun DebtorFormDialog(
                     value = note,
                     onValueChange = { note = it },
                     label = { Text(stringResource(R.string.debt_note_label)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .imeTextField(textFocus),
                 )
             }
             if (showDetails) {
@@ -380,14 +393,18 @@ fun DebtorFormDialog(
                     onValueChange = { phone = it },
                     label = { Text(stringResource(R.string.debtor_phone_label)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .imeTextField(textFocus),
                 )
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text(stringResource(R.string.debtor_email_label)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .imeTextField(textFocus),
                 )
                 if (isEdit && existingDebtor.currentAmountCents > 0L) {
                     Text(
@@ -418,16 +435,20 @@ fun DebtorFormDialog(
                         singleLine = true,
                         isError = interestError != null,
                         supportingText = interestError?.let { message -> { Text(message) } },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .imeTextField(textFocus),
                     )
                 }
             }
-            AmountKeypad(
-                onKey = { key ->
-                    amountText = applyAmountKey(amountText, key)
-                    amountError = null
-                },
-            )
+            if (!keypadHidden) {
+                AmountKeypad(
+                    onKey = { key ->
+                        amountText = applyAmountKey(amountText, key)
+                        amountError = null
+                    },
+                )
+            }
             val saveView = androidx.compose.ui.platform.LocalView.current
             var saved by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
             Button(

@@ -347,7 +347,8 @@ internal fun PhoneHomeLayout(
                 },
                 modifier = Modifier
                     .fillMaxSize()
-                    .consumeWindowInsets(innerPadding),
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
                 contentPadding = PaddingValues(
                     start = listPadding.calculateStartPadding(layoutDirection),
                     top = listPadding.calculateTopPadding(),

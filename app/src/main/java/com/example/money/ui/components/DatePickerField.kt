@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.example.money.ui.util.Formatters
 import java.util.Calendar
 
@@ -28,6 +30,7 @@ fun DatePickerField(
     supportingText: String? = null,
 ) {
     val context = LocalContext.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val interactionSource = remember { MutableInteractionSource() }
 
     fun openDatePicker() {
@@ -73,6 +76,7 @@ fun DatePickerField(
         },
         modifier = modifier
             .fillMaxWidth()
+            .onFocusEvent { if (it.isFocused) keyboard?.hide() }
             .pointerInput(selectedDateMillis) {
                 detectTapGestures(onTap = { openDatePicker() })
             },

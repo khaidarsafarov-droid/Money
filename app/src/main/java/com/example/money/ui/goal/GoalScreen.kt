@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -58,6 +59,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.money.MoneyApplication
 import com.example.money.R
+import com.example.money.ui.components.DialogImeEffect
+import com.example.money.ui.components.bringIntoViewOnFocus
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.domain.model.LuckDiaryEntry
 import com.example.money.domain.util.GoalChallengeEngines
 import com.example.money.domain.util.GoalPsychologyEngines
@@ -216,6 +220,7 @@ fun GoalScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -484,7 +489,9 @@ private fun MotivationCard(motivation: String, onMotivationChange: (String) -> U
                 text = it
                 onMotivationChange(it)
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewOnFocus(),
             placeholder = { Text(stringResource(R.string.goal_hub_motivation_placeholder)) },
         )
     }
@@ -819,18 +826,26 @@ private fun LuckDiaryEntryDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.goal_hub_luck_add)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
                     label = { Text(stringResource(R.string.goal_hub_luck_what)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
                     label = { Text(stringResource(R.string.goal_hub_luck_amount)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     categories.forEach { (id, labelRes) ->

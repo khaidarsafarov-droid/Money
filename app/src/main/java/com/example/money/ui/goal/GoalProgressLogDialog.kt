@@ -3,6 +3,7 @@ package com.example.money.ui.goal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -21,7 +22,10 @@ import com.example.money.R
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.ui.components.DatePickerField
+import com.example.money.ui.components.DialogImeEffect
 import com.example.money.ui.components.MoneyTextField
+import com.example.money.ui.components.bringIntoViewOnFocus
+import com.example.money.ui.components.scrollAboveIme
 import com.example.money.ui.util.Formatters
 import com.example.money.ui.util.InputValidators
 
@@ -48,7 +52,11 @@ fun GoalProgressLogDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.goal_log_title, goal.name)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            DialogImeEffect()
+            Column(
+                modifier = Modifier.scrollAboveIme(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 if (tracksMoney) {
                     Text(
                         text = stringResource(
@@ -76,7 +84,9 @@ fun GoalProgressLogDialog(
                         error = null
                     },
                     label = { Text(stringResource(R.string.goal_log_note)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewOnFocus(),
                 )
                 if (tracksMoney) {
                     DatePickerField(
