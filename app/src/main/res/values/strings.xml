@@ -45,10 +45,10 @@
     <string name="widget_goal_title">Мои финансы</string>
     <string name="widget_goal_description">Долги и ближайшая цель</string>
     <string name="widget_add_debt">Новый долг</string>
-    <string name="widget_preview_owes">33 751,00 $</string>
-    <string name="widget_preview_i_owe">0,00 $</string>
-    <string name="widget_preview_goal_name">Отпуск</string>
-    <string name="widget_preview_goal_ratio">9 900 / 30 000</string>
+    <string name="widget_preview_owes">33 779,20 $</string>
+    <string name="widget_preview_i_owe">237,00 $</string>
+    <string name="widget_preview_goal_name">My second 100K</string>
+    <string name="widget_preview_goal_ratio">33 000 / 100 000 $</string>
     <string name="widget_preview_goal_percent">33%</string>
     <string name="operation_pending_suffix"> · Ожидает</string>
     <string name="calendar_prev_month">Предыдущий месяц</string>

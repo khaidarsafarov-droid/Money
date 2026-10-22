@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#FFFFFFFF</color>
-    <color name="widget_preview_hero">#FFFFFFFF</color>
-    <color name="widget_preview_primary">#FF0B6E5B</color>
-    <color name="widget_preview_on_primary">#FFFFFFFF</color>
-    <color name="widget_preview_negative">#FFB3261E</color>
-    <color name="widget_preview_muted">#FF6B7772</color>
-    <color name="widget_preview_on_card">#FF16201D</color>
-    <color name="widget_preview_track">#FFE3F1EC</color>
-    <color name="widget_preview_mint">#FFDDF3EC</color>
-    <color name="widget_preview_on_mint">#FF08382E</color>
+    <color name="widget_background">#FF0B6E5B</color>
+    <color name="widget_preview_hero">#FF0B6E5B</color>
+    <color name="widget_preview_primary">#FF5FD3B3</color>
+    <color name="widget_preview_on_primary">#FF06352C</color>
+    <color name="widget_preview_negative">#FFF2B8B5</color>
+    <color name="widget_preview_muted">#FFD7EBE4</color>
+    <color name="widget_preview_on_card">#FFFFFFFF</color>
+    <color name="widget_preview_track">#FF08352C</color>
+    <color name="widget_preview_mint">#FF8FE0C8</color>
+    <color name="widget_preview_on_mint">#FF06352C</color>
     <color name="widget_preview_peach">#FFFBE7E4</color>
     <color name="widget_preview_on_peach">#FF5C120E</color>
     <color name="widget_preview_lilac">#FFE4E9E6</color>

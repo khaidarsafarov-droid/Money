@@ -9,25 +9,47 @@ import androidx.compose.ui.unit.sp
 import com.example.money.ui.util.Formatters
 
 /**
- * Amounts stay on one line. Nothing drops below 12sp.
+ * Hero amount on the green card. Long figures step down so they stay on one line.
+ * Nothing drops below 13sp.
  */
-internal fun widgetAmountFontSize(width: Dp, textLength: Int): TextUnit = when {
-    textLength >= 16 -> 12.sp
-    textLength >= 12 -> 14.sp
-    width < 220.dp -> 16.sp
-    else -> 18.sp
+internal fun widgetHeroAmountSize(width: Dp, height: Dp, textLength: Int): TextUnit {
+    val base = when {
+        height < 130.dp || width < 200.dp -> 16
+        height >= 200.dp && width >= 300.dp -> 34
+        width >= 300.dp -> 30
+        height >= 180.dp -> 24
+        else -> 22
+    }
+    val scaled = when {
+        textLength >= 18 -> base - 10
+        textLength >= 14 -> base - 6
+        textLength >= 12 -> base - 4
+        else -> base
+    }.coerceIn(13, 36)
+    return scaled.sp
 }
 
-internal val WidgetWideBreakpoint = 280.dp
+internal fun widgetSecondaryAmountSize(hero: TextUnit): TextUnit =
+    (hero.value * 0.78f).toInt().coerceIn(13, 28).sp
 
-internal fun widgetUsesWideLayout(width: Dp): Boolean = width >= WidgetWideBreakpoint
+/** Two amount columns need a 4×2-wide cell. Narrower cards stack. */
+internal fun widgetSideBySideAmounts(width: Dp): Boolean = width >= 240.dp
 
-/** Track width inside the card. Wide widgets split debts and the goal. */
-internal fun widgetGoalTrackWidth(widgetWidth: Dp, horizontalPadding: Dp, wide: Boolean): Dp {
-    val inner = (widgetWidth - horizontalPadding * 2).coerceAtLeast(0.dp)
-    if (!wide) return inner
-    return ((inner - 12.dp) / 2).coerceAtLeast(0.dp)
+internal fun widgetContentPadding(height: Dp): Dp = when {
+    height < 130.dp -> 10.dp
+    height < 180.dp -> 14.dp
+    else -> 18.dp
 }
+
+internal fun widgetPlusSize(height: Dp): Dp = when {
+    height < 130.dp -> 26.dp
+    height < 180.dp -> 34.dp
+    else -> 40.dp
+}
+
+/** The goal bar spans the card. Extra height stays inside the card, above the bar. */
+internal fun widgetGoalTrackWidth(widgetWidth: Dp, horizontalPadding: Dp): Dp =
+    (widgetWidth - horizontalPadding * 2).coerceAtLeast(0.dp)
 
 internal fun widgetProgressFillWidth(trackWidth: Dp, percent: Int): Dp =
     trackWidth * (percent.coerceIn(0, 100) / 100f)

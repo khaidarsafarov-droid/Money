@@ -7,9 +7,10 @@
     android:minResizeWidth="@dimen/widget_min_resize_width"
     android:minResizeHeight="@dimen/widget_min_resize_height"
     android:maxResizeHeight="@dimen/widget_max_resize_height"
+    android:previewImage="@drawable/widget_preview_image"
     android:previewLayout="@layout/widget_preview"
     android:resizeMode="horizontal|vertical"
-    android:targetCellWidth="2"
+    android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />
