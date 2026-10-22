@@ -3,31 +3,36 @@ package com.example.money.widget
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WidgetLayoutTest {
 
     @Test
-    fun longAmountsUseASmallerSingleLineSize() {
-        val longAmount = "122 115,00 $"
-        assertEquals(12, longAmount.length)
-        assertEquals(14.sp, widgetAmountFontSize(250.dp, longAmount.length))
-        assertEquals(14.sp, widgetAmountFontSize(320.dp, longAmount.length))
-        assertEquals(16, "122 222 115,00 $".length)
-        assertEquals(12.sp, widgetAmountFontSize(360.dp, "122 222 115,00 $".length))
-        assertEquals(18.sp, widgetAmountFontSize(250.dp, "22 115,00 $".length))
-        assertEquals(16.sp, widgetAmountFontSize(200.dp, "0,00 $".length))
-        assertEquals(18.sp, widgetAmountFontSize(320.dp, "0,00 $".length))
+    fun heroAmountGrowsOnAWideCardAndShrinksForLongText() {
+        assertEquals(30.sp, widgetHeroAmountSize(320.dp, 150.dp, "237,00 $".length))
+        assertEquals(30.sp, widgetHeroAmountSize(320.dp, 150.dp, "33 779,20 $".length))
+        assertEquals(26.sp, widgetHeroAmountSize(320.dp, 150.dp, 12))
+        assertEquals(16.sp, widgetHeroAmountSize(160.dp, 110.dp, "0,00 $".length))
+        assertEquals(20.sp, widgetHeroAmountSize(320.dp, 150.dp, 20))
+        assertEquals(13.sp, widgetHeroAmountSize(160.dp, 110.dp, 20))
+        val secondary = widgetSecondaryAmountSize(26.sp)
+        assertEquals(20.sp, secondary)
+        assertTrue(secondary.value < 26f)
     }
 
     @Test
-    fun wideLayoutStartsAtTwoColumns() {
-        assertEquals(false, widgetUsesWideLayout(200.dp))
-        assertEquals(true, widgetUsesWideLayout(280.dp))
-        assertEquals(100.dp, widgetGoalTrackWidth(124.dp, 12.dp, wide = false))
-        assertEquals(82.dp, widgetGoalTrackWidth(200.dp, 12.dp, wide = true))
+    fun fourByTwoUsesTwoAmountColumnsAndAFullWidthGoalBar() {
+        assertEquals(false, widgetSideBySideAmounts(220.dp))
+        assertEquals(true, widgetSideBySideAmounts(240.dp))
+        assertEquals(true, widgetSideBySideAmounts(320.dp))
+        assertEquals(100.dp, widgetGoalTrackWidth(124.dp, 12.dp))
+        assertEquals(292.dp, widgetGoalTrackWidth(320.dp, 14.dp))
         assertEquals(33.dp, widgetProgressFillWidth(100.dp, 33))
         assertEquals(0.dp, widgetProgressFillWidth(100.dp, 0))
         assertEquals("33%", featuredGoalPercentLabel(33))
+        assertEquals(14.dp, widgetContentPadding(150.dp))
+        assertEquals(10.dp, widgetContentPadding(110.dp))
+        assertEquals(34.dp, widgetPlusSize(150.dp))
     }
 }

@@ -7,9 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
@@ -36,6 +39,7 @@ import androidx.glance.semantics.semantics
 import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.money.MoneyApplication
@@ -104,18 +108,15 @@ class GoalProgressWidgetReceiver : GlanceAppWidgetReceiver() {
     }
 }
 
-private fun dayNight(
-    day: androidx.compose.ui.graphics.Color,
-    night: androidx.compose.ui.graphics.Color,
-): ColorProvider = androidx.glance.color.ColorProvider(day, night)
+private fun fixed(color: Color): ColorProvider = androidx.glance.color.ColorProvider(color, color)
 
-private val Card = dayNight(LightColorScheme.surface, DarkColorScheme.surface)
-private val Primary = dayNight(LightColorScheme.primary, DarkColorScheme.primary)
-private val OnPrimary = dayNight(LightColorScheme.onPrimary, DarkColorScheme.onPrimary)
-private val Negative = dayNight(LightColorScheme.error, DarkColorScheme.error)
-private val OnCard = dayNight(LightColorScheme.onSurface, DarkColorScheme.onSurface)
-private val Muted = dayNight(LightColorScheme.onSurfaceVariant, DarkColorScheme.onSurfaceVariant)
-private val Track = dayNight(LightColorScheme.primaryContainer, DarkColorScheme.primaryContainer)
+private val Mint = fixed(Color(0xFF5FD3B3))
+private val Pink = fixed(Color(0xFFF2B8B5))
+private val Title = fixed(Color(0xFFFFFFFF))
+private val Label = fixed(Color(0xFFD7EBE4))
+private val PlusFill = fixed(Color(0xFF8FE0C8))
+private val PlusInk = fixed(Color(0xFF06352C))
+private val Track = fixed(Color(0xFF08352C))
 
 private val WidgetColorProviders = androidx.glance.material3.ColorProviders(
     light = LightColorScheme,
@@ -128,10 +129,12 @@ private fun style(
     color: ColorProvider,
     size: androidx.compose.ui.unit.TextUnit,
     weight: FontWeight = FontWeight.Normal,
+    align: TextAlign? = null,
 ) = TextStyle(
     color = color,
     fontSize = size,
     fontWeight = weight,
+    textAlign = align,
     fontFamily = WidgetFont,
 )
 
@@ -141,45 +144,38 @@ internal fun GoalWidgetContent(
     snapshot: WidgetGoalSnapshot,
 ) {
     val size = LocalSize.current
-    val wide = widgetUsesWideLayout(size.width)
-    val tight = !wide && size.height < 140.dp
-    val pad = if (tight) 6.dp else 12.dp
+    val compact = size.height < 132.dp
+    val pad = widgetContentPadding(size.height)
     val openApp = actionStartActivity(AppIntents.openAppIntent(context))
     val addDebt = actionStartActivity(AppIntents.addDebtIntent(context))
-    val trackWidth = widgetGoalTrackWidth(size.width, pad, wide)
+    val trackWidth = widgetGoalTrackWidth(size.width, pad)
     val fillWidth = widgetProgressFillWidth(trackWidth, snapshot.featuredGoalPercent)
+    val sideBySide = widgetSideBySideAmounts(size.width)
 
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .cornerRadius(widgetOuterRadius(context))
-            .background(Card)
+            .background(ImageProvider(R.drawable.widget_card_bg))
             .clickable(openApp)
             .padding(pad),
         verticalAlignment = Alignment.Vertical.Top,
     ) {
-        WidgetHeader(context = context, addDebt = addDebt, tight = tight)
-        Spacer(modifier = GlanceModifier.height(if (tight) 4.dp else 8.dp))
-        if (wide) {
-            Row(
-                modifier = GlanceModifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Vertical.Top,
-            ) {
-                Column(modifier = GlanceModifier.defaultWeight()) {
-                    DebtBlock(context, snapshot, tight)
-                }
-                if (snapshot.hasFeaturedGoal) {
-                    Spacer(modifier = GlanceModifier.width(12.dp))
-                    Column(modifier = GlanceModifier.defaultWeight()) {
-                        GoalBlock(snapshot, fillWidth, tight)
-                    }
-                }
+        WidgetHeader(context = context, addDebt = addDebt, compact = compact)
+        Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+            if (sideBySide) {
+                Spacer(modifier = GlanceModifier.height(if (compact) 4.dp else 10.dp))
+                AmountColumns(context, snapshot, compact)
+            } else if (compact) {
+                Spacer(modifier = GlanceModifier.height(4.dp))
+                InlineDebts(context, snapshot)
+            } else {
+                Spacer(modifier = GlanceModifier.height(8.dp))
+                StackedAmounts(context, snapshot)
             }
-        } else {
-            DebtBlock(context, snapshot, tight)
+            Spacer(modifier = GlanceModifier.defaultWeight())
             if (snapshot.hasFeaturedGoal) {
-                Spacer(modifier = GlanceModifier.height(if (tight) 4.dp else 8.dp))
-                GoalBlock(snapshot, fillWidth, tight)
+                GoalFooter(snapshot, fillWidth, compact)
             }
         }
     }
@@ -189,16 +185,16 @@ internal fun GoalWidgetContent(
 private fun WidgetHeader(
     context: Context,
     addDebt: Action,
-    tight: Boolean,
+    compact: Boolean,
 ) {
-    val chip = if (tight) 20.dp else 28.dp
+    val chip = widgetPlusSize(LocalSize.current.height)
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = context.getString(R.string.home_brand),
-            style = style(Primary, if (tight) 12.sp else 13.sp, FontWeight.Bold),
+            style = style(Title, if (compact) 16.sp else 18.sp, FontWeight.Medium),
             maxLines = 1,
             modifier = GlanceModifier.defaultWeight(),
         )
@@ -207,14 +203,14 @@ private fun WidgetHeader(
                 .width(chip)
                 .height(chip)
                 .cornerRadius(chip / 2)
-                .background(Primary)
+                .background(PlusFill)
                 .clickable(addDebt)
                 .semantics { contentDescription = context.getString(R.string.widget_add_debt) },
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = context.getString(R.string.widget_plus),
-                style = style(OnPrimary, if (tight) 14.sp else 18.sp, FontWeight.Bold),
+                style = style(PlusInk, if (compact) 16.sp else 20.sp, FontWeight.Bold),
                 maxLines = 1,
             )
         }
@@ -222,39 +218,119 @@ private fun WidgetHeader(
 }
 
 @Composable
-private fun DebtBlock(
+private fun AmountColumns(
     context: Context,
     snapshot: WidgetGoalSnapshot,
-    tight: Boolean,
+    compact: Boolean,
 ) {
     val owes = maskFromCents(snapshot.owedToMeCents, snapshot)
     val owe = maskFromCents(snapshot.iOweCents, snapshot)
-    val labelSize = if (tight) 10.sp else 11.sp
-    val amountCap = if (tight) 13.sp else 18.sp
-    DebtLine(
+    val size = LocalSize.current
+    val hero = widgetHeroAmountSize(size.width, size.height, owes.length)
+    val secondary = widgetSecondaryAmountSize(hero)
+    val labelSize = if (compact) 12.sp else 13.sp
+    Row(
+        modifier = GlanceModifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = GlanceModifier.defaultWeight()) {
+            Text(
+                text = context.getString(R.string.debt_dashboard_owes_me),
+                style = style(Label, labelSize),
+                maxLines = 1,
+            )
+            Spacer(modifier = GlanceModifier.height(2.dp))
+            Text(
+                text = owes,
+                style = style(Mint, hero, FontWeight.Bold),
+                maxLines = 1,
+            )
+        }
+        Column(
+            modifier = GlanceModifier.defaultWeight(),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Text(
+                text = context.getString(R.string.debt_dashboard_i_owe),
+                style = style(Label, labelSize, align = TextAlign.End),
+                maxLines = 1,
+            )
+            Spacer(modifier = GlanceModifier.height(2.dp))
+            Text(
+                text = owe,
+                style = style(Pink, secondary, FontWeight.Bold, TextAlign.End),
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun StackedAmounts(
+    context: Context,
+    snapshot: WidgetGoalSnapshot,
+) {
+    val owes = maskFromCents(snapshot.owedToMeCents, snapshot)
+    val owe = maskFromCents(snapshot.iOweCents, snapshot)
+    val size = LocalSize.current
+    val hero = widgetHeroAmountSize(size.width, size.height, owes.length)
+    AmountStack(
         label = context.getString(R.string.debt_dashboard_owes_me),
         amount = owes,
-        amountColor = Primary,
-        amountSize = cappedAmountSize(owes, amountCap),
-        labelSize = labelSize,
+        amountColor = Mint,
+        amountSize = hero,
     )
-    Spacer(modifier = GlanceModifier.height(if (tight) 2.dp else 4.dp))
-    DebtLine(
+    Spacer(modifier = GlanceModifier.height(8.dp))
+    AmountStack(
         label = context.getString(R.string.debt_dashboard_i_owe),
         amount = owe,
-        amountColor = Negative,
-        amountSize = cappedAmountSize(owe, amountCap),
-        labelSize = labelSize,
+        amountColor = Pink,
+        amountSize = widgetSecondaryAmountSize(hero),
     )
 }
 
 @Composable
-private fun DebtLine(
+private fun AmountStack(
     label: String,
     amount: String,
     amountColor: ColorProvider,
     amountSize: androidx.compose.ui.unit.TextUnit,
-    labelSize: androidx.compose.ui.unit.TextUnit,
+) {
+    Text(text = label, style = style(Label, 12.sp), maxLines = 1)
+    Spacer(modifier = GlanceModifier.height(2.dp))
+    Text(text = amount, style = style(amountColor, amountSize, FontWeight.Bold), maxLines = 1)
+}
+
+@Composable
+private fun InlineDebts(
+    context: Context,
+    snapshot: WidgetGoalSnapshot,
+) {
+    val owes = maskFromCents(snapshot.owedToMeCents, snapshot)
+    val owe = maskFromCents(snapshot.iOweCents, snapshot)
+    val size = LocalSize.current
+    val hero = widgetHeroAmountSize(size.width, size.height, owes.length)
+    InlineDebt(
+        label = context.getString(R.string.debt_dashboard_owes_me),
+        amount = owes,
+        amountColor = Mint,
+        amountSize = hero,
+    )
+    Spacer(modifier = GlanceModifier.height(2.dp))
+    InlineDebt(
+        label = context.getString(R.string.debt_dashboard_i_owe),
+        amount = owe,
+        amountColor = Pink,
+        amountSize = widgetSecondaryAmountSize(hero),
+    )
+}
+
+@Composable
+private fun InlineDebt(
+    label: String,
+    amount: String,
+    amountColor: ColorProvider,
+    amountSize: androidx.compose.ui.unit.TextUnit,
 ) {
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
@@ -262,7 +338,7 @@ private fun DebtLine(
     ) {
         Text(
             text = label,
-            style = style(Muted, labelSize),
+            style = style(Label, 12.sp),
             maxLines = 1,
             modifier = GlanceModifier.defaultWeight(),
         )
@@ -275,35 +351,41 @@ private fun DebtLine(
 }
 
 @Composable
-private fun GoalBlock(
+private fun GoalFooter(
     snapshot: WidgetGoalSnapshot,
     fillWidth: Dp,
-    tight: Boolean,
+    compact: Boolean,
 ) {
-    val bar = if (tight) 4.dp else 6.dp
-    Text(
-        text = snapshot.featuredGoalName,
-        style = style(OnCard, if (tight) 12.sp else 13.sp, FontWeight.Bold),
-        maxLines = 1,
-    )
-    Spacer(modifier = GlanceModifier.height(2.dp))
+    val bar = if (compact) 5.dp else 8.dp
+    val flag = if (compact) 12.dp else 14.dp
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Image(
+            provider = ImageProvider(R.drawable.widget_goal_flag),
+            contentDescription = null,
+            modifier = GlanceModifier.width(flag).height(flag),
+        )
+        Spacer(modifier = GlanceModifier.width(6.dp))
         Text(
-            text = featuredGoalRatio(snapshot),
-            style = style(Muted, if (tight) 10.sp else 11.sp),
+            text = snapshot.featuredGoalName,
+            style = style(Title, if (compact) 12.sp else 14.sp, FontWeight.Medium),
             maxLines = 1,
             modifier = GlanceModifier.defaultWeight(),
         )
         Text(
-            text = featuredGoalPercentLabel(snapshot.featuredGoalPercent),
-            style = style(Primary, if (tight) 12.sp else 13.sp, FontWeight.Bold),
+            text = featuredGoalRatio(snapshot),
+            style = style(Label, if (compact) 12.sp else 13.sp),
+            maxLines = 1,
+        )
+        Text(
+            text = " · ${featuredGoalPercentLabel(snapshot.featuredGoalPercent)}",
+            style = style(Mint, if (compact) 12.sp else 13.sp, FontWeight.Bold),
             maxLines = 1,
         )
     }
-    Spacer(modifier = GlanceModifier.height(if (tight) 3.dp else 4.dp))
+    Spacer(modifier = GlanceModifier.height(if (compact) 4.dp else 8.dp))
     Box(
         modifier = GlanceModifier
             .fillMaxWidth()
@@ -318,19 +400,10 @@ private fun GoalBlock(
                     .width(fillWidth)
                     .height(bar)
                     .cornerRadius(bar / 2)
-                    .background(Primary),
+                    .background(Mint),
             ) {}
         }
     }
-}
-
-@Composable
-private fun cappedAmountSize(
-    amount: String,
-    cap: androidx.compose.ui.unit.TextUnit,
-): androidx.compose.ui.unit.TextUnit {
-    val raw = widgetAmountFontSize(LocalSize.current.width, amount.length)
-    return if (raw > cap) cap else raw
 }
 
 private fun maskFromCents(cents: Long, snapshot: WidgetGoalSnapshot): String =

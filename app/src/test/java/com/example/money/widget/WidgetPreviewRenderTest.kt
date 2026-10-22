@@ -62,12 +62,13 @@ class WidgetPreviewRenderTest {
     fun pickerPreviewLabelsTheGoalInLightAndDark() {
         val light = configuredContext(night = false)
         val lightView = inflatePreview(light)
-        assertEquals("Отпуск", text(lightView, R.string.widget_preview_goal_name).text.toString())
+        assertEquals("My second 100K", text(lightView, R.string.widget_preview_goal_name).text.toString())
         assertEquals("33%", text(lightView, R.string.widget_preview_goal_percent).text.toString())
-        assertEquals("9 900 / 30 000", text(lightView, R.string.widget_preview_goal_ratio).text.toString())
+        assertEquals("33 000 / 100 000 $", text(lightView, R.string.widget_preview_goal_ratio).text.toString())
         assertEquals("+", text(lightView, R.string.widget_plus).text.toString())
-        assertEquals(0xFF0B6E5B.toInt(), text(lightView, R.string.widget_preview_goal_percent).currentTextColor)
-        assertEquals(0xFFB3261E.toInt(), text(lightView, R.string.widget_preview_i_owe).currentTextColor)
+        assertEquals(0xFF5FD3B3.toInt(), text(lightView, R.string.widget_preview_goal_percent).currentTextColor)
+        assertEquals(0xFF5FD3B3.toInt(), text(lightView, R.string.widget_preview_owes).currentTextColor)
+        assertEquals(0xFFF2B8B5.toInt(), text(lightView, R.string.widget_preview_i_owe).currentTextColor)
         val lightBitmap = draw(lightView)
 
         val dark = configuredContext(night = true)
@@ -75,12 +76,13 @@ class WidgetPreviewRenderTest {
         assertEquals(0xFF5FD3B3.toInt(), text(darkView, R.string.widget_preview_goal_percent).currentTextColor)
         assertEquals(0xFFF2B8B5.toInt(), text(darkView, R.string.widget_preview_i_owe).currentTextColor)
         val darkBitmap = draw(darkView)
-        val lightPrimary = countNear(lightBitmap, 0xFF0B6E5B.toInt())
-        val darkPrimary = countNear(darkBitmap, 0xFF5FD3B3.toInt())
-        val lightNegative = countNear(lightBitmap, 0xFFB3261E.toInt())
-        assertTrue("light primary pixels=$lightPrimary size=${lightBitmap.width}x${lightBitmap.height}", lightPrimary > 40)
-        assertTrue("dark primary pixels=$darkPrimary", darkPrimary > 40)
-        assertTrue("light negative pixels=$lightNegative", lightNegative > 8)
+        val lightGreen = countNear(lightBitmap, 0xFF0B6E5B.toInt(), tolerance = 48)
+        val lightMint = countNear(lightBitmap, 0xFF5FD3B3.toInt())
+        val lightPink = countNear(lightBitmap, 0xFFF2B8B5.toInt())
+        assertTrue("green pixels=$lightGreen size=${lightBitmap.width}x${lightBitmap.height}", lightGreen > 200)
+        assertTrue("mint pixels=$lightMint", lightMint > 20)
+        assertTrue("pink pixels=$lightPink", lightPink > 8)
+        assertTrue(countNear(darkBitmap, 0xFF0B6E5B.toInt(), tolerance = 48) > 200)
     }
 
     @Test
@@ -102,40 +104,54 @@ class WidgetPreviewRenderTest {
 
         listOf(stackedLight, stackedDark, wide).forEach { view ->
             val labels = texts(view)
-            assertTrue(labels.joinToString(), labels.any { it.contains("Отпуск") })
-            assertTrue(labels.joinToString(), labels.any { it == "33%" })
+            assertTrue("${view.width}x${view.height} ${labels.joinToString()}", labels.any { it.contains("Отпуск") })
+            assertTrue(labels.joinToString(), labels.any { it.contains("33%") })
             assertFalse(labels.joinToString(), labels.any { it.contains("40%") })
             assertTrue(labels.any { it.contains("Мне должны") })
             assertTrue(labels.any { it.contains("Я должен") })
             assertTrue(labels.any { it == "+" })
         }
 
-        val goal = findText(wide, "Отпуск")
-        val owes = findText(wide, "Мне должны")
-        val goalX = offsetIn(wide, goal).first
-        val owesX = offsetIn(wide, owes).first
-        assertTrue("goalX=$goalX owesX=$owesX wide=${wide.width}", goalX > owesX + 40)
+        val wideOwe = findText(wide, "Я должен")
+        val wideOwes = findText(wide, "Мне должны")
+        val oweX = offsetIn(wide, wideOwe).first
+        val owesX = offsetIn(wide, wideOwes).first
+        assertTrue("oweX=$oweX owesX=$owesX wide=${wide.width}", oweX > owesX + 40)
+
+        val wideGoal = findText(wide, "Отпуск")
+        val goalY = offsetIn(wide, wideGoal).second
+        val owesY = offsetIn(wide, wideOwes).second
+        assertTrue("goalY=$goalY owesY=$owesY", goalY > owesY)
+        val goalBottom = goalY + wideGoal.height
+        assertTrue(
+            "goal should sit near the bottom bottom=$goalBottom height=${wide.height}",
+            goalBottom > wide.height * 0.55f,
+        )
 
         val stackedGoal = findText(stackedLight, "Отпуск")
         val stackedOwes = findText(stackedLight, "Мне должны")
-        val goalY = offsetIn(stackedLight, stackedGoal).second
-        val owesY = offsetIn(stackedLight, stackedOwes).second
-        assertTrue("goalY=$goalY owesY=$owesY", goalY > owesY)
+        assertTrue(offsetIn(stackedLight, stackedGoal).second > offsetIn(stackedLight, stackedOwes).second)
 
+        val card = renderGlance(configuredContext(night = false), designSample(), 340.dp, 168.dp)
         val lightBitmap = draw(stackedLight)
         val darkBitmap = draw(stackedDark)
         val wideBitmap = draw(wide)
-        assertTrue(countNear(lightBitmap, 0xFF0B6E5B.toInt()) > 30)
-        assertTrue(countNear(darkBitmap, 0xFF5FD3B3.toInt()) > 30)
-        val barRun = longestRun(lightBitmap, 0xFF0B6E5B.toInt())
+        val cardBitmap = draw(card)
+        assertTrue(countNear(lightBitmap, 0xFF0B6E5B.toInt(), tolerance = 48) > 80)
+        assertTrue(countNear(darkBitmap, 0xFF5FD3B3.toInt()) > 20)
+        assertTrue(countNear(cardBitmap, 0xFFF2B8B5.toInt()) > 8)
+        val barRun = longestRun(cardBitmap, 0xFF5FD3B3.toInt())
         assertTrue(
-            "bar run=$barRun width=${lightBitmap.width}",
-            barRun > lightBitmap.width / 8 && barRun < (lightBitmap.width * 0.7f).toInt(),
+            "bar run=$barRun width=${cardBitmap.width}",
+            barRun > cardBitmap.width / 10 && barRun < (cardBitmap.width * 0.7f).toInt(),
         )
 
-        val preview = stitch(listOf(lightBitmap, darkBitmap, wideBitmap))
+        val preview = stitch(listOf(cardBitmap, wideBitmap))
         val root = generateSequence(File(System.getProperty("user.dir") ?: ".")) { it.parentFile }
             .first { File(it, "settings.gradle.kts").exists() }
+        FileOutputStream(File(root, "docs/store/widget_green_card_preview.png")).use { stream ->
+            cardBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        }
         val out = File(root, "docs/store/widget_finora_preview.png")
         out.parentFile?.mkdirs()
         FileOutputStream(out).use { stream ->
@@ -183,12 +199,23 @@ class WidgetPreviewRenderTest {
         host
     }
 
+    private fun designSample() = sample(withGoal = true).copy(
+        owedToMeCents = 3_377_920L,
+        iOweCents = 23_700L,
+        featuredGoalName = "My second 100K",
+        featuredGoalSavedCents = 3_300_000L,
+        featuredGoalTargetCents = 10_000_000L,
+        featuredGoalPercent = 33,
+    )
+
     private fun inflatePreview(context: Context): View {
         val view = android.view.LayoutInflater.from(context).inflate(R.layout.widget_preview, null)
-        val width = (200 * context.resources.displayMetrics.density).toInt()
+        val density = context.resources.displayMetrics.density
+        val width = (340 * density).toInt()
+        val height = (156 * density).toInt()
         view.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
         )
         view.layout(0, 0, view.measuredWidth, view.measuredHeight)
         return view
@@ -257,7 +284,7 @@ class WidgetPreviewRenderTest {
         return best
     }
 
-    private fun countNear(bitmap: Bitmap, target: Int, tolerance: Int = 36): Int {
+    private fun countNear(bitmap: Bitmap, target: Int, tolerance: Int = 28): Int {
         var count = 0
         val pixels = IntArray(bitmap.width * bitmap.height)
         bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
