@@ -1,14 +1,10 @@
 package com.example.money.ui.goal
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,10 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import com.example.money.ui.motion.MoneyInWindowSheet
-import com.example.money.ui.motion.moneySharedBounds
 import com.example.money.ui.motion.rememberDrawFraction
-import com.example.money.ui.theme.finoraGoalBrush
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,49 +37,6 @@ import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.bringIntoViewOnFocus
 import com.example.money.ui.components.MoneyDialog
 import com.example.money.ui.util.Formatters
-
-@Composable
-fun GoalDetailOverlay(
-    goal: SavingsGoal,
-    actions: List<GoalAction>,
-    hideAmounts: Boolean,
-    onDismiss: () -> Unit,
-    onAddAction: (String) -> Unit,
-    onToggleAction: (GoalAction, Boolean) -> Unit,
-    onDeleteAction: (GoalAction) -> Unit,
-) {
-    MoneyInWindowSheet(onDismiss = onDismiss) {
-        Column(
-            modifier = Modifier
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .moneySharedBounds("goal-detail-${goal.id}")
-                    .fillMaxWidth()
-                    .height(84.dp)
-                    .background(finoraGoalBrush(goal.name.hashCode())),
-            )
-            Text(
-                text = goal.name,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-            )
-            GoalActionsPanel(
-                goal = goal,
-                actions = actions,
-                hideAmounts = hideAmounts,
-                onAddAction = onAddAction,
-                onToggleAction = onToggleAction,
-                onDeleteAction = onDeleteAction,
-                modifier = Modifier.padding(horizontal = 20.dp),
-            )
-        }
-    }
-}
 
 @Composable
 fun GoalActionsDialog(

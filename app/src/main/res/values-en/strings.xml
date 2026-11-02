@@ -283,6 +283,7 @@
     <string name="goal_over_achieved">Over-achievement: +%1$s</string>
     <string name="goal_add_confirm">Add</string>
     <string name="goal_saved_progress">Saved %1$s of %2$s</string>
+    <string name="goal_missing">Goal not found</string>
     <string name="msg_goal_added">Goal added</string>
     <string name="msg_goal_deleted">Goal deleted</string>
     <string name="empty_goals_title">No goals</string>
