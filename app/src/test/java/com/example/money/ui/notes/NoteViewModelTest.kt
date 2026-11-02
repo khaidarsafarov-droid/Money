@@ -37,7 +37,7 @@ class NoteViewModelTest {
         override suspend fun deleteNote(id: Long) {
             deletedNotes += id
         }
-        override suspend fun addLine(noteId: Long, label: String, amountCents: Long) = Unit
+        override suspend fun addLine(noteId: Long, label: String, amountCents: Long, occurredAt: Long) = Unit
         override suspend fun updateLine(line: FinanceNoteLine) = Unit
         override suspend fun deleteLine(noteId: Long, lineId: Long) = Unit
     }

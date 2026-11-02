@@ -84,19 +84,21 @@ class NoteRepositoryImpl(
         }
     }
 
-    override suspend fun addLine(noteId: Long, label: String, amountCents: Long) {
+    override suspend fun addLine(noteId: Long, label: String, amountCents: Long, occurredAt: Long) {
         SyncWriteGuard.withWriteLock {
             val note = noteDao.getNoteById(noteId) ?: return@withWriteLock
             val order = noteDao.maxSortOrder(noteId) + 1
+            val now = System.currentTimeMillis()
             val id = noteDao.insertLine(
                 FinanceNoteLineEntity(
                     noteId = noteId,
                     label = label.trim(),
                     amountCents = amountCents,
                     sortOrder = order,
+                    occurredAt = occurredAt,
+                    updatedAt = now,
                 ),
             )
-            val now = System.currentTimeMillis()
             noteDao.touchNote(noteId, now)
             noteDao.getLineById(id)?.let { syncQueueRecorder.recordNoteLine(it, note.syncId) }
             noteDao.getNoteById(noteId)?.let { syncQueueRecorder.recordNote(it) }
@@ -111,6 +113,7 @@ class NoteRepositoryImpl(
                 label = line.label.trim(),
                 amountCents = line.amountCents,
                 sortOrder = line.sortOrder,
+                occurredAt = line.occurredAt,
                 updatedAt = System.currentTimeMillis(),
             )
             noteDao.updateLine(updated)
@@ -157,4 +160,5 @@ private fun FinanceNoteLineEntity.toDomain() = FinanceNoteLine(
     label = label,
     amountCents = amountCents,
     sortOrder = sortOrder,
+    occurredAt = occurredAt,
 )

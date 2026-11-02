@@ -22,6 +22,7 @@ data class BackupGoalAction(
     val title: String,
     val completed: Boolean,
     val sortOrder: Int,
+    val occurredAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
 )
 
@@ -43,6 +44,7 @@ data class BackupNoteLine(
     val label: String,
     val amountCents: Long,
     val sortOrder: Int,
+    val occurredAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
 )
 

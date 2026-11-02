@@ -1074,7 +1074,9 @@ fun HomeScreen(
             onDismissGoal = { stepsGoalId = null },
             goals = goals,
             goalActions = goalActions,
-            onAddAction = { goalId, title -> goalViewModel.addAction(goalId, title) },
+            onAddAction = { goalId, title, occurredAt ->
+                goalViewModel.addAction(goalId, title, occurredAt = occurredAt)
+            },
             onToggleAction = { action, completed ->
                 goalViewModel.setActionCompleted(action.id, completed)
             },

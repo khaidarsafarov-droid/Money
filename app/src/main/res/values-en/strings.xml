@@ -76,6 +76,7 @@
     <string name="note_body_label">Text</string>
     <string name="note_line_label">For</string>
     <string name="note_line_amount">Amount</string>
+    <string name="action_date_label">Date</string>
     <string name="note_add_line">Add line</string>
     <string name="note_total_amount">Total: %1$s</string>
     <string name="note_deleted">Deleted</string>

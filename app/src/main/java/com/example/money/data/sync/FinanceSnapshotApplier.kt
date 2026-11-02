@@ -521,6 +521,7 @@ class FinanceSnapshotApplier(
                 title = action.title,
                 completed = action.completed,
                 sortOrder = action.sortOrder,
+                occurredAt = action.occurredAt.takeIf { it > 0L } ?: action.syncUpdatedAt,
                 syncId = action.id,
                 updatedAt = action.syncUpdatedAt,
             )
@@ -590,6 +591,7 @@ class FinanceSnapshotApplier(
                 label = line.label,
                 amountCents = line.amountCents,
                 sortOrder = line.sortOrder,
+                occurredAt = line.occurredAt.takeIf { it > 0L } ?: line.syncUpdatedAt,
                 syncId = line.id,
                 updatedAt = line.syncUpdatedAt,
             )

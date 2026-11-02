@@ -30,7 +30,7 @@ internal fun HomeMotionOverlay(
     onDismissGoal: () -> Unit,
     goals: List<SavingsGoal>,
     goalActions: List<GoalAction>,
-    onAddAction: (Long, String) -> Unit,
+    onAddAction: (Long, String, Long) -> Unit,
     onToggleAction: (GoalAction, Boolean) -> Unit,
     onDeleteAction: (GoalAction) -> Unit,
 ) {
@@ -75,7 +75,7 @@ internal fun HomeMotionOverlay(
                 actions = goalActions.filter { it.goalId == shown.id },
                 hideAmounts = hideAmounts,
                 onDismiss = onDismissGoal,
-                onAddAction = { title -> onAddAction(shown.id, title) },
+                onAddAction = { title, occurredAt -> onAddAction(shown.id, title, occurredAt) },
                 onToggleAction = onToggleAction,
                 onDeleteAction = onDeleteAction,
             )

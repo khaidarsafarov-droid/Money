@@ -5,7 +5,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { formatMoney, parseMoneyInput } from "@/lib/money";
 import {
   createNote,
+  createNoteLine,
+  dateInputValue,
   loadNotes,
+  millisFromDateInput,
   noteTotalCents,
   saveNotes,
   type NoteKind,
@@ -158,13 +161,14 @@ function NoteEditor({
         </label>
       ) : (
         <div className="space-y-3 rounded-[24px] bg-surface-container-lowest p-4">
-          <div className="flex gap-2 text-sm text-on-surface-variant">
+          <div className="hidden gap-2 text-sm text-on-surface-variant sm:flex">
             <span className="min-w-0 flex-1">Строка</span>
-            <span className="w-24">Сумма (USD)</span>
+            <span className="w-24">Сумма</span>
+            <span className="w-36">Дата</span>
             <span className="w-12" />
           </div>
           {note.lines.map((line) => (
-            <div key={line.id} className="flex items-center gap-2">
+            <div key={line.id} className="flex flex-wrap items-center gap-2">
               <input
                 aria-label="Строка"
                 name="line-label"
@@ -179,7 +183,7 @@ function NoteEditor({
                   })
                 }
                 placeholder="Строка"
-                className="field-control min-w-0 flex-1"
+                className="field-control min-w-0 flex-1 basis-40"
               />
               <input
                 aria-label="Сумма"
@@ -199,6 +203,23 @@ function NoteEditor({
                 placeholder="0"
                 className="field-control w-24"
               />
+              <input
+                aria-label="Дата"
+                name="line-date"
+                type="date"
+                value={dateInputValue(line.occurredAt)}
+                onChange={(event) =>
+                  onChange({
+                    ...note,
+                    lines: note.lines.map((item) =>
+                      item.id === line.id
+                        ? { ...item, occurredAt: millisFromDateInput(event.target.value, item.occurredAt) }
+                        : item,
+                    ),
+                  })
+                }
+                className="field-control w-36"
+              />
               <button
                 type="button"
                 aria-label="Удалить строку"
@@ -215,7 +236,7 @@ function NoteEditor({
             onClick={() =>
               onChange({
                 ...note,
-                lines: [...note.lines, { id: crypto.randomUUID(), label: "", amountCents: 0 }],
+                lines: [...note.lines, createNoteLine()],
               })
             }
           >

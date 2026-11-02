@@ -32,7 +32,12 @@ interface GoalRepository {
 
     suspend fun commitStagedDeletes()
 
-    suspend fun addAction(goalId: Long, title: String, completed: Boolean = false): Long
+    suspend fun addAction(
+        goalId: Long,
+        title: String,
+        completed: Boolean = false,
+        occurredAt: Long = System.currentTimeMillis(),
+    ): Long
 
     suspend fun setActionCompleted(actionId: Long, completed: Boolean)
 

@@ -165,8 +165,13 @@ class NoteViewModel(
         hiddenLineIds.update { it - lineId }
     }
 
-    fun addLine(noteId: Long, label: String, amountCents: Long) {
-        viewModelScope.launch { noteRepository.addLine(noteId, label, amountCents) }
+    fun addLine(
+        noteId: Long,
+        label: String,
+        amountCents: Long,
+        occurredAt: Long = System.currentTimeMillis(),
+    ) {
+        viewModelScope.launch { noteRepository.addLine(noteId, label, amountCents, occurredAt) }
     }
 
     fun updateLine(line: FinanceNoteLine) {

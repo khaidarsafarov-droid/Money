@@ -32,6 +32,8 @@ data class FinanceNoteLineEntity(
     val amountCents: Long,
     @ColumnInfo(name = "sort_order")
     val sortOrder: Int = 0,
+    @ColumnInfo(name = "occurred_at", defaultValue = "0")
+    val occurredAt: Long = 0L,
     @ColumnInfo(name = "sync_id")
     val syncId: String = SyncIds.newId(),
     @ColumnInfo(name = "updated_at")

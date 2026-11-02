@@ -47,4 +47,5 @@ data class FinanceNoteLine(
     val label: String,
     val amountCents: Long,
     val sortOrder: Int = 0,
+    val occurredAt: Long = 0L,
 )

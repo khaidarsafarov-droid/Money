@@ -44,7 +44,7 @@ class AppHistoryTest {
             ),
         )
         val goal = SavingsGoal(id = 5, name = "Trip", targetAmountCents = 100, updatedAt = 1)
-        val note = GoalAction(id = 4, goalId = 5, title = "called the bank", completed = true)
+        val note = GoalAction(id = 4, goalId = 5, title = "called the bank", completed = true, occurredAt = 50)
 
         val rows = buildAppHistory(
             transfers = listOf(transfer),
@@ -54,6 +54,23 @@ class AppHistoryTest {
             goalActions = listOf(note),
         )
 
-        assertEquals(listOf("t-t1", "e-e1", "p-9", "d-id-3", "g-id-5", "n-4"), rows.map { it.key })
+        assertEquals(listOf("t-t1", "e-e1", "p-9", "n-4", "d-id-3", "g-id-5"), rows.map { it.key })
+    }
+
+    @Test
+    fun buildAppHistory_usesGoalActionDate() {
+        val goal = SavingsGoal(id = 5, name = "Trip", targetAmountCents = 100, updatedAt = 1)
+        val older = GoalAction(id = 1, goalId = 5, title = "old", occurredAt = 10)
+        val newer = GoalAction(id = 2, goalId = 5, title = "new", occurredAt = 400)
+
+        val rows = buildAppHistory(
+            transfers = emptyList(),
+            expenses = emptyList(),
+            debtors = emptyList(),
+            goals = listOf(goal),
+            goalActions = listOf(older, newer),
+        )
+
+        assertEquals(listOf("n-2", "n-1", "g-id-5"), rows.map { it.key })
     }
 }

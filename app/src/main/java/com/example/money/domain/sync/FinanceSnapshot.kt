@@ -82,6 +82,7 @@ data class SnapshotGoalAction(
     val title: String,
     val completed: Boolean,
     val sortOrder: Int,
+    val occurredAt: Long = 0L,
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
 ) : LwwRecord
@@ -119,6 +120,7 @@ data class SnapshotNoteLine(
     val label: String,
     val amountCents: Long,
     val sortOrder: Int,
+    val occurredAt: Long = 0L,
     override val syncUpdatedAt: Long,
     override val deleted: Boolean = false,
 ) : LwwRecord

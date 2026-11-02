@@ -39,6 +39,7 @@ import com.example.money.domain.model.GoalAction
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.util.GoalProgress
+import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.MoneyButton
 import com.example.money.ui.components.MoneyButtonPriority
 import com.example.money.ui.components.bringIntoViewOnFocus
@@ -51,7 +52,7 @@ fun GoalDetailOverlay(
     actions: List<GoalAction>,
     hideAmounts: Boolean,
     onDismiss: () -> Unit,
-    onAddAction: (String) -> Unit,
+    onAddAction: (String, Long) -> Unit,
     onToggleAction: (GoalAction, Boolean) -> Unit,
     onDeleteAction: (GoalAction) -> Unit,
 ) {
@@ -94,7 +95,7 @@ fun GoalActionsDialog(
     actions: List<GoalAction>,
     hideAmounts: Boolean,
     onDismiss: () -> Unit,
-    onAddAction: (String) -> Unit,
+    onAddAction: (String, Long) -> Unit,
     onToggleAction: (GoalAction, Boolean) -> Unit,
     onDeleteAction: (GoalAction) -> Unit,
 ) {
@@ -121,12 +122,13 @@ fun GoalActionsPanel(
     goal: SavingsGoal,
     actions: List<GoalAction>,
     hideAmounts: Boolean,
-    onAddAction: (String) -> Unit,
+    onAddAction: (String, Long) -> Unit,
     onToggleAction: (GoalAction, Boolean) -> Unit,
     onDeleteAction: (GoalAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var draft by remember(goal.id) { mutableStateOf("") }
+    var occurredAt by remember(goal.id) { mutableStateOf(System.currentTimeMillis()) }
     val done = actions.count { it.completed }
     val total = actions.size
     val fraction = if (total <= 0) 0f else done.toFloat() / total.toFloat()
@@ -187,11 +189,17 @@ fun GoalActionsPanel(
                     checked = action.completed,
                     onCheckedChange = { onToggleAction(action, it) },
                 )
-                Text(
-                    text = action.title,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = action.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = Formatters.date(action.occurredAt),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 IconButton(onClick = { onDeleteAction(action) }) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
@@ -209,13 +217,19 @@ fun GoalActionsPanel(
                 .fillMaxWidth()
                 .bringIntoViewOnFocus(),
         )
+        DatePickerField(
+            label = stringResource(R.string.action_date_label),
+            selectedDateMillis = occurredAt,
+            onDateSelected = { occurredAt = it },
+        )
         MoneyButton(
             text = stringResource(R.string.goal_action_add),
             onClick = {
                 val title = draft.trim()
                 if (title.isEmpty()) return@MoneyButton
-                onAddAction(title)
+                onAddAction(title, occurredAt)
                 draft = ""
+                occurredAt = System.currentTimeMillis()
             },
             priority = MoneyButtonPriority.Primary,
             modifier = Modifier.fillMaxWidth(),

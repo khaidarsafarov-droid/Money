@@ -11,7 +11,12 @@ interface NoteRepository {
     suspend fun addNote(title: String, kind: NoteKind): Long
     suspend fun updateNote(note: FinanceNote)
     suspend fun deleteNote(id: Long)
-    suspend fun addLine(noteId: Long, label: String, amountCents: Long)
+    suspend fun addLine(
+        noteId: Long,
+        label: String,
+        amountCents: Long,
+        occurredAt: Long = System.currentTimeMillis(),
+    )
     suspend fun updateLine(line: FinanceNoteLine)
     suspend fun deleteLine(noteId: Long, lineId: Long)
 }

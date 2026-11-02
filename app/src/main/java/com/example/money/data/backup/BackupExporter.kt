@@ -89,6 +89,7 @@ class BackupExporter(
                         title = action.title,
                         completed = action.completed,
                         sortOrder = action.sortOrder,
+                        occurredAtEpochMillis = action.occurredAt,
                         updatedAtEpochMillis = action.updatedAt,
                     )
                 },
@@ -116,6 +117,7 @@ class BackupExporter(
                         label = line.label,
                         amountCents = line.amountCents,
                         sortOrder = line.sortOrder,
+                        occurredAtEpochMillis = line.occurredAt,
                         updatedAtEpochMillis = line.updatedAt,
                     )
                 },

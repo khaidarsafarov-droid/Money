@@ -434,6 +434,7 @@ class BackupBundleCodec(
             put(KEY_TITLE, action.title)
             put(KEY_COMPLETED, action.completed)
             put(KEY_SORT_ORDER, action.sortOrder)
+            put(KEY_OCCURRED_AT, action.occurredAtEpochMillis)
             put(KEY_UPDATED_AT, action.updatedAtEpochMillis)
         }
 
@@ -457,6 +458,7 @@ class BackupBundleCodec(
             put(KEY_LABEL, line.label)
             put(KEY_AMOUNT_CENTS, line.amountCents)
             put(KEY_SORT_ORDER, line.sortOrder)
+            put(KEY_OCCURRED_AT, line.occurredAtEpochMillis)
             put(KEY_UPDATED_AT, line.updatedAtEpochMillis)
         }
 
@@ -699,6 +701,7 @@ class BackupBundleCodec(
             title = json.getString(KEY_TITLE),
             completed = json.getBoolean(KEY_COMPLETED),
             sortOrder = json.getInt(KEY_SORT_ORDER),
+            occurredAtEpochMillis = json.optionalLong(KEY_OCCURRED_AT) ?: json.getLong(KEY_UPDATED_AT),
             updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
         )
 
@@ -722,6 +725,7 @@ class BackupBundleCodec(
             label = json.getString(KEY_LABEL),
             amountCents = json.getLong(KEY_AMOUNT_CENTS),
             sortOrder = json.getInt(KEY_SORT_ORDER),
+            occurredAtEpochMillis = json.optionalLong(KEY_OCCURRED_AT) ?: json.getLong(KEY_UPDATED_AT),
             updatedAtEpochMillis = json.getLong(KEY_UPDATED_AT),
         )
 
@@ -1089,6 +1093,7 @@ class BackupBundleCodec(
         private const val KEY_CURRENT_AMOUNT_CENTS = "currentAmountCents"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_UPDATED_AT = "updatedAtEpochMillis"
+        private const val KEY_OCCURRED_AT = "occurredAtEpochMillis"
         private const val KEY_DEADLINE = "deadlineEpochMillis"
         private const val KEY_STATUS = "status"
         private const val KEY_DEBT_TYPE = "debtType"
