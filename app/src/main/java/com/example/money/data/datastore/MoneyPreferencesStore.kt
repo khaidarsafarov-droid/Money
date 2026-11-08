@@ -46,6 +46,7 @@ import com.example.money.voice.VoiceLanguage
 import com.example.money.voice.VoiceReportSettings
 import com.example.money.widget.WidgetGoalSnapshot
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
@@ -213,7 +214,7 @@ class MoneyPreferencesStore(
             CurrencyRegion.fromCode(
                 prefs[MoneyPreferenceKeys.CURRENCY_REGION] ?: CurrencyRegion.US.name,
             )
-        }
+        }.distinctUntilChanged()
 
     suspend fun writeWidgetSnapshot(snapshot: WidgetGoalSnapshot) {
         context.moneyPreferencesDataStore.edit { prefs ->
@@ -527,7 +528,7 @@ class MoneyPreferencesStore(
     val peerSyncEnabled: Flow<Boolean> =
         context.moneyPreferencesDataStore.data.map { prefs ->
             prefs[MoneyPreferenceKeys.PEER_SYNC_ENABLED] == true
-        }
+        }.distinctUntilChanged()
 
     suspend fun setPeerSyncEnabled(enabled: Boolean) {
         context.moneyPreferencesDataStore.edit { prefs ->
@@ -547,7 +548,9 @@ class MoneyPreferencesStore(
     }
 
     val privacySettings: Flow<PrivacySettings> =
-        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toPrivacySettings() }
+        context.moneyPreferencesDataStore.data
+            .map { prefs -> prefs.toPrivacySettings() }
+            .distinctUntilChanged()
 
     suspend fun updatePrivacySettings(transform: (PrivacySettings) -> PrivacySettings) {
         context.moneyPreferencesDataStore.edit { prefs ->
@@ -674,7 +677,9 @@ class MoneyPreferencesStore(
     }
 
     val personalBranchSettings: Flow<PersonalBranchSettings> =
-        context.moneyPreferencesDataStore.data.map { prefs -> prefs.toPersonalBranchSettings() }
+        context.moneyPreferencesDataStore.data
+            .map { prefs -> prefs.toPersonalBranchSettings() }
+            .distinctUntilChanged()
 
     suspend fun updatePersonalBranchSettings(transform: (PersonalBranchSettings) -> PersonalBranchSettings) {
         context.moneyPreferencesDataStore.edit { prefs ->
