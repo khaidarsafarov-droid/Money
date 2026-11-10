@@ -33,6 +33,7 @@ interface FinanceCardShellProps {
   paidLabel: string;
   overdue?: boolean;
   hideAmounts?: boolean;
+  onOpen?: (item: FinancialItem) => void;
   onDelete?: (item: FinancialItem) => void;
   action?: ReactNode;
   meta?: ReactNode;
@@ -48,6 +49,7 @@ export function FinanceCardShell({
   paidLabel,
   overdue = false,
   hideAmounts = false,
+  onOpen,
   onDelete,
   action,
   meta,
@@ -91,7 +93,17 @@ export function FinanceCardShell({
               {overdue ? "Просрочен" : statusLabels[item.status]}
             </span>
           </div>
-          <h3 className="truncate text-heading">{item.name}</h3>
+          {onOpen ? (
+            <button
+              type="button"
+              onClick={() => onOpen(item)}
+              className="block w-full truncate text-left text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              {item.name}
+            </button>
+          ) : (
+            <h3 className="truncate text-heading">{item.name}</h3>
+          )}
           {taskGoal ? (
             <p className="text-sm text-on-surface-variant">
               {english ? "Tasks, no money target" : "Задачи без денежной цели"}

@@ -38,6 +38,7 @@ import com.example.money.ui.util.systemMotionEnabled
 import com.example.money.ui.clients.ClientDetailScreen
 import com.example.money.ui.clients.ClientEditorScreen
 import com.example.money.ui.clients.ClientListScreen
+import com.example.money.ui.goal.GoalDetailScreen
 import com.example.money.ui.goal.GoalScreen
 import com.example.money.ui.home.HomeLaunchConfig
 import com.example.money.ui.home.HomeScreen
@@ -192,7 +193,19 @@ fun MoneyNavHost(
                 onOpenSyncSettings = { navController.navigate(AppRoutes.SYNC_SETTINGS) },
                 onOpenGoalHub = { navController.navigate(AppRoutes.GOAL_HUB) },
                 onOpenClients = { navController.navigate(AppRoutes.CLIENTS) },
+                onOpenGoalDetail = { id -> navController.navigate(AppRoutes.goalDetail(id)) },
             )
+        }
+        composable(AppRoutes.GOAL_DETAIL) { entry ->
+            val goalId = entry.arguments?.getString("goalId")?.toLongOrNull()
+            if (goalId == null) {
+                navController.popBackStack()
+            } else {
+                GoalDetailScreen(
+                    goalId = goalId,
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
         composable(AppRoutes.GOAL_HUB) {
             GoalScreen(

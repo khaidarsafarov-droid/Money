@@ -9,6 +9,7 @@ interface FinanceCardProps {
   onAddAdvance?: (amountCents: number, givenAt: string, note: string) => void;
   onRecordPayment?: (amountCents: number, paidAt: string) => void;
   showHistory?: boolean;
+  onOpenGoal?: (item: FinancialItem) => void;
   onGoalTransfer?: (item: FinancialItem) => void;
   onGoalExpense?: () => void;
   onDelete?: (item: FinancialItem) => void;
@@ -21,6 +22,7 @@ export function FinanceCard({
   onAddAdvance,
   onRecordPayment,
   showHistory = false,
+  onOpenGoal,
   onGoalTransfer,
   onGoalExpense,
   onDelete,
@@ -42,6 +44,7 @@ export function FinanceCard({
     <GoalCard
       item={item}
       hideAmounts={hideAmounts}
+      onOpen={onOpenGoal}
       onTransfer={onGoalTransfer}
       onExpense={onGoalExpense}
       onDelete={onDelete}

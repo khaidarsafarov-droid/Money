@@ -36,7 +36,6 @@ import com.example.money.ui.debtors.DebtorFormDialog
 import com.example.money.ui.debtors.DebtorsViewModel
 import com.example.money.ui.debtors.AdvisorChatMessage
 import com.example.money.ui.debtors.IncomeIdeasDialog
-import com.example.money.ui.goal.GoalActionsDialog
 import com.example.money.ui.goal.GoalFormDialog
 import com.example.money.ui.goal.GoalProgressLogDialog
 import com.example.money.ui.goal.GoalViewModel
