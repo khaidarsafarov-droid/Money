@@ -13,7 +13,9 @@ import { useCallback, useState } from "react";
 import { personalizedGreeting } from "@money/shared";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { FinanceCard } from "@/components/cards/FinanceCard";
+import { GoalDetailPage } from "@/components/goals/GoalDetailPage";
 import { GoalSectionSummary } from "@/components/cards/GoalSectionSummary";
+import { findOpenGoal } from "@/lib/goalDetail";
 import { NotesPanel } from "@/components/notes/NotesPanel";
 import { AmountModal } from "@/components/modals/AmountModal";
 import { ConfirmDeleteModal } from "@/components/modals/ConfirmDeleteModal";
@@ -56,6 +58,7 @@ export function DashboardPage() {
   const [recordQuery, setRecordQuery] = useState("");
   const [showAdvisor, setShowAdvisor] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  const [openGoalId, setOpenGoalId] = useState<string | null>(null);
 
   const hideAmounts = psychology.privacy.hideAmounts;
   const money = useCallback(
@@ -113,6 +116,15 @@ export function DashboardPage() {
       : 0;
   const selectedRecord =
     listedItems.find((item) => item.id === selectedRecordId) ?? listedItems[0] ?? null;
+  const openGoal = findOpenGoal(finance.state.items, openGoalId);
+  const openGoalPage = (item: FinancialItem) => {
+    setOpenGoalId(item.id);
+    setTab("goals");
+  };
+  const changeTab = (next: AppTab) => {
+    setOpenGoalId(null);
+    setTab(next);
+  };
   const debtRemainingCents = activeDebts.reduce((sum, debt) => sum + remainingAmount(debt), 0);
   const ringCaption = "Цели";
 
@@ -121,19 +133,29 @@ export function DashboardPage() {
     <div className="mx-auto flex min-h-dvh w-full min-[600px]:max-w-[1104px]">
     <AppSideRail
       tab={tab}
-      onTabChange={setTab}
+      onTabChange={changeTab}
       actions={[
-        { label: "Новая цель", icon: Target, onClick: () => { setTab("goals"); setShowAddGoal(true); } },
-        { label: "Новый долг", icon: HandCoins, onClick: () => { setTab("debts"); setShowAddDebt(true); } },
-        { label: "Новая заметка", icon: Sparkles, onClick: () => setTab("notes") },
+        { label: "Новая цель", icon: Target, onClick: () => { changeTab("goals"); setShowAddGoal(true); } },
+        { label: "Новый долг", icon: HandCoins, onClick: () => { changeTab("debts"); setShowAddDebt(true); } },
+        { label: "Новая заметка", icon: Sparkles, onClick: () => changeTab("notes") },
       ]}
     />
     <div className="mx-auto min-h-dvh w-full max-w-md px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-6 min-[600px]:max-w-[840px] min-[600px]:pb-10">
-      {tab === "more" ? (
+      {openGoal ? (
+        <GoalDetailPage
+          item={openGoal}
+          transactions={finance.transactions}
+          hideAmounts={hideAmounts}
+          onBack={() => setOpenGoalId(null)}
+          onTransfer={() => setTransferGoal(openGoal)}
+          onExpense={() => setExpenseGoal(openGoal)}
+          onDelete={() => setPendingDelete(openGoal)}
+        />
+      ) : tab === "more" ? (
         <section className="space-y-4">
           <button
             type="button"
-            onClick={() => setTab("home")}
+            onClick={() => changeTab("home")}
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
           >
             <AppIcon icon={ArrowLeft} size={16} className="text-primary" />
@@ -186,7 +208,7 @@ export function DashboardPage() {
             <button
               type="button"
               aria-label="Настройки"
-              onClick={() => setTab("more")}
+              onClick={() => changeTab("more")}
               className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgb(15_110_92_/_0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <AppIcon icon={Settings} size={18} className="text-primary" />
@@ -244,6 +266,7 @@ export function DashboardPage() {
                     items={homeGoals}
                     hideAmounts={hideAmounts}
                     onOpen={() => setTab("goals")}
+                    onOpenGoal={openGoalPage}
                     onAddPayment={openPayment}
                     onGoalTransfer={setTransferGoal}
                     onGoalExpense={(item) => setExpenseGoal(item)}
@@ -344,6 +367,7 @@ export function DashboardPage() {
                             showToast(result.ok ? "Операция сохранена" : (result.error ?? "Не удалось применить платёж"));
                           }}
                           showHistory={item.type === "DEBT"}
+                          onOpenGoal={openGoalPage}
                           onGoalTransfer={setTransferGoal}
                           onGoalExpense={() => setExpenseGoal(item)}
                           onDelete={setPendingDelete}
@@ -388,6 +412,7 @@ export function DashboardPage() {
                           const result = finance.recordDebtPayment(selectedRecord.id, amountCents, paidAt);
                           showToast(result.ok ? "Операция сохранена" : (result.error ?? "Не удалось применить платёж"));
                         }}
+                        onOpenGoal={openGoalPage}
                         onGoalTransfer={setTransferGoal}
                         onGoalExpense={() => setExpenseGoal(selectedRecord)}
                         onDelete={setPendingDelete}
@@ -477,6 +502,7 @@ export function DashboardPage() {
         onConfirm={() => {
           if (pendingDelete) {
             finance.removeItem(pendingDelete.id);
+            if (openGoalId === pendingDelete.id) setOpenGoalId(null);
             showToast("Запись удалена", "info");
           }
         }}
@@ -487,11 +513,11 @@ export function DashboardPage() {
 
     <AppTabBar
         tab={tab}
-        onTabChange={setTab}
+        onTabChange={changeTab}
         actions={[
-          { label: "Новая цель", icon: Target, onClick: () => { setTab("goals"); setShowAddGoal(true); } },
-          { label: "Новый долг", icon: HandCoins, onClick: () => { setTab("debts"); setShowAddDebt(true); } },
-          { label: "Новая заметка", icon: Sparkles, onClick: () => setTab("notes") },
+          { label: "Новая цель", icon: Target, onClick: () => { changeTab("goals"); setShowAddGoal(true); } },
+          { label: "Новый долг", icon: HandCoins, onClick: () => { changeTab("debts"); setShowAddDebt(true); } },
+          { label: "Новая заметка", icon: Sparkles, onClick: () => changeTab("notes") },
         ]}
       />
     </>
@@ -503,6 +529,7 @@ function PreviewList({
   items,
   hideAmounts,
   onOpen,
+  onOpenGoal,
   onAddPayment,
   onGoalTransfer,
   onGoalExpense,
@@ -512,6 +539,7 @@ function PreviewList({
   items: FinancialItem[];
   hideAmounts: boolean;
   onOpen: () => void;
+  onOpenGoal?: (item: FinancialItem) => void;
   onAddPayment: (item: FinancialItem, prefillCents?: number) => void;
   onGoalTransfer: (item: FinancialItem) => void;
   onGoalExpense: (item: FinancialItem) => void;
@@ -533,6 +561,7 @@ function PreviewList({
             item={item}
             hideAmounts={hideAmounts}
             onAddPayment={onAddPayment}
+            onOpenGoal={onOpenGoal}
             onGoalTransfer={onGoalTransfer}
             onGoalExpense={() => onGoalExpense(item)}
             onDelete={onDelete}

@@ -155,6 +155,7 @@ fun HomeScreen(
     onOpenSyncSettings: () -> Unit = {},
     onOpenGoalHub: () -> Unit = {},
     onOpenClients: () -> Unit = {},
+    onOpenGoalDetail: (Long) -> Unit = {},
     onLaunchConfigConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -256,8 +257,6 @@ fun HomeScreen(
     var progressLogGoal by progressLogGoalState
     val editGoalState = remember { mutableStateOf<SavingsGoal?>(null) }
     var editGoal by editGoalState
-    val stepsGoalIdState = remember { mutableStateOf<Long?>(null) }
-    var stepsGoalId by stepsGoalIdState
     val showAddSheetState = remember { mutableStateOf(false) }
     var showAddSheet by showAddSheetState
     var showDebtAddMenu by remember { mutableStateOf(false) }
@@ -816,7 +815,7 @@ fun HomeScreen(
                 planProgressPercent = goalProgressPercent,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
-                onOpenGoal = { stepsGoalId = it.id },
+                onOpenGoal = { onOpenGoalDetail(it.id) },
                 onDeleteGoal = ::deleteGoalWithUndo,
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onLogGoal = { progressLogGoal = it },
@@ -942,7 +941,7 @@ fun HomeScreen(
                 highlightedDebtorId = highlightedDebtorId,
                 onAddGoal = { showAddGoalDialog = true },
                 onEditGoal = { editGoal = it },
-                onOpenGoal = { stepsGoalId = it.id },
+                onOpenGoal = { onOpenGoalDetail(it.id) },
                 onDeleteGoal = ::deleteGoalWithUndo,
                 onGoalTransfer = { showGoalTransferDialog = it },
                 onLogGoal = { progressLogGoal = it },
@@ -1070,17 +1069,6 @@ fun HomeScreen(
                     showMessage(if (ok) paymentNeutralMessage else paymentFailedMessage)
                 }
             },
-            stepsGoalId = stepsGoalId,
-            onDismissGoal = { stepsGoalId = null },
-            goals = goals,
-            goalActions = goalActions,
-            onAddAction = { goalId, title, occurredAt ->
-                goalViewModel.addAction(goalId, title, occurredAt = occurredAt)
-            },
-            onToggleAction = { action, completed ->
-                goalViewModel.setActionCompleted(action.id, completed)
-            },
-            onDeleteAction = { action -> goalViewModel.deleteAction(action.id) },
         )
         if (showDebtAddMenu) {
             DebtAddMenuSheet(

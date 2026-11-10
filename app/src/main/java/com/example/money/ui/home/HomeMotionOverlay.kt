@@ -12,10 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.money.domain.model.Debtor
-import com.example.money.domain.model.GoalAction
-import com.example.money.domain.model.SavingsGoal
 import com.example.money.ui.debtors.DebtHistorySheet
-import com.example.money.ui.goal.GoalDetailOverlay
 import com.example.money.ui.motion.LocalMoneyVisibility
 import com.example.money.ui.theme.MoneyMotion
 
@@ -26,13 +23,6 @@ internal fun HomeMotionOverlay(
     hideAmounts: Boolean,
     onAddAdvance: (Debtor, Long, Long, String) -> Unit,
     onAddPayment: (Debtor, Long, Long) -> Unit,
-    stepsGoalId: Long?,
-    onDismissGoal: () -> Unit,
-    goals: List<SavingsGoal>,
-    goalActions: List<GoalAction>,
-    onAddAction: (Long, String, Long) -> Unit,
-    onToggleAction: (GoalAction, Boolean) -> Unit,
-    onDeleteAction: (GoalAction) -> Unit,
 ) {
     val selected = historyDebtorState.value
     var lastDebt by remember { mutableStateOf(selected) }
@@ -56,28 +46,6 @@ internal fun HomeMotionOverlay(
                     onAddPayment(current, amountCents, paidAt)
                 },
                 inWindow = true,
-            )
-        }
-    }
-
-    val goal = goals.find { it.id == stepsGoalId }
-    var lastGoal by remember { mutableStateOf(goal) }
-    if (goal != null) lastGoal = goal
-    AnimatedVisibility(
-        visible = goal != null,
-        enter = EnterTransition.None,
-        exit = fadeOut(tween(MoneyMotion.fadeOut)),
-    ) {
-        CompositionLocalProvider(LocalMoneyVisibility provides this) {
-            val shown = lastGoal ?: return@CompositionLocalProvider
-            GoalDetailOverlay(
-                goal = goals.find { it.id == shown.id } ?: shown,
-                actions = goalActions.filter { it.goalId == shown.id },
-                hideAmounts = hideAmounts,
-                onDismiss = onDismissGoal,
-                onAddAction = { title, occurredAt -> onAddAction(shown.id, title, occurredAt) },
-                onToggleAction = onToggleAction,
-                onDeleteAction = onDeleteAction,
             )
         }
     }

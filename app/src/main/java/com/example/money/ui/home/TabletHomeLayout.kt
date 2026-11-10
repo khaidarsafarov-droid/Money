@@ -481,7 +481,10 @@ fun TabletHomeLayout(
                                     },
                                     selected = selection is HomeListSelection.GoalItem &&
                                         selection.goal.id == goal.id,
-                                    onClick = { onSelectionChange(HomeListSelection.GoalItem(goal)) },
+                                    onClick = {
+                                        onSelectionChange(HomeListSelection.GoalItem(goal))
+                                        onOpenGoal(goal)
+                                    },
                                     modifier = Modifier.padding(vertical = 4.dp),
                                 )
                             }

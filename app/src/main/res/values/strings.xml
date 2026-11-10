@@ -293,6 +293,7 @@
     <string name="goal_over_achieved">Перевыполнение: +%1$s</string>
     <string name="goal_add_confirm">Добавить</string>
     <string name="goal_saved_progress">Накоплено %1$s из %2$s</string>
+    <string name="goal_missing">Цель не найдена</string>
     <string name="msg_goal_added">Цель добавлена</string>
     <string name="msg_goal_deleted">Цель удалена</string>
     <string name="empty_goals_title">Нет целей</string>

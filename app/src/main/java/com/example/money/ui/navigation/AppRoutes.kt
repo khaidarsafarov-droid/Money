@@ -16,8 +16,11 @@ object AppRoutes {
     const val CLIENT_NEW = "clients/new"
     const val CLIENT_EDIT = "clients/{clientId}/edit"
     const val CLIENT_DETAIL = "clients/{clientId}"
+    const val GOAL_DETAIL = "goals/{goalId}"
 
     fun clientDetail(id: Long): String = "clients/$id"
 
     fun clientEdit(id: Long): String = "clients/$id/edit"
+
+    fun goalDetail(id: Long): String = "goals/$id"
 }

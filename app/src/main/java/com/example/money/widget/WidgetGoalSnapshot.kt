@@ -1,6 +1,8 @@
 package com.example.money.widget
 
 import com.example.money.settings.CurrencyRegion
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** Снимок целей и долгов для Glance-виджета. Только локальные данные телефона. */
 data class WidgetGoalSnapshot(
@@ -34,6 +36,11 @@ data class WidgetGoalSnapshot(
 ) {
     val hasFeaturedGoal: Boolean
         get() = featuredGoalName.isNotBlank() || featuredGoalTargetCents > 0L
+
+    /** Совпадает по показанным данным. [updatedAt] в сравнение не входит. */
+    fun contentEquals(other: WidgetGoalSnapshot): Boolean =
+        copy(updatedAt = other.updatedAt) == other
+
     companion object {
         val Empty = WidgetGoalSnapshot(
             currentAmount = 0.0,
@@ -47,3 +54,7 @@ data class WidgetGoalSnapshot(
         )
     }
 }
+
+/** Пропускает повторный штамп времени, если суммы и подписи виджета не менялись. */
+internal fun Flow<WidgetGoalSnapshot>.distinctWidgetContent(): Flow<WidgetGoalSnapshot> =
+    distinctUntilChanged(WidgetGoalSnapshot::contentEquals)
