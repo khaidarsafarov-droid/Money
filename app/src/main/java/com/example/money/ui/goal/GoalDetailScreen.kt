@@ -247,7 +247,9 @@ fun GoalDetailScreen(
                             goal = goal,
                             actions = actions.filter { it.goalId == goal.id },
                             hideAmounts = hideAmounts,
-                            onAddAction = { title -> goalViewModel.addAction(goal.id, title) },
+                            onAddAction = { title, occurredAt ->
+                                goalViewModel.addAction(goal.id, title, occurredAt = occurredAt)
+                            },
                             onToggleAction = { action, completed ->
                                 goalViewModel.setActionCompleted(action.id, completed)
                             },
@@ -318,7 +320,7 @@ fun GoalDetailScreen(
             onSave = { amount, note, date ->
                 fun saveNote() {
                     if (note.isNotBlank()) {
-                        goalViewModel.addAction(goal.id, note, completed = true)
+                        goalViewModel.addAction(goal.id, note, completed = true, occurredAt = date)
                     }
                     showLog = false
                     showMessage(context.getString(R.string.goal_log_saved))

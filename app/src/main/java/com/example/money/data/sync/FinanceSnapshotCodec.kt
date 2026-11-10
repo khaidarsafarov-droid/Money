@@ -728,6 +728,7 @@ object FinanceSnapshotCodec {
             title = entity.title,
             completed = entity.completed,
             sortOrder = entity.sortOrder,
+            occurredAt = entity.occurredAt,
             syncUpdatedAt = entity.updatedAt,
         )
 
@@ -766,6 +767,7 @@ object FinanceSnapshotCodec {
             label = entity.label,
             amountCents = entity.amountCents,
             sortOrder = entity.sortOrder,
+            occurredAt = entity.occurredAt,
             syncUpdatedAt = entity.updatedAt,
         )
 
@@ -785,6 +787,7 @@ object FinanceSnapshotCodec {
             put("title", action.title)
             put("completed", action.completed)
             put("sortOrder", action.sortOrder)
+            put("occurredAt", action.occurredAt)
             put("syncUpdatedAt", action.syncUpdatedAt)
             put("deleted", action.deleted)
         }
@@ -810,6 +813,7 @@ object FinanceSnapshotCodec {
             put("label", line.label)
             put("amountCents", line.amountCents)
             put("sortOrder", line.sortOrder)
+            put("occurredAt", line.occurredAt)
             put("syncUpdatedAt", line.syncUpdatedAt)
             put("deleted", line.deleted)
         }
@@ -825,6 +829,7 @@ object FinanceSnapshotCodec {
                         title = item.getString("title"),
                         completed = item.optBoolean("completed", false),
                         sortOrder = item.optInt("sortOrder", 0),
+                        occurredAt = item.optLong("occurredAt", item.getLong("syncUpdatedAt")),
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
                     ),
@@ -864,6 +869,7 @@ object FinanceSnapshotCodec {
                         label = item.getString("label"),
                         amountCents = item.getLong("amountCents"),
                         sortOrder = item.optInt("sortOrder", 0),
+                        occurredAt = item.optLong("occurredAt", item.getLong("syncUpdatedAt")),
                         syncUpdatedAt = item.getLong("syncUpdatedAt"),
                         deleted = item.optBoolean("deleted", false),
                     ),

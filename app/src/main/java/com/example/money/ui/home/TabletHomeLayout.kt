@@ -145,7 +145,7 @@ fun TabletHomeLayout(
     onSetMark: (FinanceNote, NoteMark) -> Unit = { _, _ -> },
     onSetClosed: (FinanceNote, Boolean) -> Unit = { _, _ -> },
     onDeleteNote: (Long) -> Unit = {},
-    onAddLine: (Long, String, Long) -> Unit = { _, _, _ -> },
+    onAddLine: (Long, String, Long, Long) -> Unit = { _, _, _, _ -> },
     onUpdateLine: (FinanceNoteLine) -> Unit = {},
     onDeleteLine: (Long, Long) -> Unit = { _, _ -> },
     onNoteTitleChange: (FinanceNote, String) -> Unit = { _, _ -> },

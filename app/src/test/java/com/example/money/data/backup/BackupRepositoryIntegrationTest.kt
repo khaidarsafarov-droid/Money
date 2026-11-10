@@ -191,6 +191,7 @@ class BackupRepositoryIntegrationTest {
                 title = "Call the bank",
                 completed = true,
                 sortOrder = 1,
+                occurredAt = 11L,
                 syncId = "action-sync",
                 updatedAt = 11L,
             ),
@@ -211,6 +212,7 @@ class BackupRepositoryIntegrationTest {
                 label = "Oil",
                 amountCents = 30_000L,
                 sortOrder = 0,
+                occurredAt = 22L,
                 syncId = "line-sync",
                 updatedAt = 22L,
             ),
@@ -236,12 +238,14 @@ class BackupRepositoryIntegrationTest {
         assertTrue(action.completed)
         assertEquals(goal.id, action.goalId)
         assertEquals("action-sync", action.syncId)
+        assertEquals(11L, action.occurredAt)
         val note = database.financeNoteDao().getAllNotesOnce().single()
         assertEquals("House expenses", note.title)
         assertEquals("PAID", note.mark)
         val line = database.financeNoteDao().getAllLinesOnce().single()
         assertEquals("Oil", line.label)
         assertEquals(30_000L, line.amountCents)
+        assertEquals(22L, line.occurredAt)
         assertEquals(note.id, line.noteId)
     }
 

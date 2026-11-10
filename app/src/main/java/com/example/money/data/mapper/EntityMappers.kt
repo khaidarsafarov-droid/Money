@@ -199,6 +199,7 @@ fun GoalActionEntity.toDomain(): GoalAction = GoalAction(
     title = title,
     completed = completed,
     sortOrder = sortOrder,
+    occurredAt = occurredAt,
 )
 
 /** Конвертация legacy double amount в cents при добавлении долга из UI. */

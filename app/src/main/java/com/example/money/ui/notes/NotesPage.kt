@@ -44,6 +44,7 @@ import com.example.money.domain.model.NoteKind
 import com.example.money.domain.model.NoteMark
 import com.example.money.domain.util.NoteCalculator
 import com.example.money.ui.components.centsToInput
+import com.example.money.ui.components.DatePickerField
 import com.example.money.ui.components.EmptyIllustration
 import com.example.money.ui.components.EmptyStateMessage
 import com.example.money.ui.components.MoneyButton
@@ -117,7 +118,7 @@ fun NotesPage(
     onSetMark: (FinanceNote, NoteMark) -> Unit,
     onSetClosed: (FinanceNote, Boolean) -> Unit,
     onDeleteNote: (Long) -> Unit,
-    onAddLine: (Long, String, Long) -> Unit,
+    onAddLine: (Long, String, Long, Long) -> Unit,
     onUpdateLine: (FinanceNoteLine) -> Unit,
     onDeleteLine: (Long, Long) -> Unit,
     hideAmounts: Boolean = false,
@@ -151,7 +152,7 @@ fun NotesPage(
                 onDeleteNote(openNote.id)
                 onCloseNote()
             },
-            onAddLine = { label, cents -> onAddLine(openNote.id, label, cents) },
+            onAddLine = { label, cents, occurredAt -> onAddLine(openNote.id, label, cents, occurredAt) },
             onUpdateLine = onUpdateLine,
             onDeleteLine = { lineId -> onDeleteLine(openNote.id, lineId) },
             onNoteTitleChange = { title -> onNoteTitleChange(openNote, title) },
@@ -248,7 +249,7 @@ private fun NoteEditor(
     onSetMark: (NoteMark) -> Unit,
     onSetClosed: (Boolean) -> Unit,
     onDeleteNote: () -> Unit,
-    onAddLine: (String, Long) -> Unit,
+    onAddLine: (String, Long, Long) -> Unit,
     onUpdateLine: (FinanceNoteLine) -> Unit,
     onDeleteLine: (Long) -> Unit,
     hideAmounts: Boolean = false,
@@ -364,7 +365,7 @@ private fun FinancialNoteBody(
     note: FinanceNote,
     lines: List<FinanceNoteLine>,
     onSetMark: (NoteMark) -> Unit,
-    onAddLine: (String, Long) -> Unit,
+    onAddLine: (String, Long, Long) -> Unit,
     onUpdateLine: (FinanceNoteLine) -> Unit,
     hideAmounts: Boolean = false,
     onDeleteLine: (Long) -> Unit,
@@ -372,6 +373,7 @@ private fun FinancialNoteBody(
 ) {
     var label by remember(note.id) { mutableStateOf("") }
     var amountText by remember(note.id) { mutableStateOf("") }
+    var occurredAt by remember(note.id) { mutableStateOf(System.currentTimeMillis()) }
     var editing by remember(note.id) { mutableStateOf<FinanceNoteLine?>(null) }
     val total = NoteCalculator.totalCents(lines)
     val totalColor = markColor(note.mark)
@@ -384,8 +386,15 @@ private fun FinancialNoteBody(
                     initialLabel = line.label,
                     initialAmountCents = line.amountCents,
                     onCancel = { editing = null },
-                    onSave = { nextLabel, cents ->
-                        onUpdateLine(line.copy(label = nextLabel, amountCents = cents))
+                    initialOccurredAt = line.occurredAt,
+                    onSave = { nextLabel, cents, nextOccurredAt ->
+                        onUpdateLine(
+                            line.copy(
+                                label = nextLabel,
+                                amountCents = cents,
+                                occurredAt = nextOccurredAt,
+                            ),
+                        )
                         editing = null
                     },
                 )
@@ -397,6 +406,11 @@ private fun FinancialNoteBody(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = line.label, fontWeight = FontWeight.Medium)
                         Text(text = Formatters.currencyFromCents(line.amountCents, hide = hideAmounts))
+                        Text(
+                            text = Formatters.date(line.occurredAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                     IconButton(onClick = { editing = line }) {
                         Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.note_edit_line))
@@ -463,15 +477,21 @@ private fun FinancialNoteBody(
         onValueChange = { amountText = it },
         label = stringResource(R.string.note_line_amount),
     )
+    DatePickerField(
+        label = stringResource(R.string.action_date_label),
+        selectedDateMillis = occurredAt,
+        onDateSelected = { occurredAt = it },
+    )
     MoneyButton(
         text = stringResource(R.string.note_add_line),
         onClick = {
             val amountCents = InputValidators.parseAmount(amountText) ?: return@MoneyButton
             if (label.isBlank()) return@MoneyButton
             onTitleCommit()
-            onAddLine(label.trim(), amountCents)
+            onAddLine(label.trim(), amountCents, occurredAt)
             label = ""
             amountText = ""
+            occurredAt = System.currentTimeMillis()
         },
     )
 }
@@ -481,13 +501,15 @@ private fun LineEditor(
     lineId: Long,
     initialLabel: String,
     initialAmountCents: Long,
+    initialOccurredAt: Long,
     onCancel: () -> Unit,
-    onSave: (String, Long) -> Unit,
+    onSave: (String, Long, Long) -> Unit,
 ) {
     var label by remember(lineId) { mutableStateOf(initialLabel) }
     var amountText by remember(lineId) {
         mutableStateOf(centsToInput(initialAmountCents))
     }
+    var occurredAt by remember(lineId) { mutableStateOf(initialOccurredAt) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = label,
@@ -503,12 +525,17 @@ private fun LineEditor(
             onValueChange = { amountText = it },
             label = stringResource(R.string.note_line_amount),
         )
+        DatePickerField(
+            label = stringResource(R.string.action_date_label),
+            selectedDateMillis = occurredAt,
+            onDateSelected = { occurredAt = it },
+        )
         Row {
             TextButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
             TextButton(onClick = {
                 val amountCents = InputValidators.parseAmount(amountText) ?: return@TextButton
                 if (label.isBlank()) return@TextButton
-                onSave(label.trim(), amountCents)
+                onSave(label.trim(), amountCents, occurredAt)
             }) { Text(stringResource(R.string.action_save)) }
         }
     }

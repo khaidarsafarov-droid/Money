@@ -79,9 +79,14 @@ class GoalViewModel(
         }
     }
 
-    fun addAction(goalId: Long, title: String, completed: Boolean = false) {
+    fun addAction(
+        goalId: Long,
+        title: String,
+        completed: Boolean = false,
+        occurredAt: Long = System.currentTimeMillis(),
+    ) {
         viewModelScope.launch {
-            goalRepository.addAction(goalId, title, completed)
+            goalRepository.addAction(goalId, title, completed, occurredAt)
         }
     }
 

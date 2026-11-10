@@ -346,7 +346,7 @@ internal fun HomeDialogs(
             onSave = { amount, note, date ->
                 fun saveNote() {
                     if (note.isNotBlank()) {
-                        goalViewModel.addAction(goal.id, note, completed = true)
+                        goalViewModel.addAction(goal.id, note, completed = true, occurredAt = date)
                     }
                     progressLogGoal = null
                     scope.launch {

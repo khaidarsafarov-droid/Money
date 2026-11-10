@@ -152,6 +152,7 @@ class FinanceSnapshotRepositoryImplTest {
                 title = "Buy flour",
                 completed = false,
                 sortOrder = 0,
+                occurredAt = 11L,
                 syncId = "action-sync",
                 updatedAt = 11L,
             ),
@@ -185,6 +186,7 @@ class FinanceSnapshotRepositoryImplTest {
                 label = "Flour",
                 amountCents = 20_000L,
                 sortOrder = 0,
+                occurredAt = 32L,
                 syncId = "line-sync",
                 updatedAt = 32L,
             ),
@@ -195,8 +197,10 @@ class FinanceSnapshotRepositoryImplTest {
         assertEquals("goal-sync", expense.goalId)
         assertEquals("ACTION", decoded.goals.single().goalKind)
         assertEquals("Buy flour", decoded.goalActions?.single()?.title)
+        assertEquals(11L, decoded.goalActions?.single()?.occurredAt)
         assertEquals("House", decoded.notes?.single()?.title)
         assertEquals(20_000L, decoded.noteLines?.single()?.amountCents)
+        assertEquals(32L, decoded.noteLines?.single()?.occurredAt)
 
         val other = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
@@ -215,6 +219,8 @@ class FinanceSnapshotRepositoryImplTest {
             assertEquals("OWED", restoredNote.mark)
             val restoredLine = other.financeNoteDao().getAllLinesOnce().single()
             assertEquals("Flour", restoredLine.label)
+            assertEquals(32L, restoredLine.occurredAt)
+            assertEquals(11L, other.goalActionDao().getAllOnce().single().occurredAt)
             assertEquals(restoredNote.id, restoredLine.noteId)
         } finally {
             other.close()

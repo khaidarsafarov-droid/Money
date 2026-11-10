@@ -23,6 +23,7 @@ export interface SnapshotGoalAction extends LwwRecord {
   title: string;
   completed: boolean;
   sortOrder: number;
+  occurredAt?: number;
 }
 
 export interface SnapshotNote extends LwwRecord {
@@ -54,6 +55,7 @@ export interface SnapshotNoteLine extends LwwRecord {
   label: string;
   amountCents: number;
   sortOrder: number;
+  occurredAt?: number;
 }
 
 export interface SnapshotDebt extends LwwRecord {

@@ -75,6 +75,7 @@
     <string name="note_body_label">Текст</string>
     <string name="note_line_label">За что</string>
     <string name="note_line_amount">Сумма</string>
+    <string name="action_date_label">Дата</string>
     <string name="note_add_line">Добавить строку</string>
     <string name="note_total_amount">Итог: %1$s</string>
     <string name="note_deleted">Удалено</string>

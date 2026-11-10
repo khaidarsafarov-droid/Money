@@ -154,18 +154,26 @@ class GoalRepositoryImpl(
         }
     }
 
-    override suspend fun addAction(goalId: Long, title: String, completed: Boolean): Long =
+    override suspend fun addAction(
+        goalId: Long,
+        title: String,
+        completed: Boolean,
+        occurredAt: Long,
+    ): Long =
         SyncWriteGuard.withWriteLock {
             val trimmed = title.trim()
             if (trimmed.isEmpty()) return@withWriteLock 0L
             val goalSyncId = savingsGoalDao.getGoalById(goalId)?.syncId ?: return@withWriteLock 0L
             val sortOrder = goalActionDao.maxSortOrder(goalId) + 1
+            val now = System.currentTimeMillis()
             val id = goalActionDao.insert(
                 GoalActionEntity(
                     goalId = goalId,
                     title = trimmed,
                     completed = completed,
                     sortOrder = sortOrder,
+                    occurredAt = occurredAt,
+                    updatedAt = now,
                 ),
             )
             goalActionDao.getById(id)?.let { syncQueueRecorder.recordGoalAction(it, goalSyncId) }

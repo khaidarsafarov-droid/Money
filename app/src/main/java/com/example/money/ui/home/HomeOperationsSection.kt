@@ -26,8 +26,8 @@ import com.example.money.ui.theme.MoneySpacing
 import com.example.money.ui.util.Formatters
 
 /**
- * One line in the read-only history. Money rows use [sortAt] from the record date.
- * Goal notes have no stored time, so they sort after dated rows.
+ * One line in the read-only history. Money rows and goal notes use [sortAt]
+ * from the record date.
  */
 internal sealed class AppHistoryEvent {
     abstract val sortAt: Long
@@ -49,7 +49,7 @@ internal sealed class AppHistoryEvent {
     }
 
     data class GoalNoteEvent(val goalName: String, val action: GoalAction) : AppHistoryEvent() {
-        override val sortAt: Long = 0L
+        override val sortAt: Long = action.occurredAt
         override val key: String = "n-${action.id}"
     }
 
@@ -198,7 +198,9 @@ internal fun historyEventSubtitle(event: AppHistoryEvent, goals: List<SavingsGoa
     is AppHistoryEvent.DebtPaymentEvent ->
         stringResource(R.string.history_debt_payment, event.debtor.name) +
             " · " + Formatters.shortDate(event.payment.paidAt)
-    is AppHistoryEvent.GoalNoteEvent -> stringResource(R.string.history_goal_note, event.goalName)
+    is AppHistoryEvent.GoalNoteEvent ->
+        stringResource(R.string.history_goal_note, event.goalName) +
+            " · " + Formatters.shortDate(event.action.occurredAt)
     is AppHistoryEvent.DebtOpenedEvent ->
         stringResource(R.string.history_debt_opened, Formatters.shortDate(event.debtor.dateGiven))
     is AppHistoryEvent.GoalRecordEvent ->

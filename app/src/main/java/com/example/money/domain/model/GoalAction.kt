@@ -6,4 +6,5 @@ data class GoalAction(
     val title: String,
     val completed: Boolean = false,
     val sortOrder: Int = 0,
+    val occurredAt: Long = 0L,
 )
