@@ -5,12 +5,12 @@ import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Обновляет Glance-виджет только при изменении снимка в DataStore — без polling Room.
+ * Обновляет Glance-виджет, когда меняются суммы, цели, валюта или приватность.
+ * Повторный updatedAt без новых данных виджет не перерисовывает.
  */
 class GoalWidgetUpdater(
     private val context: Context,
@@ -20,7 +20,7 @@ class GoalWidgetUpdater(
     fun start(scope: CoroutineScope) {
         scope.launch {
             widgetGoalRepository.observeSnapshot()
-                .distinctUntilChanged()
+                .distinctWidgetContent()
                 .collect {
                     refreshAllWidgets()
                 }

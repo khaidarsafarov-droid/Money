@@ -5,6 +5,9 @@ import com.example.money.domain.model.Debtor
 import com.example.money.domain.model.GoalKind
 import com.example.money.domain.model.SavingsGoal
 import com.example.money.settings.CurrencyRegion
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -141,6 +144,33 @@ class WidgetSnapshotBuilderTest {
         )
 
         assertFalse(snapshot.hasFeaturedGoal)
+    }
+
+    @Test
+    fun contentEqualityIgnoresTheTimestampAndKeepsShownFields() {
+        val shown = WidgetGoalSnapshot.Empty.copy(
+            owedToMeCents = 8_000,
+            currencyRegion = CurrencyRegion.fromCode("EUR"),
+            hideAmounts = true,
+            updatedAt = 10,
+        )
+        assertTrue(shown.contentEquals(shown.copy(updatedAt = 99)))
+        assertFalse(shown.contentEquals(shown.copy(owedToMeCents = 1)))
+        assertFalse(shown.contentEquals(shown.copy(hideAmounts = false)))
+        assertFalse(shown.contentEquals(shown.copy(currencyRegion = CurrencyRegion.US)))
+    }
+
+    @Test
+    fun widgetRefreshSignalSkipsTimestampOnlyRepeats() = runBlocking {
+        val shown = WidgetGoalSnapshot.Empty.copy(owedToMeCents = 8_000, updatedAt = 10)
+        val values = flow {
+            emit(shown)
+            emit(shown.copy(updatedAt = 20))
+            emit(shown.copy(updatedAt = 30, owedToMeCents = 9_000))
+            emit(shown.copy(updatedAt = 40, owedToMeCents = 9_000))
+        }.distinctWidgetContent().toList()
+
+        assertEquals(listOf(8_000L, 9_000L), values.map { it.owedToMeCents })
     }
 
     @Test

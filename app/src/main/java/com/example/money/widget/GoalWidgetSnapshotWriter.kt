@@ -6,42 +6,69 @@ import com.example.money.domain.model.SavingsGoal
 import com.example.money.domain.repository.DebtorRepository
 import com.example.money.domain.repository.GoalRepository
 import com.example.money.settings.CurrencyRegion
+import com.example.money.settings.PrivacySettings
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 
-class GoalWidgetSnapshotWriter(
-    private val goalRepository: GoalRepository,
-    private val debtorRepository: DebtorRepository,
-    private val pendingTransactionCount: kotlinx.coroutines.flow.Flow<Int>,
-    private val preferencesStore: MoneyPreferencesStore,
-    private val currencyRegion: kotlinx.coroutines.flow.Flow<CurrencyRegion>,
+/**
+ * Собирает снимок виджета из целей, долгов и настроек.
+ * Запись обратно в DataStore не считается новым событием: иначе свежий
+ * [WidgetGoalSnapshot.updatedAt] снова будит те же потоки.
+ */
+class GoalWidgetSnapshotWriter internal constructor(
+    private val goals: Flow<List<SavingsGoal>>,
+    private val debts: Flow<List<Debtor>>,
+    private val pendingTransactionCount: Flow<Int>,
+    private val currencyRegion: Flow<CurrencyRegion>,
+    private val privacySettings: Flow<PrivacySettings>,
+    private val nowMillis: () -> Long,
+    private val readStored: suspend () -> WidgetGoalSnapshot,
+    private val writeStored: suspend (WidgetGoalSnapshot) -> Unit,
 ) {
 
-    fun observeSnapshotChanges() =
+    constructor(
+        goalRepository: GoalRepository,
+        debtorRepository: DebtorRepository,
+        pendingTransactionCount: Flow<Int>,
+        preferencesStore: MoneyPreferencesStore,
+        currencyRegion: Flow<CurrencyRegion>,
+        nowMillis: () -> Long = System::currentTimeMillis,
+    ) : this(
+        goals = goalRepository.observeAllGoals(),
+        debts = debtorRepository.getAllDebtors(),
+        pendingTransactionCount = pendingTransactionCount,
+        currencyRegion = currencyRegion,
+        privacySettings = preferencesStore.privacySettings,
+        nowMillis = nowMillis,
+        readStored = { preferencesStore.widgetSnapshot.first() },
+        writeStored = { snapshot -> preferencesStore.writeWidgetSnapshot(snapshot) },
+    )
+
+    fun observeSnapshotChanges(): Flow<WidgetGoalSnapshot> =
         combine(
             combine(
-                goalRepository.observeAllGoals(),
-                debtorRepository.getAllDebtors(),
+                goals,
+                debts,
                 pendingTransactionCount,
                 currencyRegion,
-            ) { goals, debts, pendingCount, region ->
-                SnapshotCoreInputs(goals, debts, pendingCount, region)
+            ) { goalList, debtList, pendingCount, region ->
+                SnapshotCoreInputs(goalList, debtList, pendingCount, region)
             },
-            preferencesStore.privacySettings,
+            privacySettings,
         ) { core, privacy ->
-            val region = core.region
             val hideWidget = privacy.hideOnWidget || privacy.hideAmounts
             buildWidgetGoalSnapshot(
                 goals = core.goals,
                 debts = core.debts,
                 pendingCount = core.pendingCount,
-                region = region,
+                region = core.region,
                 hideAmounts = hideWidget,
                 streakCount = 0,
                 lastWinMessage = null,
-                now = System.currentTimeMillis(),
+                now = nowMillis(),
             )
-        }.distinctUntilChanged()
+        }.distinctWidgetContent()
 
     private data class SnapshotCoreInputs(
         val goals: List<SavingsGoal>,
@@ -51,7 +78,7 @@ class GoalWidgetSnapshotWriter(
     )
 
     suspend fun persist(snapshot: WidgetGoalSnapshot) {
-        preferencesStore.writeWidgetSnapshot(snapshot)
+        if (readStored().contentEquals(snapshot)) return
+        writeStored(snapshot)
     }
-
 }
