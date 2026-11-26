@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.money"
+        applicationId = "com.keystone.money"
         minSdk = 24
         targetSdk = 36
         versionCode = 3
@@ -55,7 +55,13 @@ android {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             }
+            isDebuggable = false
+            isMinifyEnabled = true
             isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             optimization {
                 enable = true
             }
@@ -68,6 +74,11 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+        checkReleaseBuilds = true
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true

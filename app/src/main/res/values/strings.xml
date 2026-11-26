@@ -1,5 +1,6 @@
 <resources>
     <string name="widget_plus" translatable="false">+</string>
+    <string name="widget_preview_meter_separator" translatable="false"> · </string>
     <string name="home_debt_balance">Баланс долгов</string>
     <string name="home_upcoming">Ближайшие</string>
     <string name="debt_history_balance">Остаток</string>

@@ -8,8 +8,11 @@ import com.example.money.domain.model.FinanceNoteLine
 import com.example.money.domain.model.NoteKind
 import com.example.money.domain.model.NoteMark
 import com.example.money.domain.repository.NoteRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +22,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 private const val TEXT_SAVE_DELAY_MS = 500L
 private const val DELETE_UNDO_MS = 5_000L
@@ -33,6 +35,7 @@ private data class NoteTextDraft(
 @OptIn(FlowPreview::class)
 class NoteViewModel(
     private val noteRepository: NoteRepository,
+    private val draftFlushScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) : ViewModel() {
 
     val notes: StateFlow<List<FinanceNote>> = noteRepository.observeNotes()
@@ -82,7 +85,9 @@ class NoteViewModel(
     override fun onCleared() {
         val pending = textDrafts.value
         if (pending.isEmpty()) return
-        runBlocking { flushDrafts(pending) }
+        // viewModelScope is already cancelled here. Flush on a scope that outlives this screen
+        // so the main thread is not blocked and the last edit is still written.
+        draftFlushScope.launch { flushDrafts(pending) }
     }
 
     private fun stageDraft(note: FinanceNote, title: String, body: String) {
@@ -184,10 +189,11 @@ class NoteViewModel(
 
     class Factory(
         private val noteRepository: NoteRepository,
+        private val draftFlushScope: CoroutineScope,
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return NoteViewModel(noteRepository) as T
+            return NoteViewModel(noteRepository, draftFlushScope) as T
         }
     }
 }

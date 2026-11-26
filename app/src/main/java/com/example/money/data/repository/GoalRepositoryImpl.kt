@@ -86,6 +86,7 @@ class GoalRepositoryImpl(
                 targetAmountCents = targetAmountCents,
                 currentAmountCents = 0L,
                 deadlineMillis = deadlineMillis,
+                currency = com.example.money.ui.util.Formatters.activeRegion.currencyCode,
                 updatedAt = now,
                 kind = kind.name,
             ),

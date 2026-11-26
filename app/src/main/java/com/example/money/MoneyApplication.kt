@@ -2,6 +2,8 @@ package com.example.money
 
 import android.app.Application
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.os.StrictMode
 import android.util.Log
 import com.example.money.di.AppContainer
 import com.example.money.data.backup.GoogleDriveAuthorizationManager
@@ -107,6 +109,22 @@ class MoneyApplication : Application() {
     }
 
     override fun onCreate() {
+        val debug = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (debug) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build(),
+            )
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectLeakedClosableObjects()
+                    .detectActivityLeaks()
+                    .penaltyLog()
+                    .build(),
+            )
+        }
         super.onCreate()
         if (System.getProperty("money.robolectric") == "true") return
         SqlCipherLibrary.load()
