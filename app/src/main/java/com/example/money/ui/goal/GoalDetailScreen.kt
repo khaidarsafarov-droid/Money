@@ -77,6 +77,13 @@ fun GoalDetailScreen(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as MoneyApplication
+    val goalSavedMessage = stringResource(R.string.msg_goal_saved)
+    val transferAddedMessage = stringResource(R.string.msg_goal_transfer_added)
+    val insufficientFundsMessage = stringResource(R.string.msg_insufficient_funds)
+    val saveFailedMessage = stringResource(R.string.msg_save_failed)
+    val expenseAddedMessage = stringResource(R.string.msg_goal_expense_added)
+    val goalInsufficientMessage = stringResource(R.string.msg_goal_insufficient)
+    val logSavedMessage = stringResource(R.string.goal_log_saved)
     val goalViewModel: GoalViewModel = viewModel(
         factory = GoalViewModel.Factory(app.goalRepository),
     )
@@ -268,7 +275,7 @@ fun GoalDetailScreen(
             onConfirm = { name, kind, target, current, deadline ->
                 goalViewModel.updateGoal(goal, name, target, current, deadline, kind)
                 showEdit = false
-                showMessage(context.getString(R.string.msg_goal_saved))
+                showMessage(goalSavedMessage)
             },
         )
     }
@@ -279,13 +286,11 @@ fun GoalDetailScreen(
                 budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
                     showTransfer = false
                     showMessage(
-                        context.getString(
-                            when (result) {
-                                BudgetActionResult.Success -> R.string.msg_goal_transfer_added
-                                BudgetActionResult.InsufficientFunds -> R.string.msg_insufficient_funds
-                                BudgetActionResult.Error -> R.string.msg_save_failed
-                            },
-                        ),
+                        when (result) {
+                            BudgetActionResult.Success -> transferAddedMessage
+                            BudgetActionResult.InsufficientFunds -> insufficientFundsMessage
+                            BudgetActionResult.Error -> saveFailedMessage
+                        },
                     )
                 }
             },
@@ -300,13 +305,11 @@ fun GoalDetailScreen(
                 budgetViewModel.addExpense(amount, category, date, note, goal.id) { result ->
                     showExpense = false
                     showMessage(
-                        context.getString(
-                            when (result) {
-                                BudgetActionResult.Success -> R.string.msg_goal_expense_added
-                                BudgetActionResult.InsufficientFunds -> R.string.msg_goal_insufficient
-                                BudgetActionResult.Error -> R.string.msg_save_failed
-                            },
-                        ),
+                        when (result) {
+                            BudgetActionResult.Success -> expenseAddedMessage
+                            BudgetActionResult.InsufficientFunds -> goalInsufficientMessage
+                            BudgetActionResult.Error -> saveFailedMessage
+                        },
                     )
                 }
             },
@@ -323,7 +326,7 @@ fun GoalDetailScreen(
                         goalViewModel.addAction(goal.id, note, completed = true, occurredAt = date)
                     }
                     showLog = false
-                    showMessage(context.getString(R.string.goal_log_saved))
+                    showMessage(logSavedMessage)
                 }
                 if (amount != null && goal.kind == GoalKind.MONEY) {
                     budgetViewModel.addGoalTransfer(goal.id, amount, date) { result ->
@@ -331,11 +334,11 @@ fun GoalDetailScreen(
                             BudgetActionResult.Success -> saveNote()
                             BudgetActionResult.InsufficientFunds -> {
                                 showLog = false
-                                showMessage(context.getString(R.string.msg_insufficient_funds))
+                                showMessage(insufficientFundsMessage)
                             }
                             BudgetActionResult.Error -> {
                                 showLog = false
-                                showMessage(context.getString(R.string.msg_save_failed))
+                                showMessage(saveFailedMessage)
                             }
                         }
                     }

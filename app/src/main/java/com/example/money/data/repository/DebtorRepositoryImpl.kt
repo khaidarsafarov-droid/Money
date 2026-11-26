@@ -276,8 +276,8 @@ class DebtorRepositoryImpl(
             if (debtor.status == DebtStatus.COMPLETED.name) return@withTransaction
 
             val remaining = MoneyMath.remainingCents(debtor.targetAmountCents, debtor.currentAmountCents)
-            val cappedPayment = minOf(paymentCents, remaining)
-            if (cappedPayment <= 0L) return@withTransaction
+            if (paymentCents > remaining || remaining <= 0L) return@withTransaction
+            val cappedPayment = paymentCents
 
             val newCurrent = debtor.currentAmountCents + cappedPayment
             val newStatus = MoneyMath.resolveDebtStatus(debtor.targetAmountCents, newCurrent)

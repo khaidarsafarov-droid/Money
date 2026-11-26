@@ -28,8 +28,8 @@ jobs:
           packages: platform-tools
       - name: Install Android 36 platform
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
-      - name: Run JVM tests and assemble debug APK
-        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :benchmark:assemble
+      - name: Run lint, JVM tests, and assemble debug APK
+        run: ./gradlew :app:lintDebug :app:testDebugUnitTest :app:assembleDebug :benchmark:assemble
       - name: Release build keeps R8 and the baseline profile
         run: |
           ./gradlew :app:assembleRelease

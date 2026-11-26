@@ -296,6 +296,7 @@ private fun HistoryRow(
         signed,
     )
     val accent = if (took) extra.negative else extra.positive
+    val onAccent = if (took) scheme.onError else scheme.onPrimary
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(
             modifier = Modifier
@@ -308,13 +309,13 @@ private fun HistoryRow(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(if (took) Color(0xFFE2725B) else Color(0xFF2FA884)),
+                    .background(accent),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = if (took) Icons.Rounded.SouthWest else Icons.Rounded.NorthEast,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = onAccent,
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
